@@ -11,6 +11,12 @@ automatically_update_urls_on_dev = true
 [webhooks]
 api_version = "2026-04"
 
+
+
+[[webhooks.subscriptions]]
+compliance_topics = ["customers/data_request", "customers/redact", "shop/redact"]
+uri = "https://profit-leak-scanner.onrender.com/webhooks"
+
 [access_scopes]
 scopes = "read_orders,read_products,write_products,read_metaobject_definitions,write_metaobject_definitions,read_metaobjects,write_metaobjects"
 
