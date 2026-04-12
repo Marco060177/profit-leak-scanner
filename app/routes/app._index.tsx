@@ -374,18 +374,20 @@ export default function AppIndex() {
         </div>
       </div>
 
-      {!billingActive ? (
-        <div style={styles.paywallBanner}>
-          <div style={{ fontWeight: 800 }}>🔒 Plan inactive</div>
-          <div style={{ opacity: 0.9, marginTop: 4 }}>
-            You are viewing the dashboard in preview mode. Activate your plan to unlock full
-            analysis.
-          </div>
-          <button style={styles.paywallBtn} onClick={() => navigate("/app/billing")}>
-            Go to billing
-          </button>
-        </div>
-      ) : null}
+      {/* 
+{!billingActive ? (
+  <div style={styles.paywallBanner}>
+    <div style={{ fontWeight: 800 }}>🔒 Plan inactive</div>
+    <div style={{ opacity: 0.9, marginTop: 4 }}>
+      You are viewing the dashboard in preview mode. Activate your plan to unlock full
+      analysis.
+    </div>
+    <button style={styles.paywallBtn} onClick={() => navigate("/app/billing")}>
+      Go to billing
+    </button>
+  </div>
+) : null}
+*/}
 
       {hasMissingCost && (
         <div style={styles.bannerWarning}>
