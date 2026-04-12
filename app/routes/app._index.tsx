@@ -322,6 +322,14 @@ export default function AppIndex() {
       <div style={styles.headerRow}>
         <div>
           <div style={styles.title}>Profit Leak Scanner</div>
+          <div style={{ marginTop: 6 }}>
+  <span
+    style={{ fontSize: 13, color: "#3457ff", cursor: "pointer" }}
+    onClick={() => navigate("/app/billing")}
+  >
+    Go to billing
+  </span>
+</div>
 
           <div style={styles.subtitleRow}>
             <div style={styles.subtitle}>
