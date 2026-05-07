@@ -204,6 +204,105 @@ export default function DashboardV2() {
       </div>
     </div>
   ))}
+
+<div
+  style={{
+    background: "rgba(255,255,255,0.045)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 26,
+    padding: 26,
+    marginBottom: 24,
+    boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+    }}
+  >
+    <div>
+      <div style={{ fontSize: 22, fontWeight: 900 }}>
+        Top Profit Leaks Detected
+      </div>
+      <div style={{ opacity: 0.62, marginTop: 6 }}>
+        Prioritized issues that may be hurting your margins.
+      </div>
+    </div>
+
+    <button
+      style={{
+        background: "rgba(255,90,54,0.14)",
+        border: "1px solid rgba(255,90,54,0.35)",
+        color: "#ff7b59",
+        padding: "10px 14px",
+        borderRadius: 12,
+        fontWeight: 800,
+        cursor: "pointer",
+      }}
+    >
+      View all
+    </button>
+  </div>
+
+  {[
+    ["Products below target margin", "High", "-$780/mo"],
+    ["Discounts eating your margins", "Medium", "-$430/mo"],
+    ["Costs not updated recently", "Medium", "-$320/mo"],
+    ["Low-margin best sellers", "Low", "-$180/mo"],
+  ].map(([issue, severity, loss]) => (
+    <div
+      key={issue}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 100px 120px",
+        gap: 16,
+        alignItems: "center",
+        padding: "16px 0",
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <div style={{ fontWeight: 750 }}>{issue}</div>
+
+      <div
+        style={{
+          justifySelf: "start",
+          padding: "6px 10px",
+          borderRadius: 999,
+          fontSize: 13,
+          fontWeight: 800,
+          color:
+            severity === "High"
+              ? "#ff6b4a"
+              : severity === "Medium"
+              ? "#f59e0b"
+              : "#9ca3af",
+          background:
+            severity === "High"
+              ? "rgba(255,90,54,0.14)"
+              : severity === "Medium"
+              ? "rgba(245,158,11,0.14)"
+              : "rgba(156,163,175,0.12)",
+        }}
+      >
+        {severity}
+      </div>
+
+      <div
+        style={{
+          justifySelf: "end",
+          fontWeight: 900,
+          color: "#f3f4f6",
+        }}
+      >
+        {loss}
+      </div>
+    </div>
+  ))}
+</div>
+
 </div>
             </div>
           </div>
