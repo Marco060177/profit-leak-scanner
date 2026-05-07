@@ -451,12 +451,19 @@ export default function AppIndex() {
         {visibleRows.length === 0 ? (
           <div style={styles.empty}>
   <div style={{ fontSize: 42 }}>🧾</div>
-  <div style={{ fontWeight: 700, marginTop: 8 }}>
-    No sales data yet
+
+  <div style={{ fontWeight: 800, marginTop: 8, fontSize: 18 }}>
+    Your store is ready for profit analysis
   </div>
-  <div style={{ opacity: 0.8, marginTop: 6 }}>
-    Once your store receives orders, Profit Leak Scanner will analyze profit,
-    margins, and detect products selling below cost.
+
+  <div style={{ opacity: 0.82, marginTop: 8, lineHeight: 1.6 }}>
+    Once orders are available, Profit Leak Scanner will automatically detect
+    products selling below cost, low-margin products, missing product costs,
+    and pricing leaks.
+  </div>
+
+  <div style={{ marginTop: 14, fontWeight: 700 }}>
+    Tip: add product costs in Shopify for the most accurate results.
   </div>
 </div>
         ) : (
