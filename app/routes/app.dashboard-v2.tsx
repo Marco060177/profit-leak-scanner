@@ -145,6 +145,66 @@ export default function DashboardV2() {
     </div>
   </div>
 </div>
+
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 18,
+    marginBottom: 24,
+  }}
+>
+  {[
+    ["Revenue scanned", "$48,920", "+12%"],
+    ["Products analyzed", "186", "24 at risk"],
+    ["Low margin products", "17", "Needs review"],
+    ["Missing costs", "9", "Fix required"],
+  ].map(([label, value, note]) => (
+    <div
+      key={label}
+      style={{
+        background: "rgba(255,255,255,0.055)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 22,
+        padding: 22,
+        boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 13,
+          opacity: 0.68,
+          fontWeight: 700,
+          textTransform: "uppercase",
+          letterSpacing: 0.7,
+        }}
+      >
+        {label}
+      </div>
+
+      <div
+        style={{
+          fontSize: 34,
+          fontWeight: 900,
+          marginTop: 14,
+        }}
+      >
+        {value}
+      </div>
+
+      <div
+        style={{
+          marginTop: 8,
+          color: "#ff7b59",
+          fontWeight: 700,
+          fontSize: 14,
+        }}
+      >
+        {note}
+      </div>
+    </div>
+  ))}
+</div>
             </div>
           </div>
 
