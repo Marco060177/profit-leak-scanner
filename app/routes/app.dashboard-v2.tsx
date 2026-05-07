@@ -221,7 +221,85 @@ export default function DashboardV2() {
             </div>
           ))}
         </div>
+        <div
+  style={{
+    background: "rgba(255,255,255,0.045)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 26,
+    padding: 26,
+    marginBottom: 24,
+    boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+  }}
+>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 24,
+    }}
+  >
+    <div>
+      <div style={{ fontSize: 22, fontWeight: 900 }}>
+        Profit Trend
+      </div>
 
+      <div style={{ opacity: 0.62, marginTop: 6 }}>
+        Revenue and profit performance over time.
+      </div>
+    </div>
+
+    <div
+      style={{
+        color: "#22c55e",
+        fontWeight: 800,
+        fontSize: 15,
+      }}
+    >
+      ↑ 12.4% this month
+    </div>
+  </div>
+
+  <div
+    style={{
+      height: 260,
+      borderRadius: 20,
+      background:
+        "linear-gradient(180deg, rgba(255,90,54,0.12), rgba(255,255,255,0.02))",
+      border: "1px solid rgba(255,255,255,0.06)",
+      position: "relative",
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "flex-end",
+      padding: 24,
+      gap: 14,
+    }}
+  >
+    {[40, 58, 52, 74, 68, 92, 88, 110, 96, 120, 138, 152].map((h, i) => (
+      <div
+        key={i}
+        style={{
+          flex: 1,
+          height: `${h}px`,
+          borderRadius: 999,
+          background:
+            "linear-gradient(180deg,#ff7b59 0%, #ff5a36 100%)",
+          boxShadow: "0 8px 24px rgba(255,90,54,0.35)",
+        }}
+      />
+    ))}
+
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background:
+          "radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 60%)",
+        pointerEvents: "none",
+      }}
+    />
+  </div>
+</div>
         <div
           style={{
             background: "rgba(255,255,255,0.045)",
