@@ -58,6 +58,93 @@ export default function DashboardV2() {
             >
               Track hidden margin leaks, underpriced products and pricing
               issues affecting your Shopify store profitability.
+            
+            <div
+  style={{
+    background:
+      "linear-gradient(135deg, rgba(255,90,54,0.16), rgba(15,23,42,0.95))",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 28,
+    padding: 32,
+    boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+    display: "grid",
+    gridTemplateColumns: "1.2fr 0.8fr",
+    gap: 28,
+    marginBottom: 24,
+  }}
+>
+  <div>
+    <div style={{ opacity: 0.7, fontSize: 14, fontWeight: 700 }}>
+      PROFIT LEAK SCORE
+    </div>
+
+    <div style={{ fontSize: 72, fontWeight: 900, marginTop: 16 }}>
+      32<span style={{ fontSize: 28, opacity: 0.55 }}>/100</span>
+    </div>
+
+    <div
+      style={{
+        color: "#ff6b4a",
+        fontWeight: 800,
+        fontSize: 20,
+        marginTop: 4,
+      }}
+    >
+      High risk
+    </div>
+
+    <div
+      style={{
+        marginTop: 14,
+        fontSize: 17,
+        opacity: 0.78,
+        maxWidth: 520,
+        lineHeight: 1.6,
+      }}
+    >
+      Your store may be losing profit every day due to underpriced products,
+      missing costs, and margin leaks.
+    </div>
+  </div>
+
+  <div
+    style={{
+      background: "rgba(0,0,0,0.22)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 22,
+      padding: 24,
+    }}
+  >
+    <div style={{ opacity: 0.7, fontSize: 14, fontWeight: 700 }}>
+      ESTIMATED MONTHLY LOSS
+    </div>
+
+    <div
+      style={{
+        fontSize: 46,
+        fontWeight: 900,
+        color: "#ff5a36",
+        marginTop: 18,
+      }}
+    >
+      $2,140
+    </div>
+
+    <div style={{ marginTop: 8, opacity: 0.78, lineHeight: 1.5 }}>
+      Potential profit you could be losing right now.
+    </div>
+
+    <div
+      style={{
+        marginTop: 18,
+        color: "#ff7b59",
+        fontWeight: 800,
+      }}
+    >
+      ↑ 18% vs last 30 days
+    </div>
+  </div>
+</div>
             </div>
           </div>
 
