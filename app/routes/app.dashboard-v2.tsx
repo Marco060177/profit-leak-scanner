@@ -215,6 +215,32 @@ export default function DashboardV2() {
     boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
   }}
 >
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 28,
+    padding: "14px 16px",
+    borderRadius: 18,
+    background: "rgba(255,255,255,0.045)",
+    border: "1px solid rgba(255,255,255,0.08)",
+  }}
+>
+  <div style={{ fontWeight: 900, letterSpacing: 0.5 }}>
+    MARGIN<span style={{ color: "#ff5a36" }}>LAB</span>
+  </div>
+
+  <div style={{ display: "flex", gap: 18, opacity: 0.78, fontWeight: 700 }}>
+    <span>Overview</span>
+    <span>Leaks</span>
+    <span>Products</span>
+    <span>Recommendations</span>
+    <span>Billing</span>
+  </div>
+</div>
+
+
   <div
     style={{
       display: "flex",
