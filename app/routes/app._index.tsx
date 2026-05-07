@@ -429,7 +429,105 @@ export default function AppIndex() {
           </div>
         </div>
       )}
+      
+      <div
+  style={{
+    background: hasLosing
+      ? "linear-gradient(135deg, #2a0f12 0%, #47171d 100%)"
+      : "linear-gradient(135deg, #101828 0%, #172033 100%)",
+    borderRadius: 18,
+    padding: 24,
+    marginBottom: 22,
+    border: hasLosing
+      ? "1px solid rgba(255,80,80,0.25)"
+      : "1px solid rgba(255,255,255,0.08)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+  }}
+>
+  <div
+    style={{
+      fontSize: 13,
+      fontWeight: 700,
+      letterSpacing: 1,
+      textTransform: "uppercase",
+      opacity: 0.7,
+    }}
+  >
+    Margin Health
+  </div>
 
+  <div
+    style={{
+      fontSize: 34,
+      fontWeight: 800,
+      marginTop: 10,
+      lineHeight: 1.1,
+    }}
+  >
+    {hasLosing
+      ? `Your store is leaking ${money(summary.totalLeak)}`
+      : "Your margins look healthy"}
+  </div>
+
+  <div
+    style={{
+      marginTop: 12,
+      opacity: 0.82,
+      fontSize: 16,
+      lineHeight: 1.6,
+      maxWidth: 760,
+    }}
+  >
+    {hasLosing
+      ? "Products selling below cost have been detected. Review pricing, shipping, and product costs to recover lost profit."
+      : "Profit Leak Scanner is monitoring your store for hidden pricing leaks, low-margin products, and missing costs."}
+  </div>
+
+  <div
+    style={{
+      display: "flex",
+      gap: 12,
+      marginTop: 18,
+      flexWrap: "wrap",
+    }}
+  >
+    <div
+      style={{
+        background: "rgba(255,255,255,0.08)",
+        padding: "10px 14px",
+        borderRadius: 12,
+        fontWeight: 700,
+      }}
+    >
+      Revenue: {money(summary.revenue)}
+    </div>
+
+    <div
+      style={{
+        background: "rgba(255,255,255,0.08)",
+        padding: "10px 14px",
+        borderRadius: 12,
+        fontWeight: 700,
+      }}
+    >
+      Profit: {money(summary.profit)}
+    </div>
+
+    <div
+      style={{
+        background: hasLosing
+          ? "rgba(255,80,80,0.15)"
+          : "rgba(80,255,120,0.12)",
+        padding: "10px 14px",
+        borderRadius: 12,
+        fontWeight: 700,
+      }}
+    >
+      Total Leak: {money(summary.totalLeak)}
+    </div>
+  </div>
+</div>
+      
       <div style={styles.kpiGrid}>
         <KpiCard label="Revenue" value={money(summary.revenue)} />
         <KpiCard label="COGS" value={money(summary.cogs)} />
