@@ -159,24 +159,75 @@ export default function DashboardV2() {
               }}
             >
               Your store may be losing profit every day due to underpriced products, missing costs,
-              and margin leaks.
-            </div>
-          </div>
+and margin leaks.
+</div>
 
-          <div
-            style={{
-              background: "rgba(0,0,0,0.22)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 22,
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-              overflow: "hidden",
-            }}
-          >
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: 14,
+    marginTop: 24,
+    maxWidth: 700,
+  }}
+>
+  {[
+    ["Estimated Loss", "$2,140/mo", "#ff5a36"],
+    ["Products at Risk", "24 detected", "#f59e0b"],
+    ["Margin Trend", "+12.4%", "#22c55e"],
+  ].map(([label, value, color]) => (
+    <div
+      key={label}
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: 18,
+        padding: 18,
+        boxShadow: "0 12px 30px rgba(0,0,0,0.16)",
+      }}
+    >
+      <div
+        style={{
+          fontSize: 12,
+          opacity: 0.58,
+          textTransform: "uppercase",
+          letterSpacing: 0.8,
+          fontWeight: 800,
+        }}
+      >
+        {label}
+      </div>
+
+      <div
+        style={{
+          marginTop: 10,
+          fontSize: 26,
+          fontWeight: 900,
+          color,
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  ))}
+</div>
+</div>
+
+<div
+  style={{
+    background: "rgba(0,0,0,0.22)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: 22,
+    padding: 24,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    overflow: "hidden",
+  }}
+>
             <div
               style={{
                 position: "absolute",
