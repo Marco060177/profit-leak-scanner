@@ -191,16 +191,16 @@ export default function DashboardV2() {
             <div
               style={{
                 position: "relative",
-                width: 220,
-                height: 220,
+                width: 170,
+                height: 170,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
               <svg
-                width="220"
-                height="220"
+                width="170"
+                height="170"
                 viewBox="0 0 220 220"
                 style={{
                   position: "absolute",
@@ -240,7 +240,7 @@ export default function DashboardV2() {
               >
                 <div
                   style={{
-                    fontSize: 56,
+                    fontSize: 42,
                     fontWeight: 900,
                     lineHeight: 1,
                   }}
@@ -264,7 +264,7 @@ export default function DashboardV2() {
 
             <div
               style={{
-                marginTop: 18,
+                marginTop: 8,
                 fontSize: 14,
                 opacity: 0.62,
                 textAlign: "center",
