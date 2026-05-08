@@ -399,7 +399,7 @@ export default function DashboardV2() {
             </button>
           </div>
 
-          {leaks.map(([issue, severity, loss]) => (
+          {leaks.map(([icon, issue, severity, loss]) => (
             <div
               key={issue}
               style={{
