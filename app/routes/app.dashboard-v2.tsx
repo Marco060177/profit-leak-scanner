@@ -7,11 +7,11 @@ export default function DashboardV2() {
   ];
 
   const leaks = [
-    ["Products below target margin", "High", "-$780/mo"],
-    ["Discounts eating your margins", "Medium", "-$430/mo"],
-    ["Costs not updated recently", "Medium", "-$320/mo"],
-    ["Low-margin best sellers", "Low", "-$180/mo"],
-  ];
+  ["⚠️", "Products below target margin", "High", "-$780/mo"],
+  ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
+  ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
+  ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
+];
 
   return (
     <div
