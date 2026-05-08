@@ -1,9 +1,9 @@
 export default function DashboardV2() {
   const kpis = [
-    ["Revenue scanned", "$48,920", "+12%"],
-    ["Products analyzed", "186", "24 at risk"],
-    ["Low margin products", "17", "Needs review"],
-    ["Missing costs", "9", "Fix required"],
+    ["Revenue scanned", "$48,920", "+12%", "positive"],
+    ["Products analyzed", "186", "24 at risk", "warning"],
+    ["Low margin products", "17", "Needs review", "warning"],
+    ["Missing costs", "9", "Fix required", "danger"],
   ];
 
   const leaks = [
@@ -190,12 +190,13 @@ export default function DashboardV2() {
             marginBottom: 24,
           }}
         >
-          {kpis.map(([label, value, note]) => (
+          {kpis.map(([label, value, note, tone]) => (
             <div
               key={label}
               style={{
-                background: "rgba(255,255,255,0.055)",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035))",
+                border: "1px solid rgba(255,255,255,0.09)",
                 borderRadius: 22,
                 padding: 22,
                 boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
@@ -203,11 +204,11 @@ export default function DashboardV2() {
             >
               <div
                 style={{
-                  fontSize: 13,
-                  opacity: 0.68,
-                  fontWeight: 700,
+                  fontSize: 12,
+                  opacity: 0.62,
+                  fontWeight: 800,
                   textTransform: "uppercase",
-                  letterSpacing: 0.7,
+                  letterSpacing: 0.8,
                 }}
               >
                 {label}
@@ -215,145 +216,147 @@ export default function DashboardV2() {
 
               <div style={{ fontSize: 34, fontWeight: 900, marginTop: 14 }}>{value}</div>
 
-              <div style={{ marginTop: 8, color: "#ff7b59", fontWeight: 700, fontSize: 14 }}>
+              <div
+                style={{
+                  marginTop: 8,
+                  color:
+                    tone === "positive"
+                      ? "#22c55e"
+                      : tone === "danger"
+                        ? "#ff6b4a"
+                        : "#f59e0b",
+                  fontWeight: 800,
+                  fontSize: 14,
+                }}
+              >
                 {note}
               </div>
             </div>
           ))}
         </div>
+
         <div
-  style={{
-    background: "rgba(255,255,255,0.045)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 26,
-    padding: 26,
-    marginBottom: 24,
-    boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
-  }}
->
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 24,
-    }}
-  >
-    <div>
-      <div style={{ fontSize: 22, fontWeight: 900 }}>
-        Profit Trend
-      </div>
+          style={{
+            background: "rgba(255,255,255,0.045)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 26,
+            padding: 26,
+            marginBottom: 24,
+            boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 24,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>Profit Trend</div>
 
-      <div style={{ opacity: 0.62, marginTop: 6 }}>
-        Revenue and profit performance over time.
-      </div>
-    </div>
+              <div style={{ opacity: 0.62, marginTop: 6 }}>
+                Revenue and profit performance over time.
+              </div>
+            </div>
 
-    <div
-      style={{
-        color: "#22c55e",
-        fontWeight: 800,
-        fontSize: 15,
-      }}
-    >
-      ↑ 12.4% this month
-    </div>
-  </div>
+            <div style={{ color: "#22c55e", fontWeight: 800, fontSize: 15 }}>
+              ↑ 12.4% this month
+            </div>
+          </div>
 
-  <div
-    style={{
-      height: 260,
-      borderRadius: 20,
-      background:
-        "linear-gradient(180deg, rgba(255,90,54,0.12), rgba(255,255,255,0.02))",
-      border: "1px solid rgba(255,255,255,0.06)",
-      position: "relative",
-      overflow: "hidden",
-      display: "flex",
-      alignItems: "flex-end",
-      padding: 24,
-      gap: 14,
-    }}
-  >
-    <svg
-  viewBox="0 0 1000 260"
-  preserveAspectRatio="none"
-  style={{
-    width: "100%",
-    height: "100%",
-  }}
->
-  <defs>
-    <linearGradient id="lineGradient" x1="0" x2="1">
-      <stop offset="0%" stopColor="#ff7b59" />
-      <stop offset="100%" stopColor="#ff5a36" />
-    </linearGradient>
+          <div
+            style={{
+              height: 260,
+              borderRadius: 20,
+              background:
+                "linear-gradient(180deg, rgba(255,90,54,0.12), rgba(255,255,255,0.02))",
+              border: "1px solid rgba(255,255,255,0.06)",
+              position: "relative",
+              overflow: "hidden",
+              padding: 24,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 22,
+                left: 24,
+                right: 24,
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.38)",
+                zIndex: 2,
+              }}
+            >
+              <span>Apr 1</span>
+              <span>Apr 15</span>
+              <span>Apr 30</span>
+            </div>
 
-    <linearGradient id="fillGradient" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" stopColor="rgba(255,123,89,0.35)" />
-      <stop offset="100%" stopColor="rgba(255,123,89,0)" />
-    </linearGradient>
-  </defs>
+            <svg
+              viewBox="0 0 1000 260"
+              preserveAspectRatio="none"
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+            >
+              <defs>
+                <linearGradient id="lineGradient" x1="0" x2="1">
+                  <stop offset="0%" stopColor="#ff7b59" />
+                  <stop offset="100%" stopColor="#ff5a36" />
+                </linearGradient>
 
-  <path
-    d="
-      M 0 210
-      C 80 200, 120 180, 180 170
-      S 300 120, 380 140
-      S 500 80, 620 95
-      S 760 50, 1000 40
-      L 1000 260
-      L 0 260
-      Z
-    "
-    fill="url(#fillGradient)"
-  />
+                <linearGradient id="fillGradient" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(255,123,89,0.35)" />
+                  <stop offset="100%" stopColor="rgba(255,123,89,0)" />
+                </linearGradient>
+              </defs>
 
-  <path
-    d="
-      M 0 210
-      C 80 200, 120 180, 180 170
-      S 300 120, 380 140
-      S 500 80, 620 95
-      S 760 50, 1000 40
-    "
-    fill="none"
-    stroke="url(#lineGradient)"
-    strokeWidth="6"
-    strokeLinecap="round"
-  />
+              <path
+                d="
+                  M 0 210
+                  C 80 200, 120 180, 180 170
+                  S 300 120, 380 140
+                  S 500 80, 620 95
+                  S 760 50, 1000 40
+                  L 1000 260
+                  L 0 260
+                  Z
+                "
+                fill="url(#fillGradient)"
+              />
 
-  <div
-  style={{
-    position: "absolute",
-    top: 22,
-    left: 24,
-    right: 24,
-    display: "flex",
-    justifyContent: "space-between",
-    fontSize: 12,
-    color: "rgba(255,255,255,0.38)",
-    zIndex: 2,
-  }}
->
-  <span>Apr 1</span>
-  <span>Apr 15</span>
-  <span>Apr 30</span>
-</div>
+              <path
+                d="
+                  M 0 210
+                  C 80 200, 120 180, 180 170
+                  S 300 120, 380 140
+                  S 500 80, 620 95
+                  S 760 50, 1000 40
+                "
+                fill="none"
+                stroke="url(#lineGradient)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+            </svg>
 
-</svg>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 60%)",
+                pointerEvents: "none",
+              }}
+            />
+          </div>
+        </div>
 
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        background:
-          "radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 60%)",
-        pointerEvents: "none",
-      }}
-    />
-  </div>
-</div>
         <div
           style={{
             background: "rgba(255,255,255,0.045)",
