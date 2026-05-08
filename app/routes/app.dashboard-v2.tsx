@@ -7,11 +7,11 @@ export default function DashboardV2() {
   ];
 
   const leaks = [
-  ["⚠️", "Products below target margin", "High", "-$780/mo"],
-  ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
-  ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
-  ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
-];
+    ["⚠️", "Products below target margin", "High", "-$780/mo"],
+    ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
+    ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
+    ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
+  ];
 
   return (
     <div
@@ -411,7 +411,45 @@ export default function DashboardV2() {
                 borderTop: "1px solid rgba(255,255,255,0.07)",
               }}
             >
-              <div style={{ fontWeight: 750 }}>{issue}</div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                }}
+              >
+                <div
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 14,
+                    background: "rgba(255,255,255,0.06)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  {icon}
+                </div>
+
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 15 }}>
+                    {issue}
+                  </div>
+
+                  <div
+                    style={{
+                      opacity: 0.5,
+                      marginTop: 4,
+                      fontSize: 13,
+                    }}
+                  >
+                    Margin optimization opportunity detected
+                  </div>
+                </div>
+              </div>
 
               <div
                 style={{
@@ -437,7 +475,13 @@ export default function DashboardV2() {
                 {severity}
               </div>
 
-              <div style={{ justifySelf: "end", fontWeight: 900, color: "#f3f4f6" }}>
+              <div
+                style={{
+                  justifySelf: "end",
+                  fontWeight: 900,
+                  color: "#f3f4f6",
+                }}
+              >
                 {loss}
               </div>
             </div>
