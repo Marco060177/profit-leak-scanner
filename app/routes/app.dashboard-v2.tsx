@@ -131,7 +131,7 @@ export default function DashboardV2() {
             padding: 32,
             boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
             display: "grid",
-            gridTemplateColumns: "1.2fr 0.8fr",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
             gap: 28,
             marginBottom: 24,
           }}
@@ -192,7 +192,7 @@ export default function DashboardV2() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
             gap: 18,
             marginBottom: 24,
           }}
@@ -411,7 +411,7 @@ export default function DashboardV2() {
               key={issue}
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 100px 120px",
+                gridTemplateColumns: "minmax(0,1fr) 100px 120px",
                 gap: 16,
                 alignItems: "center",
                 padding: "18px 0",
