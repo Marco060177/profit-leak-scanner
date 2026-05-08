@@ -169,22 +169,110 @@ export default function DashboardV2() {
               border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: 22,
               padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            <div style={{ opacity: 0.7, fontSize: 14, fontWeight: 700 }}>
-              ESTIMATED MONTHLY LOSS
+            <div
+              style={{
+                position: "absolute",
+                width: 260,
+                height: 260,
+                borderRadius: "50%",
+                background: "rgba(255,90,54,0.12)",
+                filter: "blur(50px)",
+              }}
+            />
+
+            <div
+              style={{
+                position: "relative",
+                width: 220,
+                height: 220,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg
+                width="220"
+                height="220"
+                viewBox="0 0 220 220"
+                style={{
+                  position: "absolute",
+                  transform: "rotate(-90deg)",
+                }}
+              >
+                <circle
+                  cx="110"
+                  cy="110"
+                  r="84"
+                  stroke="rgba(255,255,255,0.08)"
+                  strokeWidth="18"
+                  fill="none"
+                />
+
+                <circle
+                  cx="110"
+                  cy="110"
+                  r="84"
+                  stroke="#ff5a36"
+                  strokeWidth="18"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="528"
+                  strokeDashoffset="180"
+                  style={{
+                    filter: "drop-shadow(0 0 18px rgba(255,90,54,0.55))",
+                  }}
+                />
+              </svg>
+
+              <div
+                style={{
+                  position: "relative",
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 56,
+                    fontWeight: 900,
+                    lineHeight: 1,
+                  }}
+                >
+                  32
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#ff7b59",
+                    fontWeight: 800,
+                    letterSpacing: 1,
+                    fontSize: 13,
+                  }}
+                >
+                  HIGH RISK
+                </div>
+              </div>
             </div>
 
-            <div style={{ fontSize: 46, fontWeight: 900, color: "#ff5a36", marginTop: 18 }}>
-              $2,140
-            </div>
-
-            <div style={{ marginTop: 8, opacity: 0.78, lineHeight: 1.5 }}>
-              Potential profit you could be losing right now.
-            </div>
-
-            <div style={{ marginTop: 18, color: "#ff7b59", fontWeight: 800 }}>
-              ↑ 18% vs last 30 days
+            <div
+              style={{
+                marginTop: 18,
+                fontSize: 14,
+                opacity: 0.62,
+                textAlign: "center",
+                maxWidth: 260,
+                lineHeight: 1.6,
+              }}
+            >
+              Your current margin health score based on pricing leaks and low-profit products.
             </div>
           </div>
         </div>
