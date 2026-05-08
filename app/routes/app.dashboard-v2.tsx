@@ -275,19 +275,54 @@ export default function DashboardV2() {
       gap: 14,
     }}
   >
-    {[40, 58, 52, 74, 68, 92, 88, 110, 96, 120, 138, 152].map((h, i) => (
-      <div
-        key={i}
-        style={{
-          flex: 1,
-          height: `${h}px`,
-          borderRadius: 999,
-          background:
-            "linear-gradient(180deg,#ff7b59 0%, #ff5a36 100%)",
-          boxShadow: "0 8px 24px rgba(255,90,54,0.35)",
-        }}
-      />
-    ))}
+    <svg
+  viewBox="0 0 1000 260"
+  preserveAspectRatio="none"
+  style={{
+    width: "100%",
+    height: "100%",
+  }}
+>
+  <defs>
+    <linearGradient id="lineGradient" x1="0" x2="1">
+      <stop offset="0%" stopColor="#ff7b59" />
+      <stop offset="100%" stopColor="#ff5a36" />
+    </linearGradient>
+
+    <linearGradient id="fillGradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stopColor="rgba(255,123,89,0.35)" />
+      <stop offset="100%" stopColor="rgba(255,123,89,0)" />
+    </linearGradient>
+  </defs>
+
+  <path
+    d="
+      M 0 210
+      C 80 200, 120 180, 180 170
+      S 300 120, 380 140
+      S 500 80, 620 95
+      S 760 50, 1000 40
+      L 1000 260
+      L 0 260
+      Z
+    "
+    fill="url(#fillGradient)"
+  />
+
+  <path
+    d="
+      M 0 210
+      C 80 200, 120 180, 180 170
+      S 300 120, 380 140
+      S 500 80, 620 95
+      S 760 50, 1000 40
+    "
+    fill="none"
+    stroke="url(#lineGradient)"
+    strokeWidth="6"
+    strokeLinecap="round"
+  />
+</svg>
 
     <div
       style={{
