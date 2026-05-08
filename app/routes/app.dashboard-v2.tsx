@@ -322,6 +322,25 @@ export default function DashboardV2() {
     strokeWidth="6"
     strokeLinecap="round"
   />
+
+  <div
+  style={{
+    position: "absolute",
+    top: 22,
+    left: 24,
+    right: 24,
+    display: "flex",
+    justifyContent: "space-between",
+    fontSize: 12,
+    color: "rgba(255,255,255,0.38)",
+    zIndex: 2,
+  }}
+>
+  <span>Apr 1</span>
+  <span>Apr 15</span>
+  <span>Apr 30</span>
+</div>
+
 </svg>
 
     <div
