@@ -13,6 +13,13 @@ export default function DashboardV2() {
     ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
   ];
 
+  const products = [
+    ["Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
+    ["Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
+    ["Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
+    ["Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
+  ];
+
   return (
     <div
       style={{
@@ -407,7 +414,7 @@ export default function DashboardV2() {
                 gridTemplateColumns: "1fr 100px 120px",
                 gap: 16,
                 alignItems: "center",
-                padding: "16px 0",
+                padding: "18px 0",
                 borderTop: "1px solid rgba(255,255,255,0.07)",
               }}
             >
@@ -420,22 +427,30 @@ export default function DashboardV2() {
               >
                 <div
                   style={{
-                    width: 42,
-                    height: 42,
+                    width: 44,
+                    height: 44,
                     borderRadius: 14,
-                    background: "rgba(255,255,255,0.06)",
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     fontSize: 18,
                     border: "1px solid rgba(255,255,255,0.08)",
+                    boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
                   }}
                 >
                   {icon}
                 </div>
 
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 15 }}>
+                  <div
+                    style={{
+                      fontWeight: 800,
+                      fontSize: 15,
+                      letterSpacing: 0.1,
+                    }}
+                  >
                     {issue}
                   </div>
 
@@ -454,38 +469,206 @@ export default function DashboardV2() {
               <div
                 style={{
                   justifySelf: "start",
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color:
-                    severity === "High"
-                      ? "#ff6b4a"
-                      : severity === "Medium"
-                        ? "#f59e0b"
-                        : "#9ca3af",
-                  background:
-                    severity === "High"
-                      ? "rgba(255,90,54,0.14)"
-                      : severity === "Medium"
-                        ? "rgba(245,158,11,0.14)"
-                        : "rgba(156,163,175,0.12)",
                 }}
               >
-                {severity}
+                <div
+                  style={{
+                    padding: "7px 12px",
+                    borderRadius: 999,
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: 0.3,
+                    color:
+                      severity === "High"
+                        ? "#ff6b4a"
+                        : severity === "Medium"
+                          ? "#f59e0b"
+                          : "#9ca3af",
+                    background:
+                      severity === "High"
+                        ? "rgba(255,90,54,0.14)"
+                        : severity === "Medium"
+                          ? "rgba(245,158,11,0.14)"
+                          : "rgba(156,163,175,0.12)",
+                    border:
+                      severity === "High"
+                        ? "1px solid rgba(255,90,54,0.25)"
+                        : severity === "Medium"
+                          ? "1px solid rgba(245,158,11,0.22)"
+                          : "1px solid rgba(156,163,175,0.18)",
+                  }}
+                >
+                  {severity}
+                </div>
               </div>
 
               <div
                 style={{
                   justifySelf: "end",
-                  fontWeight: 900,
-                  color: "#f3f4f6",
                 }}
               >
-                {loss}
+                <div
+                  style={{
+                    fontWeight: 900,
+                    fontSize: 18,
+                    color:
+                      severity === "High"
+                        ? "#ff6b4a"
+                        : severity === "Medium"
+                          ? "#f3f4f6"
+                          : "#d1d5db",
+                  }}
+                >
+                  {loss}
+                </div>
+
+                <div
+                  style={{
+                    fontSize: 12,
+                    opacity: 0.45,
+                    marginTop: 4,
+                    textAlign: "right",
+                  }}
+                >
+                  estimated impact
+                </div>
               </div>
             </div>
           ))}
+        </div>
+
+        <div
+          style={{
+            background: "rgba(255,255,255,0.045)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 26,
+            padding: 26,
+            marginBottom: 24,
+            boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 22,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>
+                Product Risk Table
+              </div>
+
+              <div style={{ opacity: 0.62, marginTop: 6 }}>
+                Products ranked by margin risk and potential profit leaks.
+              </div>
+            </div>
+
+            <button
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#f3f4f6",
+                padding: "10px 14px",
+                borderRadius: 12,
+                fontWeight: 800,
+                cursor: "pointer",
+              }}
+            >
+              Export CSV
+            </button>
+          </div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "14px 12px",
+                        fontSize: 12,
+                        opacity: 0.55,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.8,
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {products.map(([product, revenue, cogs, profit, margin, risk]) => (
+                  <tr key={product}>
+                    <td
+                      style={{
+                        padding: "18px 12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {product}
+                    </td>
+
+                    {[revenue, cogs, profit, margin].map((value) => (
+                      <td
+                        key={value}
+                        style={{
+                          padding: "18px 12px",
+                          borderBottom: "1px solid rgba(255,255,255,0.06)",
+                          opacity: 0.86,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {value}
+                      </td>
+                    ))}
+
+                    <td
+                      style={{
+                        padding: "18px 12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 900,
+                          color:
+                            risk === "Critical"
+                              ? "#ef4444"
+                              : risk === "High"
+                                ? "#ff6b4a"
+                                : "#f59e0b",
+                          background:
+                            risk === "Critical"
+                              ? "rgba(239,68,68,0.16)"
+                              : risk === "High"
+                                ? "rgba(255,90,54,0.14)"
+                                : "rgba(245,158,11,0.14)",
+                        }}
+                      >
+                        {risk}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
