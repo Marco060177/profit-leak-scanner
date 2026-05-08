@@ -207,6 +207,18 @@ export default function DashboardV2() {
                 borderRadius: 22,
                 padding: 22,
                 boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+                transition: "all 0.22s ease",
+                cursor: "pointer",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-4px)";
+                e.currentTarget.style.boxShadow = "0 28px 70px rgba(0,0,0,0.28)";
+                e.currentTarget.style.border = "1px solid rgba(255,255,255,0.16)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0px)";
+                e.currentTarget.style.boxShadow = "0 18px 50px rgba(0,0,0,0.18)";
+                e.currentTarget.style.border = "1px solid rgba(255,255,255,0.09)";
               }}
             >
               <div
@@ -386,6 +398,7 @@ export default function DashboardV2() {
               <div style={{ fontSize: 22, fontWeight: 900 }}>
                 Top Profit Leaks Detected
               </div>
+
               <div style={{ opacity: 0.62, marginTop: 6 }}>
                 Prioritized issues that may be hurting your margins.
               </div>
@@ -466,11 +479,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  justifySelf: "start",
-                }}
-              >
+              <div style={{ justifySelf: "start" }}>
                 <div
                   style={{
                     padding: "7px 12px",
@@ -502,11 +511,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <div
-                style={{
-                  justifySelf: "end",
-                }}
-              >
+              <div style={{ justifySelf: "end" }}>
                 <div
                   style={{
                     fontWeight: 900,
@@ -610,7 +615,19 @@ export default function DashboardV2() {
 
               <tbody>
                 {products.map(([product, revenue, cogs, profit, margin, risk]) => (
-                  <tr key={product}>
+                  <tr
+                    key={product}
+                    style={{
+                      transition: "all 0.18s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.035)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
                     <td
                       style={{
                         padding: "18px 12px",
