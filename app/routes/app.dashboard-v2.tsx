@@ -24,13 +24,18 @@ export default function DashboardV2() {
     <div
       style={{
         minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top left, rgba(255,80,40,0.18), transparent 30%), radial-gradient(circle at bottom right, rgba(255,90,54,0.12), transparent 24%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
+        background: `
+          radial-gradient(circle at top left, rgba(255,80,40,0.16), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(255,90,54,0.10), transparent 24%),
+          linear-gradient(180deg, #071019 0%, #0b111b 100%)
+        `,
         backgroundSize: "120% 120%",
         animation: "gradientMove 18s ease infinite",
         padding: 32,
         color: "#f3f4f6",
         fontFamily: "Inter, system-ui, sans-serif",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <style>
@@ -51,7 +56,59 @@ export default function DashboardV2() {
         `}
       </style>
 
-      <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+      <svg
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          opacity: 0.16,
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+        viewBox="0 0 1600 1200"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0 120 C300 220 500 20 800 120 S1300 220 1600 80"
+          stroke="#ff5a36"
+          strokeWidth="1.2"
+          fill="none"
+        />
+        <path
+          d="M0 260 C300 360 500 160 800 260 S1300 360 1600 220"
+          stroke="#ff5a36"
+          strokeWidth="1"
+          fill="none"
+        />
+        <path
+          d="M0 420 C300 520 500 320 800 420 S1300 520 1600 380"
+          stroke="#ff5a36"
+          strokeWidth="1"
+          fill="none"
+        />
+        <path
+          d="M0 620 C300 720 500 520 800 620 S1300 720 1600 580"
+          stroke="#ff5a36"
+          strokeWidth="1"
+          fill="none"
+        />
+        <path
+          d="M0 860 C300 960 500 760 800 860 S1300 960 1600 820"
+          stroke="#ff5a36"
+          strokeWidth="1"
+          fill="none"
+        />
+      </svg>
+
+      <div
+        style={{
+          maxWidth: 1400,
+          margin: "0 auto",
+          position: "relative",
+          zIndex: 2,
+        }}
+      >
         <div
           style={{
             display: "flex",
