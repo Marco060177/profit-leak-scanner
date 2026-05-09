@@ -526,12 +526,20 @@ export default function DashboardV2() {
             }}
           >
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>Profit Trend</div>
+  <div
+    style={{
+      fontSize: 24,
+      fontWeight: 850,
+      letterSpacing: -0.4,
+    }}
+  >
+    Profit Trend
+  </div>
 
-              <div style={{ opacity: 0.62, marginTop: 6 }}>
-                Revenue and profit performance over time.
-              </div>
-            </div>
+  <div style={{ opacity: 0.62, marginTop: 6 }}>
+    Revenue and profit performance over time.
+  </div>
+</div>
 
             <div style={{ color: "#22c55e", fontWeight: 800, fontSize: 15 }}>
               ↑ 12.4% this month
@@ -648,13 +656,20 @@ export default function DashboardV2() {
             }}
           >
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Top Profit Leaks Detected
-              </div>
-              <div style={{ opacity: 0.62, marginTop: 6 }}>
-                Prioritized issues that may be hurting your margins.
-              </div>
-            </div>
+  <div
+    style={{
+      fontSize: 24,
+      fontWeight: 850,
+      letterSpacing: -0.4,
+    }}
+  >
+    Top Profit Leaks Detected
+  </div>
+
+  <div style={{ opacity: 0.62, marginTop: 6 }}>
+    Prioritized issues that may be hurting your margins.
+  </div>
+</div>
 
             <button
               style={{
@@ -813,9 +828,15 @@ export default function DashboardV2() {
             }}
           >
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Product Risk Table
-              </div>
+              <div
+  style={{
+    fontSize: 24,
+    fontWeight: 850,
+    letterSpacing: -0.4,
+  }}
+>
+  Product Risk Table
+</div>
 
               <div style={{ opacity: 0.62, marginTop: 6 }}>
                 Products ranked by margin risk and potential profit leaks.
