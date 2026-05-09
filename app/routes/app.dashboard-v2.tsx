@@ -678,19 +678,140 @@ export default function DashboardV2() {
           }}
         >
           <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 22,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>Product Risk Table</div>
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 22,
+  }}
+>
+  <div>
+    <div style={{ fontSize: 22, fontWeight: 900 }}>
+      Product Risk Table
+    </div>
 
-              <div style={{ opacity: 0.62, marginTop: 6 }}>
-                Products ranked by margin risk and potential profit leaks.
-                <div
+    <div style={{ opacity: 0.62, marginTop: 6 }}>
+      Products ranked by margin risk and potential profit leaks.
+    </div>
+  </div>
+
+  <button
+    style={{
+      background: "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(255,255,255,0.1)",
+      color: "#f3f4f6",
+      padding: "10px 14px",
+      borderRadius: 12,
+      fontWeight: 800,
+      cursor: "pointer",
+    }}
+  >
+    Export CSV
+  </button>
+</div>
+
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+              }}
+            >
+              <thead>
+                <tr>
+                  {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk"].map((h) => (
+                    <th
+                      key={h}
+                      style={{
+                        textAlign: "left",
+                        padding: "14px 12px",
+                        fontSize: 12,
+                        opacity: 0.55,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.8,
+                        borderBottom: "1px solid rgba(255,255,255,0.08)",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {products.map(([product, revenue, cogs, profit, margin, risk]) => (
+                  <tr
+                    key={product}
+                    style={{
+                      transition: "all 0.18s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.035)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                    }}
+                  >
+                    <td
+                      style={{
+                        padding: "18px 12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {product}
+                    </td>
+
+                    {[revenue, cogs, profit, margin].map((value) => (
+                      <td
+                        key={value}
+                        style={{
+                          padding: "18px 12px",
+                          borderBottom: "1px solid rgba(255,255,255,0.06)",
+                          opacity: 0.86,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {value}
+                      </td>
+                    ))}
+
+                    <td
+                      style={{
+                        padding: "18px 12px",
+                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 900,
+                          color:
+                            risk === "Critical"
+                              ? "#ef4444"
+                              : risk === "High"
+                                ? "#ff6b4a"
+                                : "#f59e0b",
+                          background:
+                            risk === "Critical"
+                              ? "rgba(239,68,68,0.16)"
+                              : risk === "High"
+                                ? "rgba(255,90,54,0.14)"
+                                : "rgba(245,158,11,0.14)",
+                        }}
+                      >
+                        {risk}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div
   style={{
     background:
       "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(255,255,255,0.03))",
@@ -848,125 +969,6 @@ export default function DashboardV2() {
     ))}
   </div>
 </div>
-              </div>
-            </div>
-
-            <button
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#f3f4f6",
-                padding: "10px 14px",
-                borderRadius: 12,
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Export CSV
-            </button>
-          </div>
-
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr>
-                  {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk"].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        textAlign: "left",
-                        padding: "14px 12px",
-                        fontSize: 12,
-                        opacity: 0.55,
-                        textTransform: "uppercase",
-                        letterSpacing: 0.8,
-                        borderBottom: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {products.map(([product, revenue, cogs, profit, margin, risk]) => (
-                  <tr
-                    key={product}
-                    style={{
-                      transition: "all 0.18s ease",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.035)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: "18px 12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
-                        fontWeight: 800,
-                      }}
-                    >
-                      {product}
-                    </td>
-
-                    {[revenue, cogs, profit, margin].map((value) => (
-                      <td
-                        key={value}
-                        style={{
-                          padding: "18px 12px",
-                          borderBottom: "1px solid rgba(255,255,255,0.06)",
-                          opacity: 0.86,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {value}
-                      </td>
-                    ))}
-
-                    <td
-                      style={{
-                        padding: "18px 12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: "7px 11px",
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 900,
-                          color:
-                            risk === "Critical"
-                              ? "#ef4444"
-                              : risk === "High"
-                                ? "#ff6b4a"
-                                : "#f59e0b",
-                          background:
-                            risk === "Critical"
-                              ? "rgba(239,68,68,0.16)"
-                              : risk === "High"
-                                ? "rgba(255,90,54,0.14)"
-                                : "rgba(245,158,11,0.14)",
-                        }}
-                      >
-                        {risk}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>
