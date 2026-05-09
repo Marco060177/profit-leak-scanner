@@ -25,12 +25,30 @@ export default function DashboardV2() {
       style={{
         minHeight: "100vh",
         background:
-          "radial-gradient(circle at top left, rgba(255,80,40,0.18), transparent 30%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
-        padding: 32,
+         "radial-gradient(circle at top left, rgba(255,80,40,0.18), transparent 30%), radial-gradient(circle at bottom right, rgba(255,90,54,0.12), transparent 24%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
+        backgroundSize: "120% 120%",
+        animation: "gradientMove 18s ease infinite",
+         padding: 32,
         color: "#f3f4f6",
         fontFamily: "Inter, system-ui, sans-serif",
       }}
-    >
+    ><style>
+  {`
+    @keyframes gradientMove {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+  `}
+</style>
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         <div
           style={{
