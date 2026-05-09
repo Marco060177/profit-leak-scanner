@@ -25,30 +25,32 @@ export default function DashboardV2() {
       style={{
         minHeight: "100vh",
         background:
-         "radial-gradient(circle at top left, rgba(255,80,40,0.18), transparent 30%), radial-gradient(circle at bottom right, rgba(255,90,54,0.12), transparent 24%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
+          "radial-gradient(circle at top left, rgba(255,80,40,0.18), transparent 30%), radial-gradient(circle at bottom right, rgba(255,90,54,0.12), transparent 24%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
         backgroundSize: "120% 120%",
         animation: "gradientMove 18s ease infinite",
-         padding: 32,
+        padding: 32,
         color: "#f3f4f6",
         fontFamily: "Inter, system-ui, sans-serif",
       }}
-    ><style>
-  {`
-    @keyframes gradientMove {
-      0% {
-        background-position: 0% 50%;
-      }
+    >
+      <style>
+        {`
+          @keyframes gradientMove {
+            0% {
+              background-position: 0% 50%;
+            }
 
-      50% {
-        background-position: 100% 50%;
-      }
+            50% {
+              background-position: 100% 50%;
+            }
 
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-  `}
-</style>
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+        `}
+      </style>
+
       <div style={{ maxWidth: 1400, margin: "0 auto" }}>
         <div
           style={{
@@ -67,56 +69,43 @@ export default function DashboardV2() {
           </div>
 
           <div
-  style={{
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-  }}
->
-            {[
-  "Overview",
-  "Leaks",
-  "Products",
-  "Recommendations",
-  "Billing",
-].map((item) => (
-  <div
-    key={item}
-    style={{
-      padding: "10px 14px",
-      borderRadius: 12,
-      fontWeight: 800,
-      fontSize: 14,
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-      background:
-        item === "Overview"
-          ? "rgba(255,255,255,0.08)"
-          : "transparent",
-      border:
-        item === "Overview"
-          ? "1px solid rgba(255,255,255,0.08)"
-          : "1px solid transparent",
-      color:
-        item === "Overview"
-          ? "#ffffff"
-          : "rgba(255,255,255,0.72)",
-    }}
-    onMouseEnter={(e) => {
-      if (item !== "Overview") {
-        e.currentTarget.style.background =
-          "rgba(255,255,255,0.05)";
-      }
-    }}
-    onMouseLeave={(e) => {
-      if (item !== "Overview") {
-        e.currentTarget.style.background = "transparent";
-      }
-    }}
-  >
-    {item}
-  </div>
-))}
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+            }}
+          >
+            {["Overview", "Leaks", "Products", "Recommendations", "Billing"].map((item) => (
+              <div
+                key={item}
+                style={{
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  fontWeight: 800,
+                  fontSize: 14,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  background: item === "Overview" ? "rgba(255,255,255,0.08)" : "transparent",
+                  border:
+                    item === "Overview"
+                      ? "1px solid rgba(255,255,255,0.08)"
+                      : "1px solid transparent",
+                  color: item === "Overview" ? "#ffffff" : "rgba(255,255,255,0.72)",
+                }}
+                onMouseEnter={(e) => {
+                  if (item !== "Overview") {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (item !== "Overview") {
+                    e.currentTarget.style.background = "transparent";
+                  }
+                }}
+              >
+                {item}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -138,40 +127,41 @@ export default function DashboardV2() {
                 opacity: 0.7,
                 textTransform: "uppercase",
               }}
-            > <div
-  style={{
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 10,
-    padding: "8px 14px",
-    borderRadius: 999,
-    background: "rgba(255,90,54,0.12)",
-    border: "1px solid rgba(255,90,54,0.16)",
-    marginBottom: 18,
-  }}
->
-  <div
-    style={{
-      width: 8,
-      height: 8,
-      borderRadius: "50%",
-      background: "#ff5a36",
-      boxShadow: "0 0 10px rgba(255,90,54,0.8)",
-    }}
-  />
+            >
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  background: "rgba(255,90,54,0.12)",
+                  border: "1px solid rgba(255,90,54,0.16)",
+                  marginBottom: 18,
+                }}
+              >
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: "#ff5a36",
+                    boxShadow: "0 0 10px rgba(255,90,54,0.8)",
+                  }}
+                />
 
-  <div
-    style={{
-      fontSize: 13,
-      fontWeight: 800,
-      color: "#ff7b59",
-      letterSpacing: 0.3,
-    }}
-  >
-    3 critical pricing issues detected
-  </div>
-</div>
-              Profit Leak Scanner
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "#ff7b59",
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  3 critical pricing issues detected
+                </div>
+              </div>
+              <div>Profit Leak Scanner</div>
             </div>
 
             <div
@@ -200,54 +190,79 @@ export default function DashboardV2() {
           </div>
 
           <button
-  style={{
-    background:
-      "linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    color: "white",
-    fontWeight: 900,
-    padding: "15px 22px",
-    borderRadius: 16,
-    cursor: "pointer",
-    fontSize: 15,
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    boxShadow: "0 14px 34px rgba(255,90,54,0.28)",
-    transition: "all 0.2s ease",
-  }}
-  onMouseEnter={(e) => {
-    e.currentTarget.style.transform = "translateY(-2px)";
-    e.currentTarget.style.boxShadow =
-      "0 20px 44px rgba(255,90,54,0.34)";
-  }}
-  onMouseLeave={(e) => {
-    e.currentTarget.style.transform = "translateY(0px)";
-    e.currentTarget.style.boxShadow =
-      "0 14px 34px rgba(255,90,54,0.28)";
-  }}
->
-  <span style={{ fontSize: 16 }}>✦</span>
-
-  <span>Run analysis</span>
-</button>
+            style={{
+              background: "linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "white",
+              fontWeight: 900,
+              padding: "15px 22px",
+              borderRadius: 16,
+              cursor: "pointer",
+              fontSize: 15,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              boxShadow: "0 14px 34px rgba(255,90,54,0.28)",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 20px 44px rgba(255,90,54,0.34)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0px)";
+              e.currentTarget.style.boxShadow = "0 14px 34px rgba(255,90,54,0.28)";
+            }}
+          >
+            <span style={{ fontSize: 16 }}>✦</span>
+            <span>Run analysis</span>
+          </button>
         </div>
 
         <div
           style={{
-            background:
-              "linear-gradient(135deg, rgba(255,90,54,0.16), rgba(15,23,42,0.95))",
+            background: "linear-gradient(135deg, rgba(255,90,54,0.16), rgba(15,23,42,0.92))",
             border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: 28,
             padding: 32,
             boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+            position: "relative",
+            overflow: "hidden",
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
             gap: 28,
             marginBottom: 24,
           }}
         >
-          <div>
+          <div
+            style={{
+              position: "absolute",
+              top: -180,
+              right: -120,
+              width: 420,
+              height: 420,
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.05)",
+              filter: "blur(70px)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: -120,
+              left: -120,
+              width: 320,
+              height: 320,
+              borderRadius: "50%",
+              background: "rgba(255,90,54,0.08)",
+              filter: "blur(60px)",
+              pointerEvents: "none",
+            }}
+          />
+
+          <div style={{ position: "relative", zIndex: 2 }}>
             <div style={{ opacity: 0.7, fontSize: 14, fontWeight: 700 }}>
               PROFIT LEAK SCORE
             </div>
@@ -329,6 +344,7 @@ export default function DashboardV2() {
               justifyContent: "center",
               position: "relative",
               overflow: "hidden",
+              zIndex: 2,
             }}
           >
             <div
@@ -1087,13 +1103,11 @@ export default function DashboardV2() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.border =
-                    "1px solid rgba(255,255,255,0.14)";
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.14)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0px)";
-                  e.currentTarget.style.border =
-                    "1px solid rgba(255,255,255,0.08)";
+                  e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)";
                 }}
               >
                 <div
