@@ -14,10 +14,10 @@ export default function DashboardV2() {
   ];
 
   const products = [
-    ["Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
-    ["Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
-    ["Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
-    ["Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
+    ["🧥", "Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
+    ["🧤", "Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
+    ["🎒", "Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
+    ["🥾", "Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
   ];
 
   return (
@@ -678,37 +678,37 @@ export default function DashboardV2() {
           }}
         >
           <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 22,
-  }}
->
-  <div>
-    <div style={{ fontSize: 22, fontWeight: 900 }}>
-      Product Risk Table
-    </div>
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 22,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>
+                Product Risk Table
+              </div>
 
-    <div style={{ opacity: 0.62, marginTop: 6 }}>
-      Products ranked by margin risk and potential profit leaks.
-    </div>
-  </div>
+              <div style={{ opacity: 0.62, marginTop: 6 }}>
+                Products ranked by margin risk and potential profit leaks.
+              </div>
+            </div>
 
-  <button
-    style={{
-      background: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.1)",
-      color: "#f3f4f6",
-      padding: "10px 14px",
-      borderRadius: 12,
-      fontWeight: 800,
-      cursor: "pointer",
-    }}
-  >
-    Export CSV
-  </button>
-</div>
+            <button
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#f3f4f6",
+                padding: "10px 14px",
+                borderRadius: 12,
+                fontWeight: 800,
+                cursor: "pointer",
+              }}
+            >
+              Export CSV
+            </button>
+          </div>
 
           <div style={{ overflowX: "auto" }}>
             <table
@@ -739,7 +739,7 @@ export default function DashboardV2() {
               </thead>
 
               <tbody>
-                {products.map(([product, revenue, cogs, profit, margin, risk]) => (
+                {products.map(([icon, product, revenue, cogs, profit, margin, risk]) => (
                   <tr
                     key={product}
                     style={{
@@ -757,10 +757,54 @@ export default function DashboardV2() {
                       style={{
                         padding: "18px 12px",
                         borderBottom: "1px solid rgba(255,255,255,0.06)",
-                        fontWeight: 800,
                       }}
                     >
-                      {product}
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 14,
+                            background:
+                              "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 18,
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
+                          }}
+                        >
+                          {icon}
+                        </div>
+
+                        <div>
+                          <div
+                            style={{
+                              fontWeight: 800,
+                              fontSize: 15,
+                            }}
+                          >
+                            {product}
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop: 4,
+                              fontSize: 12,
+                              opacity: 0.48,
+                            }}
+                          >
+                            Shopify product
+                          </div>
+                        </div>
+                      </div>
                     </td>
 
                     {[revenue, cogs, profit, margin].map((value) => (
@@ -784,27 +828,27 @@ export default function DashboardV2() {
                       }}
                     >
                       <span
-  style={{
-    padding: "7px 11px",
-    borderRadius: 999,
-    fontSize: 13,
-    fontWeight: 900,
-    color:
-      risk === "Critical"
-        ? "#ef4444"
-        : risk === "High"
-          ? "#ff6b4a"
-          : "#f59e0b",
-    background:
-      risk === "Critical"
-        ? "rgba(239,68,68,0.16)"
-        : risk === "High"
-          ? "rgba(255,90,54,0.14)"
-          : "rgba(245,158,11,0.14)",
-  }}
->
-  {risk}
-</span>
+                        style={{
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          fontSize: 13,
+                          fontWeight: 900,
+                          color:
+                            risk === "Critical"
+                              ? "#ef4444"
+                              : risk === "High"
+                                ? "#ff6b4a"
+                                : "#f59e0b",
+                          background:
+                            risk === "Critical"
+                              ? "rgba(239,68,68,0.16)"
+                              : risk === "High"
+                                ? "rgba(255,90,54,0.14)"
+                                : "rgba(245,158,11,0.14)",
+                        }}
+                      >
+                        {risk}
+                      </span>
                     </td>
                   </tr>
                 ))}
