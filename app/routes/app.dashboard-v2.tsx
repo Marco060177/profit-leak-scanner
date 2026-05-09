@@ -182,21 +182,37 @@ export default function DashboardV2() {
           </div>
 
           <button
-            style={{
-              background: "linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%)",
-              border: "none",
-              color: "white",
-              fontWeight: 800,
-              padding: "14px 22px",
-              borderRadius: 14,
-              cursor: "pointer",
-              fontSize: 15,
-              boxShadow: "0 10px 25px rgba(255,90,54,0.25)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Scan store
-          </button>
+  style={{
+    background:
+      "linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    color: "white",
+    fontWeight: 900,
+    padding: "15px 22px",
+    borderRadius: 16,
+    cursor: "pointer",
+    fontSize: 15,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    boxShadow: "0 14px 34px rgba(255,90,54,0.28)",
+    transition: "all 0.2s ease",
+  }}
+  onMouseEnter={(e) => {
+    e.currentTarget.style.transform = "translateY(-2px)";
+    e.currentTarget.style.boxShadow =
+      "0 20px 44px rgba(255,90,54,0.34)";
+  }}
+  onMouseLeave={(e) => {
+    e.currentTarget.style.transform = "translateY(0px)";
+    e.currentTarget.style.boxShadow =
+      "0 14px 34px rgba(255,90,54,0.28)";
+  }}
+>
+  <span style={{ fontSize: 16 }}>✦</span>
+
+  <span>Run analysis</span>
+</button>
         </div>
 
         <div
