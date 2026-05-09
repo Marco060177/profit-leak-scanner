@@ -14,51 +14,97 @@ export default function DashboardV2() {
     ],
 
     leaks: [
-      ["⚠️", "Products below target margin", "High", "-$780/mo"],
-      ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
-      ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
-      ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
+      {
+        icon: "⚠️",
+        issue: "Products below target margin",
+        severity: "High",
+        loss: "-$780/mo",
+      },
+
+      {
+        icon: "🏷️",
+        issue: "Discounts eating your margins",
+        severity: "Medium",
+        loss: "-$430/mo",
+      },
+
+      {
+        icon: "📦",
+        issue: "Costs not updated recently",
+        severity: "Medium",
+        loss: "-$320/mo",
+      },
+
+      {
+        icon: "🔥",
+        issue: "Low-margin best sellers",
+        severity: "Low",
+        loss: "-$180/mo",
+      },
     ],
 
     recommendations: [
-      [
-        "Increase Arctic Hoodie price by 8%",
-        "+$420/mo potential recovery",
-        "High confidence",
-      ],
-      [
-        "Review discount strategy on Thermal Gloves",
-        "+$180/mo margin improvement",
-        "Medium confidence",
-      ],
-      [
-        "Update outdated product costs",
-        "9 products affected",
-        "Critical issue",
-      ],
+      {
+        title: "Increase Arctic Hoodie price by 8%",
+        impact: "+$420/mo potential recovery",
+        confidence: "High confidence",
+      },
+
+      {
+        title: "Review discount strategy on Thermal Gloves",
+        impact: "+$180/mo margin improvement",
+        confidence: "Medium confidence",
+      },
+
+      {
+        title: "Update outdated product costs",
+        impact: "9 products affected",
+        confidence: "Critical issue",
+      },
     ],
 
     products: [
-      ["🧥", "Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
-      ["🧤", "Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
-      ["🎒", "Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
-      ["🥾", "Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
+      {
+        icon: "🧥",
+        name: "Arctic Hoodie",
+        revenue: "$8,420",
+        cogs: "$5,980",
+        profit: "$420",
+        margin: "5.0%",
+        risk: "High",
+      },
+
+      {
+        icon: "🧤",
+        name: "Thermal Gloves",
+        revenue: "$3,120",
+        cogs: "$2,740",
+        profit: "-$180",
+        margin: "-5.8%",
+        risk: "Critical",
+      },
+
+      {
+        icon: "🎒",
+        name: "Winter Backpack",
+        revenue: "$6,890",
+        cogs: "$4,110",
+        profit: "$960",
+        margin: "13.9%",
+        risk: "Medium",
+      },
+
+      {
+        icon: "🥾",
+        name: "Snow Boots",
+        revenue: "$12,300",
+        cogs: "$8,940",
+        profit: "$1,120",
+        margin: "9.1%",
+        risk: "High",
+      },
     ],
   };
-
-  const leaks = [
-    ["⚠️", "Products below target margin", "High", "-$780/mo"],
-    ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
-    ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
-    ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
-  ];
-
-  const products = [
-    ["🧥", "Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
-    ["🧤", "Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
-    ["🎒", "Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
-    ["🥾", "Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
-  ];
 
   return (
     <div
@@ -320,7 +366,8 @@ export default function DashboardV2() {
             </div>
 
             <div style={{ fontSize: 72, fontWeight: 900, marginTop: 16 }}>
-              32<span style={{ fontSize: 28, opacity: 0.55 }}>/100</span>
+              {dashboardData.summary.score}
+              <span style={{ fontSize: 28, opacity: 0.55 }}>/100</span>
             </div>
 
             <div style={{ color: "#ff6b4a", fontWeight: 800, fontSize: 20, marginTop: 4 }}>
@@ -351,7 +398,7 @@ export default function DashboardV2() {
               }}
             >
               {[
-                ["Estimated loss", "$2,140/mo", "#ff5a36"],
+                ["Estimated loss", `${dashboardData.summary.monthlyLoss}/mo`, "#ff5a36"],
                 ["Products at risk", "24 detected", "#f59e0b"],
                 ["Margin trend", "+12.4%", "#22c55e"],
               ].map(([label, value, color]) => (
@@ -462,7 +509,7 @@ export default function DashboardV2() {
                     lineHeight: 1,
                   }}
                 >
-                  32
+                  {dashboardData.summary.score}
                 </div>
 
                 <div
@@ -738,7 +785,7 @@ export default function DashboardV2() {
             </button>
           </div>
 
-          {dashboardData.leaks.map(([icon, issue, severity, loss]) => (
+          {dashboardData.leaks.map(({ icon, issue, severity, loss }) => (
             <div
               key={issue}
               style={{
@@ -939,124 +986,126 @@ export default function DashboardV2() {
               </thead>
 
               <tbody>
-                {dashboardData.products.map(([icon, product, revenue, cogs, profit, margin, risk]) => (
-                  <tr
-                    key={product}
-                    style={{
-                      transition: "all 0.18s ease",
-                      cursor: "pointer",
-                      transform: "scale(1)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background =
-                        "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))";
-
-                      e.currentTarget.style.transform = "scale(1.003)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                      e.currentTarget.style.transform = "scale(1)";
-                    }}
-                  >
-                    <td
+                {dashboardData.products.map(
+                  ({ icon, name, revenue, cogs, profit, margin, risk }) => (
+                    <tr
+                      key={name}
                       style={{
-                        padding: "18px 12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        transition: "all 0.18s ease",
+                        cursor: "pointer",
+                        transform: "scale(1)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background =
+                          "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))";
+
+                        e.currentTarget.style.transform = "scale(1.003)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.transform = "scale(1)";
                       }}
                     >
-                      <div
+                      <td
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
+                          padding: "18px 12px",
+                          borderBottom: "1px solid rgba(255,255,255,0.06)",
                         }}
                       >
                         <div
                           style={{
-                            width: 42,
-                            height: 42,
-                            borderRadius: 14,
-                            background:
-                              "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 18,
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
+                            gap: 14,
                           }}
                         >
-                          {icon}
-                        </div>
-
-                        <div>
                           <div
                             style={{
-                              fontWeight: 800,
-                              fontSize: 15,
+                              width: 42,
+                              height: 42,
+                              borderRadius: 14,
+                              background:
+                                "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 18,
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
                             }}
                           >
-                            {product}
+                            {icon}
                           </div>
 
-                          <div
-                            style={{
-                              marginTop: 4,
-                              fontSize: 12,
-                              opacity: 0.48,
-                            }}
-                          >
-                            Shopify product
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 800,
+                                fontSize: 15,
+                              }}
+                            >
+                              {name}
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop: 4,
+                                fontSize: 12,
+                                opacity: 0.48,
+                              }}
+                            >
+                              Shopify product
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    {[revenue, cogs, profit, margin].map((value) => (
+                      {[revenue, cogs, profit, margin].map((value) => (
+                        <td
+                          key={value}
+                          style={{
+                            padding: "18px 12px",
+                            borderBottom: "1px solid rgba(255,255,255,0.06)",
+                            opacity: 0.86,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {value}
+                        </td>
+                      ))}
+
                       <td
-                        key={value}
                         style={{
                           padding: "18px 12px",
                           borderBottom: "1px solid rgba(255,255,255,0.06)",
-                          opacity: 0.86,
-                          fontWeight: 700,
                         }}
                       >
-                        {value}
+                        <span
+                          style={{
+                            padding: "7px 11px",
+                            borderRadius: 999,
+                            fontSize: 13,
+                            fontWeight: 900,
+                            color:
+                              risk === "Critical"
+                                ? "#ef4444"
+                                : risk === "High"
+                                  ? "#ff6b4a"
+                                  : "#f59e0b",
+                            background:
+                              risk === "Critical"
+                                ? "rgba(239,68,68,0.16)"
+                                : risk === "High"
+                                  ? "rgba(255,90,54,0.14)"
+                                  : "rgba(245,158,11,0.14)",
+                          }}
+                        >
+                          {risk}
+                        </span>
                       </td>
-                    ))}
-
-                    <td
-                      style={{
-                        padding: "18px 12px",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
-                      }}
-                    >
-                      <span
-                        style={{
-                          padding: "7px 11px",
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 900,
-                          color:
-                            risk === "Critical"
-                              ? "#ef4444"
-                              : risk === "High"
-                                ? "#ff6b4a"
-                                : "#f59e0b",
-                          background:
-                            risk === "Critical"
-                              ? "rgba(239,68,68,0.16)"
-                              : risk === "High"
-                                ? "rgba(255,90,54,0.14)"
-                                : "rgba(245,158,11,0.14)",
-                        }}
-                      >
-                        {risk}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>
@@ -1147,7 +1196,7 @@ export default function DashboardV2() {
               zIndex: 2,
             }}
           >
-            {dashboardData.recommendations.map(([title, impact, confidence]) => (
+            {dashboardData.recommendations.map(({ title, impact, confidence }) => (
               <div
                 key={title}
                 style={{
