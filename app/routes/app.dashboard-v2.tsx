@@ -59,6 +59,75 @@ export default function DashboardV2() {
 
         <div
           style={{
+            background:
+              "linear-gradient(90deg, rgba(255,90,54,0.16), rgba(255,90,54,0.06))",
+            border: "1px solid rgba(255,90,54,0.18)",
+            borderRadius: 18,
+            padding: "14px 18px",
+            marginBottom: 26,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}
+          >
+            <div
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                background: "#ff5a36",
+                boxShadow: "0 0 12px rgba(255,90,54,0.8)",
+              }}
+            />
+
+            <div>
+              <div
+                style={{
+                  fontWeight: 900,
+                  fontSize: 15,
+                }}
+              >
+                3 critical pricing issues detected
+              </div>
+
+              <div
+                style={{
+                  marginTop: 4,
+                  opacity: 0.62,
+                  fontSize: 13,
+                }}
+              >
+                Estimated monthly loss increased by 18% over the last 30 days.
+              </div>
+            </div>
+          </div>
+
+          <button
+            style={{
+              background: "#ff5a36",
+              border: "none",
+              color: "white",
+              padding: "10px 14px",
+              borderRadius: 12,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 10px 24px rgba(255,90,54,0.25)",
+            }}
+          >
+            Review issues
+          </button>
+        </div>
+
+        <div
+          style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-start",
