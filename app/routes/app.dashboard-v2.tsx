@@ -48,12 +48,57 @@ export default function DashboardV2() {
             MARGIN<span style={{ color: "#ff5a36" }}>LAB</span>
           </div>
 
-          <div style={{ display: "flex", gap: 18, opacity: 0.78, fontWeight: 700 }}>
-            <span>Overview</span>
-            <span>Leaks</span>
-            <span>Products</span>
-            <span>Recommendations</span>
-            <span>Billing</span>
+          <div
+  style={{
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+  }}
+>
+            {[
+  "Overview",
+  "Leaks",
+  "Products",
+  "Recommendations",
+  "Billing",
+].map((item) => (
+  <div
+    key={item}
+    style={{
+      padding: "10px 14px",
+      borderRadius: 12,
+      fontWeight: 800,
+      fontSize: 14,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+      background:
+        item === "Overview"
+          ? "rgba(255,255,255,0.08)"
+          : "transparent",
+      border:
+        item === "Overview"
+          ? "1px solid rgba(255,255,255,0.08)"
+          : "1px solid transparent",
+      color:
+        item === "Overview"
+          ? "#ffffff"
+          : "rgba(255,255,255,0.72)",
+    }}
+    onMouseEnter={(e) => {
+      if (item !== "Overview") {
+        e.currentTarget.style.background =
+          "rgba(255,255,255,0.05)";
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (item !== "Overview") {
+        e.currentTarget.style.background = "transparent";
+      }
+    }}
+  >
+    {item}
+  </div>
+))}
           </div>
         </div>
 
