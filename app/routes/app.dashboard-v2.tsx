@@ -1132,15 +1132,64 @@ export default function DashboardV2() {
                 </div>
 
                 <div
-                  style={{
-                    marginTop: 10,
-                    opacity: 0.55,
-                    fontSize: 13,
-                    fontWeight: 700,
-                  }}
-                >
-                  {confidence}
-                </div>
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 18,
+    paddingTop: 16,
+    borderTop: "1px solid rgba(255,255,255,0.08)",
+  }}
+>
+  <div>
+    <div
+      style={{
+        fontSize: 11,
+        opacity: 0.45,
+        textTransform: "uppercase",
+        letterSpacing: 0.8,
+        fontWeight: 800,
+      }}
+    >
+      Confidence
+    </div>
+
+    <div
+      style={{
+        marginTop: 6,
+        fontSize: 13,
+        fontWeight: 800,
+        color: "#f3f4f6",
+      }}
+    >
+      {confidence}
+    </div>
+  </div>
+
+  <button
+    style={{
+      background: "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      color: "#ffffff",
+      padding: "10px 14px",
+      borderRadius: 12,
+      fontWeight: 800,
+      fontSize: 13,
+      cursor: "pointer",
+      transition: "all 0.2s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.background =
+        "rgba(255,255,255,0.1)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background =
+        "rgba(255,255,255,0.06)";
+    }}
+  >
+    Apply suggestion
+  </button>
+</div>
               </div>
             ))}
           </div>
