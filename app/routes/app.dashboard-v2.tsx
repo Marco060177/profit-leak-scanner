@@ -784,191 +784,192 @@ export default function DashboardV2() {
                       }}
                     >
                       <span
-                        style={{
-                          padding: "7px 11px",
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 900,
-                          color:
-                            risk === "Critical"
-                              ? "#ef4444"
-                              : risk === "High"
-                                ? "#ff6b4a"
-                                : "#f59e0b",
-                          background:
-                            risk === "Critical"
-                              ? "rgba(239,68,68,0.16)"
-                              : risk === "High"
-                                ? "rgba(255,90,54,0.14)"
-                                : "rgba(245,158,11,0.14)",
-                        }}
-                      >
-                        {risk}
-                      </span>
+  style={{
+    padding: "7px 11px",
+    borderRadius: 999,
+    fontSize: 13,
+    fontWeight: 900,
+    color:
+      risk === "Critical"
+        ? "#ef4444"
+        : risk === "High"
+          ? "#ff6b4a"
+          : "#f59e0b",
+    background:
+      risk === "Critical"
+        ? "rgba(239,68,68,0.16)"
+        : risk === "High"
+          ? "rgba(255,90,54,0.14)"
+          : "rgba(245,158,11,0.14)",
+  }}
+>
+  {risk}
+</span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(255,255,255,0.03))",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: 26,
+            padding: 28,
+            marginBottom: 24,
+            boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
           <div
-  style={{
-    background:
-      "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(255,255,255,0.03))",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 26,
-    padding: 28,
-    marginBottom: 24,
-    boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
-    position: "relative",
-    overflow: "hidden",
-  }}
->
-  <div
-    style={{
-      position: "absolute",
-      top: -120,
-      right: -120,
-      width: 260,
-      height: 260,
-      borderRadius: "50%",
-      background: "rgba(34,197,94,0.08)",
-      filter: "blur(40px)",
-    }}
-  />
+            style={{
+              position: "absolute",
+              top: -120,
+              right: -120,
+              width: 260,
+              height: 260,
+              borderRadius: "50%",
+              background: "rgba(34,197,94,0.08)",
+              filter: "blur(40px)",
+            }}
+          />
 
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 26,
-      position: "relative",
-      zIndex: 2,
-    }}
-  >
-    <div>
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 800,
-          letterSpacing: 1,
-          opacity: 0.58,
-          textTransform: "uppercase",
-        }}
-      >
-        AI Recommendations
-      </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 26,
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  letterSpacing: 1,
+                  opacity: 0.58,
+                  textTransform: "uppercase",
+                }}
+              >
+                AI Recommendations
+              </div>
 
-      <div
-        style={{
-          fontSize: 30,
-          fontWeight: 900,
-          marginTop: 10,
-          lineHeight: 1.1,
-        }}
-      >
-        Smart margin optimization suggestions
-      </div>
-    </div>
+              <div
+                style={{
+                  fontSize: 30,
+                  fontWeight: 900,
+                  marginTop: 10,
+                  lineHeight: 1.1,
+                }}
+              >
+                Smart margin optimization suggestions
+              </div>
+            </div>
 
-    <div
-      style={{
-        padding: "10px 14px",
-        borderRadius: 999,
-        background: "rgba(34,197,94,0.12)",
-        color: "#22c55e",
-        fontWeight: 900,
-        fontSize: 13,
-        border: "1px solid rgba(34,197,94,0.18)",
-      }}
-    >
-      AI ACTIVE
-    </div>
-  </div>
+            <div
+              style={{
+                padding: "10px 14px",
+                borderRadius: 999,
+                background: "rgba(34,197,94,0.12)",
+                color: "#22c55e",
+                fontWeight: 900,
+                fontSize: 13,
+                border: "1px solid rgba(34,197,94,0.18)",
+              }}
+            >
+              AI ACTIVE
+            </div>
+          </div>
 
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-      gap: 18,
-      position: "relative",
-      zIndex: 2,
-    }}
-  >
-    {[
-      [
-        "Increase Arctic Hoodie price by 8%",
-        "+$420/mo potential recovery",
-        "High confidence",
-      ],
-      [
-        "Review discount strategy on Thermal Gloves",
-        "+$180/mo margin improvement",
-        "Medium confidence",
-      ],
-      [
-        "Update outdated product costs",
-        "9 products affected",
-        "Critical issue",
-      ],
-    ].map(([title, impact, confidence]) => (
-      <div
-        key={title}
-        style={{
-          background: "rgba(255,255,255,0.045)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 20,
-          padding: 22,
-          transition: "all 0.2s ease",
-          cursor: "pointer",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-4px)";
-          e.currentTarget.style.border =
-            "1px solid rgba(255,255,255,0.14)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0px)";
-          e.currentTarget.style.border =
-            "1px solid rgba(255,255,255,0.08)";
-        }}
-      >
-        <div
-          style={{
-            fontSize: 17,
-            fontWeight: 800,
-            lineHeight: 1.45,
-          }}
-        >
-          {title}
-        </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: 18,
+              position: "relative",
+              zIndex: 2,
+            }}
+          >
+            {[
+              [
+                "Increase Arctic Hoodie price by 8%",
+                "+$420/mo potential recovery",
+                "High confidence",
+              ],
+              [
+                "Review discount strategy on Thermal Gloves",
+                "+$180/mo margin improvement",
+                "Medium confidence",
+              ],
+              [
+                "Update outdated product costs",
+                "9 products affected",
+                "Critical issue",
+              ],
+            ].map(([title, impact, confidence]) => (
+              <div
+                key={title}
+                style={{
+                  background: "rgba(255,255,255,0.045)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 20,
+                  padding: 22,
+                  transition: "all 0.2s ease",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.14)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0px)";
+                  e.currentTarget.style.border =
+                    "1px solid rgba(255,255,255,0.08)";
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 17,
+                    fontWeight: 800,
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {title}
+                </div>
 
-        <div
-          style={{
-            marginTop: 16,
-            color: "#22c55e",
-            fontWeight: 900,
-            fontSize: 22,
-          }}
-        >
-          {impact}
-        </div>
+                <div
+                  style={{
+                    marginTop: 16,
+                    color: "#22c55e",
+                    fontWeight: 900,
+                    fontSize: 22,
+                  }}
+                >
+                  {impact}
+                </div>
 
-        <div
-          style={{
-            marginTop: 10,
-            opacity: 0.55,
-            fontSize: 13,
-            fontWeight: 700,
-          }}
-        >
-          {confidence}
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    opacity: 0.55,
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  {confidence}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
