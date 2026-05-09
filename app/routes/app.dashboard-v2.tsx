@@ -154,87 +154,79 @@ export default function DashboardV2() {
                 marginTop: 14,
                 fontSize: 17,
                 opacity: 0.78,
-                maxWidth: 520,
+                maxWidth: 560,
                 lineHeight: 1.6,
               }}
             >
               Your store may be losing profit every day due to underpriced products, missing costs,
-and margin leaks.
-</div>
+              and margin leaks.
+            </div>
 
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-    gap: 14,
-    marginTop: 24,
-    maxWidth: 700,
-  }}
->
-  {[
-    ["Estimated Loss", "$2,140/mo", "#ff5a36"],
-    ["Products at Risk", "24 detected", "#f59e0b"],
-    ["Margin Trend", "+12.4%", "#22c55e"],
-  ].map(([label, value, color]) => (
-    <div
-      key={label}
-      style={{
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 18,
-        padding: 18,
-        boxShadow: "0 12px 30px rgba(0,0,0,0.16)",
-      }}
-    >
-      <div
-        style={{
-          fontSize: 12,
-          opacity: 0.58,
-          textTransform: "uppercase",
-          letterSpacing: 0.8,
-          fontWeight: 800,
-        }}
-      >
-        {label}
-      </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 28,
+                marginTop: 26,
+                flexWrap: "wrap",
+                paddingTop: 18,
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {[
+                ["Estimated loss", "$2,140/mo", "#ff5a36"],
+                ["Products at risk", "24 detected", "#f59e0b"],
+                ["Margin trend", "+12.4%", "#22c55e"],
+              ].map(([label, value, color]) => (
+                <div key={label} style={{ minWidth: 160 }}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      opacity: 0.5,
+                      textTransform: "uppercase",
+                      letterSpacing: 0.8,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {label}
+                  </div>
 
-      <div
-        style={{
-          marginTop: 10,
-          fontSize: 26,
-          fontWeight: 900,
-          color,
-        }}
-      >
-        {value}
-      </div>
-    </div>
-  ))}
-</div>
-</div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 28,
+                      fontWeight: 900,
+                      color,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-<div
-  style={{
-    background: "rgba(0,0,0,0.22)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 22,
-    padding: 24,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    overflow: "hidden",
-  }}
->
+          <div
+            style={{
+              background: "rgba(0,0,0,0.22)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 22,
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
             <div
               style={{
                 position: "absolute",
-                width: 260,
-                height: 260,
+                width: 240,
+                height: 240,
                 borderRadius: "50%",
-                background: "rgba(255,90,54,0.12)",
+                background: "rgba(255,90,54,0.1)",
                 filter: "blur(50px)",
               }}
             />
@@ -263,7 +255,7 @@ and margin leaks.
                   cy="110"
                   r="84"
                   stroke="rgba(255,255,255,0.08)"
-                  strokeWidth="18"
+                  strokeWidth="14"
                   fill="none"
                 />
 
@@ -272,23 +264,18 @@ and margin leaks.
                   cy="110"
                   r="84"
                   stroke="#ff5a36"
-                  strokeWidth="18"
+                  strokeWidth="14"
                   fill="none"
                   strokeLinecap="round"
                   strokeDasharray="528"
-                  strokeDashoffset="180"
+                  strokeDashoffset="220"
                   style={{
-                    filter: "drop-shadow(0 0 18px rgba(255,90,54,0.55))",
+                    filter: "drop-shadow(0 0 14px rgba(255,90,54,0.45))",
                   }}
                 />
               </svg>
 
-              <div
-                style={{
-                  position: "relative",
-                  textAlign: "center",
-                }}
-              >
+              <div style={{ position: "relative", textAlign: "center" }}>
                 <div
                   style={{
                     fontSize: 42,
@@ -305,7 +292,7 @@ and margin leaks.
                     color: "#ff7b59",
                     fontWeight: 800,
                     letterSpacing: 1,
-                    fontSize: 13,
+                    fontSize: 12,
                   }}
                 >
                   HIGH RISK
@@ -319,7 +306,7 @@ and margin leaks.
                 fontSize: 14,
                 opacity: 0.62,
                 textAlign: "center",
-                maxWidth: 260,
+                maxWidth: 280,
                 lineHeight: 1.6,
               }}
             >
@@ -537,7 +524,6 @@ and margin leaks.
               <div style={{ fontSize: 22, fontWeight: 900 }}>
                 Top Profit Leaks Detected
               </div>
-
               <div style={{ opacity: 0.62, marginTop: 6 }}>
                 Prioritized issues that may be hurting your margins.
               </div>
@@ -700,9 +686,7 @@ and margin leaks.
             }}
           >
             <div>
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Product Risk Table
-              </div>
+              <div style={{ fontSize: 22, fontWeight: 900 }}>Product Risk Table</div>
 
               <div style={{ opacity: 0.62, marginTop: 6 }}>
                 Products ranked by margin risk and potential profit leaks.
