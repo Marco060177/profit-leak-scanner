@@ -745,12 +745,17 @@ export default function DashboardV2() {
                     style={{
                       transition: "all 0.18s ease",
                       cursor: "pointer",
+                      transform: "scale(1)",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.035)";
+                      e.currentTarget.style.background =
+                        "linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))";
+
+                      e.currentTarget.style.transform = "scale(1.003)";
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.transform = "scale(1)";
                     }}
                   >
                     <td
