@@ -1,10 +1,50 @@
 export default function DashboardV2() {
-  const kpis = [
-    ["Revenue scanned", "$48,920", "+12%", "positive"],
-    ["Products analyzed", "186", "24 at risk", "warning"],
-    ["Low margin products", "17", "Needs review", "warning"],
-    ["Missing costs", "9", "Fix required", "danger"],
-  ];
+  const dashboardData = {
+    summary: {
+      score: 32,
+      monthlyLoss: "$2,140",
+      trend: "+18%",
+    },
+
+    kpis: [
+      ["Revenue scanned", "$48,920", "+12%", "positive"],
+      ["Products analyzed", "186", "24 at risk", "warning"],
+      ["Low margin products", "17", "Needs review", "warning"],
+      ["Missing costs", "9", "Fix required", "danger"],
+    ],
+
+    leaks: [
+      ["⚠️", "Products below target margin", "High", "-$780/mo"],
+      ["🏷️", "Discounts eating your margins", "Medium", "-$430/mo"],
+      ["📦", "Costs not updated recently", "Medium", "-$320/mo"],
+      ["🔥", "Low-margin best sellers", "Low", "-$180/mo"],
+    ],
+
+    recommendations: [
+      [
+        "Increase Arctic Hoodie price by 8%",
+        "+$420/mo potential recovery",
+        "High confidence",
+      ],
+      [
+        "Review discount strategy on Thermal Gloves",
+        "+$180/mo margin improvement",
+        "Medium confidence",
+      ],
+      [
+        "Update outdated product costs",
+        "9 products affected",
+        "Critical issue",
+      ],
+    ],
+
+    products: [
+      ["🧥", "Arctic Hoodie", "$8,420", "$5,980", "$420", "5.0%", "High"],
+      ["🧤", "Thermal Gloves", "$3,120", "$2,740", "-$180", "-5.8%", "Critical"],
+      ["🎒", "Winter Backpack", "$6,890", "$4,110", "$960", "13.9%", "Medium"],
+      ["🥾", "Snow Boots", "$12,300", "$8,940", "$1,120", "9.1%", "High"],
+    ],
+  };
 
   const leaks = [
     ["⚠️", "Products below target margin", "High", "-$780/mo"],
@@ -55,8 +95,6 @@ export default function DashboardV2() {
           }
         `}
       </style>
-
-      
 
       <div
         style={{
@@ -464,7 +502,7 @@ export default function DashboardV2() {
             marginBottom: 24,
           }}
         >
-          {kpis.map(([label, value, note, tone]) => (
+          {dashboardData.kpis.map(([label, value, note, tone]) => (
             <div
               key={label}
               style={{
@@ -540,20 +578,20 @@ export default function DashboardV2() {
             }}
           >
             <div>
-  <div
-    style={{
-      fontSize: 24,
-      fontWeight: 850,
-      letterSpacing: -0.4,
-    }}
-  >
-    Profit Trend
-  </div>
+              <div
+                style={{
+                  fontSize: 24,
+                  fontWeight: 850,
+                  letterSpacing: -0.4,
+                }}
+              >
+                Profit Trend
+              </div>
 
-  <div style={{ opacity: 0.62, marginTop: 6 }}>
-    Revenue and profit performance over time.
-  </div>
-</div>
+              <div style={{ opacity: 0.62, marginTop: 6 }}>
+                Revenue and profit performance over time.
+              </div>
+            </div>
 
             <div style={{ color: "#22c55e", fontWeight: 800, fontSize: 15 }}>
               ↑ 12.4% this month
@@ -670,20 +708,20 @@ export default function DashboardV2() {
             }}
           >
             <div>
-  <div
-    style={{
-      fontSize: 24,
-      fontWeight: 850,
-      letterSpacing: -0.4,
-    }}
-  >
-    Top Profit Leaks Detected
-  </div>
+              <div
+                style={{
+                  fontSize: 24,
+                  fontWeight: 850,
+                  letterSpacing: -0.4,
+                }}
+              >
+                Top Profit Leaks Detected
+              </div>
 
-  <div style={{ opacity: 0.62, marginTop: 6 }}>
-    Prioritized issues that may be hurting your margins.
-  </div>
-</div>
+              <div style={{ opacity: 0.62, marginTop: 6 }}>
+                Prioritized issues that may be hurting your margins.
+              </div>
+            </div>
 
             <button
               style={{
@@ -700,7 +738,7 @@ export default function DashboardV2() {
             </button>
           </div>
 
-          {leaks.map(([icon, issue, severity, loss]) => (
+          {dashboardData.leaks.map(([icon, issue, severity, loss]) => (
             <div
               key={issue}
               style={{
@@ -843,14 +881,14 @@ export default function DashboardV2() {
           >
             <div>
               <div
-  style={{
-    fontSize: 24,
-    fontWeight: 850,
-    letterSpacing: -0.4,
-  }}
->
-  Product Risk Table
-</div>
+                style={{
+                  fontSize: 24,
+                  fontWeight: 850,
+                  letterSpacing: -0.4,
+                }}
+              >
+                Product Risk Table
+              </div>
 
               <div style={{ opacity: 0.62, marginTop: 6 }}>
                 Products ranked by margin risk and potential profit leaks.
@@ -901,7 +939,7 @@ export default function DashboardV2() {
               </thead>
 
               <tbody>
-                {products.map(([icon, product, revenue, cogs, profit, margin, risk]) => (
+                {dashboardData.products.map(([icon, product, revenue, cogs, profit, margin, risk]) => (
                   <tr
                     key={product}
                     style={{
@@ -1109,23 +1147,7 @@ export default function DashboardV2() {
               zIndex: 2,
             }}
           >
-            {[
-              [
-                "Increase Arctic Hoodie price by 8%",
-                "+$420/mo potential recovery",
-                "High confidence",
-              ],
-              [
-                "Review discount strategy on Thermal Gloves",
-                "+$180/mo margin improvement",
-                "Medium confidence",
-              ],
-              [
-                "Update outdated product costs",
-                "9 products affected",
-                "Critical issue",
-              ],
-            ].map(([title, impact, confidence]) => (
+            {dashboardData.recommendations.map(([title, impact, confidence]) => (
               <div
                 key={title}
                 style={{
@@ -1167,64 +1189,62 @@ export default function DashboardV2() {
                 </div>
 
                 <div
-  style={{
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 18,
-    paddingTop: 16,
-    borderTop: "1px solid rgba(255,255,255,0.08)",
-  }}
->
-  <div>
-    <div
-      style={{
-        fontSize: 11,
-        opacity: 0.45,
-        textTransform: "uppercase",
-        letterSpacing: 0.8,
-        fontWeight: 800,
-      }}
-    >
-      Confidence
-    </div>
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginTop: 18,
+                    paddingTop: 16,
+                    borderTop: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        opacity: 0.45,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.8,
+                        fontWeight: 800,
+                      }}
+                    >
+                      Confidence
+                    </div>
 
-    <div
-      style={{
-        marginTop: 6,
-        fontSize: 13,
-        fontWeight: 800,
-        color: "#f3f4f6",
-      }}
-    >
-      {confidence}
-    </div>
-  </div>
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: "#f3f4f6",
+                      }}
+                    >
+                      {confidence}
+                    </div>
+                  </div>
 
-  <button
-    style={{
-      background: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.08)",
-      color: "#ffffff",
-      padding: "10px 14px",
-      borderRadius: 12,
-      fontWeight: 800,
-      fontSize: 13,
-      cursor: "pointer",
-      transition: "all 0.2s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.background =
-        "rgba(255,255,255,0.1)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.background =
-        "rgba(255,255,255,0.06)";
-    }}
-  >
-    Apply suggestion
-  </button>
-</div>
+                  <button
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "#ffffff",
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      fontWeight: 800,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                    }}
+                  >
+                    Apply suggestion
+                  </button>
+                </div>
               </div>
             ))}
           </div>
