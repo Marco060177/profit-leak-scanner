@@ -735,7 +735,8 @@ export default function DashboardV2() {
 
               setTimeout(() => {
                 clearInterval(interval);
-                window.location.reload();
+                setAnalysisLoading(false);
+                setAnalysisText(analysisSteps[0]);
               }, 2800);
             }}
           >
