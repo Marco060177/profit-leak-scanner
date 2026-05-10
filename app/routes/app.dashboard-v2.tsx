@@ -278,7 +278,7 @@ export default function DashboardV2() {
     "Scanning Shopify orders...",
     "Checking product costs...",
     "Detecting pricing leaks...",
-    "Calculating margin risks...",
+    "Analysis complete...",
   ];
 
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
@@ -443,6 +443,20 @@ export default function DashboardV2() {
     severity: string;
     loss: string;
   }[];
+
+  const worstProduct =
+    rows.length > 0
+      ? [...rows].sort((a, b) => a.profit - b.profit)[0]
+      : null;
+
+  const bestProduct =
+    rows.length > 0
+      ? [...rows].sort((a, b) => b.marginPct - a.marginPct)[0]
+      : null;
+
+  const recoverableProfit = rows.reduce((acc, row) => {
+    return acc + (row.targetDelta > 0 ? row.targetDelta * row.qty : 0);
+  }, 0);
 
   const recommendations = [
     summary.losingCount > 0
@@ -745,6 +759,60 @@ export default function DashboardV2() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="kpi-grid" style={{ marginBottom: 24 }}>
+          <div className="kpi-card">
+            <div className="kpi-label">Biggest Profit Leak</div>
+
+            <div className="kpi-value" style={{ fontSize: 24 }}>
+              {worstProduct ? worstProduct.productTitle : "No data"}
+            </div>
+
+            <div className="kpi-note" style={{ color: "#ff6b4a" }}>
+              {worstProduct
+                ? `${money(Math.abs(worstProduct.profit))} estimated loss`
+                : "No issues detected"}
+            </div>
+          </div>
+
+          <div className="kpi-card">
+            <div className="kpi-label">Best Margin Product</div>
+
+            <div className="kpi-value" style={{ fontSize: 24 }}>
+              {bestProduct ? bestProduct.productTitle : "No data"}
+            </div>
+
+            <div className="kpi-note" style={{ color: "#22c55e" }}>
+              {bestProduct
+                ? `${pct(bestProduct.marginPct)} margin`
+                : "No products available"}
+            </div>
+          </div>
+
+          <div className="kpi-card">
+            <div className="kpi-label">Recoverable Profit</div>
+
+            <div className="kpi-value">
+              {money(recoverableProfit)}
+            </div>
+
+            <div className="kpi-note" style={{ color: "#f59e0b" }}>
+              Potential margin recovery
+            </div>
+          </div>
+
+          <div className="kpi-card">
+            <div className="kpi-label">Products Missing Costs</div>
+
+            <div className="kpi-value">
+              {summary.missingCostCount}
+            </div>
+
+            <div className="kpi-note" style={{ color: "#ff6b4a" }}>
+              Cost setup required
+            </div>
+          </div>
         </div>
 
         <div className="panel">
