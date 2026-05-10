@@ -1,115 +1,406 @@
+import * as React from "react";
+import { useLoaderData, useNavigate } from "react-router";
+import { authenticate } from "~/shopify.server";
+
+type Summary = {
+  revenue: number;
+  cogs: number;
+  profit: number;
+  marginPct: number;
+  totalLeak: number;
+  losingCount: number;
+  missingCostCount: number;
+};
+
+type Row = {
+  productId: string;
+  productTitle: string;
+  qty: number;
+  revenue: number;
+  cogs: number;
+  profit: number;
+  marginPct: number;
+  losing: boolean;
+  lowMargin: boolean;
+  avgPrice: number;
+  avgCost: number;
+  breakEvenPrice: number;
+  targetPrice: number;
+  targetDelta: number;
+  suggestion: string;
+  missingCost: boolean;
+};
+
+type LoaderData = {
+  summary: Summary;
+  rows: Row[];
+  billingActive: boolean;
+  period: string;
+  shopHandle: string;
+};
+
+function money(n: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(n);
+}
+
+function pct(n: number) {
+  return `${n.toFixed(1)}%`;
+}
+
+function toYYYYMMDD(d: Date) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function extractNumericId(gid: string) {
+  return gid.split("/").pop() || "";
+}
+
+export const loader = async ({
+  request,
+}: {
+  request: Request;
+}): Promise<LoaderData> => {
+  const url = new URL(request.url);
+  const period = url.searchParams.get("period") || "30";
+  const days = Number.parseInt(period, 10);
+  const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
+
+  const fromDate = new Date();
+  fromDate.setDate(fromDate.getDate() - safeDays);
+  const fromYYYYMMDD = toYYYYMMDD(fromDate);
+
+  const { admin, session } = await authenticate.admin(request);
+
+  try {
+    await admin.graphql(`query { shop { id } }`);
+  } catch {
+    throw new Response("Auth/scopes not ready. Reinstall the app.", {
+      status: 401,
+    });
+  }
+
+  const billingRes = await admin.graphql(`
+    #graphql
+    query {
+      appInstallation {
+        activeSubscriptions {
+          id
+          name
+          status
+        }
+      }
+    }
+  `);
+
+  const billingJson = await billingRes.json();
+
+  const activeSubscriptions =
+    billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
+
+  const billingActive = activeSubscriptions.length > 0;
+
+  const queryString = `processed_at:>=${fromYYYYMMDD}`;
+
+  const response = await admin.graphql(
+    `#graphql
+    query OrdersForLeak($q: String!) {
+      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+        edges {
+          node {
+            id
+            name
+            processedAt
+            lineItems(first: 250) {
+              edges {
+                node {
+                  quantity
+                  originalUnitPriceSet {
+                    shopMoney { amount }
+                  }
+                  variant {
+                    product {
+                      id
+                      title
+                    }
+                    inventoryItem {
+                      unitCost { amount }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    { variables: { q: queryString } },
+  );
+
+  const gql = await response.json();
+  const orderEdges = gql?.data?.orders?.edges ?? [];
+
+  const byProduct: Record<
+    string,
+    {
+      productId: string;
+      productTitle: string;
+      qty: number;
+      revenue: number;
+      cogs: number;
+      missingCost: boolean;
+    }
+  > = {};
+
+  let totalRevenue = 0;
+  let totalCogs = 0;
+
+  for (const o of orderEdges) {
+    const items = o?.node?.lineItems?.edges ?? [];
+
+    for (const li of items) {
+      const qty = Number(li?.node?.quantity ?? 0);
+      const price = Number(li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0);
+      const costRaw = li?.node?.variant?.inventoryItem?.unitCost?.amount;
+      const hasCost = costRaw !== null && costRaw !== undefined;
+      const cost = Number(costRaw ?? 0);
+
+      const product = li?.node?.variant?.product;
+      const productTitle = product?.title ?? "Unknown product";
+      const productId = product?.id ? extractNumericId(product.id) : "";
+
+      const lineRevenue = price * qty;
+      const lineCogs = cost * qty;
+
+      if (!byProduct[productTitle]) {
+        byProduct[productTitle] = {
+          productId,
+          productTitle,
+          qty: 0,
+          revenue: 0,
+          cogs: 0,
+          missingCost: false,
+        };
+      }
+
+      if (!hasCost) {
+        byProduct[productTitle].missingCost = true;
+      }
+
+      byProduct[productTitle].qty += qty;
+      byProduct[productTitle].revenue += lineRevenue;
+      byProduct[productTitle].cogs += lineCogs;
+
+      totalRevenue += lineRevenue;
+      totalCogs += lineCogs;
+    }
+  }
+
+  const rows: Row[] = Object.values(byProduct)
+    .map((r) => {
+      const profit = r.revenue - r.cogs;
+      const marginPct = r.revenue > 0 ? (profit / r.revenue) * 100 : 0;
+
+      const avgPrice = r.qty > 0 ? r.revenue / r.qty : 0;
+      const avgCost = r.qty > 0 ? r.cogs / r.qty : 0;
+
+      const breakEvenPrice = avgCost;
+      const targetMargin = 0.2;
+      const targetPrice = avgCost > 0 ? avgCost / (1 - targetMargin) : avgPrice;
+      const targetDelta = targetPrice - avgPrice;
+
+      const suggestion =
+        profit < 0
+          ? `Increase price to ${money(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${money(
+              targetDelta,
+            )} per unit) to reach a 20% margin.`
+          : `Pricing looks healthy for a 20% margin.`;
+
+      return {
+        ...r,
+        profit,
+        marginPct,
+        losing: profit < 0,
+        lowMargin: marginPct > 0 && marginPct < 10,
+        avgPrice,
+        avgCost,
+        breakEvenPrice,
+        targetPrice,
+        targetDelta,
+        missingCost: r.missingCost,
+        suggestion,
+      };
+    })
+    .sort((a, b) => a.profit - b.profit);
+
+  const totalProfit = totalRevenue - totalCogs;
+  const totalLeak = Math.abs(
+    rows.reduce((acc, r) => acc + (r.profit < 0 ? r.profit : 0), 0),
+  );
+  const losingCount = rows.filter((r) => r.losing).length;
+  const missingCostCount = rows.filter((r) => r.missingCost).length;
+  const shopHandle = session.shop.replace(".myshopify.com", "");
+
+  return {
+    summary: {
+      revenue: totalRevenue,
+      cogs: totalCogs,
+      profit: totalProfit,
+      marginPct: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
+      totalLeak,
+      losingCount,
+      missingCostCount,
+    },
+    rows,
+    billingActive,
+    period: String(safeDays),
+    shopHandle,
+  };
+};
+
 export default function DashboardV2() {
+  const { summary, rows, billingActive, period, shopHandle } =
+    useLoaderData() as LoaderData;
+
+  const navigate = useNavigate();
+
   const dashboardLoading = false;
 
-  const dashboardData = {
-    summary: {
-      score: 32,
-      monthlyLoss: "$2,140",
-      trend: "+18%",
-    },
+  const lowMarginCount = rows.filter((row) => row.lowMargin).length;
+  const productsAtRisk = rows.filter(
+    (row) => row.losing || row.lowMargin || row.missingCost,
+  ).length;
 
-    kpis: [
-      ["Revenue scanned", "$48,920", "+12%", "positive"],
-      ["Products analyzed", "186", "24 at risk", "warning"],
-      ["Low margin products", "17", "Needs review", "warning"],
-      ["Missing costs", "9", "Fix required", "danger"],
-    ],
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        100 -
+          summary.losingCount * 18 -
+          summary.missingCostCount * 8 -
+          lowMarginCount * 6 -
+          Math.max(0, 20 - summary.marginPct) * 2,
+      ),
+    ),
+  );
 
-    leaks: [
-      {
-        icon: "⚠️",
-        issue: "Products below target margin",
-        severity: "High",
-        loss: "-$780/mo",
-      },
-      {
-        icon: "🏷️",
-        issue: "Discounts eating your margins",
-        severity: "Medium",
-        loss: "-$430/mo",
-      },
-      {
-        icon: "📦",
-        issue: "Costs not updated recently",
-        severity: "Medium",
-        loss: "-$320/mo",
-      },
-      {
-        icon: "🔥",
-        issue: "Low-margin best sellers",
-        severity: "Low",
-        loss: "-$180/mo",
-      },
-    ],
+  const scoreLabel =
+    score < 40 ? "High risk" : score < 70 ? "Needs attention" : "Healthy";
 
-    recommendations: [
-      {
-        title: "Increase Arctic Hoodie price by 8%",
-        impact: "+$420/mo potential recovery",
-        confidence: "High confidence",
-      },
-      {
-        title: "Review discount strategy on Thermal Gloves",
-        impact: "+$180/mo margin improvement",
-        confidence: "Medium confidence",
-      },
-      {
-        title: "Update outdated product costs",
-        impact: "9 products affected",
-        confidence: "Critical issue",
-      },
-    ],
+  const sortedRiskRows = rows
+    .slice()
+    .sort((a, b) => {
+      if (a.losing !== b.losing) return a.losing ? -1 : 1;
+      if (a.missingCost !== b.missingCost) return a.missingCost ? -1 : 1;
+      if (a.lowMargin !== b.lowMargin) return a.lowMargin ? -1 : 1;
+      return a.profit - b.profit;
+    })
+    .slice(0, 6);
 
-    products: [
-      {
-        icon: "🧥",
-        name: "Arctic Hoodie",
-        revenue: "$8,420",
-        cogs: "$5,980",
-        profit: "$420",
-        margin: "5.0%",
-        risk: "High",
-      },
-      {
-        icon: "🧤",
-        name: "Thermal Gloves",
-        revenue: "$3,120",
-        cogs: "$2,740",
-        profit: "-$180",
-        margin: "-5.8%",
-        risk: "Critical",
-      },
-      {
-        icon: "🎒",
-        name: "Winter Backpack",
-        revenue: "$6,890",
-        cogs: "$4,110",
-        profit: "$960",
-        margin: "13.9%",
-        risk: "Medium",
-      },
-      {
-        icon: "🥾",
-        name: "Snow Boots",
-        revenue: "$12,300",
-        cogs: "$8,940",
-        profit: "$1,120",
-        margin: "9.1%",
-        risk: "High",
-      },
-    ],
+  const topLeaks = [
+    summary.losingCount > 0
+      ? {
+          icon: "⚠️",
+          issue: "Products selling below cost",
+          severity: "High",
+          loss: money(summary.totalLeak),
+        }
+      : null,
+    summary.missingCostCount > 0
+      ? {
+          icon: "📦",
+          issue: "Products missing cost data",
+          severity: "Medium",
+          loss: `${summary.missingCostCount} products`,
+        }
+      : null,
+    lowMarginCount > 0
+      ? {
+          icon: "🏷️",
+          issue: "Low-margin products detected",
+          severity: "Medium",
+          loss: `${lowMarginCount} products`,
+        }
+      : null,
+    productsAtRisk > 0
+      ? {
+          icon: "🔥",
+          issue: "Products requiring margin review",
+          severity: "Low",
+          loss: `${productsAtRisk} at risk`,
+        }
+      : null,
+  ].filter(Boolean) as {
+    icon: string;
+    issue: string;
+    severity: string;
+    loss: string;
+  }[];
+
+  const recommendations = [
+    summary.losingCount > 0
+      ? {
+          title: `Fix ${summary.losingCount} products selling below cost`,
+          impact: `${money(summary.totalLeak)} potential recovery`,
+          confidence: "High confidence",
+        }
+      : null,
+    summary.missingCostCount > 0
+      ? {
+          title: "Update missing product costs in Shopify",
+          impact: `${summary.missingCostCount} products affected`,
+          confidence: "Critical issue",
+        }
+      : null,
+    lowMarginCount > 0
+      ? {
+          title: "Review low-margin products below 10%",
+          impact: `${lowMarginCount} products need attention`,
+          confidence: "Medium confidence",
+        }
+      : null,
+    rows.length > 0
+      ? {
+          title: "Review target prices for worst-performing products",
+          impact: "20% margin target available",
+          confidence: "Rule-based insight",
+        }
+      : null,
+  ].filter(Boolean) as {
+    title: string;
+    impact: string;
+    confidence: string;
+  }[];
+
+  function setPeriod(next: "7" | "30" | "90") {
+    navigate(`/app/dashboard-v2?period=${next}`);
+  }
+
+  const riskColor = (row: Row) => {
+    if (row.losing) return "#ef4444";
+    if (row.missingCost) return "#f59e0b";
+    if (row.lowMargin) return "#ff6b4a";
+    return "#22c55e";
   };
 
-  const riskColor = (risk: string) => {
-    if (risk === "Critical") return "#ef4444";
-    if (risk === "High") return "#ff6b4a";
-    return "#f59e0b";
+  const riskBackground = (row: Row) => {
+    if (row.losing) return "rgba(239,68,68,0.16)";
+    if (row.missingCost) return "rgba(245,158,11,0.14)";
+    if (row.lowMargin) return "rgba(255,90,54,0.14)";
+    return "rgba(34,197,94,0.12)";
   };
 
-  const riskBackground = (risk: string) => {
-    if (risk === "Critical") return "rgba(239,68,68,0.16)";
-    if (risk === "High") return "rgba(255,90,54,0.14)";
-    return "rgba(245,158,11,0.14)";
+  const riskLabel = (row: Row) => {
+    if (row.losing) return "Critical";
+    if (row.missingCost) return "Missing cost";
+    if (row.lowMargin) return "High";
+    return "Healthy";
   };
 
   const severityColor = (severity: string) => {
@@ -162,7 +453,7 @@ export default function DashboardV2() {
           </div>
 
           <div className="nav-tabs">
-            {["Overview", "Leaks", "Products", "Recommendations", "Billing"].map((item) => (
+            {["Overview", "Leaks", "Products", "Recommendations"].map((item) => (
               <div
                 key={item}
                 className={item === "Overview" ? "nav-tab active" : "nav-tab"}
@@ -170,6 +461,10 @@ export default function DashboardV2() {
                 {item}
               </div>
             ))}
+
+            <div className="nav-tab" onClick={() => navigate("/app/billing")}>
+              Billing
+            </div>
           </div>
         </div>
 
@@ -177,7 +472,11 @@ export default function DashboardV2() {
           <div>
             <div className="alert-pill">
               <div className="alert-dot" />
-              <div>3 critical pricing issues detected</div>
+              <div>
+                {productsAtRisk > 0
+                  ? `${productsAtRisk} pricing issues detected`
+                  : "No critical pricing issues detected"}
+              </div>
             </div>
 
             <div className="eyebrow">Profit Leak Scanner</div>
@@ -188,6 +487,18 @@ export default function DashboardV2() {
               Track hidden margin leaks, underpriced products and pricing issues affecting your
               Shopify store profitability.
             </div>
+
+            <div className="period-tabs">
+              {(["7", "30", "90"] as const).map((item) => (
+                <button
+                  key={item}
+                  className={period === item ? "period-tab active" : "period-tab"}
+                  onClick={() => setPeriod(item)}
+                >
+                  {item}d
+                </button>
+              ))}
+            </div>
           </div>
 
           <button className="primary-button">
@@ -195,6 +506,17 @@ export default function DashboardV2() {
             <span>Run analysis</span>
           </button>
         </div>
+
+        {!billingActive ? (
+          <div className="billing-banner">
+            <strong>Plan inactive</strong>
+            <span>
+              You are viewing the dashboard in preview mode. Activate your plan to unlock full
+              analysis.
+            </span>
+            <button onClick={() => navigate("/app/billing")}>Go to billing</button>
+          </div>
+        ) : null}
 
         <div className="score-card">
           <div className="score-glow-one" />
@@ -204,22 +526,25 @@ export default function DashboardV2() {
             <div className="section-eyebrow">PROFIT LEAK SCORE</div>
 
             <div className="score-number">
-              {dashboardData.summary.score}
+              {score}
               <span>/100</span>
             </div>
 
-            <div className="score-risk">High risk</div>
+            <div className="score-risk">{scoreLabel}</div>
 
             <div className="score-copy">
-              Your store may be losing profit every day due to underpriced products, missing costs,
-              and margin leaks.
+              {summary.totalLeak > 0
+                ? `Your store is leaking an estimated ${money(
+                    summary.totalLeak,
+                  )} from products selling below cost.`
+                : "Your store currently has no products selling below cost in the selected period."}
             </div>
 
             <div className="score-mini-grid">
               {[
-                ["Estimated loss", `${dashboardData.summary.monthlyLoss}/mo`, "#ff5a36"],
-                ["Products at risk", "24 detected", "#f59e0b"],
-                ["Margin trend", "+12.4%", "#22c55e"],
+                ["Estimated leak", money(summary.totalLeak), "#ff5a36"],
+                ["Products at risk", `${productsAtRisk} detected`, "#f59e0b"],
+                ["Margin", pct(summary.marginPct), "#22c55e"],
               ].map(([label, value, color]) => (
                 <div key={label} className="score-mini-card">
                   <div>{label}</div>
@@ -252,7 +577,7 @@ export default function DashboardV2() {
                   fill="none"
                   strokeLinecap="round"
                   strokeDasharray="528"
-                  strokeDashoffset="220"
+                  strokeDashoffset={528 - (528 * score) / 100}
                   style={{
                     filter: "drop-shadow(0 0 14px rgba(255,90,54,0.45))",
                   }}
@@ -260,19 +585,25 @@ export default function DashboardV2() {
               </svg>
 
               <div className="gauge-center">
-                <div>{dashboardData.summary.score}</div>
-                <span>HIGH RISK</span>
+                <div>{score}</div>
+                <span>{scoreLabel.toUpperCase()}</span>
               </div>
             </div>
 
             <div className="gauge-copy">
-              Your current margin health score based on pricing leaks and low-profit products.
+              Margin health score based on profit leaks, missing costs, low margins and store
+              profitability.
             </div>
           </div>
         </div>
 
         <div className="kpi-grid">
-          {dashboardData.kpis.map(([label, value, note, tone]) => (
+          {[
+            ["Revenue scanned", money(summary.revenue), `Last ${period} days`, "positive"],
+            ["Products analyzed", String(rows.length), `${productsAtRisk} at risk`, "warning"],
+            ["Low margin products", String(lowMarginCount), "Below 10%", "warning"],
+            ["Missing costs", String(summary.missingCostCount), "Fix required", "danger"],
+          ].map(([label, value, note, tone]) => (
             <div key={label} className="kpi-card">
               <div className="kpi-label">{label}</div>
               <div className="kpi-value">{value}</div>
@@ -298,17 +629,19 @@ export default function DashboardV2() {
           <div className="section-header">
             <div>
               <div className="section-title">Profit Trend</div>
-              <div className="section-subtitle">Revenue and profit performance over time.</div>
+              <div className="section-subtitle">
+                Current profit performance based on Shopify orders.
+              </div>
             </div>
 
-            <div className="positive-trend">↑ 12.4% this month</div>
+            <div className="positive-trend">{pct(summary.marginPct)} margin</div>
           </div>
 
           <div className="chart-card">
             <div className="chart-labels">
-              <span>Apr 1</span>
-              <span>Apr 15</span>
-              <span>Apr 30</span>
+              <span>Revenue</span>
+              <span>COGS</span>
+              <span>Profit</span>
             </div>
 
             <svg viewBox="0 0 1000 260" preserveAspectRatio="none" className="chart-svg">
@@ -362,56 +695,53 @@ export default function DashboardV2() {
             <div>
               <div className="section-title">Top Profit Leaks Detected</div>
               <div className="section-subtitle">
-                Prioritized issues that may be hurting your margins.
+                Prioritized issues found from your real Shopify order data.
               </div>
             </div>
 
             <button className="secondary-orange-button">View all</button>
           </div>
 
-          <div className="leaks-list">
-            {dashboardData.leaks.map(({ icon, issue, severity, loss }) => (
-              <div key={issue} className="leak-row">
-                <div className="leak-main">
-                  <div className="leak-icon">{icon}</div>
+          {topLeaks.length === 0 ? (
+            <div className="clean-state">
+              ✅ No major profit leaks detected in the selected period.
+            </div>
+          ) : (
+            <div className="leaks-list">
+              {topLeaks.map(({ icon, issue, severity, loss }) => (
+                <div key={issue} className="leak-row">
+                  <div className="leak-main">
+                    <div className="leak-icon">{icon}</div>
 
-                  <div>
-                    <div className="leak-title">{issue}</div>
-                    <div className="leak-subtitle">Margin optimization opportunity detected</div>
+                    <div>
+                      <div className="leak-title">{issue}</div>
+                      <div className="leak-subtitle">
+                        Margin optimization opportunity detected
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="leak-severity">
+                    <div
+                      className="severity-pill"
+                      style={{
+                        color: severityColor(severity),
+                        background: severityBackground(severity),
+                        border: severityBorder(severity),
+                      }}
+                    >
+                      {severity}
+                    </div>
+                  </div>
+
+                  <div className="leak-loss">
+                    <div>{loss}</div>
+                    <span>estimated impact</span>
                   </div>
                 </div>
-
-                <div className="leak-severity">
-                  <div
-                    className="severity-pill"
-                    style={{
-                      color: severityColor(severity),
-                      background: severityBackground(severity),
-                      border: severityBorder(severity),
-                    }}
-                  >
-                    {severity}
-                  </div>
-                </div>
-
-                <div className="leak-loss">
-                  <div
-                    style={{
-                      color:
-                        severity === "High"
-                          ? "#ff6b4a"
-                          : severity === "Medium"
-                            ? "#f3f4f6"
-                            : "#d1d5db",
-                    }}
-                  >
-                    {loss}
-                  </div>
-                  <span>estimated impact</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="panel">
@@ -419,22 +749,22 @@ export default function DashboardV2() {
             <div>
               <div className="section-title">Product Risk Table</div>
               <div className="section-subtitle">
-                Products ranked by margin risk and potential profit leaks.
+                Products ranked by real margin risk and potential profit leaks.
               </div>
             </div>
 
             <button className="secondary-button">Export CSV</button>
           </div>
 
-          {dashboardData.products.length === 0 ? (
+          {sortedRiskRows.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">📦</div>
 
               <div className="empty-title">No products analyzed yet</div>
 
               <div className="empty-copy">
-                Run your first store analysis to identify hidden margin leaks, pricing issues and
-                optimization opportunities.
+                Once orders are available, Profit Leak Scanner will detect products selling below
+                cost, missing costs and margin issues.
               </div>
 
               <button className="empty-button">Run first analysis</button>
@@ -445,98 +775,122 @@ export default function DashboardV2() {
                 <table className="product-table">
                   <thead>
                     <tr>
-                      {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk"].map((h) => (
-                        <th key={h}>{h}</th>
-                      ))}
+                      {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk", "Action"].map(
+                        (h) => (
+                          <th key={h}>{h}</th>
+                        ),
+                      )}
                     </tr>
                   </thead>
 
                   <tbody>
-                    {dashboardData.products.map(
-                      ({ icon, name, revenue, cogs, profit, margin, risk }) => (
-                        <tr key={name}>
-                          <td>
-                            <div className="product-name-cell">
-                              <div className="product-icon">{icon}</div>
+                    {sortedRiskRows.map((row) => (
+                      <tr key={row.productTitle}>
+                        <td>
+                          <div className="product-name-cell">
+                            <div className="product-icon">📦</div>
 
-                              <div>
-                                <div className="product-name">{name}</div>
-                                <div className="product-subtitle">Shopify product</div>
+                            <div>
+                              <div className="product-name">{row.productTitle}</div>
+                              <div className="product-subtitle">
+                                Avg price {money(row.avgPrice)} • Avg cost {money(row.avgCost)}
                               </div>
                             </div>
-                          </td>
+                          </div>
+                        </td>
 
-                          {[revenue, cogs, profit, margin].map((value) => (
-                            <td key={`${name}-${value}`}>{value}</td>
-                          ))}
+                        <td>{money(row.revenue)}</td>
+                        <td>{money(row.cogs)}</td>
+                        <td style={{ color: row.profit < 0 ? "#ef4444" : "#22c55e" }}>
+                          {money(row.profit)}
+                        </td>
+                        <td>{pct(row.marginPct)}</td>
 
-                          <td>
-                            <span
-                              className="risk-pill"
-                              style={{
-                                color: riskColor(risk),
-                                background: riskBackground(risk),
-                              }}
+                        <td>
+                          <span
+                            className="risk-pill"
+                            style={{
+                              color: riskColor(row),
+                              background: riskBackground(row),
+                            }}
+                          >
+                            {riskLabel(row)}
+                          </span>
+                        </td>
+
+                        <td>
+                          {row.missingCost && row.productId ? (
+                            <a
+                              href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="shopify-link"
                             >
-                              {risk}
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    )}
+                              Set cost
+                            </a>
+                          ) : row.targetDelta > 0 ? (
+                            <span className="price-delta">↑ {money(row.targetDelta)}</span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
               <div className="mobile-products">
-                {dashboardData.products.map(
-                  ({ icon, name, revenue, cogs, profit, margin, risk }) => (
-                    <div key={name} className="mobile-product-card">
-                      <div className="mobile-product-header">
-                        <div className="product-name-cell">
-                          <div className="product-icon">{icon}</div>
+                {sortedRiskRows.map((row) => (
+                  <div key={row.productTitle} className="mobile-product-card">
+                    <div className="mobile-product-header">
+                      <div className="product-name-cell">
+                        <div className="product-icon">📦</div>
 
-                          <div>
-                            <div className="product-name">{name}</div>
-                            <div className="product-subtitle">Shopify product</div>
+                        <div>
+                          <div className="product-name">{row.productTitle}</div>
+                          <div className="product-subtitle">
+                            Avg price {money(row.avgPrice)}
                           </div>
                         </div>
-
-                        <span
-                          className="risk-pill"
-                          style={{
-                            color: riskColor(risk),
-                            background: riskBackground(risk),
-                          }}
-                        >
-                          {risk}
-                        </span>
                       </div>
 
-                      <div className="mobile-product-grid">
-                        <div>
-                          <span>Revenue</span>
-                          <strong>{revenue}</strong>
-                        </div>
+                      <span
+                        className="risk-pill"
+                        style={{
+                          color: riskColor(row),
+                          background: riskBackground(row),
+                        }}
+                      >
+                        {riskLabel(row)}
+                      </span>
+                    </div>
 
-                        <div>
-                          <span>COGS</span>
-                          <strong>{cogs}</strong>
-                        </div>
+                    <div className="mobile-product-grid">
+                      <div>
+                        <span>Revenue</span>
+                        <strong>{money(row.revenue)}</strong>
+                      </div>
 
-                        <div>
-                          <span>Profit</span>
-                          <strong>{profit}</strong>
-                        </div>
+                      <div>
+                        <span>COGS</span>
+                        <strong>{money(row.cogs)}</strong>
+                      </div>
 
-                        <div>
-                          <span>Margin</span>
-                          <strong>{margin}</strong>
-                        </div>
+                      <div>
+                        <span>Profit</span>
+                        <strong>{money(row.profit)}</strong>
+                      </div>
+
+                      <div>
+                        <span>Margin</span>
+                        <strong>{pct(row.marginPct)}</strong>
                       </div>
                     </div>
-                  )
-                )}
+
+                    <div className="mobile-suggestion">{row.suggestion}</div>
+                  </div>
+                ))}
               </div>
             </>
           )}
@@ -552,11 +906,11 @@ export default function DashboardV2() {
               <div className="ai-title">Smart margin optimization suggestions</div>
             </div>
 
-            <div className="ai-badge">AI ACTIVE</div>
+            <div className="ai-badge">RULE ENGINE</div>
           </div>
 
           <div className="ai-grid">
-            {dashboardData.recommendations.map(({ title, impact, confidence }) => (
+            {recommendations.map(({ title, impact, confidence }) => (
               <div key={title} className="ai-card">
                 <div className="ai-card-title">{title}</div>
 
@@ -568,7 +922,7 @@ export default function DashboardV2() {
                     <div className="confidence-value">{confidence}</div>
                   </div>
 
-                  <button className="apply-button">Apply suggestion</button>
+                  <button className="apply-button">Review</button>
                 </div>
               </div>
             ))}
@@ -581,36 +935,18 @@ export default function DashboardV2() {
 
 const dashboardStyles = `
   @keyframes gradientMove {
-    0% {
-      background-position: 0% 50%;
-    }
-
-    50% {
-      background-position: 100% 50%;
-    }
-
-    100% {
-      background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   @keyframes pulse {
-    0% {
-      opacity: 0.45;
-    }
-
-    50% {
-      opacity: 1;
-    }
-
-    100% {
-      opacity: 0.45;
-    }
+    0% { opacity: 0.45; }
+    50% { opacity: 1; }
+    100% { opacity: 0.45; }
   }
 
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
 
   .dashboard-shell {
     min-height: 100vh;
@@ -653,14 +989,8 @@ const dashboardStyles = `
     animation: pulse 1.8s infinite;
   }
 
-  .loading-navbar {
-    height: 80px;
-  }
-
-  .loading-hero {
-    height: 340px;
-    border-radius: 32px;
-  }
+  .loading-navbar { height: 80px; }
+  .loading-hero { height: 340px; border-radius: 32px; }
 
   .loading-kpi-grid {
     display: grid;
@@ -668,9 +998,7 @@ const dashboardStyles = `
     gap: 18px;
   }
 
-  .loading-kpi-card {
-    height: 140px;
-  }
+  .loading-kpi-card { height: 140px; }
 
   .navbar {
     display: flex;
@@ -690,9 +1018,7 @@ const dashboardStyles = `
     white-space: nowrap;
   }
 
-  .logo span {
-    color: #ff5a36;
-  }
+  .logo span { color: #ff5a36; }
 
   .nav-tabs {
     display: flex;
@@ -702,9 +1028,7 @@ const dashboardStyles = `
     scrollbar-width: none;
   }
 
-  .nav-tabs::-webkit-scrollbar {
-    display: none;
-  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
 
   .nav-tab {
     padding: 10px 14px;
@@ -719,9 +1043,7 @@ const dashboardStyles = `
     white-space: nowrap;
   }
 
-  .nav-tab:hover {
-    background: rgba(255,255,255,0.05);
-  }
+  .nav-tab:hover { background: rgba(255,255,255,0.05); }
 
   .nav-tab.active {
     background: rgba(255,255,255,0.08);
@@ -783,6 +1105,29 @@ const dashboardStyles = `
     line-height: 1.6;
   }
 
+  .period-tabs {
+    display: inline-flex;
+    margin-top: 18px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .period-tab {
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.65);
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .period-tab.active {
+    background: rgba(255,255,255,0.1);
+    color: #ffffff;
+  }
+
   .primary-button {
     background: linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%);
     border: 1px solid rgba(255,255,255,0.08);
@@ -803,6 +1148,33 @@ const dashboardStyles = `
   .primary-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 20px 44px rgba(255,90,54,0.34);
+  }
+
+  .billing-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    border-radius: 18px;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.22);
+    color: #f8fafc;
+  }
+
+  .billing-banner span {
+    opacity: 0.75;
+    flex: 1;
+  }
+
+  .billing-banner button {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: white;
+    border-radius: 12px;
+    padding: 9px 13px;
+    font-weight: 800;
+    cursor: pointer;
   }
 
   .score-card {
@@ -1088,31 +1460,39 @@ const dashboardStyles = `
     pointer-events: none;
   }
 
-  .secondary-orange-button {
-    background: rgba(255,90,54,0.14);
-    border: 1px solid rgba(255,90,54,0.35);
-    color: #ff7b59;
+  .secondary-orange-button,
+  .secondary-button {
     padding: 10px 14px;
     border-radius: 12px;
     font-weight: 800;
     cursor: pointer;
     white-space: nowrap;
+  }
+
+  .secondary-orange-button {
+    background: rgba(255,90,54,0.14);
+    border: 1px solid rgba(255,90,54,0.35);
+    color: #ff7b59;
   }
 
   .secondary-button {
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.1);
     color: #f3f4f6;
-    padding: 10px 14px;
-    border-radius: 12px;
+  }
+
+  .clean-state {
+    padding: 22px;
+    border-radius: 18px;
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.14);
+    color: #86efac;
     font-weight: 800;
-    cursor: pointer;
-    white-space: nowrap;
   }
 
   .leak-row {
     display: grid;
-    grid-template-columns: minmax(0,1fr) 100px 120px;
+    grid-template-columns: minmax(0,1fr) 100px 150px;
     gap: 16px;
     align-items: center;
     padding: 18px 0;
@@ -1232,7 +1612,7 @@ const dashboardStyles = `
   .product-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 760px;
+    min-width: 920px;
   }
 
   .product-table th {
@@ -1292,8 +1672,28 @@ const dashboardStyles = `
     white-space: nowrap;
   }
 
+  .shopify-link {
+    color: #fbbf24;
+    text-decoration: none;
+    font-weight: 900;
+  }
+
+  .price-delta {
+    color: #ff6b4a;
+    font-weight: 900;
+  }
+
   .mobile-products {
     display: none;
+  }
+
+  .mobile-suggestion {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.72);
+    line-height: 1.5;
+    font-size: 13px;
   }
 
   .ai-panel {
@@ -1428,9 +1828,7 @@ const dashboardStyles = `
   }
 
   @media (max-width: 900px) {
-    .dashboard-shell {
-      padding: 22px;
-    }
+    .dashboard-shell { padding: 22px; }
 
     .navbar {
       align-items: flex-start;
@@ -1451,13 +1849,8 @@ const dashboardStyles = `
       justify-content: center;
     }
 
-    .hero-title {
-      font-size: 38px;
-    }
-
-    .hero-description {
-      font-size: 16px;
-    }
+    .hero-title { font-size: 38px; }
+    .hero-description { font-size: 16px; }
 
     .section-header {
       align-items: flex-start;
@@ -1489,9 +1882,7 @@ const dashboardStyles = `
       text-align: left;
     }
 
-    .score-number {
-      font-size: 58px;
-    }
+    .score-number { font-size: 58px; }
 
     .ai-footer {
       align-items: flex-start;
@@ -1501,12 +1892,15 @@ const dashboardStyles = `
     .apply-button {
       width: 100%;
     }
+
+    .billing-banner {
+      align-items: flex-start;
+      flex-direction: column;
+    }
   }
 
   @media (max-width: 640px) {
-    .dashboard-shell {
-      padding: 16px;
-    }
+    .dashboard-shell { padding: 16px; }
 
     .navbar,
     .panel,
@@ -1520,9 +1914,7 @@ const dashboardStyles = `
       grid-template-columns: 1fr;
     }
 
-    .hero-title {
-      font-size: 32px;
-    }
+    .hero-title { font-size: 32px; }
 
     .alert-pill {
       font-size: 12px;
@@ -1589,9 +1981,7 @@ const dashboardStyles = `
       font-size: 15px;
     }
 
-    .ai-title {
-      font-size: 24px;
-    }
+    .ai-title { font-size: 24px; }
 
     .ai-grid {
       grid-template-columns: 1fr;

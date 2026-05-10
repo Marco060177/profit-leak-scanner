@@ -97,7 +97,7 @@ export const loader = async ({
   }
   let billingActive = false;
 
-const billingRes = await admin.graphql(`
+  const billingRes = await admin.graphql(`
   #graphql
   query {
     appInstallation {
@@ -110,14 +110,12 @@ const billingRes = await admin.graphql(`
   }
 `);
 
-const billingJson = await billingRes.json();
+  const billingJson = await billingRes.json();
 
-const activeSubscriptions =
-  billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
+  const activeSubscriptions =
+    billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
 
-billingActive = activeSubscriptions.length > 0;
-
-  
+  billingActive = activeSubscriptions.length > 0;
 
   const queryString = `processed_at:>=${fromYYYYMMDD}`;
 
@@ -323,13 +321,13 @@ export default function AppIndex() {
         <div>
           <div style={styles.title}>Profit Leak Scanner</div>
           <div style={{ marginTop: 6 }}>
-  <span
-    style={{ fontSize: 13, color: "#3457ff", cursor: "pointer" }}
-    onClick={() => navigate("/app/billing")}
-  >
-    Go to billing
-  </span>
-</div>
+            <span
+              style={{ fontSize: 13, color: "#3457ff", cursor: "pointer" }}
+              onClick={() => navigate("/app/billing")}
+            >
+              Go to billing
+            </span>
+          </div>
 
           <div style={styles.subtitleRow}>
             <div style={styles.subtitle}>
@@ -382,21 +380,6 @@ export default function AppIndex() {
         </div>
       </div>
 
-      {/* 
-{!billingActive ? (
-  <div style={styles.paywallBanner}>
-    <div style={{ fontWeight: 800 }}>🔒 Plan inactive</div>
-    <div style={{ opacity: 0.9, marginTop: 4 }}>
-      You are viewing the dashboard in preview mode. Activate your plan to unlock full
-      analysis.
-    </div>
-    <button style={styles.paywallBtn} onClick={() => navigate("/app/billing")}>
-      Go to billing
-    </button>
-  </div>
-) : null}
-*/}
-
       {hasMissingCost && (
         <div style={styles.bannerWarning}>
           <div style={{ fontWeight: 700 }}>⚠️ Missing product costs</div>
@@ -429,105 +412,103 @@ export default function AppIndex() {
           </div>
         </div>
       )}
-      
+
       <div
-  style={{
-    background: hasLosing
-      ? "linear-gradient(135deg, #2a0f12 0%, #47171d 100%)"
-      : "linear-gradient(135deg, #101828 0%, #172033 100%)",
-    borderRadius: 18,
-    padding: 24,
-    marginBottom: 22,
-    border: hasLosing
-      ? "1px solid rgba(255,80,80,0.25)"
-      : "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-  }}
->
-  <div
-    style={{
-      fontSize: 13,
-      fontWeight: 700,
-      letterSpacing: 1,
-      textTransform: "uppercase",
-      opacity: 0.7,
-    }}
-  >
-    Margin Health
-  </div>
+        style={{
+          background: hasLosing
+            ? "linear-gradient(135deg, #2a0f12 0%, #47171d 100%)"
+            : "linear-gradient(135deg, #101828 0%, #172033 100%)",
+          borderRadius: 18,
+          padding: 24,
+          marginBottom: 22,
+          border: hasLosing
+            ? "1px solid rgba(255,80,80,0.25)"
+            : "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: 1,
+            textTransform: "uppercase",
+            opacity: 0.7,
+          }}
+        >
+          Margin Health
+        </div>
 
-  <div
-    style={{
-      fontSize: 34,
-      fontWeight: 800,
-      marginTop: 10,
-      lineHeight: 1.1,
-    }}
-  >
-    {hasLosing
-      ? `Your store is leaking ${money(summary.totalLeak)}`
-      : "Your margins look healthy"}
-  </div>
+        <div
+          style={{
+            fontSize: 34,
+            fontWeight: 800,
+            marginTop: 10,
+            lineHeight: 1.1,
+          }}
+        >
+          {hasLosing
+            ? `Your store is leaking ${money(summary.totalLeak)}`
+            : "Your margins look healthy"}
+        </div>
 
-  <div
-    style={{
-      marginTop: 12,
-      opacity: 0.82,
-      fontSize: 16,
-      lineHeight: 1.6,
-      maxWidth: 760,
-    }}
-  >
-    {hasLosing
-      ? "Products selling below cost have been detected. Review pricing, shipping, and product costs to recover lost profit."
-      : "Profit Leak Scanner is monitoring your store for hidden pricing leaks, low-margin products, and missing costs."}
-  </div>
+        <div
+          style={{
+            marginTop: 12,
+            opacity: 0.82,
+            fontSize: 16,
+            lineHeight: 1.6,
+            maxWidth: 760,
+          }}
+        >
+          {hasLosing
+            ? "Products selling below cost have been detected. Review pricing, shipping, and product costs to recover lost profit."
+            : "Profit Leak Scanner is monitoring your store for hidden pricing leaks, low-margin products, and missing costs."}
+        </div>
 
-  <div
-    style={{
-      display: "flex",
-      gap: 12,
-      marginTop: 18,
-      flexWrap: "wrap",
-    }}
-  >
-    <div
-      style={{
-        background: "rgba(255,255,255,0.08)",
-        padding: "10px 14px",
-        borderRadius: 12,
-        fontWeight: 700,
-      }}
-    >
-      Revenue: {money(summary.revenue)}
-    </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+            marginTop: 18,
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              padding: "10px 14px",
+              borderRadius: 12,
+              fontWeight: 700,
+            }}
+          >
+            Revenue: {money(summary.revenue)}
+          </div>
 
-    <div
-      style={{
-        background: "rgba(255,255,255,0.08)",
-        padding: "10px 14px",
-        borderRadius: 12,
-        fontWeight: 700,
-      }}
-    >
-      Profit: {money(summary.profit)}
-    </div>
+          <div
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              padding: "10px 14px",
+              borderRadius: 12,
+              fontWeight: 700,
+            }}
+          >
+            Profit: {money(summary.profit)}
+          </div>
 
-    <div
-      style={{
-        background: hasLosing
-          ? "rgba(255,80,80,0.15)"
-          : "rgba(80,255,120,0.12)",
-        padding: "10px 14px",
-        borderRadius: 12,
-        fontWeight: 700,
-      }}
-    >
-      Total Leak: {money(summary.totalLeak)}
-    </div>
-  </div>
-</div>
-      
+          <div
+            style={{
+              background: hasLosing ? "rgba(255,80,80,0.15)" : "rgba(80,255,120,0.12)",
+              padding: "10px 14px",
+              borderRadius: 12,
+              fontWeight: 700,
+            }}
+          >
+            Total Leak: {money(summary.totalLeak)}
+          </div>
+        </div>
+      </div>
+
       <div style={styles.kpiGrid}>
         <KpiCard label="Revenue" value={money(summary.revenue)} />
         <KpiCard label="COGS" value={money(summary.cogs)} />
@@ -548,22 +529,21 @@ export default function AppIndex() {
 
         {visibleRows.length === 0 ? (
           <div style={styles.empty}>
-  <div style={{ fontSize: 42 }}>🧾</div>
+            <div style={{ fontSize: 42 }}>🧾</div>
 
-  <div style={{ fontWeight: 800, marginTop: 8, fontSize: 18 }}>
-    Your store is ready for profit analysis
-  </div>
+            <div style={{ fontWeight: 800, marginTop: 8, fontSize: 18 }}>
+              Your store is ready for profit analysis
+            </div>
 
-  <div style={{ opacity: 0.82, marginTop: 8, lineHeight: 1.6 }}>
-    Once orders are available, Profit Leak Scanner will automatically detect
-    products selling below cost, low-margin products, missing product costs,
-    and pricing leaks.
-  </div>
+            <div style={{ opacity: 0.82, marginTop: 8, lineHeight: 1.6 }}>
+              Once orders are available, Profit Leak Scanner will automatically detect products
+              selling below cost, low-margin products, missing product costs, and pricing leaks.
+            </div>
 
-  <div style={{ marginTop: 14, fontWeight: 700 }}>
-    Tip: add product costs in Shopify for the most accurate results.
-  </div>
-</div>
+            <div style={{ marginTop: 14, fontWeight: 700 }}>
+              Tip: add product costs in Shopify for the most accurate results.
+            </div>
+          </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={styles.table}>
@@ -639,32 +619,33 @@ export default function AppIndex() {
                 {visibleRows.map((r) => (
                   <React.Fragment key={r.productTitle}>
                     <tr
-  style={{
-    ...(r.losing
-      ? styles.trLosing
-      : r.lowMargin
-      ? styles.trLowMargin
-      : r.missingCost
-      ? styles.trMissingCost
-      : styles.tr),
-  }}
-  onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(0,0,0,0.035)")}
-  onMouseLeave={(e) =>
-    (e.currentTarget.style.background =
-      r.losing
-        ? "rgba(220, 38, 38, 0.06)"
-        : r.lowMargin
-        ? "rgba(245, 158, 11, 0.08)"
-        : r.missingCost
-        ? "rgba(245, 158, 11, 0.05)"
-        : "transparent")
-  }
->
+                      style={{
+                        ...(r.losing
+                          ? styles.trLosing
+                          : r.lowMargin
+                            ? styles.trLowMargin
+                            : r.missingCost
+                              ? styles.trMissingCost
+                              : styles.tr),
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = "rgba(0,0,0,0.035)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = r.losing
+                          ? "rgba(220, 38, 38, 0.06)"
+                          : r.lowMargin
+                            ? "rgba(245, 158, 11, 0.08)"
+                            : r.missingCost
+                              ? "rgba(245, 158, 11, 0.05)"
+                              : "transparent")
+                      }
+                    >
                       <td style={styles.tdProduct}>
                         <div style={{ fontWeight: 700 }}>{r.productTitle}</div>
                         <div style={styles.mini}>
-                          Avg price: {money(r.avgPrice)} • Avg cost: {money(r.avgCost)} • Break-even
-                          price: {money(r.breakEvenPrice)}
+                          Avg price: {money(r.avgPrice)} • Avg cost: {money(r.avgCost)} •
+                          Break-even price: {money(r.breakEvenPrice)}
                           {r.missingCost ? (
                             <span style={styles.missingCostBadge}>Missing cost</span>
                           ) : null}
@@ -1001,12 +982,12 @@ const styles: Record<string, React.CSSProperties> = {
     opacity: 1,
   },
   tr: {
-  background: "transparent",
-  transition: "background 0.15s ease",
-},
-trHover: {
-  background: "rgba(0,0,0,0.035)",
-},
+    background: "transparent",
+    transition: "background 0.15s ease",
+  },
+  trHover: {
+    background: "rgba(0,0,0,0.035)",
+  },
   trLosing: {
     background: "rgba(220, 38, 38, 0.06)",
   },
