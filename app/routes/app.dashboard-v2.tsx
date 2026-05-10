@@ -560,14 +560,7 @@ export default function DashboardV2() {
 
         <div className="hero-header">
           <div>
-            <div className="alert-pill">
-              <div className="alert-dot" />
-              <div>
-                {productsAtRisk > 0
-                  ? `${productsAtRisk} pricing issues detected`
-                  : "No critical pricing issues detected"}
-              </div>
-            </div>
+            
 
             <div className="eyebrow">Profit Leak Scanner</div>
 
@@ -575,27 +568,7 @@ export default function DashboardV2() {
 
             <div className="hero-description">
 
-              {!hasRealData ? (
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 10,
-                    padding: "10px 14px",
-                    borderRadius: 999,
-                    background: "rgba(59,130,246,0.12)",
-                    border: "1px solid rgba(59,130,246,0.24)",
-                    color: "#93c5fd",
-                    fontWeight: 800,
-                    fontSize: 13,
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  <span>ℹ️</span>
-                  <span>Demo preview • Real analytics will appear after store orders are detected</span>
-                </div>
-              ) : null}
+              
               Track hidden margin leaks, underpriced products and pricing issues affecting your
               Shopify store profitability.
             </div>
