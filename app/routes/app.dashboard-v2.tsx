@@ -596,7 +596,22 @@ export default function DashboardV2() {
 
       const y = 240 - (point.revenue / maxRevenue) * 180;
 
-      return `${x}, ${y}`;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  const maxProfit = Math.max(...chartData.map((d) => d.profit), 1);
+
+  const profitPoints = chartData
+    .map((point, index) => {
+      const x =
+        chartData.length === 1
+          ? 0
+          : (index / (chartData.length - 1)) * 1000;
+
+      const y = 240 - (point.profit / maxProfit) * 180;
+
+      return `${x},${y}`;
     })
     .join(" ");
 
@@ -984,6 +999,19 @@ export default function DashboardV2() {
                 strokeLinejoin="round"
                 points={revenuePoints}
               />
+
+              <polyline
+                fill="none"
+                stroke="rgba(34,197,94,0.95)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={profitPoints}
+                style={{
+                  filter: "drop-shadow(0 0 10px rgba(34,197,94,0.35))",
+                }}
+              />
+
             </svg>
 
             <div className="chart-overlay" />
