@@ -306,6 +306,40 @@ export default function DashboardV2() {
           <div>
             <div
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 14px",
+                borderRadius: 999,
+                background: "rgba(255,90,54,0.12)",
+                border: "1px solid rgba(255,90,54,0.16)",
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "#ff5a36",
+                  boxShadow: "0 0 10px rgba(255,90,54,0.8)",
+                }}
+              />
+
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: "#ff7b59",
+                  letterSpacing: 0.3,
+                }}
+              >
+                3 critical pricing issues detected
+              </div>
+            </div>
+
+            <div
+              style={{
                 fontSize: 14,
                 fontWeight: 700,
                 letterSpacing: 1,
@@ -313,40 +347,7 @@ export default function DashboardV2() {
                 textTransform: "uppercase",
               }}
             >
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  background: "rgba(255,90,54,0.12)",
-                  border: "1px solid rgba(255,90,54,0.16)",
-                  marginBottom: 18,
-                }}
-              >
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "#ff5a36",
-                    boxShadow: "0 0 10px rgba(255,90,54,0.8)",
-                  }}
-                />
-
-                <div
-                  style={{
-                    fontSize: 13,
-                    fontWeight: 800,
-                    color: "#ff7b59",
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  3 critical pricing issues detected
-                </div>
-              </div>
-              <div>Profit Leak Scanner</div>
+              Profit Leak Scanner
             </div>
 
             <div
