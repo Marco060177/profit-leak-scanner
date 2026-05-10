@@ -428,6 +428,27 @@ export default function DashboardV2() {
 
   const sourceRows = hasRealData ? rows : demoRows;
 
+  const visualRevenue = sourceRows.reduce((acc, row) => acc + row.revenue, 0);
+  const visualCogs = sourceRows.reduce((acc, row) => acc + row.cogs, 0);
+  const visualProfit = visualRevenue - visualCogs;
+
+  const visualLeak = Math.abs(
+    sourceRows.reduce((acc, row) => acc + (row.profit < 0 ? row.profit : 0), 0),
+  );
+
+  const visualMarginPct =
+    visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
+
+  const visualLowMarginCount = sourceRows.filter((row) => row.lowMargin).length;
+
+  const visualMissingCostCount = sourceRows.filter(
+    (row) => row.missingCost,
+  ).length;
+
+  const visualProductsAtRisk = sourceRows.filter(
+    (row) => row.losing || row.lowMargin || row.missingCost,
+  ).length;
+
   const filteredRows = onlyLosing
     ? sourceRows.filter((row) => row.losing)
     : sourceRows;
@@ -444,20 +465,20 @@ export default function DashboardV2() {
     .slice(0, 12);
 
   const topLeaks = [
-    summary.losingCount > 0
+    sourceRows.filter((row) => row.losing).length > 0
       ? {
         icon: "⚠️",
         issue: "Products selling below cost",
         severity: "High",
-        loss: money(summary.totalLeak),
+        loss: money(visualLeak),
       }
       : null,
-    summary.missingCostCount > 0
+    visualMissingCostCount > 0
       ? {
         icon: "📦",
         issue: "Products missing cost data",
         severity: "Medium",
-        loss: `${summary.missingCostCount} products`,
+        loss: `${visualMissingCostCount} products`,
       }
       : null,
     lowMarginCount > 0
@@ -498,10 +519,11 @@ export default function DashboardV2() {
   }, 0);
 
   const recommendations = [
-    summary.losingCount > 0
+    sourceRows.filter((row) => row.losing).length > 0
       ? {
-        title: `Fix ${summary.losingCount} products selling below cost`,
-        impact: `${money(summary.totalLeak)} potential recovery`,
+        title: `Fix ${sourceRows.filter((row) => row.losing).length
+          } products selling below cost`,
+        impact: `${money(visualLeak)} potential recovery`,
         confidence: "High confidence",
       }
       : null,
@@ -533,7 +555,7 @@ export default function DashboardV2() {
   }[];
 
   function setPeriod(next: "7" | "30" | "90") {
-    navigate(`/app/dashboard-v2?period=${next}`);
+    navigate(`/ app / dashboard - v2 ? period = ${next}`);
   }
 
   const riskColor = (row: Row) => {
@@ -549,6 +571,34 @@ export default function DashboardV2() {
     if (row.lowMargin) return "rgba(255,90,54,0.14)";
     return "rgba(34,197,94,0.12)";
   };
+
+  const chartData =
+    trend.length > 0
+      ? trend
+      : [
+        { date: "Mon", revenue: 4200, profit: 1100 },
+        { date: "Tue", revenue: 5100, profit: 1600 },
+        { date: "Wed", revenue: 4800, profit: 1200 },
+        { date: "Thu", revenue: 6200, profit: 2100 },
+        { date: "Fri", revenue: 7200, profit: 2600 },
+        { date: "Sat", revenue: 6800, profit: 2400 },
+        { date: "Sun", revenue: 7600, profit: 3100 },
+      ];
+
+  const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1);
+
+  const revenuePoints = chartData
+    .map((point, index) => {
+      const x =
+        chartData.length === 1
+          ? 0
+          : (index / (chartData.length - 1)) * 1000;
+
+      const y = 240 - (point.revenue / maxRevenue) * 180;
+
+      return `${x}, ${y}`;
+    })
+    .join(" ");
 
   const riskLabel = (row: Row) => {
     if (row.losing) return "Critical";
@@ -670,7 +720,7 @@ export default function DashboardV2() {
 
               setTimeout(() => {
                 clearInterval(interval);
-                navigate(`/app/dashboard-v2?period=${period}`);
+                navigate(`/ app / dashboard - v2 ? period = ${period}`);
               }, 2800);
             }}
           >
@@ -708,18 +758,18 @@ export default function DashboardV2() {
             <div className="score-risk">{scoreLabel}</div>
 
             <div className="score-copy">
-              {summary.totalLeak > 0
+              {visualLeak > 0
                 ? `Your store is leaking an estimated ${money(
-                  summary.totalLeak,
+                  visualLeak,
                 )} from products selling below cost.`
                 : "Your store currently has no products selling below cost in the selected period."}
             </div>
 
             <div className="score-mini-grid">
               {[
-                ["Estimated leak", money(summary.totalLeak), "#ff5a36"],
-                ["Products at risk", `${productsAtRisk} detected`, "#f59e0b"],
-                ["Margin", pct(summary.marginPct), "#22c55e"],
+                ["Estimated leak", money(visualLeak), "#ff5a36"],
+                ["Products at risk", `${visualProductsAtRisk} detected`, "#f59e0b"],
+                ["Margin", pct(visualMarginPct), "#22c55e"],
               ].map(([label, value, color]) => (
                 <div key={label} className="score-mini-card">
                   <div>{label}</div>
@@ -786,7 +836,8 @@ export default function DashboardV2() {
               String(sourceRows.length),
               `${sourceRows.filter(
                 (row) => row.losing || row.lowMargin || row.missingCost,
-              ).length} at risk`,
+              ).length
+              } at risk`,
               "warning",
             ],
 
@@ -894,7 +945,9 @@ export default function DashboardV2() {
               </div>
             </div>
 
-            <div className="positive-trend">{pct(summary.marginPct)} margin</div>
+            <div className="positive-trend">
+              {pct(visualMarginPct)} margin
+            </div>
           </div>
 
           <div className="chart-card">
@@ -917,32 +970,19 @@ export default function DashboardV2() {
                 </linearGradient>
               </defs>
 
-              <path
-                d="
-                  M 0 210
-                  C 80 200, 120 180, 180 170
-                  S 300 120, 380 140
-                  S 500 80, 620 95
-                  S 760 50, 1000 40
-                  L 1000 260
-                  L 0 260
-                  Z
-                "
-                fill="url(#fillGradient)"
+              <polyline
+                fill="rgba(255,123,89,0.12)"
+                stroke="none"
+                points={`0, 260 ${revenuePoints} 1000, 260`}
               />
 
-              <path
-                d="
-                  M 0 210
-                  C 80 200, 120 180, 180 170
-                  S 300 120, 380 140
-                  S 500 80, 620 95
-                  S 760 50, 1000 40
-                "
+              <polyline
                 fill="none"
                 stroke="url(#lineGradient)"
                 strokeWidth="6"
                 strokeLinecap="round"
+                strokeLinejoin="round"
+                points={revenuePoints}
               />
             </svg>
 
@@ -1090,13 +1130,13 @@ export default function DashboardV2() {
                                         className="shopify-link"
                                       >
                                         Set cost
-                                      </a>
+                                      </a >
                                     </>
                                   ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
+                                </div >
+                              </div >
+                            </div >
+                          </td >
 
                           <td>{money(row.revenue)}</td>
 
@@ -1131,7 +1171,7 @@ export default function DashboardV2() {
                               {riskLabel(row)}
                             </span>
                           </td>
-                        </tr>
+                        </tr >
 
                         {(row.losing || row.targetDelta > 0) && (
                           <tr>
@@ -1144,11 +1184,11 @@ export default function DashboardV2() {
                             </td>
                           </tr>
                         )}
-                      </React.Fragment>
+                      </React.Fragment >
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </tbody >
+                </table >
+              </div >
 
               <div className="mobile-products">
                 {sortedRiskRows.map((row) => (
@@ -1218,7 +1258,7 @@ export default function DashboardV2() {
               </div>
             </>
           )}
-        </div>
+        </div >
 
         <div className="ai-panel">
           <div className="ai-glow" />
@@ -1252,8 +1292,8 @@ export default function DashboardV2() {
             ))}
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 
