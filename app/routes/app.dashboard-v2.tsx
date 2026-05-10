@@ -1,4 +1,6 @@
 export default function DashboardV2() {
+  const dashboardLoading = true;
+
   const dashboardData = {
     summary: {
       score: 32,
@@ -105,6 +107,91 @@ export default function DashboardV2() {
       },
     ],
   };
+
+  if (dashboardLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "linear-gradient(180deg, #071019 0%, #0b111b 100%)",
+          padding: 32,
+          color: "#f3f4f6",
+          fontFamily: "Inter, system-ui, sans-serif",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1400,
+            margin: "0 auto",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 24,
+            }}
+          >
+            <div
+              style={{
+                height: 80,
+                borderRadius: 24,
+                background: "rgba(255,255,255,0.05)",
+                animation: "pulse 1.8s infinite",
+              }}
+            />
+
+            <div
+              style={{
+                height: 340,
+                borderRadius: 32,
+                background: "rgba(255,255,255,0.05)",
+                animation: "pulse 1.8s infinite",
+              }}
+            />
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 18,
+              }}
+            >
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  style={{
+                    height: 140,
+                    borderRadius: 24,
+                    background: "rgba(255,255,255,0.05)",
+                    animation: "pulse 1.8s infinite",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <style>
+          {`
+            @keyframes pulse {
+              0% {
+                opacity: 0.45;
+              }
+
+              50% {
+                opacity: 1;
+              }
+
+              100% {
+                opacity: 0.45;
+              }
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
 
   return (
     <div
