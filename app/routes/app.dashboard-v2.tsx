@@ -829,14 +829,19 @@ export default function DashboardV2() {
           </div>
 
           <div className="kpi-card">
-            <div className="kpi-label">Products Missing Costs</div>
+            <div className="kpi-label">AVERAGE PRODUCT MARGIN</div>
 
             <div className="kpi-value">
-              {summary.missingCostCount}
+              {pct(
+                sourceRows.length > 0
+                  ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
+                  sourceRows.length
+                  : 0,
+              )}
             </div>
 
-            <div className="kpi-note" style={{ color: "#ff6b4a" }}>
-              Cost setup required
+            <div className="kpi-note" style={{ color: "#22c55e" }}>
+              Across analyzed products
             </div>
           </div>
         </div>
