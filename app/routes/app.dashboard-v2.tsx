@@ -555,7 +555,7 @@ export default function DashboardV2() {
   }[];
 
   function setPeriod(next: "7" | "30" | "90") {
-    navigate(`/ app / dashboard - v2 ? period = ${next}`);
+    navigate(`/app?period=${next}`);
   }
 
   const riskColor = (row: Row) => {
