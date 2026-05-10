@@ -1327,31 +1327,41 @@ const dashboardStyles = `
   }
 
   .billing-banner {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 24px;
-    padding: 14px 16px;
-    border-radius: 18px;
-    background: rgba(245,158,11,0.1);
-    border: 1px solid rgba(245,158,11,0.22);
-    color: #f8fafc;
-  }
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(59,130,246,0.10);
+  border: 1px solid rgba(59,130,246,0.20);
+  color: #e5edff;
+}
 
-  .billing-banner span {
-    opacity: 0.75;
-    flex: 1;
-  }
+.billing-banner span {
+  opacity: 0.82;
+  flex: 1;
+  color: #c7d7ff;
+}
 
-  .billing-banner button {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: white;
-    border-radius: 12px;
-    padding: 9px 13px;
-    font-weight: 800;
-    cursor: pointer;
-  }
+.billing-banner strong {
+  color: #93c5fd;
+}
+
+.billing-banner button {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: white;
+  border-radius: 12px;
+  padding: 9px 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.billing-banner button:hover {
+  background: rgba(255,255,255,0.10);
+}
 
   .score-card {
     background: linear-gradient(135deg, rgba(255,90,54,0.16), rgba(15,23,42,0.92));
