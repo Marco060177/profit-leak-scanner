@@ -217,8 +217,8 @@ export const loader = async ({
       const suggestion =
         profit < 0
           ? `Increase price to ${money(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${money(
-              targetDelta,
-            )} per unit) to reach a 20% margin.`
+            targetDelta,
+          )} per unit) to reach a 20% margin.`
           : `Pricing looks healthy for a 20% margin.`;
 
       return {
@@ -269,6 +269,8 @@ export default function DashboardV2() {
 
   const navigate = useNavigate();
 
+  const [onlyLosing, setOnlyLosing] = React.useState(false);
+
   const dashboardLoading = false;
 
   const lowMarginCount = rows.filter((row) => row.lowMargin).length;
@@ -282,10 +284,10 @@ export default function DashboardV2() {
       100,
       Math.round(
         100 -
-          summary.losingCount * 18 -
-          summary.missingCostCount * 8 -
-          lowMarginCount * 6 -
-          Math.max(0, 20 - summary.marginPct) * 2,
+        summary.losingCount * 18 -
+        summary.missingCostCount * 8 -
+        lowMarginCount * 6 -
+        Math.max(0, 20 - summary.marginPct) * 2,
       ),
     ),
   );
@@ -293,7 +295,11 @@ export default function DashboardV2() {
   const scoreLabel =
     score < 40 ? "High risk" : score < 70 ? "Needs attention" : "Healthy";
 
-  const sortedRiskRows = rows
+  const filteredRows = onlyLosing
+    ? rows.filter((row) => row.losing)
+    : rows;
+
+  const sortedRiskRows = filteredRows
     .slice()
     .sort((a, b) => {
       if (a.losing !== b.losing) return a.losing ? -1 : 1;
@@ -301,40 +307,40 @@ export default function DashboardV2() {
       if (a.lowMargin !== b.lowMargin) return a.lowMargin ? -1 : 1;
       return a.profit - b.profit;
     })
-    .slice(0, 6);
+    .slice(0, 12);
 
   const topLeaks = [
     summary.losingCount > 0
       ? {
-          icon: "⚠️",
-          issue: "Products selling below cost",
-          severity: "High",
-          loss: money(summary.totalLeak),
-        }
+        icon: "⚠️",
+        issue: "Products selling below cost",
+        severity: "High",
+        loss: money(summary.totalLeak),
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          icon: "📦",
-          issue: "Products missing cost data",
-          severity: "Medium",
-          loss: `${summary.missingCostCount} products`,
-        }
+        icon: "📦",
+        issue: "Products missing cost data",
+        severity: "Medium",
+        loss: `${summary.missingCostCount} products`,
+      }
       : null,
     lowMarginCount > 0
       ? {
-          icon: "🏷️",
-          issue: "Low-margin products detected",
-          severity: "Medium",
-          loss: `${lowMarginCount} products`,
-        }
+        icon: "🏷️",
+        issue: "Low-margin products detected",
+        severity: "Medium",
+        loss: `${lowMarginCount} products`,
+      }
       : null,
     productsAtRisk > 0
       ? {
-          icon: "🔥",
-          issue: "Products requiring margin review",
-          severity: "Low",
-          loss: `${productsAtRisk} at risk`,
-        }
+        icon: "🔥",
+        issue: "Products requiring margin review",
+        severity: "Low",
+        loss: `${productsAtRisk} at risk`,
+      }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -346,31 +352,31 @@ export default function DashboardV2() {
   const recommendations = [
     summary.losingCount > 0
       ? {
-          title: `Fix ${summary.losingCount} products selling below cost`,
-          impact: `${money(summary.totalLeak)} potential recovery`,
-          confidence: "High confidence",
-        }
+        title: `Fix ${summary.losingCount} products selling below cost`,
+        impact: `${money(summary.totalLeak)} potential recovery`,
+        confidence: "High confidence",
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-        }
+        title: "Update missing product costs in Shopify",
+        impact: `${summary.missingCostCount} products affected`,
+        confidence: "Critical issue",
+      }
       : null,
     lowMarginCount > 0
       ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-        }
+        title: "Review low-margin products below 10%",
+        impact: `${lowMarginCount} products need attention`,
+        confidence: "Medium confidence",
+      }
       : null,
     rows.length > 0
       ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-        }
+        title: "Review target prices for worst-performing products",
+        impact: "20% margin target available",
+        confidence: "Rule-based insight",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -535,8 +541,8 @@ export default function DashboardV2() {
             <div className="score-copy">
               {summary.totalLeak > 0
                 ? `Your store is leaking an estimated ${money(
-                    summary.totalLeak,
-                  )} from products selling below cost.`
+                  summary.totalLeak,
+                )} from products selling below cost.`
                 : "Your store currently has no products selling below cost in the selected period."}
             </div>
 
@@ -630,7 +636,21 @@ export default function DashboardV2() {
             <div>
               <div className="section-title">Profit Trend</div>
               <div className="section-subtitle">
-                Current profit performance based on Shopify orders.
+                <div className="table-filters">
+                  <button
+                    className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
+                    onClick={() => setOnlyLosing(false)}
+                  >
+                    All products
+                  </button>
+
+                  <button
+                    className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
+                    onClick={() => setOnlyLosing(true)}
+                  >
+                    Losing only
+                  </button>
+                </div>Current profit performance based on Shopify orders.
               </div>
             </div>
 
@@ -1998,5 +2018,32 @@ const dashboardStyles = `
     .score-mini-card strong {
       font-size: 23px;
     }
+     .table-filters {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.table-filter-btn {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.72);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-filter-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.table-filter-btn.active {
+  background: rgba(255,255,255,0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.14);
+} 
   }
 `;
