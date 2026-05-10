@@ -735,13 +735,39 @@ export default function DashboardV2() {
 
         <div className="kpi-grid">
           {[
-            ["Revenue scanned", money(summary.revenue), `Last ${period} days`, "positive"],
-            ["Products analyzed", String(rows.length), `${productsAtRisk} at risk`, "warning"],
-            ["Low margin products", String(lowMarginCount), "Below 10%", "warning"],
-            ["Missing costs", String(summary.missingCostCount), "Fix required", "danger"],
+            [
+              "Revenue scanned",
+              money(sourceRows.reduce((acc, row) => acc + row.revenue, 0)),
+              `Last ${period} days`,
+              "positive",
+            ],
+
+            [
+              "Products analyzed",
+              String(sourceRows.length),
+              `${sourceRows.filter(
+                (row) => row.losing || row.lowMargin || row.missingCost,
+              ).length} at risk`,
+              "warning",
+            ],
+
+            [
+              "Low margin products",
+              String(sourceRows.filter((row) => row.lowMargin).length),
+              "Below 10%",
+              "warning",
+            ],
+
+            [
+              "Missing costs",
+              String(sourceRows.filter((row) => row.missingCost).length),
+              "Fix required",
+              "danger",
+            ],
           ].map(([label, value, note, tone]) => (
             <div key={label} className="kpi-card">
               <div className="kpi-label">{label}</div>
+
               <div className="kpi-value">{value}</div>
 
               <div
