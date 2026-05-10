@@ -99,10 +99,8 @@ export const loader = async ({
   `);
 
   const billingJson = await billingRes.json();
-
   const activeSubscriptions =
     billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
-
   const billingActive = activeSubscriptions.length > 0;
 
   const queryString = `processed_at:>=${fromYYYYMMDD}`;
@@ -217,9 +215,13 @@ export const loader = async ({
       const suggestion =
         profit < 0
           ? `Increase price to ${money(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${money(
-            targetDelta,
-          )} per unit) to reach a 20% margin.`
-          : `Pricing looks healthy for a 20% margin.`;
+              targetDelta,
+            )} per unit) to reach a 20% margin.`
+          : targetDelta > 0
+            ? `Consider increasing price to ${money(
+                targetPrice,
+              )} to reach a stronger 20% margin target.`
+            : `Pricing looks healthy for a 20% margin.`;
 
       return {
         ...r,
@@ -268,7 +270,6 @@ export default function DashboardV2() {
     useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
-
   const [onlyLosing, setOnlyLosing] = React.useState(false);
 
   const dashboardLoading = false;
@@ -284,10 +285,10 @@ export default function DashboardV2() {
       100,
       Math.round(
         100 -
-        summary.losingCount * 18 -
-        summary.missingCostCount * 8 -
-        lowMarginCount * 6 -
-        Math.max(0, 20 - summary.marginPct) * 2,
+          summary.losingCount * 18 -
+          summary.missingCostCount * 8 -
+          lowMarginCount * 6 -
+          Math.max(0, 20 - summary.marginPct) * 2,
       ),
     ),
   );
@@ -295,9 +296,7 @@ export default function DashboardV2() {
   const scoreLabel =
     score < 40 ? "High risk" : score < 70 ? "Needs attention" : "Healthy";
 
-  const filteredRows = onlyLosing
-    ? rows.filter((row) => row.losing)
-    : rows;
+  const filteredRows = onlyLosing ? rows.filter((row) => row.losing) : rows;
 
   const sortedRiskRows = filteredRows
     .slice()
@@ -312,35 +311,35 @@ export default function DashboardV2() {
   const topLeaks = [
     summary.losingCount > 0
       ? {
-        icon: "⚠️",
-        issue: "Products selling below cost",
-        severity: "High",
-        loss: money(summary.totalLeak),
-      }
+          icon: "⚠️",
+          issue: "Products selling below cost",
+          severity: "High",
+          loss: money(summary.totalLeak),
+        }
       : null,
     summary.missingCostCount > 0
       ? {
-        icon: "📦",
-        issue: "Products missing cost data",
-        severity: "Medium",
-        loss: `${summary.missingCostCount} products`,
-      }
+          icon: "📦",
+          issue: "Products missing cost data",
+          severity: "Medium",
+          loss: `${summary.missingCostCount} products`,
+        }
       : null,
     lowMarginCount > 0
       ? {
-        icon: "🏷️",
-        issue: "Low-margin products detected",
-        severity: "Medium",
-        loss: `${lowMarginCount} products`,
-      }
+          icon: "🏷️",
+          issue: "Low-margin products detected",
+          severity: "Medium",
+          loss: `${lowMarginCount} products`,
+        }
       : null,
     productsAtRisk > 0
       ? {
-        icon: "🔥",
-        issue: "Products requiring margin review",
-        severity: "Low",
-        loss: `${productsAtRisk} at risk`,
-      }
+          icon: "🔥",
+          issue: "Products requiring margin review",
+          severity: "Low",
+          loss: `${productsAtRisk} at risk`,
+        }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -352,31 +351,31 @@ export default function DashboardV2() {
   const recommendations = [
     summary.losingCount > 0
       ? {
-        title: `Fix ${summary.losingCount} products selling below cost`,
-        impact: `${money(summary.totalLeak)} potential recovery`,
-        confidence: "High confidence",
-      }
+          title: `Fix ${summary.losingCount} products selling below cost`,
+          impact: `${money(summary.totalLeak)} potential recovery`,
+          confidence: "High confidence",
+        }
       : null,
     summary.missingCostCount > 0
       ? {
-        title: "Update missing product costs in Shopify",
-        impact: `${summary.missingCostCount} products affected`,
-        confidence: "Critical issue",
-      }
+          title: "Update missing product costs in Shopify",
+          impact: `${summary.missingCostCount} products affected`,
+          confidence: "Critical issue",
+        }
       : null,
     lowMarginCount > 0
       ? {
-        title: "Review low-margin products below 10%",
-        impact: `${lowMarginCount} products need attention`,
-        confidence: "Medium confidence",
-      }
+          title: "Review low-margin products below 10%",
+          impact: `${lowMarginCount} products need attention`,
+          confidence: "Medium confidence",
+        }
       : null,
     rows.length > 0
       ? {
-        title: "Review target prices for worst-performing products",
-        impact: "20% margin target available",
-        confidence: "Rule-based insight",
-      }
+          title: "Review target prices for worst-performing products",
+          impact: "20% margin target available",
+          confidence: "Rule-based insight",
+        }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -541,8 +540,8 @@ export default function DashboardV2() {
             <div className="score-copy">
               {summary.totalLeak > 0
                 ? `Your store is leaking an estimated ${money(
-                  summary.totalLeak,
-                )} from products selling below cost.`
+                    summary.totalLeak,
+                  )} from products selling below cost.`
                 : "Your store currently has no products selling below cost in the selected period."}
             </div>
 
@@ -636,21 +635,7 @@ export default function DashboardV2() {
             <div>
               <div className="section-title">Profit Trend</div>
               <div className="section-subtitle">
-                <div className="table-filters">
-                  <button
-                    className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
-                    onClick={() => setOnlyLosing(false)}
-                  >
-                    All products
-                  </button>
-
-                  <button
-                    className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
-                    onClick={() => setOnlyLosing(true)}
-                  >
-                    Losing only
-                  </button>
-                </div>Current profit performance based on Shopify orders.
+                Current profit performance based on Shopify orders.
               </div>
             </div>
 
@@ -771,6 +756,22 @@ export default function DashboardV2() {
               <div className="section-subtitle">
                 Products ranked by real margin risk and potential profit leaks.
               </div>
+
+              <div className="table-filters">
+                <button
+                  className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
+                  onClick={() => setOnlyLosing(false)}
+                >
+                  All products
+                </button>
+
+                <button
+                  className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
+                  onClick={() => setOnlyLosing(true)}
+                >
+                  Losing only
+                </button>
+              </div>
             </div>
 
             <button className="secondary-button">Export CSV</button>
@@ -795,66 +796,100 @@ export default function DashboardV2() {
                 <table className="product-table">
                   <thead>
                     <tr>
-                      {["Product", "Revenue", "COGS", "Profit", "Margin", "Risk", "Action"].map(
-                        (h) => (
-                          <th key={h}>{h}</th>
-                        ),
-                      )}
+                      {[
+                        "Product",
+                        "Revenue",
+                        "COGS",
+                        "Profit",
+                        "Target Price",
+                        "Delta",
+                        "Margin",
+                        "Risk",
+                      ].map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
                     </tr>
                   </thead>
 
                   <tbody>
                     {sortedRiskRows.map((row) => (
-                      <tr key={row.productTitle}>
-                        <td>
-                          <div className="product-name-cell">
-                            <div className="product-icon">📦</div>
+                      <React.Fragment key={row.productTitle}>
+                        <tr>
+                          <td>
+                            <div className="product-name-cell">
+                              <div className="product-icon">📦</div>
 
-                            <div>
-                              <div className="product-name">{row.productTitle}</div>
-                              <div className="product-subtitle">
-                                Avg price {money(row.avgPrice)} • Avg cost {money(row.avgCost)}
+                              <div>
+                                <div className="product-name">{row.productTitle}</div>
+                                <div className="product-subtitle">
+                                  Avg price {money(row.avgPrice)} • Avg cost{" "}
+                                  {money(row.avgCost)}
+                                  {row.missingCost && row.productId ? (
+                                    <>
+                                      {" "}
+                                      •{" "}
+                                      <a
+                                        href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="shopify-link"
+                                      >
+                                        Set cost
+                                      </a>
+                                    </>
+                                  ) : null}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>{money(row.revenue)}</td>
-                        <td>{money(row.cogs)}</td>
-                        <td style={{ color: row.profit < 0 ? "#ef4444" : "#22c55e" }}>
-                          {money(row.profit)}
-                        </td>
-                        <td>{pct(row.marginPct)}</td>
+                          <td>{money(row.revenue)}</td>
 
-                        <td>
-                          <span
-                            className="risk-pill"
+                          <td>{money(row.cogs)}</td>
+
+                          <td style={{ color: row.profit < 0 ? "#ef4444" : "#22c55e" }}>
+                            {money(row.profit)}
+                          </td>
+
+                          <td>{money(row.targetPrice)}</td>
+
+                          <td
                             style={{
-                              color: riskColor(row),
-                              background: riskBackground(row),
+                              color: row.targetDelta > 0 ? "#ff6b4a" : "#22c55e",
+                              fontWeight: 900,
                             }}
                           >
-                            {riskLabel(row)}
-                          </span>
-                        </td>
+                            {row.targetDelta > 0 ? "↑ " : "↓ "}
+                            {money(row.targetDelta)}
+                          </td>
 
-                        <td>
-                          {row.missingCost && row.productId ? (
-                            <a
-                              href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="shopify-link"
+                          <td>{pct(row.marginPct)}</td>
+
+                          <td>
+                            <span
+                              className="risk-pill"
+                              style={{
+                                color: riskColor(row),
+                                background: riskBackground(row),
+                              }}
                             >
-                              Set cost
-                            </a>
-                          ) : row.targetDelta > 0 ? (
-                            <span className="price-delta">↑ {money(row.targetDelta)}</span>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
+                              {riskLabel(row)}
+                            </span>
+                          </td>
+                        </tr>
+
+                        {(row.losing || row.targetDelta > 0) && (
+                          <tr>
+                            <td colSpan={8}>
+                              <div className="desktop-suggestion">
+                                <div className="suggestion-title">AI Suggestion</div>
+
+                                <div className="suggestion-copy">{row.suggestion}</div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
@@ -903,12 +938,26 @@ export default function DashboardV2() {
                       </div>
 
                       <div>
+                        <span>Target</span>
+                        <strong>{money(row.targetPrice)}</strong>
+                      </div>
+
+                      <div>
+                        <span>Delta</span>
+                        <strong>{money(row.targetDelta)}</strong>
+                      </div>
+
+                      <div>
                         <span>Margin</span>
                         <strong>{pct(row.marginPct)}</strong>
                       </div>
                     </div>
 
-                    <div className="mobile-suggestion">{row.suggestion}</div>
+                    <div className="mobile-suggestion">
+                      <div className="suggestion-title">AI Suggestion</div>
+
+                      <div className="suggestion-copy">{row.suggestion}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1446,6 +1495,34 @@ const dashboardStyles = `
     white-space: nowrap;
   }
 
+  .table-filters {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .table-filter-btn {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.72);
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .table-filter-btn:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .table-filter-btn.active {
+    background: rgba(255,255,255,0.12);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.14);
+  }
+
   .chart-card {
     height: 260px;
     border-radius: 20px;
@@ -1703,6 +1780,26 @@ const dashboardStyles = `
     font-weight: 900;
   }
 
+  .desktop-suggestion {
+    padding: 18px 20px;
+    background: rgba(255,90,54,0.06);
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .suggestion-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 900;
+    opacity: 0.5;
+  }
+
+  .suggestion-copy {
+    margin-top: 10px;
+    line-height: 1.7;
+    color: rgba(255,255,255,0.82);
+  }
+
   .mobile-products {
     display: none;
   }
@@ -1711,9 +1808,6 @@ const dashboardStyles = `
     margin-top: 16px;
     padding-top: 14px;
     border-top: 1px solid rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.72);
-    line-height: 1.5;
-    font-size: 13px;
   }
 
   .ai-panel {
@@ -2018,32 +2112,5 @@ const dashboardStyles = `
     .score-mini-card strong {
       font-size: 23px;
     }
-     .table-filters {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
-.table-filter-btn {
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.72);
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.table-filter-btn:hover {
-  background: rgba(255,255,255,0.08);
-}
-
-.table-filter-btn.active {
-  background: rgba(255,255,255,0.12);
-  color: #ffffff;
-  border: 1px solid rgba(255,255,255,0.14);
-} 
   }
 `;
