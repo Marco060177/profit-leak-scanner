@@ -31,9 +31,16 @@ type Row = {
   missingCost: boolean;
 };
 
+type TrendPoint = {
+  date: string;
+  revenue: number;
+  profit: number;
+};
+
 type LoaderData = {
   summary: Summary;
   rows: Row[];
+  trend: TrendPoint[];
   billingActive: boolean;
   period: string;
   shopHandle: string;
@@ -143,6 +150,14 @@ export const loader = async ({
   const gql = await response.json();
   const orderEdges = gql?.data?.orders?.edges ?? [];
 
+  const byDay: Record<
+    string,
+    {
+      revenue: number;
+      cogs: number;
+    }
+  > = {};
+
   const byProduct: Record<
     string,
     {
@@ -174,6 +189,19 @@ export const loader = async ({
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
+
+      const processedAt = o?.node?.processedAt ?? "";
+      const day = processedAt.slice(0, 10);
+
+      if (!byDay[day]) {
+        byDay[day] = {
+          revenue: 0,
+          cogs: 0,
+        };
+      }
+
+      byDay[day].revenue += lineRevenue;
+      byDay[day].cogs += lineCogs;
 
       if (!byProduct[productTitle]) {
         byProduct[productTitle] = {
@@ -223,6 +251,8 @@ export const loader = async ({
             )} to reach a stronger 20% margin target.`
             : `Pricing looks healthy for a 20% margin.`;
 
+
+
       return {
         ...r,
         profit,
@@ -248,6 +278,14 @@ export const loader = async ({
   const missingCostCount = rows.filter((r) => r.missingCost).length;
   const shopHandle = session.shop.replace(".myshopify.com", "");
 
+  const trend = Object.entries(byDay)
+    .map(([date, values]) => ({
+      date,
+      revenue: values.revenue,
+      profit: values.revenue - values.cogs,
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   return {
     summary: {
       revenue: totalRevenue,
@@ -259,6 +297,7 @@ export const loader = async ({
       missingCostCount,
     },
     rows,
+    trend,
     billingActive,
     period: String(safeDays),
     shopHandle,
@@ -266,7 +305,7 @@ export const loader = async ({
 };
 
 export default function DashboardV2() {
-  const { summary, rows, billingActive, period, shopHandle } =
+  const { summary, rows, trend, billingActive, period, shopHandle } =
     useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
