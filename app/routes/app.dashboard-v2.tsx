@@ -272,6 +272,17 @@ export default function DashboardV2() {
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
 
+  const [analysisLoading, setAnalysisLoading] = React.useState(false);
+
+  const analysisSteps = [
+    "Scanning Shopify orders...",
+    "Checking product costs...",
+    "Detecting pricing leaks...",
+    "Calculating margin risks...",
+  ];
+
+  const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
+
   const dashboardLoading = false;
 
   const lowMarginCount = rows.filter((row) => row.lowMargin).length;
@@ -560,7 +571,7 @@ export default function DashboardV2() {
 
         <div className="hero-header">
           <div>
-            
+
 
             <div className="eyebrow">Profit Leak Scanner</div>
 
@@ -568,7 +579,7 @@ export default function DashboardV2() {
 
             <div className="hero-description">
 
-              
+
               Track hidden margin leaks, underpriced products and pricing issues affecting your
               Shopify store profitability.
             </div>
@@ -586,9 +597,35 @@ export default function DashboardV2() {
             </div>
           </div>
 
-          <button className="primary-button">
-            <span>✦</span>
-            <span>Run analysis</span>
+          <button
+            className="primary-button"
+            disabled={analysisLoading}
+            onClick={() => {
+              if (analysisLoading) return;
+
+              setAnalysisLoading(true);
+
+              let step = 0;
+
+              const interval = setInterval(() => {
+                step++;
+
+                if (step < analysisSteps.length) {
+                  setAnalysisText(analysisSteps[step]);
+                }
+              }, 700);
+
+              setTimeout(() => {
+                clearInterval(interval);
+                navigate(`/app/dashboard-v2?period=${period}`);
+              }, 2800);
+            }}
+          >
+            <span>{analysisLoading ? "⏳" : "✦"}</span>
+
+            <span>
+              {analysisLoading ? analysisText : "Run analysis"}
+            </span>
           </button>
         </div>
 
