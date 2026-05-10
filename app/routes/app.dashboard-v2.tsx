@@ -296,9 +296,94 @@ export default function DashboardV2() {
   const scoreLabel =
     score < 40 ? "High risk" : score < 70 ? "Needs attention" : "Healthy";
 
-  const filteredRows = onlyLosing ? rows.filter((row) => row.losing) : rows;
+  const hasRealData = rows.length > 0;
 
-  const sortedRiskRows = filteredRows
+const demoRows: Row[] = [
+  {
+    productId: "1",
+    productTitle: "Arctic Hoodie",
+    qty: 124,
+    revenue: 8420,
+    cogs: 5980,
+    profit: 420,
+    marginPct: 5,
+    losing: false,
+    lowMargin: true,
+    avgPrice: 68,
+    avgCost: 48,
+    breakEvenPrice: 48,
+    targetPrice: 60,
+    targetDelta: 8,
+    suggestion: "Increase price by $8 to reach target margin.",
+    missingCost: false,
+  },
+
+  {
+    productId: "2",
+    productTitle: "Thermal Gloves",
+    qty: 86,
+    revenue: 3120,
+    cogs: 3740,
+    profit: -620,
+    marginPct: -19.8,
+    losing: true,
+    lowMargin: false,
+    avgPrice: 36,
+    avgCost: 43,
+    breakEvenPrice: 43,
+    targetPrice: 54,
+    targetDelta: 18,
+    suggestion: "Product is selling below cost.",
+    missingCost: false,
+  },
+
+  {
+    productId: "3",
+    productTitle: "Winter Backpack",
+    qty: 42,
+    revenue: 6890,
+    cogs: 4110,
+    profit: 2780,
+    marginPct: 40.3,
+    losing: false,
+    lowMargin: false,
+    avgPrice: 164,
+    avgCost: 97,
+    breakEvenPrice: 97,
+    targetPrice: 122,
+    targetDelta: -42,
+    suggestion: "Pricing looks healthy.",
+    missingCost: false,
+  },
+
+  {
+    productId: "4",
+    productTitle: "Snow Boots",
+    qty: 58,
+    revenue: 12300,
+    cogs: 8940,
+    profit: 3360,
+    marginPct: 27.3,
+    losing: false,
+    lowMargin: false,
+    avgPrice: 212,
+    avgCost: 154,
+    breakEvenPrice: 154,
+    targetPrice: 193,
+    targetDelta: -19,
+    suggestion: "Pricing looks healthy.",
+    missingCost: false,
+  },
+];
+
+const sourceRows = hasRealData ? rows : demoRows;
+
+const filteredRows = onlyLosing
+  ? sourceRows.filter((row) => row.losing)
+  : sourceRows;
+
+const sortedRiskRows = filteredRows
+
     .slice()
     .sort((a, b) => {
       if (a.losing !== b.losing) return a.losing ? -1 : 1;
