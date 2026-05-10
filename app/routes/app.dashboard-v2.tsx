@@ -215,12 +215,12 @@ export const loader = async ({
       const suggestion =
         profit < 0
           ? `Increase price to ${money(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${money(
-              targetDelta,
-            )} per unit) to reach a 20% margin.`
+            targetDelta,
+          )} per unit) to reach a 20% margin.`
           : targetDelta > 0
             ? `Consider increasing price to ${money(
-                targetPrice,
-              )} to reach a stronger 20% margin target.`
+              targetPrice,
+            )} to reach a stronger 20% margin target.`
             : `Pricing looks healthy for a 20% margin.`;
 
       return {
@@ -285,10 +285,10 @@ export default function DashboardV2() {
       100,
       Math.round(
         100 -
-          summary.losingCount * 18 -
-          summary.missingCostCount * 8 -
-          lowMarginCount * 6 -
-          Math.max(0, 20 - summary.marginPct) * 2,
+        summary.losingCount * 18 -
+        summary.missingCostCount * 8 -
+        lowMarginCount * 6 -
+        Math.max(0, 20 - summary.marginPct) * 2,
       ),
     ),
   );
@@ -298,91 +298,91 @@ export default function DashboardV2() {
 
   const hasRealData = rows.length > 0;
 
-const demoRows: Row[] = [
-  {
-    productId: "1",
-    productTitle: "Arctic Hoodie",
-    qty: 124,
-    revenue: 8420,
-    cogs: 5980,
-    profit: 420,
-    marginPct: 5,
-    losing: false,
-    lowMargin: true,
-    avgPrice: 68,
-    avgCost: 48,
-    breakEvenPrice: 48,
-    targetPrice: 60,
-    targetDelta: 8,
-    suggestion: "Increase price by $8 to reach target margin.",
-    missingCost: false,
-  },
+  const demoRows: Row[] = [
+    {
+      productId: "1",
+      productTitle: "Arctic Hoodie",
+      qty: 124,
+      revenue: 8420,
+      cogs: 5980,
+      profit: 420,
+      marginPct: 5,
+      losing: false,
+      lowMargin: true,
+      avgPrice: 68,
+      avgCost: 48,
+      breakEvenPrice: 48,
+      targetPrice: 60,
+      targetDelta: 8,
+      suggestion: "Increase price by $8 to reach target margin.",
+      missingCost: false,
+    },
 
-  {
-    productId: "2",
-    productTitle: "Thermal Gloves",
-    qty: 86,
-    revenue: 3120,
-    cogs: 3740,
-    profit: -620,
-    marginPct: -19.8,
-    losing: true,
-    lowMargin: false,
-    avgPrice: 36,
-    avgCost: 43,
-    breakEvenPrice: 43,
-    targetPrice: 54,
-    targetDelta: 18,
-    suggestion: "Product is selling below cost.",
-    missingCost: false,
-  },
+    {
+      productId: "2",
+      productTitle: "Thermal Gloves",
+      qty: 86,
+      revenue: 3120,
+      cogs: 3740,
+      profit: -620,
+      marginPct: -19.8,
+      losing: true,
+      lowMargin: false,
+      avgPrice: 36,
+      avgCost: 43,
+      breakEvenPrice: 43,
+      targetPrice: 54,
+      targetDelta: 18,
+      suggestion: "Product is selling below cost.",
+      missingCost: false,
+    },
 
-  {
-    productId: "3",
-    productTitle: "Winter Backpack",
-    qty: 42,
-    revenue: 6890,
-    cogs: 4110,
-    profit: 2780,
-    marginPct: 40.3,
-    losing: false,
-    lowMargin: false,
-    avgPrice: 164,
-    avgCost: 97,
-    breakEvenPrice: 97,
-    targetPrice: 122,
-    targetDelta: -42,
-    suggestion: "Pricing looks healthy.",
-    missingCost: false,
-  },
+    {
+      productId: "3",
+      productTitle: "Winter Backpack",
+      qty: 42,
+      revenue: 6890,
+      cogs: 4110,
+      profit: 2780,
+      marginPct: 40.3,
+      losing: false,
+      lowMargin: false,
+      avgPrice: 164,
+      avgCost: 97,
+      breakEvenPrice: 97,
+      targetPrice: 122,
+      targetDelta: -42,
+      suggestion: "Pricing looks healthy.",
+      missingCost: false,
+    },
 
-  {
-    productId: "4",
-    productTitle: "Snow Boots",
-    qty: 58,
-    revenue: 12300,
-    cogs: 8940,
-    profit: 3360,
-    marginPct: 27.3,
-    losing: false,
-    lowMargin: false,
-    avgPrice: 212,
-    avgCost: 154,
-    breakEvenPrice: 154,
-    targetPrice: 193,
-    targetDelta: -19,
-    suggestion: "Pricing looks healthy.",
-    missingCost: false,
-  },
-];
+    {
+      productId: "4",
+      productTitle: "Snow Boots",
+      qty: 58,
+      revenue: 12300,
+      cogs: 8940,
+      profit: 3360,
+      marginPct: 27.3,
+      losing: false,
+      lowMargin: false,
+      avgPrice: 212,
+      avgCost: 154,
+      breakEvenPrice: 154,
+      targetPrice: 193,
+      targetDelta: -19,
+      suggestion: "Pricing looks healthy.",
+      missingCost: false,
+    },
+  ];
 
-const sourceRows = hasRealData ? rows : demoRows;
+  const sourceRows = hasRealData ? rows : demoRows;
 
-const filteredRows = onlyLosing
-  ? sourceRows.filter((row) => row.losing)
-  : sourceRows;
+  const filteredRows = onlyLosing
+    ? sourceRows.filter((row) => row.losing)
+    : sourceRows;
 
-const sortedRiskRows = filteredRows
+  const sortedRiskRows = filteredRows
 
     .slice()
     .sort((a, b) => {
@@ -396,35 +396,35 @@ const sortedRiskRows = filteredRows
   const topLeaks = [
     summary.losingCount > 0
       ? {
-          icon: "⚠️",
-          issue: "Products selling below cost",
-          severity: "High",
-          loss: money(summary.totalLeak),
-        }
+        icon: "⚠️",
+        issue: "Products selling below cost",
+        severity: "High",
+        loss: money(summary.totalLeak),
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          icon: "📦",
-          issue: "Products missing cost data",
-          severity: "Medium",
-          loss: `${summary.missingCostCount} products`,
-        }
+        icon: "📦",
+        issue: "Products missing cost data",
+        severity: "Medium",
+        loss: `${summary.missingCostCount} products`,
+      }
       : null,
     lowMarginCount > 0
       ? {
-          icon: "🏷️",
-          issue: "Low-margin products detected",
-          severity: "Medium",
-          loss: `${lowMarginCount} products`,
-        }
+        icon: "🏷️",
+        issue: "Low-margin products detected",
+        severity: "Medium",
+        loss: `${lowMarginCount} products`,
+      }
       : null,
     productsAtRisk > 0
       ? {
-          icon: "🔥",
-          issue: "Products requiring margin review",
-          severity: "Low",
-          loss: `${productsAtRisk} at risk`,
-        }
+        icon: "🔥",
+        issue: "Products requiring margin review",
+        severity: "Low",
+        loss: `${productsAtRisk} at risk`,
+      }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -436,31 +436,31 @@ const sortedRiskRows = filteredRows
   const recommendations = [
     summary.losingCount > 0
       ? {
-          title: `Fix ${summary.losingCount} products selling below cost`,
-          impact: `${money(summary.totalLeak)} potential recovery`,
-          confidence: "High confidence",
-        }
+        title: `Fix ${summary.losingCount} products selling below cost`,
+        impact: `${money(summary.totalLeak)} potential recovery`,
+        confidence: "High confidence",
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-        }
+        title: "Update missing product costs in Shopify",
+        impact: `${summary.missingCostCount} products affected`,
+        confidence: "Critical issue",
+      }
       : null,
     lowMarginCount > 0
       ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-        }
+        title: "Review low-margin products below 10%",
+        impact: `${lowMarginCount} products need attention`,
+        confidence: "Medium confidence",
+      }
       : null,
     rows.length > 0
       ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-        }
+        title: "Review target prices for worst-performing products",
+        impact: "20% margin target available",
+        confidence: "Rule-based insight",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -574,6 +574,28 @@ const sortedRiskRows = filteredRows
             <div className="hero-title">Profit Leak Dashboard</div>
 
             <div className="hero-description">
+
+              {!hasRealData ? (
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 14px",
+                    borderRadius: 999,
+                    background: "rgba(59,130,246,0.12)",
+                    border: "1px solid rgba(59,130,246,0.24)",
+                    color: "#93c5fd",
+                    fontWeight: 800,
+                    fontSize: 13,
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  <span>ℹ️</span>
+                  <span>Demo preview • Real analytics will appear after store orders are detected</span>
+                </div>
+              ) : null}
               Track hidden margin leaks, underpriced products and pricing issues affecting your
               Shopify store profitability.
             </div>
@@ -625,8 +647,8 @@ const sortedRiskRows = filteredRows
             <div className="score-copy">
               {summary.totalLeak > 0
                 ? `Your store is leaking an estimated ${money(
-                    summary.totalLeak,
-                  )} from products selling below cost.`
+                  summary.totalLeak,
+                )} from products selling below cost.`
                 : "Your store currently has no products selling below cost in the selected period."}
             </div>
 
