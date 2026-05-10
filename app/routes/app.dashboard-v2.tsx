@@ -65,7 +65,7 @@ export default function DashboardV2() {
       },
     ],
 
-    products: [],
+    products: [
       {
         icon: "🧥",
         name: "Arctic Hoodie",
