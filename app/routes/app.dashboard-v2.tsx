@@ -1270,23 +1270,48 @@ export default function DashboardV2() {
               <div className="ai-title">Smart margin optimization suggestions</div>
             </div>
 
-            <div className="ai-badge">RULE ENGINE</div>
+            <div className="ai-badge">
+              LIVE ANALYSIS
+            </div>
           </div>
 
           <div className="ai-grid">
             {recommendations.map(({ title, impact, confidence }) => (
               <div key={title} className="ai-card">
-                <div className="ai-card-title">{title}</div>
+                <div className="ai-card-top">
+                  <div className="ai-priority">HIGH PRIORITY</div>
 
-                <div className="ai-impact">{impact}</div>
+                  <div className="ai-confidence-inline">
+                    {confidence}
+                  </div>
+                </div>
+
+                <div className="ai-card-title">
+                  {title}
+                </div>
+
+                <div className="ai-impact">
+                  {impact}
+                </div>
+
+                <div className="ai-recommendation">
+                  Recommended action: review pricing strategy and optimize margins.
+                </div>
 
                 <div className="ai-footer">
                   <div>
-                    <div className="confidence-label">Confidence</div>
-                    <div className="confidence-value">{confidence}</div>
+                    <div className="confidence-label">
+                      Analysis status
+                    </div>
+
+                    <div className="confidence-value">
+                      Live monitoring active
+                    </div>
                   </div>
 
-                  <button className="apply-button">Review</button>
+                  <button className="apply-button">
+                    Review insight
+                  </button>
                 </div>
               </div>
             ))}
@@ -2213,6 +2238,42 @@ const dashboardStyles = `
     padding-top: 16px;
     border-top: 1px solid rgba(255,255,255,0.08);
   }
+
+  .ai-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ai-priority {
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255,90,54,0.14);
+  border: 1px solid rgba(255,90,54,0.24);
+  color: #ff7b59;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
+}
+
+.ai-confidence-inline {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ai-recommendation {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.72);
+  line-height: 1.55;
+  font-size: 13px;
+}
 
   .confidence-label {
     font-size: 11px;
