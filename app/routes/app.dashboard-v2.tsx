@@ -445,16 +445,16 @@ export default function DashboardV2() {
   }[];
 
   const worstProduct =
-    rows.length > 0
-      ? [...rows].sort((a, b) => a.profit - b.profit)[0]
+    sourceRows.length > 0
+      ? [...sourceRows].sort((a, b) => a.profit - b.profit)[0]
       : null;
 
   const bestProduct =
-    rows.length > 0
-      ? [...rows].sort((a, b) => b.marginPct - a.marginPct)[0]
+    sourceRows.length > 0
+      ? [...sourceRows].sort((a, b) => b.marginPct - a.marginPct)[0]
       : null;
 
-  const recoverableProfit = rows.reduce((acc, row) => {
+  const recoverableProfit = sourceRows.reduce((acc, row) => {
     return acc + (row.targetDelta > 0 ? row.targetDelta * row.qty : 0);
   }, 0);
 
