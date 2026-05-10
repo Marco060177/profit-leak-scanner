@@ -735,7 +735,7 @@ export default function DashboardV2() {
 
               setTimeout(() => {
                 clearInterval(interval);
-                navigate(`/ app / dashboard - v2 ? period = ${period}`);
+                window.location.reload();
               }, 2800);
             }}
           >
