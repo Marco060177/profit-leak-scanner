@@ -1,5 +1,5 @@
 export default function DashboardV2() {
-  const dashboardLoading = true;
+  const dashboardLoading = false;
 
   const dashboardData = {
     summary: {
