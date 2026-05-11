@@ -558,6 +558,17 @@ export default function DashboardV2() {
     navigate(`/app?period=${next}`);
   }
 
+  function scrollToSection(id: string) {
+    const section = document.getElementById(id);
+
+    if (section) {
+      section.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }
+
   const riskColor = (row: Row) => {
     if (row.losing) return "#ef4444";
     if (row.missingCost) return "#f59e0b";
@@ -672,14 +683,27 @@ export default function DashboardV2() {
           </div>
 
           <div className="nav-tabs">
-            {["Overview", "Leaks", "Products", "Recommendations"].map((item) => (
-              <div
-                key={item}
-                className={item === "Overview" ? "nav-tab active" : "nav-tab"}
-              >
-                {item}
-              </div>
-            ))}
+            <div
+              className="nav-tab active"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            >
+              Overview
+            </div>
+
+            <div className="nav-tab" onClick={() => scrollToSection("leaks-section")}>
+              Leaks
+            </div>
+
+            <div className="nav-tab" onClick={() => scrollToSection("products-section")}>
+              Products
+            </div>
+
+            <div
+              className="nav-tab"
+              onClick={() => scrollToSection("recommendations-section")}
+            >
+              Recommendations
+            </div>
 
             <div className="nav-tab" onClick={() => navigate("/app/billing")}>
               Billing
@@ -1019,7 +1043,7 @@ export default function DashboardV2() {
           </div>
         </div>
 
-        <div className="panel">
+        <div className="panel" id="leaks-section">
           <div className="section-header">
             <div>
               <div className="section-title">Top Profit Leaks Detected</div>
@@ -1073,7 +1097,7 @@ export default function DashboardV2() {
           )}
         </div>
 
-        <div className="panel">
+        <div className="panel" id="products-section">
           <div className="section-header">
             <div>
               <div className="section-title">Product Risk Table</div>
@@ -1289,7 +1313,7 @@ export default function DashboardV2() {
           )}
         </div >
 
-        <div className="ai-panel">
+        <div className="ai-panel" id="recommendations-section">
           <div className="ai-glow" />
 
           <div className="section-header ai-header">
