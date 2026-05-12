@@ -2396,6 +2396,70 @@ const dashboardStyles = `
     background: rgba(255,255,255,0.1);
   }
 
+  .insight-panel {
+  position: relative;
+  overflow: hidden;
+  margin-top: 22px;
+  margin-bottom: 22px;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background:
+    linear-gradient(135deg, rgba(255,90,54,0.14), rgba(8,15,28,0.96));
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.insight-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.insight-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #ff8a6b;
+  margin-bottom: 10px;
+}
+
+.insight-title {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #ffffff;
+  max-width: 700px;
+}
+
+.insight-description {
+  margin-top: 18px;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.74);
+  max-width: 900px;
+}
+
+.insight-description strong {
+  color: #ffffff;
+}
+
+.insight-badge {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.insight-badge.warning {
+  background: rgba(255,90,54,0.16);
+  border: 1px solid rgba(255,90,54,0.28);
+  color: #ff8a6b;
+}
+
   @media (max-width: 900px) {
     .dashboard-shell { padding: 22px; }
 
@@ -2568,68 +2632,6 @@ const dashboardStyles = `
       font-size: 23px;
     }
 
-    .insight-panel {
-  position: relative;
-  overflow: hidden;
-  margin-top: 22px;
-  margin-bottom: 22px;
-  padding: 28px;
-  border-radius: 28px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background:
-    linear-gradient(135deg, rgba(255,90,54,0.14), rgba(8,15,28,0.96));
-  box-shadow:
-    0 10px 40px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-.insight-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.insight-eyebrow {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-  color: #ff8a6b;
-  margin-bottom: 10px;
-}
-
-.insight-title {
-  font-size: 28px;
-  line-height: 1.1;
-  font-weight: 800;
-  color: #ffffff;
-  max-width: 700px;
-}
-
-.insight-description {
-  margin-top: 18px;
-  font-size: 16px;
-  line-height: 1.7;
-  color: rgba(255,255,255,0.74);
-  max-width: 900px;
-}
-
-.insight-description strong {
-  color: #ffffff;
-}
-
-.insight-badge {
-  flex-shrink: 0;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.insight-badge.warning {
-  background: rgba(255,90,54,0.16);
-  border: 1px solid rgba(255,90,54,0.28);
-  color: #ff8a6b;
-}
+    
   }
 `;
