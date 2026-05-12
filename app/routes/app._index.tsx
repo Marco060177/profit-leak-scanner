@@ -82,6 +82,13 @@ export const loader = async ({
   fromDate.setDate(fromDate.getDate() - safeDays);
   const fromYYYYMMDD = toYYYYMMDD(fromDate);
 
+  const previousFromDate = new Date(fromDate);
+  previousFromDate.setDate(previousFromDate.getDate() - safeDays);
+  const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
+
+  const queryString = `processed_at:>=${fromYYYYMMDD}`;
+  const previousQueryString = `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
+
   const { admin, session } = await authenticate.admin(request);
 
   try {
@@ -109,8 +116,6 @@ export const loader = async ({
   const activeSubscriptions =
     billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
   const billingActive = activeSubscriptions.length > 0;
-
-  const queryString = `processed_at:>=${fromYYYYMMDD}`;
 
   const response = await admin.graphql(
     `#graphql
@@ -148,6 +153,37 @@ export const loader = async ({
   );
 
   const gql = await response.json();
+
+  const previousResponse = await admin.graphql(
+    `#graphql
+    query OrdersForLeakPrevious($q: String!) {
+      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+        edges {
+          node {
+            lineItems(first: 250) {
+              edges {
+                node {
+                  quantity
+                  originalUnitPriceSet {
+                    shopMoney { amount }
+                  }
+                  variant {
+                    inventoryItem {
+                      unitCost { amount }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }`,
+    { variables: { q: previousQueryString } },
+  );
+
+  const previousGql = await previousResponse.json();
+  const previousOrderEdges = previousGql?.data?.orders?.edges ?? [];
   const orderEdges = gql?.data?.orders?.edges ?? [];
 
   const byDay: Record<
@@ -277,6 +313,8 @@ export const loader = async ({
   const losingCount = rows.filter((r) => r.losing).length;
   const missingCostCount = rows.filter((r) => r.missingCost).length;
   const shopHandle = session.shop.replace(".myshopify.com", "");
+
+  
 
   const trend = Object.entries(byDay)
     .map(([date, values]) => ({
@@ -473,7 +511,10 @@ export default function DashboardV2() {
       ? (weakBestSeller.profit / weakBestSeller.revenue) * 100
       : 0;
 
-  const hasWeakBestSeller = Boolean(weakBestSeller);
+  const hasWeakBestSeller =
+    weakBestSeller &&
+    weakBestSeller.revenue > 1000 &&
+    weakBestSellerMargin < 30;
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
