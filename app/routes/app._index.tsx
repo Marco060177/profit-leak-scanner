@@ -10,6 +10,8 @@ type Summary = {
   totalLeak: number;
   losingCount: number;
   missingCostCount: number;
+  previousMarginPct: number;
+  marginDelta: number;
 };
 
 type Row = {
@@ -209,6 +211,9 @@ export const loader = async ({
   let totalRevenue = 0;
   let totalCogs = 0;
 
+  let previousRevenue = 0;
+  let previousCogs = 0;
+
   for (const o of orderEdges) {
     const items = o?.node?.lineItems?.edges ?? [];
 
@@ -263,6 +268,26 @@ export const loader = async ({
     }
   }
 
+  for (const o of previousOrderEdges) {
+    const items = o?.node?.lineItems?.edges ?? [];
+
+    for (const li of items) {
+      const qty = Number(li?.node?.quantity ?? 0);
+
+      const price = Number(
+        li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0,
+      );
+
+      const costRaw =
+        li?.node?.variant?.inventoryItem?.unitCost?.amount;
+
+      const cost = Number(costRaw ?? 0);
+
+      previousRevenue += price * qty;
+      previousCogs += cost * qty;
+    }
+  }
+
   const rows: Row[] = Object.values(byProduct)
     .map((r) => {
       const profit = r.revenue - r.cogs;
@@ -307,6 +332,17 @@ export const loader = async ({
     .sort((a, b) => a.profit - b.profit);
 
   const totalProfit = totalRevenue - totalCogs;
+  const previousProfit = previousRevenue - previousCogs;
+
+  const previousMarginPct =
+    previousRevenue > 0
+      ? (previousProfit / previousRevenue) * 100
+      : 0;
+
+  const marginDelta =
+    (totalRevenue > 0
+      ? (totalProfit / totalRevenue) * 100
+      : 0) - previousMarginPct;
   const totalLeak = Math.abs(
     rows.reduce((acc, r) => acc + (r.profit < 0 ? r.profit : 0), 0),
   );
@@ -314,7 +350,7 @@ export const loader = async ({
   const missingCostCount = rows.filter((r) => r.missingCost).length;
   const shopHandle = session.shop.replace(".myshopify.com", "");
 
-  
+
 
   const trend = Object.entries(byDay)
     .map(([date, values]) => ({
@@ -329,10 +365,14 @@ export const loader = async ({
       revenue: totalRevenue,
       cogs: totalCogs,
       profit: totalProfit,
-      marginPct: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
+      marginPct: totalRevenue > 0
+        ? (totalProfit / totalRevenue) * 100
+        : 0,
       totalLeak,
       losingCount,
       missingCostCount,
+      previousMarginPct,
+      marginDelta,
     },
     rows,
     trend,
@@ -361,7 +401,7 @@ export default function DashboardV2() {
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
 
   const dashboardLoading = false;
-
+  const marginDelta = summary.marginDelta;
   const lowMarginCount = rows.filter((row) => row.lowMargin).length;
   const productsAtRisk = rows.filter(
     (row) => row.losing || row.lowMargin || row.missingCost,
@@ -1116,6 +1156,33 @@ export default function DashboardV2() {
               <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
               <strong>{pct(weakBestSellerMargin)}</strong> margin.
               This product may be reducing your overall store profitability.
+            </div>
+          </div>
+        ) : null}
+
+        {marginDelta < -3 ? (
+          <div className="insight-panel">
+            <div className="insight-header">
+              <div>
+                <div className="insight-eyebrow">
+                  MARGIN DETERIORATION
+                </div>
+
+                <div className="insight-title">
+                  Store profitability is decreasing
+                </div>
+              </div>
+
+              <div className="insight-badge warning">
+                {marginDelta.toFixed(1)}%
+              </div>
+            </div>
+
+            <div className="insight-description">
+              Your store margin dropped from{" "}
+              <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
+              <strong>{pct(summary.marginPct)}</strong> compared to the previous period.
+              Review pricing, discounts and product costs to avoid further margin erosion.
             </div>
           </div>
         ) : null}
