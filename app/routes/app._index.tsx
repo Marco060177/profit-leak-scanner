@@ -473,10 +473,7 @@ export default function DashboardV2() {
       ? (weakBestSeller.profit / weakBestSeller.revenue) * 100
       : 0;
 
-  const hasWeakBestSeller =
-    weakBestSeller &&
-    weakBestSeller.revenue > 1000 &&
-    weakBestSellerMargin < 30;
+  const hasWeakBestSeller = Boolean(weakBestSeller);
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
