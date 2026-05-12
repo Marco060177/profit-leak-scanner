@@ -610,6 +610,13 @@ export default function DashboardV2() {
     return acc + (row.targetDelta > 0 ? row.targetDelta * row.qty : 0);
   }, 0);
 
+  const recoveryProducts = sourceRows.filter(
+    (row) => row.targetDelta > 0 && row.qty > 0,
+  );
+
+  const hasRecoveryOpportunity = true;
+    recoveryProducts.length > 0 && recoverableProfit > 0;
+
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
@@ -1183,6 +1190,33 @@ export default function DashboardV2() {
               <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
               <strong>{pct(summary.marginPct)}</strong> compared to the previous period.
               Review pricing, discounts and product costs to avoid further margin erosion.
+            </div>
+          </div>
+        ) : null}
+
+        {hasRecoveryOpportunity ? (
+          <div className="insight-panel">
+            <div className="insight-header">
+              <div>
+                <div className="insight-eyebrow">
+                  RECOVERY OPPORTUNITY
+                </div>
+
+                <div className="insight-title">
+                  Recover hidden profit from underpriced products
+                </div>
+              </div>
+
+              <div className="insight-badge warning">
+                {money(recoverableProfit)}
+              </div>
+            </div>
+
+            <div className="insight-description">
+              Profit Leak Scanner detected{" "}
+              <strong>{recoveryProducts.length} products</strong> with pricing gaps.
+              Adjusting prices toward target margins could recover approximately{" "}
+              <strong>{money(recoverableProfit)}</strong> in additional profit.
             </div>
           </div>
         ) : null}
