@@ -464,6 +464,20 @@ export default function DashboardV2() {
     })
     .slice(0, 12);
 
+  const weakBestSeller = [...sourceRows]
+    .filter((p) => p.revenue > 0)
+    .sort((a, b) => b.revenue - a.revenue)[0];
+
+  const weakBestSellerMargin =
+    weakBestSeller && weakBestSeller.revenue > 0
+      ? (weakBestSeller.profit / weakBestSeller.revenue) * 100
+      : 0;
+
+  const hasWeakBestSeller =
+    weakBestSeller &&
+    weakBestSeller.revenue > 1000 &&
+    weakBestSellerMargin < 20;
+
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
@@ -1042,6 +1056,31 @@ export default function DashboardV2() {
             <div className="chart-overlay" />
           </div>
         </div>
+
+        {hasWeakBestSeller ? (
+          <div className="insight-panel">
+            <div className="insight-header">
+              <div>
+                <div className="insight-eyebrow">CRITICAL INSIGHT</div>
+
+                <div className="insight-title">
+                  Best seller with weak profitability detected
+                </div>
+              </div>
+
+              <div className="insight-badge warning">
+                Low margin
+              </div>
+            </div>
+
+            <div className="insight-description">
+              <strong>{weakBestSeller.productTitle}</strong> generated{" "}
+              <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
+              <strong>{pct(weakBestSellerMargin)}</strong> margin.
+              This product may be reducing your overall store profitability.
+            </div>
+          </div>
+        ) : null}
 
         <div className="panel" id="leaks-section">
           <div className="section-header">
