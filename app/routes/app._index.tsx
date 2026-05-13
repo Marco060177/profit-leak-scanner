@@ -717,7 +717,7 @@ export default function DashboardV2() {
   };
 
   const chartData =
-    trend.length > 0
+    trend.length >= 2
       ? trend
       : [
         { date: "Mon", revenue: 4200, profit: 1100 },
