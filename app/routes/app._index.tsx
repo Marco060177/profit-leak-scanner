@@ -12,6 +12,8 @@ type Summary = {
   missingCostCount: number;
   previousMarginPct: number;
   marginDelta: number;
+  previousRevenue: number;
+  revenueDeltaPct: number;
 };
 
 type Row = {
@@ -343,6 +345,10 @@ export const loader = async ({
     (totalRevenue > 0
       ? (totalProfit / totalRevenue) * 100
       : 0) - previousMarginPct;
+  const revenueDeltaPct =
+    previousRevenue > 0
+      ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
+      : 0;
   const totalLeak = Math.abs(
     rows.reduce((acc, r) => acc + (r.profit < 0 ? r.profit : 0), 0),
   );
@@ -373,6 +379,8 @@ export const loader = async ({
       missingCostCount,
       previousMarginPct,
       marginDelta,
+      previousRevenue,
+      revenueDeltaPct,
     },
     rows,
     trend,
@@ -527,6 +535,17 @@ export default function DashboardV2() {
     (row) => row.losing || row.lowMargin || row.missingCost,
   ).length;
 
+  const criticalCount = sourceRows.filter((row) => row.losing).length;
+  const warningCount = sourceRows.filter(
+    (row) => row.lowMargin && !row.losing,
+  ).length;
+  const missingCount = sourceRows.filter((row) => row.missingCost).length;
+  const healthyCount = sourceRows.filter(
+    (row) => !row.losing && !row.lowMargin && !row.missingCost,
+  ).length;
+
+  const riskTotal = Math.max(sourceRows.length, 1);
+
   const filteredRows = onlyLosing
     ? sourceRows.filter((row) => row.losing)
     : sourceRows;
@@ -614,7 +633,7 @@ export default function DashboardV2() {
     (row) => row.targetDelta > 0 && row.qty > 0,
   );
 
-  const hasRecoveryOpportunity = true;
+  const hasRecoveryOpportunity =
     recoveryProducts.length > 0 && recoverableProfit > 0;
 
   const recommendations = [
@@ -1142,6 +1161,84 @@ export default function DashboardV2() {
           </div>
         </div>
 
+        <div className="panel">
+          <div className="section-header">
+            <div>
+              <div className="section-title">
+                Risk Distribution
+              </div>
+
+              <div className="section-subtitle">
+                Real-time catalog health overview based on margin analysis.
+              </div>
+            </div>
+          </div>
+
+          <div className="risk-distribution">
+            {[
+              [
+                "Critical",
+                criticalCount,
+                "#ef4444",
+              ],
+
+              [
+                "Low Margin",
+                warningCount,
+                "#f59e0b",
+              ],
+
+              [
+                "Missing Cost",
+                missingCount,
+                "#3b82f6",
+              ],
+
+              [
+                "Healthy",
+                healthyCount,
+                "#22c55e",
+              ],
+            ].map(([label, value, color]) => {
+              const percentage =
+                (Number(value) / riskTotal) * 100;
+
+              return (
+                <div key={String(label)} className="risk-block">
+                  <div className="risk-block-top">
+                    <div
+                      className="risk-dot"
+                      style={{ background: String(color) }}
+                    />
+
+                    <div className="risk-label">
+                      {label}
+                    </div>
+
+                    <div className="risk-value">
+                      {String(value)}
+                    </div>
+                  </div>
+
+                  <div className="risk-bar">
+                    <div
+                      className="risk-fill"
+                      style={{
+                        width: `${percentage}%`,
+                        background: String(color),
+                      }}
+                    />
+                  </div>
+
+                  <div className="risk-percent">
+                    {percentage.toFixed(0)}% of products
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {hasWeakBestSeller ? (
           <div className="insight-panel">
             <div className="insight-header">
@@ -1217,6 +1314,35 @@ export default function DashboardV2() {
               <strong>{recoveryProducts.length} products</strong> with pricing gaps.
               Adjusting prices toward target margins could recover approximately{" "}
               <strong>{money(recoverableProfit)}</strong> in additional profit.
+            </div>
+          </div>
+        ) : null}
+
+        {summary.revenueDeltaPct > 10 && summary.marginDelta < 0 ? (
+          <div className="insight-panel">
+            <div className="insight-header">
+              <div>
+                <div className="insight-eyebrow">
+                  GROWTH WARNING
+                </div>
+
+                <div className="insight-title">
+                  Revenue is growing faster than profitability
+                </div>
+              </div>
+
+              <div className="insight-badge warning">
+                {summary.revenueDeltaPct.toFixed(1)}% revenue
+              </div>
+            </div>
+
+            <div className="insight-description">
+              Store revenue increased by{" "}
+              <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>,
+              but margin dropped by{" "}
+              <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>.
+              Rapid growth combined with weakening margins may indicate
+              aggressive discounts, rising costs or underpriced best sellers.
             </div>
           </div>
         ) : null}
@@ -2774,6 +2900,61 @@ const dashboardStyles = `
       font-size: 23px;
     }
 
-    
+    .risk-distribution {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.risk-block {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.risk-block-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.risk-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.risk-label {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.risk-value {
+  margin-left: auto;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.risk-bar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  margin-top: 16px;
+}
+
+.risk-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.risk-percent {
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.58;
+  font-weight: 700;
+}
   }
 `;
