@@ -729,7 +729,10 @@ export default function DashboardV2() {
         { date: "Sun", revenue: 7600, profit: 3100 },
       ];
 
-  const maxRevenue = Math.max(...chartData.map((d) => d.revenue), 1);
+  const maxChartValue = Math.max(
+    ...chartData.map((d) => Math.max(d.revenue, d.profit)),
+    1,
+  );
 
   const revenuePoints = chartData
     .map((point, index) => {
@@ -738,13 +741,13 @@ export default function DashboardV2() {
           ? 0
           : (index / (chartData.length - 1)) * 1000;
 
-      const y = 240 - (point.revenue / maxRevenue) * 180;
+      const y = 230 - (point.revenue / maxChartValue) * 170;
 
       return `${x},${y}`;
     })
     .join(" ");
 
-  const maxProfit = Math.max(...chartData.map((d) => d.profit), 1);
+  
 
   const profitPoints = chartData
     .map((point, index) => {
@@ -753,7 +756,7 @@ export default function DashboardV2() {
           ? 0
           : (index / (chartData.length - 1)) * 1000;
 
-      const y = 240 - (point.profit / maxProfit) * 180;
+      const y = 230 - (point.profit / maxChartValue) * 170;
 
       return `${x},${y}`;
     })
