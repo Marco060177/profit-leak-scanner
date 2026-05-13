@@ -1499,7 +1499,54 @@ export default function DashboardV2() {
               </div>
             </div>
 
-            <button className="secondary-button">Export CSV</button>
+            <button
+              className="secondary-button"
+              onClick={() => {
+                const headers = [
+                  "Product",
+                  "Revenue",
+                  "COGS",
+                  "Profit",
+                  "Margin %",
+                  "Target Price",
+                  "Price Delta",
+                  "Risk",
+                ];
+
+                const csvRows = sortedRiskRows.map((row) => [
+                  row.productTitle,
+                  row.revenue.toFixed(2),
+                  row.cogs.toFixed(2),
+                  row.profit.toFixed(2),
+                  row.marginPct.toFixed(1),
+                  row.targetPrice.toFixed(2),
+                  row.targetDelta.toFixed(2),
+                  riskLabel(row),
+                ]);
+
+                const csvContent = [
+                  headers.join(","),
+                  ...csvRows.map((row) =>
+                    row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+                  ),
+                ].join("\n");
+
+                const blob = new Blob([csvContent], {
+                  type: "text/csv;charset=utf-8;",
+                });
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+
+                link.href = url;
+                link.download = `marginlab-products-${period}d.csv`;
+                link.click();
+
+                URL.revokeObjectURL(url);
+              }}
+            >
+              Export CSV
+            </button>
           </div>
 
           {sortedRiskRows.length === 0 ? (
