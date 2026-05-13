@@ -747,7 +747,7 @@ export default function DashboardV2() {
     })
     .join(" ");
 
-  
+
 
   const profitPoints = chartData
     .map((point, index) => {
@@ -1134,27 +1134,14 @@ export default function DashboardV2() {
             </div>
 
             <svg viewBox="0 0 1000 260" preserveAspectRatio="none" className="chart-svg">
-              <defs>
-                <linearGradient id="lineGradient" x1="0" x2="1">
-                  <stop offset="0%" stopColor="#ff7b59" />
-                  <stop offset="100%" stopColor="#ff5a36" />
-                </linearGradient>
-
-                <linearGradient id="fillGradient" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="rgba(255,123,89,0.35)" />
-                  <stop offset="100%" stopColor="rgba(255,123,89,0)" />
-                </linearGradient>
-              </defs>
-
-              <polyline
-                fill="rgba(255,123,89,0.12)"
-                stroke="none"
-                points={`0, 260 ${revenuePoints} 1000, 260`}
-              />
+              <line x1="0" y1="230" x2="1000" y2="230" stroke="rgba(255,255,255,0.08)" />
+              <line x1="0" y1="170" x2="1000" y2="170" stroke="rgba(255,255,255,0.05)" />
+              <line x1="0" y1="110" x2="1000" y2="110" stroke="rgba(255,255,255,0.05)" />
+              <line x1="0" y1="50" x2="1000" y2="50" stroke="rgba(255,255,255,0.05)" />
 
               <polyline
                 fill="none"
-                stroke="url(#lineGradient)"
+                stroke="#ff5a36"
                 strokeWidth="6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -1163,16 +1150,29 @@ export default function DashboardV2() {
 
               <polyline
                 fill="none"
-                stroke="rgba(34,197,94,0.95)"
+                stroke="#22c55e"
                 strokeWidth="4"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 points={profitPoints}
-                style={{
-                  filter: "drop-shadow(0 0 10px rgba(34,197,94,0.35))",
-                }}
               />
 
+              {chartData.map((point, index) => {
+                const x =
+                  chartData.length === 1
+                    ? 500
+                    : (index / (chartData.length - 1)) * 1000;
+
+                const revenueY = 230 - (point.revenue / maxChartValue) * 170;
+                const profitY = 230 - (point.profit / maxChartValue) * 170;
+
+                return (
+                  <React.Fragment key={point.date}>
+                    <circle cx={x} cy={revenueY} r="6" fill="#ff5a36" />
+                    <circle cx={x} cy={profitY} r="5" fill="#22c55e" />
+                  </React.Fragment>
+                );
+              })}
             </svg>
 
             <div className="chart-overlay" />
