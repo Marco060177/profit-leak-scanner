@@ -525,6 +525,21 @@ export default function DashboardV2() {
   const visualMarginPct =
     visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
 
+  const profitPercentage =
+    visualRevenue > 0
+      ? (visualProfit / visualRevenue) * 100
+      : 0;
+
+  const cogsPercentage =
+    visualRevenue > 0
+      ? (visualCogs / visualRevenue) * 100
+      : 0;
+
+  const leakPercentage =
+    visualRevenue > 0
+      ? (visualLeak / visualRevenue) * 100
+      : 0;
+
   const visualLowMarginCount = sourceRows.filter((row) => row.lowMargin).length;
 
   const visualMissingCostCount = sourceRows.filter(
@@ -1399,6 +1414,64 @@ export default function DashboardV2() {
               ))}
             </div>
           )}
+        </div>
+
+        <div className="panel">
+          <div className="section-header">
+            <div>
+              <div className="section-title">
+                Margin Breakdown
+              </div>
+
+              <div className="section-subtitle">
+                Revenue allocation across costs, profit and detected leaks.
+              </div>
+            </div>
+          </div>
+
+          <div className="breakdown-stack">
+            {[
+              [
+                "COGS",
+                cogsPercentage,
+                "#3b82f6",
+              ],
+
+              [
+                "Profit",
+                profitPercentage,
+                "#22c55e",
+              ],
+
+              [
+                "Leak",
+                leakPercentage,
+                "#ef4444",
+              ],
+            ].map(([label, value, color]) => (
+              <div key={String(label)} className="breakdown-row">
+                <div className="breakdown-header">
+                  <div className="breakdown-label">
+                    {label}
+                  </div>
+
+                  <div className="breakdown-value">
+                    {Number(value).toFixed(1)}%
+                  </div>
+                </div>
+
+                <div className="breakdown-bar">
+                  <div
+                    className="breakdown-fill"
+                    style={{
+                      width: `${Math.min(Number(value), 100)}%`,
+                      background: String(color),
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="panel" id="products-section">
@@ -2783,6 +2856,48 @@ const dashboardStyles = `
   font-size: 12px;
   opacity: 0.58;
   font-weight: 700;
+}
+
+.breakdown-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.breakdown-row {
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.breakdown-label {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.breakdown-value {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.breakdown-bar {
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+}
+
+.breakdown-fill {
+  height: 100%;
+  border-radius: 999px;
 }
 
   @media (max-width: 900px) {
