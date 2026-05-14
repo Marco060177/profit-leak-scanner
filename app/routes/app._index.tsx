@@ -12,6 +12,8 @@ import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
 import InsightsPanel from "~/components/dashboard/InsightsPanel";
 import KpiGrid from "~/components/dashboard/KpiGrid";
 import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
+import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
+import DashboardHero from "~/components/dashboard/DashboardHero";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -529,39 +531,17 @@ export default function DashboardV2() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <div className="navbar">
-          <div className="logo">
-            MARGIN<span>LAB</span>
-          </div>
-
-          <div className="nav-tabs">
-            <div
-              className="nav-tab active"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            >
-              Overview
-            </div>
-
-            <div className="nav-tab" onClick={() => scrollToSection("leaks-section")}>
-              Leaks
-            </div>
-
-            <div className="nav-tab" onClick={() => scrollToSection("products-section")}>
-              Products
-            </div>
-
-            <div
-              className="nav-tab"
-              onClick={() => scrollToSection("recommendations-section")}
-            >
-              Recommendations
-            </div>
-
-            <div className="nav-tab" onClick={() => navigate("/app/billing")}>
-              Billing
-            </div>
-          </div>
-        </div>
+        <DashboardHero
+          period={period}
+          setPeriod={setPeriod}
+          navigate={navigate}
+          scrollToSection={scrollToSection}
+          analysisLoading={analysisLoading}
+          analysisText={analysisText}
+          analysisSteps={analysisSteps}
+          setAnalysisLoading={setAnalysisLoading}
+          setAnalysisText={setAnalysisText}
+        />
 
         <div className="hero-header">
           <div>
@@ -619,12 +599,18 @@ export default function DashboardV2() {
 
         {!billingActive ? (
           <div className="billing-banner">
-            <strong>Plan inactive</strong>
-            <span>
-              You are viewing the dashboard in preview mode. Activate your plan to unlock full
-              analysis.
-            </span>
-            <button onClick={() => navigate("/app/billing")}>Go to billing</button>
+            <div>
+              <strong>Margin Intelligence preview mode</strong>
+
+              <span>
+                Activate your plan to unlock full margin analysis,
+                product risk detection, pricing insights and recovery opportunities.
+              </span>
+            </div>
+
+            <button onClick={() => navigate("/app/billing")}>
+              Activate plan
+            </button>
           </div>
         ) : null}
 
@@ -743,42 +729,11 @@ export default function DashboardV2() {
           severityBorder={severityBorder}
         />
 
-        <div className="panel">
-          <div className="section-header">
-            <div>
-              <div className="section-title">Margin Breakdown</div>
-
-              <div className="section-subtitle">
-                Revenue allocation across costs, profit and detected leaks.
-              </div>
-            </div>
-          </div>
-
-          <div className="breakdown-stack">
-            {[
-              ["COGS", cogsPercentage, "#3b82f6"],
-              ["Profit", profitPercentage, "#22c55e"],
-              ["Leak", leakPercentage, "#ef4444"],
-            ].map(([label, value, color]) => (
-              <div key={String(label)} className="breakdown-row">
-                <div className="breakdown-header">
-                  <div className="breakdown-label">{label}</div>
-                  <div className="breakdown-value">{Number(value).toFixed(1)}%</div>
-                </div>
-
-                <div className="breakdown-bar">
-                  <div
-                    className="breakdown-fill"
-                    style={{
-                      width: `${Math.min(Number(value), 100)}%`,
-                      background: String(color),
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <MarginBreakdown
+          cogsPercentage={cogsPercentage}
+          profitPercentage={profitPercentage}
+          leakPercentage={leakPercentage}
+        />
 
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
