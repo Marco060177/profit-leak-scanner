@@ -10,6 +10,8 @@ import RiskDistribution from "~/components/dashboard/RiskDistribution";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
 import InsightsPanel from "~/components/dashboard/InsightsPanel";
+import KpiGrid from "~/components/dashboard/KpiGrid";
+import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -634,110 +636,85 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
-        <div className="kpi-grid">
-          {[
-            [
-              "Revenue scanned",
-              money(sourceRows.reduce((acc, row) => acc + row.revenue, 0)),
-              `Last ${period} days`,
-              "positive",
-            ],
-            [
-              "Products analyzed",
-              String(sourceRows.length),
-              `${sourceRows.filter(
+        <KpiGrid
+          items={[
+            {
+              label: "Revenue scanned",
+              value: money(sourceRows.reduce((acc, row) => acc + row.revenue, 0)),
+              note: `Last ${period} days`,
+              tone: "positive",
+            },
+
+            {
+              label: "Products analyzed",
+              value: String(sourceRows.length),
+              note: `${sourceRows.filter(
                 (row) => row.losing || row.lowMargin || row.missingCost,
-              ).length
-              } at risk`,
-              "warning",
-            ],
-            [
-              "Low margin products",
-              String(sourceRows.filter((row) => row.lowMargin).length),
-              "Below 10%",
-              "warning",
-            ],
-            [
-              "Missing costs",
-              String(sourceRows.filter((row) => row.missingCost).length),
-              "Fix required",
-              "danger",
-            ],
-          ].map(([label, value, note, tone]) => (
-            <div key={label} className="kpi-card">
-              <div className="kpi-label">{label}</div>
-              <div className="kpi-value">{value}</div>
+              ).length} at risk`,
+              tone: "warning",
+            },
 
-              <div
-                className="kpi-note"
-                style={{
-                  color:
-                    tone === "positive"
-                      ? "#22c55e"
-                      : tone === "danger"
-                        ? "#ff6b4a"
-                        : "#f59e0b",
-                }}
-              >
-                {note}
-              </div>
-            </div>
-          ))}
-        </div>
+            {
+              label: "Low margin products",
+              value: String(sourceRows.filter((row) => row.lowMargin).length),
+              note: "Below 10%",
+              tone: "warning",
+            },
 
-        <div className="kpi-grid" style={{ marginBottom: 24 }}>
-          <div className="kpi-card">
-            <div className="kpi-label">Biggest Profit Leak</div>
+            {
+              label: "Missing costs",
+              value: String(sourceRows.filter((row) => row.missingCost).length),
+              note: "Fix required",
+              tone: "danger",
+            },
+          ]}
+        />
 
-            <div className="kpi-value" style={{ fontSize: 24 }}>
-              {worstProduct ? worstProduct.productTitle : "No data"}
-            </div>
-
-            <div className="kpi-note" style={{ color: "#ff6b4a" }}>
-              {worstProduct
+        <KpiGrid
+          marginBottom={24}
+          items={[
+            {
+              label: "Biggest Profit Leak",
+              value: worstProduct
+                ? worstProduct.productTitle
+                : "No data",
+              note: worstProduct
                 ? `${money(Math.abs(worstProduct.profit))} estimated loss`
-                : "No issues detected"}
-            </div>
-          </div>
+                : "No issues detected",
+              tone: "danger",
+            },
 
-          <div className="kpi-card">
-            <div className="kpi-label">Best Margin Product</div>
+            {
+              label: "Best Margin Product",
+              value: bestProduct
+                ? bestProduct.productTitle
+                : "No data",
+              note: bestProduct
+                ? `${pct(bestProduct.marginPct)} margin`
+                : "No products available",
+              tone: "positive",
+            },
 
-            <div className="kpi-value" style={{ fontSize: 24 }}>
-              {bestProduct ? bestProduct.productTitle : "No data"}
-            </div>
+            {
+              label: "Recoverable Profit",
+              value: money(recoverableProfit),
+              note: "Potential margin recovery",
+              tone: "warning",
+            },
 
-            <div className="kpi-note" style={{ color: "#22c55e" }}>
-              {bestProduct ? `${pct(bestProduct.marginPct)} margin` : "No products available"}
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-label">Recoverable Profit</div>
-            <div className="kpi-value">{money(recoverableProfit)}</div>
-
-            <div className="kpi-note" style={{ color: "#f59e0b" }}>
-              Potential margin recovery
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-label">AVERAGE PRODUCT MARGIN</div>
-
-            <div className="kpi-value">
-              {pct(
+            {
+              label: "AVERAGE PRODUCT MARGIN",
+              value: pct(
                 sourceRows.length > 0
                   ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
                   sourceRows.length
                   : 0,
-              )}
-            </div>
-
-            <div className="kpi-note" style={{ color: "#22c55e" }}>
-              Across analyzed products
-            </div>
-          </div>
-        </div>
+              ),
+              note: "Across analyzed products",
+              tone: "positive",
+            },
+          ]}
+        />
 
         <TrendChart
           chartData={chartData}
@@ -757,61 +734,14 @@ export default function DashboardV2() {
 
         <InsightsPanel insights={insights as any[]} />
 
-        
 
-        <div className="panel" id="leaks-section">
-          <div className="section-header">
-            <div>
-              <div className="section-title">Top Profit Leaks Detected</div>
-              <div className="section-subtitle">
-                Prioritized issues found from your real Shopify order data.
-              </div>
-            </div>
 
-            <button className="secondary-orange-button">View all</button>
-          </div>
-
-          {topLeaks.length === 0 ? (
-            <div className="clean-state">
-              ✅ No major profit leaks detected in the selected period.
-            </div>
-          ) : (
-            <div className="leaks-list">
-              {topLeaks.map(({ icon, issue, severity, loss }) => (
-                <div key={issue} className="leak-row">
-                  <div className="leak-main">
-                    <div className="leak-icon">{icon}</div>
-
-                    <div>
-                      <div className="leak-title">{issue}</div>
-                      <div className="leak-subtitle">
-                        Margin optimization opportunity detected
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="leak-severity">
-                    <div
-                      className="severity-pill"
-                      style={{
-                        color: severityColor(severity),
-                        background: severityBackground(severity),
-                        border: severityBorder(severity),
-                      }}
-                    >
-                      {severity}
-                    </div>
-                  </div>
-
-                  <div className="leak-loss">
-                    <div>{loss}</div>
-                    <span>estimated impact</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <TopLeaksPanel
+          topLeaks={topLeaks}
+          severityColor={severityColor}
+          severityBackground={severityBackground}
+          severityBorder={severityBorder}
+        />
 
         <div className="panel">
           <div className="section-header">
