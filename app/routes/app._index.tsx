@@ -1,20 +1,30 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
+
+import dashboardStylesUrl from "~/styles/dashboard.css?url";
+
 import ScoreCard from "~/components/dashboard/ScoreCard";
 import TrendChart from "~/components/dashboard/TrendChart";
 import RiskDistribution from "~/components/dashboard/RiskDistribution";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
 
+import { loadMarginDashboardData } from "~/utils/margin.server";
+
 import {
   type LoaderData,
   type Row,
   money,
   pct,
-  toYYYYMMDD,
-  extractNumericId,
 } from "~/utils/margin";
+
+export const links = () => [
+  {
+    rel: "stylesheet",
+    href: dashboardStylesUrl,
+  },
+];
 
 export const loader = async ({
   request,
@@ -23,19 +33,6 @@ export const loader = async ({
 }): Promise<LoaderData> => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
-  const days = Number.parseInt(period, 10);
-  const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
-
-  const fromDate = new Date();
-  fromDate.setDate(fromDate.getDate() - safeDays);
-  const fromYYYYMMDD = toYYYYMMDD(fromDate);
-
-  const previousFromDate = new Date(fromDate);
-  previousFromDate.setDate(previousFromDate.getDate() - safeDays);
-  const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
-
-  const queryString = `processed_at:>=${fromYYYYMMDD}`;
-  const previousQueryString = `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 
   const { admin, session } = await authenticate.admin(request);
 
@@ -47,291 +44,11 @@ export const loader = async ({
     });
   }
 
-  const billingRes = await admin.graphql(`
-    #graphql
-    query {
-      appInstallation {
-        activeSubscriptions {
-          id
-          name
-          status
-        }
-      }
-    }
-  `);
-
-  const billingJson = await billingRes.json();
-  const activeSubscriptions =
-    billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
-  const billingActive = activeSubscriptions.length > 0;
-
-  const response = await admin.graphql(
-    `#graphql
-    query OrdersForLeak($q: String!) {
-      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
-        edges {
-          node {
-            id
-            name
-            processedAt
-            lineItems(first: 250) {
-              edges {
-                node {
-                  quantity
-                  originalUnitPriceSet {
-                    shopMoney { amount }
-                  }
-                  variant {
-                    product {
-                      id
-                      title
-                    }
-                    inventoryItem {
-                      unitCost { amount }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    { variables: { q: queryString } },
-  );
-
-  const gql = await response.json();
-
-  const previousResponse = await admin.graphql(
-    `#graphql
-    query OrdersForLeakPrevious($q: String!) {
-      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
-        edges {
-          node {
-            lineItems(first: 250) {
-              edges {
-                node {
-                  quantity
-                  originalUnitPriceSet {
-                    shopMoney { amount }
-                  }
-                  variant {
-                    inventoryItem {
-                      unitCost { amount }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }`,
-    { variables: { q: previousQueryString } },
-  );
-
-  const previousGql = await previousResponse.json();
-  const previousOrderEdges = previousGql?.data?.orders?.edges ?? [];
-  const orderEdges = gql?.data?.orders?.edges ?? [];
-
-  const byDay: Record<
-    string,
-    {
-      revenue: number;
-      cogs: number;
-    }
-  > = {};
-
-  const byProduct: Record<
-    string,
-    {
-      productId: string;
-      productTitle: string;
-      qty: number;
-      revenue: number;
-      cogs: number;
-      missingCost: boolean;
-    }
-  > = {};
-
-  let totalRevenue = 0;
-  let totalCogs = 0;
-
-  let previousRevenue = 0;
-  let previousCogs = 0;
-
-  for (const o of orderEdges) {
-    const items = o?.node?.lineItems?.edges ?? [];
-
-    for (const li of items) {
-      const qty = Number(li?.node?.quantity ?? 0);
-      const price = Number(li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0);
-      const costRaw = li?.node?.variant?.inventoryItem?.unitCost?.amount;
-      const hasCost = costRaw !== null && costRaw !== undefined;
-      const cost = Number(costRaw ?? 0);
-
-      const product = li?.node?.variant?.product;
-      const productTitle = product?.title ?? "Unknown product";
-      const productId = product?.id ? extractNumericId(product.id) : "";
-
-      const lineRevenue = price * qty;
-      const lineCogs = cost * qty;
-
-      const processedAt = o?.node?.processedAt ?? "";
-      const day = processedAt.slice(0, 10);
-
-      if (!byDay[day]) {
-        byDay[day] = {
-          revenue: 0,
-          cogs: 0,
-        };
-      }
-
-      byDay[day].revenue += lineRevenue;
-      byDay[day].cogs += lineCogs;
-
-      if (!byProduct[productTitle]) {
-        byProduct[productTitle] = {
-          productId,
-          productTitle,
-          qty: 0,
-          revenue: 0,
-          cogs: 0,
-          missingCost: false,
-        };
-      }
-
-      if (!hasCost) {
-        byProduct[productTitle].missingCost = true;
-      }
-
-      byProduct[productTitle].qty += qty;
-      byProduct[productTitle].revenue += lineRevenue;
-      byProduct[productTitle].cogs += lineCogs;
-
-      totalRevenue += lineRevenue;
-      totalCogs += lineCogs;
-    }
-  }
-
-  for (const o of previousOrderEdges) {
-    const items = o?.node?.lineItems?.edges ?? [];
-
-    for (const li of items) {
-      const qty = Number(li?.node?.quantity ?? 0);
-
-      const price = Number(
-        li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0,
-      );
-
-      const costRaw =
-        li?.node?.variant?.inventoryItem?.unitCost?.amount;
-
-      const cost = Number(costRaw ?? 0);
-
-      previousRevenue += price * qty;
-      previousCogs += cost * qty;
-    }
-  }
-
-  const rows: Row[] = Object.values(byProduct)
-    .map((r) => {
-      const profit = r.revenue - r.cogs;
-      const marginPct = r.revenue > 0 ? (profit / r.revenue) * 100 : 0;
-
-      const avgPrice = r.qty > 0 ? r.revenue / r.qty : 0;
-      const avgCost = r.qty > 0 ? r.cogs / r.qty : 0;
-
-      const breakEvenPrice = avgCost;
-      const targetMargin = 0.2;
-      const targetPrice = avgCost > 0 ? avgCost / (1 - targetMargin) : avgPrice;
-      const targetDelta = targetPrice - avgPrice;
-
-      const suggestion =
-        profit < 0
-          ? `Increase price to ${money(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${money(
-            targetDelta,
-          )} per unit) to reach a 20% margin.`
-          : targetDelta > 0
-            ? `Consider increasing price to ${money(
-              targetPrice,
-            )} to reach a stronger 20% margin target.`
-            : `Pricing looks healthy for a 20% margin.`;
-
-
-
-      return {
-        ...r,
-        profit,
-        marginPct,
-        losing: profit < 0,
-        lowMargin: marginPct > 0 && marginPct < 10,
-        avgPrice,
-        avgCost,
-        breakEvenPrice,
-        targetPrice,
-        targetDelta,
-        missingCost: r.missingCost,
-        suggestion,
-      };
-    })
-    .sort((a, b) => a.profit - b.profit);
-
-  const totalProfit = totalRevenue - totalCogs;
-  const previousProfit = previousRevenue - previousCogs;
-
-  const previousMarginPct =
-    previousRevenue > 0
-      ? (previousProfit / previousRevenue) * 100
-      : 0;
-
-  const marginDelta =
-    (totalRevenue > 0
-      ? (totalProfit / totalRevenue) * 100
-      : 0) - previousMarginPct;
-  const revenueDeltaPct =
-    previousRevenue > 0
-      ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
-      : 0;
-  const totalLeak = Math.abs(
-    rows.reduce((acc, r) => acc + (r.profit < 0 ? r.profit : 0), 0),
-  );
-  const losingCount = rows.filter((r) => r.losing).length;
-  const missingCostCount = rows.filter((r) => r.missingCost).length;
-  const shopHandle = session.shop.replace(".myshopify.com", "");
-
-
-
-  const trend = Object.entries(byDay)
-    .map(([date, values]) => ({
-      date,
-      revenue: values.revenue,
-      profit: values.revenue - values.cogs,
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
-
-  return {
-    summary: {
-      revenue: totalRevenue,
-      cogs: totalCogs,
-      profit: totalProfit,
-      marginPct: totalRevenue > 0
-        ? (totalProfit / totalRevenue) * 100
-        : 0,
-      totalLeak,
-      losingCount,
-      missingCostCount,
-      previousMarginPct,
-      marginDelta,
-      previousRevenue,
-      revenueDeltaPct,
-    },
-    rows,
-    trend,
-    billingActive,
-    period: String(safeDays),
-    shopHandle,
-  };
+  return loadMarginDashboardData({
+    admin,
+    session,
+    period,
+  });
 };
 
 export default function DashboardV2() {
@@ -340,7 +57,6 @@ export default function DashboardV2() {
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
-
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
   const analysisSteps = [
@@ -354,7 +70,9 @@ export default function DashboardV2() {
 
   const dashboardLoading = false;
   const marginDelta = summary.marginDelta;
+
   const lowMarginCount = rows.filter((row) => row.lowMargin).length;
+
   const productsAtRisk = rows.filter(
     (row) => row.losing || row.lowMargin || row.missingCost,
   ).length;
@@ -365,10 +83,10 @@ export default function DashboardV2() {
       100,
       Math.round(
         100 -
-        summary.losingCount * 18 -
-        summary.missingCostCount * 8 -
-        lowMarginCount * 6 -
-        Math.max(0, 20 - summary.marginPct) * 2,
+          summary.losingCount * 18 -
+          summary.missingCostCount * 8 -
+          lowMarginCount * 6 -
+          Math.max(0, 20 - summary.marginPct) * 2,
       ),
     ),
   );
@@ -397,7 +115,6 @@ export default function DashboardV2() {
       suggestion: "Increase price by $8 to reach target margin.",
       missingCost: false,
     },
-
     {
       productId: "2",
       productTitle: "Thermal Gloves",
@@ -416,7 +133,6 @@ export default function DashboardV2() {
       suggestion: "Product is selling below cost.",
       missingCost: false,
     },
-
     {
       productId: "3",
       productTitle: "Winter Backpack",
@@ -435,7 +151,6 @@ export default function DashboardV2() {
       suggestion: "Pricing looks healthy.",
       missingCost: false,
     },
-
     {
       productId: "4",
       productTitle: "Snow Boots",
@@ -470,21 +185,13 @@ export default function DashboardV2() {
     visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
 
   const profitPercentage =
-    visualRevenue > 0
-      ? (visualProfit / visualRevenue) * 100
-      : 0;
+    visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
 
   const cogsPercentage =
-    visualRevenue > 0
-      ? (visualCogs / visualRevenue) * 100
-      : 0;
+    visualRevenue > 0 ? (visualCogs / visualRevenue) * 100 : 0;
 
   const leakPercentage =
-    visualRevenue > 0
-      ? (visualLeak / visualRevenue) * 100
-      : 0;
-
-  const visualLowMarginCount = sourceRows.filter((row) => row.lowMargin).length;
+    visualRevenue > 0 ? (visualLeak / visualRevenue) * 100 : 0;
 
   const visualMissingCostCount = sourceRows.filter(
     (row) => row.missingCost,
@@ -495,10 +202,13 @@ export default function DashboardV2() {
   ).length;
 
   const criticalCount = sourceRows.filter((row) => row.losing).length;
+
   const warningCount = sourceRows.filter(
     (row) => row.lowMargin && !row.losing,
   ).length;
+
   const missingCount = sourceRows.filter((row) => row.missingCost).length;
+
   const healthyCount = sourceRows.filter(
     (row) => !row.losing && !row.lowMargin && !row.missingCost,
   ).length;
@@ -510,7 +220,6 @@ export default function DashboardV2() {
     : sourceRows;
 
   const sortedRiskRows = filteredRows
-
     .slice()
     .sort((a, b) => {
       if (a.losing !== b.losing) return a.losing ? -1 : 1;
@@ -530,42 +239,40 @@ export default function DashboardV2() {
       : 0;
 
   const hasWeakBestSeller =
-    weakBestSeller &&
-    weakBestSeller.revenue > 1000 &&
-    weakBestSellerMargin < 30;
+    weakBestSeller && weakBestSeller.revenue > 1000 && weakBestSellerMargin < 30;
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-        icon: "⚠️",
-        issue: "Products selling below cost",
-        severity: "High",
-        loss: money(visualLeak),
-      }
+          icon: "⚠️",
+          issue: "Products selling below cost",
+          severity: "High",
+          loss: money(visualLeak),
+        }
       : null,
     visualMissingCostCount > 0
       ? {
-        icon: "📦",
-        issue: "Products missing cost data",
-        severity: "Medium",
-        loss: `${visualMissingCostCount} products`,
-      }
+          icon: "📦",
+          issue: "Products missing cost data",
+          severity: "Medium",
+          loss: `${visualMissingCostCount} products`,
+        }
       : null,
     lowMarginCount > 0
       ? {
-        icon: "🏷️",
-        issue: "Low-margin products detected",
-        severity: "Medium",
-        loss: `${lowMarginCount} products`,
-      }
+          icon: "🏷️",
+          issue: "Low-margin products detected",
+          severity: "Medium",
+          loss: `${lowMarginCount} products`,
+        }
       : null,
     productsAtRisk > 0
       ? {
-        icon: "🔥",
-        issue: "Products requiring margin review",
-        severity: "Low",
-        loss: `${productsAtRisk} at risk`,
-      }
+          icon: "🔥",
+          issue: "Products requiring margin review",
+          severity: "Low",
+          loss: `${productsAtRisk} at risk`,
+        }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -598,32 +305,33 @@ export default function DashboardV2() {
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-        title: `Fix ${sourceRows.filter((row) => row.losing).length
+          title: `Fix ${
+            sourceRows.filter((row) => row.losing).length
           } products selling below cost`,
-        impact: `${money(visualLeak)} potential recovery`,
-        confidence: "High confidence",
-      }
+          impact: `${money(visualLeak)} potential recovery`,
+          confidence: "High confidence",
+        }
       : null,
     summary.missingCostCount > 0
       ? {
-        title: "Update missing product costs in Shopify",
-        impact: `${summary.missingCostCount} products affected`,
-        confidence: "Critical issue",
-      }
+          title: "Update missing product costs in Shopify",
+          impact: `${summary.missingCostCount} products affected`,
+          confidence: "Critical issue",
+        }
       : null,
     lowMarginCount > 0
       ? {
-        title: "Review low-margin products below 10%",
-        impact: `${lowMarginCount} products need attention`,
-        confidence: "Medium confidence",
-      }
+          title: "Review low-margin products below 10%",
+          impact: `${lowMarginCount} products need attention`,
+          confidence: "Medium confidence",
+        }
       : null,
     rows.length > 0
       ? {
-        title: "Review target prices for worst-performing products",
-        impact: "20% margin target available",
-        confidence: "Rule-based insight",
-      }
+          title: "Review target prices for worst-performing products",
+          impact: "20% margin target available",
+          confidence: "Rule-based insight",
+        }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -664,14 +372,14 @@ export default function DashboardV2() {
     trend.length >= 2
       ? trend
       : [
-        { date: "Mon", revenue: 4200, profit: 1100 },
-        { date: "Tue", revenue: 5100, profit: 1600 },
-        { date: "Wed", revenue: 4800, profit: 1200 },
-        { date: "Thu", revenue: 6200, profit: 2100 },
-        { date: "Fri", revenue: 7200, profit: 2600 },
-        { date: "Sat", revenue: 6800, profit: 2400 },
-        { date: "Sun", revenue: 7600, profit: 3100 },
-      ];
+          { date: "Mon", revenue: 4200, profit: 1100 },
+          { date: "Tue", revenue: 5100, profit: 1600 },
+          { date: "Wed", revenue: 4800, profit: 1200 },
+          { date: "Thu", revenue: 6200, profit: 2100 },
+          { date: "Fri", revenue: 7200, profit: 2600 },
+          { date: "Sat", revenue: 6800, profit: 2400 },
+          { date: "Sun", revenue: 7600, profit: 3100 },
+        ];
 
   const maxChartValue = Math.max(
     ...chartData.map((d) => Math.max(d.revenue, d.profit)),
@@ -690,8 +398,6 @@ export default function DashboardV2() {
       return `${x},${y}`;
     })
     .join(" ");
-
-
 
   const profitPoints = chartData
     .map((point, index) => {
@@ -734,8 +440,6 @@ export default function DashboardV2() {
   if (dashboardLoading) {
     return (
       <div className="dashboard-shell loading-shell">
-
-
         <div className="dashboard-container">
           <div className="loading-stack">
             <div className="loading-navbar" />
@@ -754,8 +458,6 @@ export default function DashboardV2() {
 
   return (
     <div className="dashboard-shell">
-
-
       <div className="dashboard-container">
         <div className="navbar">
           <div className="logo">
@@ -793,15 +495,11 @@ export default function DashboardV2() {
 
         <div className="hero-header">
           <div>
-
-
             <div className="eyebrow">Profit Leak Scanner</div>
 
             <div className="hero-title">Profit Leak Dashboard</div>
 
             <div className="hero-description">
-
-
               Track hidden margin leaks, underpriced products and pricing issues affecting your
               Shopify store profitability.
             </div>
@@ -845,10 +543,7 @@ export default function DashboardV2() {
             }}
           >
             <span>{analysisLoading ? "⏳" : "✦"}</span>
-
-            <span>
-              {analysisLoading ? analysisText : "Run analysis"}
-            </span>
+            <span>{analysisLoading ? analysisText : "Run analysis"}</span>
           </button>
         </div>
 
@@ -879,24 +574,22 @@ export default function DashboardV2() {
               `Last ${period} days`,
               "positive",
             ],
-
             [
               "Products analyzed",
               String(sourceRows.length),
-              `${sourceRows.filter(
-                (row) => row.losing || row.lowMargin || row.missingCost,
-              ).length
+              `${
+                sourceRows.filter(
+                  (row) => row.losing || row.lowMargin || row.missingCost,
+                ).length
               } at risk`,
               "warning",
             ],
-
             [
               "Low margin products",
               String(sourceRows.filter((row) => row.lowMargin).length),
               "Below 10%",
               "warning",
             ],
-
             [
               "Missing costs",
               String(sourceRows.filter((row) => row.missingCost).length),
@@ -906,7 +599,6 @@ export default function DashboardV2() {
           ].map(([label, value, note, tone]) => (
             <div key={label} className="kpi-card">
               <div className="kpi-label">{label}</div>
-
               <div className="kpi-value">{value}</div>
 
               <div
@@ -949,18 +641,13 @@ export default function DashboardV2() {
             </div>
 
             <div className="kpi-note" style={{ color: "#22c55e" }}>
-              {bestProduct
-                ? `${pct(bestProduct.marginPct)} margin`
-                : "No products available"}
+              {bestProduct ? `${pct(bestProduct.marginPct)} margin` : "No products available"}
             </div>
           </div>
 
           <div className="kpi-card">
             <div className="kpi-label">Recoverable Profit</div>
-
-            <div className="kpi-value">
-              {money(recoverableProfit)}
-            </div>
+            <div className="kpi-value">{money(recoverableProfit)}</div>
 
             <div className="kpi-note" style={{ color: "#f59e0b" }}>
               Potential margin recovery
@@ -974,7 +661,7 @@ export default function DashboardV2() {
               {pct(
                 sourceRows.length > 0
                   ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
-                  sourceRows.length
+                      sourceRows.length
                   : 0,
               )}
             </div>
@@ -1006,22 +693,17 @@ export default function DashboardV2() {
             <div className="insight-header">
               <div>
                 <div className="insight-eyebrow">CRITICAL INSIGHT</div>
-
-                <div className="insight-title">
-                  Best seller with weak profitability detected
-                </div>
+                <div className="insight-title">Best seller with weak profitability detected</div>
               </div>
 
-              <div className="insight-badge warning">
-                Low margin
-              </div>
+              <div className="insight-badge warning">Low margin</div>
             </div>
 
             <div className="insight-description">
               <strong>{weakBestSeller.productTitle}</strong> generated{" "}
               <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
-              <strong>{pct(weakBestSellerMargin)}</strong> margin.
-              This product may be reducing your overall store profitability.
+              <strong>{pct(weakBestSellerMargin)}</strong> margin. This product may be reducing
+              your overall store profitability.
             </div>
           </div>
         ) : null}
@@ -1030,25 +712,17 @@ export default function DashboardV2() {
           <div className="insight-panel">
             <div className="insight-header">
               <div>
-                <div className="insight-eyebrow">
-                  MARGIN DETERIORATION
-                </div>
-
-                <div className="insight-title">
-                  Store profitability is decreasing
-                </div>
+                <div className="insight-eyebrow">MARGIN DETERIORATION</div>
+                <div className="insight-title">Store profitability is decreasing</div>
               </div>
 
-              <div className="insight-badge warning">
-                {marginDelta.toFixed(1)}%
-              </div>
+              <div className="insight-badge warning">{marginDelta.toFixed(1)}%</div>
             </div>
 
             <div className="insight-description">
-              Your store margin dropped from{" "}
-              <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
-              <strong>{pct(summary.marginPct)}</strong> compared to the previous period.
-              Review pricing, discounts and product costs to avoid further margin erosion.
+              Your store margin dropped from <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
+              <strong>{pct(summary.marginPct)}</strong> compared to the previous period. Review
+              pricing, discounts and product costs to avoid further margin erosion.
             </div>
           </div>
         ) : null}
@@ -1057,24 +731,16 @@ export default function DashboardV2() {
           <div className="insight-panel">
             <div className="insight-header">
               <div>
-                <div className="insight-eyebrow">
-                  RECOVERY OPPORTUNITY
-                </div>
-
-                <div className="insight-title">
-                  Recover hidden profit from underpriced products
-                </div>
+                <div className="insight-eyebrow">RECOVERY OPPORTUNITY</div>
+                <div className="insight-title">Recover hidden profit from underpriced products</div>
               </div>
 
-              <div className="insight-badge warning">
-                {money(recoverableProfit)}
-              </div>
+              <div className="insight-badge warning">{money(recoverableProfit)}</div>
             </div>
 
             <div className="insight-description">
-              Profit Leak Scanner detected{" "}
-              <strong>{recoveryProducts.length} products</strong> with pricing gaps.
-              Adjusting prices toward target margins could recover approximately{" "}
+              Profit Leak Scanner detected <strong>{recoveryProducts.length} products</strong> with
+              pricing gaps. Adjusting prices toward target margins could recover approximately{" "}
               <strong>{money(recoverableProfit)}</strong> in additional profit.
             </div>
           </div>
@@ -1084,13 +750,8 @@ export default function DashboardV2() {
           <div className="insight-panel">
             <div className="insight-header">
               <div>
-                <div className="insight-eyebrow">
-                  GROWTH WARNING
-                </div>
-
-                <div className="insight-title">
-                  Revenue is growing faster than profitability
-                </div>
+                <div className="insight-eyebrow">GROWTH WARNING</div>
+                <div className="insight-title">Revenue is growing faster than profitability</div>
               </div>
 
               <div className="insight-badge warning">
@@ -1099,12 +760,10 @@ export default function DashboardV2() {
             </div>
 
             <div className="insight-description">
-              Store revenue increased by{" "}
-              <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>,
-              but margin dropped by{" "}
-              <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>.
-              Rapid growth combined with weakening margins may indicate
-              aggressive discounts, rising costs or underpriced best sellers.
+              Store revenue increased by <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>, but
+              margin dropped by <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>. Rapid
+              growth combined with weakening margins may indicate aggressive discounts, rising costs
+              or underpriced best sellers.
             </div>
           </div>
         ) : null}
@@ -1166,9 +825,7 @@ export default function DashboardV2() {
         <div className="panel">
           <div className="section-header">
             <div>
-              <div className="section-title">
-                Margin Breakdown
-              </div>
+              <div className="section-title">Margin Breakdown</div>
 
               <div className="section-subtitle">
                 Revenue allocation across costs, profit and detected leaks.
@@ -1178,33 +835,14 @@ export default function DashboardV2() {
 
           <div className="breakdown-stack">
             {[
-              [
-                "COGS",
-                cogsPercentage,
-                "#3b82f6",
-              ],
-
-              [
-                "Profit",
-                profitPercentage,
-                "#22c55e",
-              ],
-
-              [
-                "Leak",
-                leakPercentage,
-                "#ef4444",
-              ],
+              ["COGS", cogsPercentage, "#3b82f6"],
+              ["Profit", profitPercentage, "#22c55e"],
+              ["Leak", leakPercentage, "#ef4444"],
             ].map(([label, value, color]) => (
               <div key={String(label)} className="breakdown-row">
                 <div className="breakdown-header">
-                  <div className="breakdown-label">
-                    {label}
-                  </div>
-
-                  <div className="breakdown-value">
-                    {Number(value).toFixed(1)}%
-                  </div>
+                  <div className="breakdown-label">{label}</div>
+                  <div className="breakdown-value">{Number(value).toFixed(1)}%</div>
                 </div>
 
                 <div className="breakdown-bar">
@@ -1233,8 +871,7 @@ export default function DashboardV2() {
         />
 
         <RecommendationsPanel recommendations={recommendations} />
-      </div >
-    </div >
+      </div>
+    </div>
   );
 }
-
