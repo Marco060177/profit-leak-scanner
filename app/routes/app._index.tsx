@@ -1,6 +1,11 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
+import ScoreCard from "~/components/dashboard/ScoreCard";
+import TrendChart from "~/components/dashboard/TrendChart";
+import RiskDistribution from "~/components/dashboard/RiskDistribution";
+import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
+import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
 
 import {
   type LoaderData,
@@ -729,7 +734,7 @@ export default function DashboardV2() {
   if (dashboardLoading) {
     return (
       <div className="dashboard-shell loading-shell">
-        
+
 
         <div className="dashboard-container">
           <div className="loading-stack">
@@ -749,7 +754,7 @@ export default function DashboardV2() {
 
   return (
     <div className="dashboard-shell">
-      
+
 
       <div className="dashboard-container">
         <div className="navbar">
@@ -858,84 +863,13 @@ export default function DashboardV2() {
           </div>
         ) : null}
 
-        <div className="score-card">
-          <div className="score-glow-one" />
-          <div className="score-glow-two" />
-
-          <div className="score-content">
-            <div className="section-eyebrow">PROFIT LEAK SCORE</div>
-
-            <div className="score-number">
-              {score}
-              <span>/100</span>
-            </div>
-
-            <div className="score-risk">{scoreLabel}</div>
-
-            <div className="score-copy">
-              {visualLeak > 0
-                ? `Your store is leaking an estimated ${money(
-                  visualLeak,
-                )} from products selling below cost.`
-                : "Your store currently has no products selling below cost in the selected period."}
-            </div>
-
-            <div className="score-mini-grid">
-              {[
-                ["Estimated leak", money(visualLeak), "#ff5a36"],
-                ["Products at risk", `${visualProductsAtRisk} detected`, "#f59e0b"],
-                ["Margin", pct(visualMarginPct), "#22c55e"],
-              ].map(([label, value, color]) => (
-                <div key={label} className="score-mini-card">
-                  <div>{label}</div>
-                  <strong style={{ color }}>{value}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="gauge-card">
-            <div className="gauge-glow" />
-
-            <div className="gauge">
-              <svg width="170" height="170" viewBox="0 0 220 220">
-                <circle
-                  cx="110"
-                  cy="110"
-                  r="84"
-                  stroke="rgba(255,255,255,0.08)"
-                  strokeWidth="14"
-                  fill="none"
-                />
-
-                <circle
-                  cx="110"
-                  cy="110"
-                  r="84"
-                  stroke="#ff5a36"
-                  strokeWidth="14"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray="528"
-                  strokeDashoffset={528 - (528 * score) / 100}
-                  style={{
-                    filter: "drop-shadow(0 0 14px rgba(255,90,54,0.45))",
-                  }}
-                />
-              </svg>
-
-              <div className="gauge-center">
-                <div>{score}</div>
-                <span>{scoreLabel.toUpperCase()}</span>
-              </div>
-            </div>
-
-            <div className="gauge-copy">
-              Margin health score based on profit leaks, missing costs, low margins and store
-              profitability.
-            </div>
-          </div>
-        </div>
+        <ScoreCard
+          score={score}
+          scoreLabel={scoreLabel}
+          visualLeak={visualLeak}
+          visualProductsAtRisk={visualProductsAtRisk}
+          visualMarginPct={visualMarginPct}
+        />
 
         <div className="kpi-grid">
           {[
@@ -1051,150 +985,21 @@ export default function DashboardV2() {
           </div>
         </div>
 
-        <div className="panel">
-          <div className="section-header">
-            <div>
-              <div className="section-title">Profit Trend</div>
-              <div className="section-subtitle">
-                Current profit performance based on Shopify orders.
-              </div>
-            </div>
+        <TrendChart
+          chartData={chartData}
+          maxChartValue={maxChartValue}
+          revenuePoints={revenuePoints}
+          profitPoints={profitPoints}
+          visualMarginPct={visualMarginPct}
+        />
 
-            <div className="positive-trend">
-              {pct(visualMarginPct)} margin
-            </div>
-          </div>
-
-          <div className="chart-card">
-            <div className="chart-labels">
-              <span>Revenue</span>
-              <span>COGS</span>
-              <span>Profit</span>
-            </div>
-
-            <svg viewBox="0 0 1000 260" preserveAspectRatio="none" className="chart-svg">
-              <line x1="0" y1="230" x2="1000" y2="230" stroke="rgba(255,255,255,0.08)" />
-              <line x1="0" y1="170" x2="1000" y2="170" stroke="rgba(255,255,255,0.05)" />
-              <line x1="0" y1="110" x2="1000" y2="110" stroke="rgba(255,255,255,0.05)" />
-              <line x1="0" y1="50" x2="1000" y2="50" stroke="rgba(255,255,255,0.05)" />
-
-              <polyline
-                fill="none"
-                stroke="#ff5a36"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={revenuePoints}
-              />
-
-              <polyline
-                fill="none"
-                stroke="#22c55e"
-                strokeWidth="4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                points={profitPoints}
-              />
-
-              {chartData.map((point, index) => {
-                const x =
-                  chartData.length === 1
-                    ? 500
-                    : (index / (chartData.length - 1)) * 1000;
-
-                const revenueY = 230 - (point.revenue / maxChartValue) * 170;
-                const profitY = 230 - (point.profit / maxChartValue) * 170;
-
-                return (
-                  <React.Fragment key={point.date}>
-                    <circle cx={x} cy={revenueY} r="6" fill="#ff5a36" />
-                    <circle cx={x} cy={profitY} r="5" fill="#22c55e" />
-                  </React.Fragment>
-                );
-              })}
-            </svg>
-
-            <div className="chart-overlay" />
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="section-header">
-            <div>
-              <div className="section-title">
-                Risk Distribution
-              </div>
-
-              <div className="section-subtitle">
-                Real-time catalog health overview based on margin analysis.
-              </div>
-            </div>
-          </div>
-
-          <div className="risk-distribution">
-            {[
-              [
-                "Critical",
-                criticalCount,
-                "#ef4444",
-              ],
-
-              [
-                "Low Margin",
-                warningCount,
-                "#f59e0b",
-              ],
-
-              [
-                "Missing Cost",
-                missingCount,
-                "#3b82f6",
-              ],
-
-              [
-                "Healthy",
-                healthyCount,
-                "#22c55e",
-              ],
-            ].map(([label, value, color]) => {
-              const percentage =
-                (Number(value) / riskTotal) * 100;
-
-              return (
-                <div key={String(label)} className="risk-block">
-                  <div className="risk-block-top">
-                    <div
-                      className="risk-dot"
-                      style={{ background: String(color) }}
-                    />
-
-                    <div className="risk-label">
-                      {label}
-                    </div>
-
-                    <div className="risk-value">
-                      {String(value)}
-                    </div>
-                  </div>
-
-                  <div className="risk-bar">
-                    <div
-                      className="risk-fill"
-                      style={{
-                        width: `${percentage}%`,
-                        background: String(color),
-                      }}
-                    />
-                  </div>
-
-                  <div className="risk-percent">
-                    {percentage.toFixed(0)}% of products
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <RiskDistribution
+          criticalCount={criticalCount}
+          warningCount={warningCount}
+          missingCount={missingCount}
+          healthyCount={healthyCount}
+          riskTotal={riskTotal}
+        />
 
         {hasWeakBestSeller ? (
           <div className="insight-panel">
@@ -1416,326 +1221,18 @@ export default function DashboardV2() {
           </div>
         </div>
 
-        <div className="panel" id="products-section">
-          <div className="section-header">
-            <div>
-              <div className="section-title">Product Risk Table</div>
-              <div className="section-subtitle">
-                Products ranked by real margin risk and potential profit leaks.
-              </div>
+        <ProductRiskTable
+          sortedRiskRows={sortedRiskRows}
+          onlyLosing={onlyLosing}
+          setOnlyLosing={setOnlyLosing}
+          period={period}
+          riskLabel={riskLabel}
+          riskColor={riskColor}
+          riskBackground={riskBackground}
+          shopHandle={shopHandle}
+        />
 
-              <div className="table-filters">
-                <button
-                  className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
-                  onClick={() => setOnlyLosing(false)}
-                >
-                  All products
-                </button>
-
-                <button
-                  className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
-                  onClick={() => setOnlyLosing(true)}
-                >
-                  Losing only
-                </button>
-              </div>
-            </div>
-
-            <button
-              className="secondary-button"
-              onClick={() => {
-                const headers = [
-                  "Product",
-                  "Revenue",
-                  "COGS",
-                  "Profit",
-                  "Margin %",
-                  "Target Price",
-                  "Price Delta",
-                  "Risk",
-                ];
-
-                const csvRows = sortedRiskRows.map((row) => [
-                  row.productTitle,
-                  row.revenue.toFixed(2),
-                  row.cogs.toFixed(2),
-                  row.profit.toFixed(2),
-                  row.marginPct.toFixed(1),
-                  row.targetPrice.toFixed(2),
-                  row.targetDelta.toFixed(2),
-                  riskLabel(row),
-                ]);
-
-                const csvContent = [
-                  headers.join(","),
-                  ...csvRows.map((row) =>
-                    row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-                  ),
-                ].join("\n");
-
-                const blob = new Blob([csvContent], {
-                  type: "text/csv;charset=utf-8;",
-                });
-
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-
-                link.href = url;
-                link.download = `marginlab-products-${period}d.csv`;
-                link.click();
-
-                URL.revokeObjectURL(url);
-              }}
-            >
-              Export CSV
-            </button>
-          </div>
-
-          {sortedRiskRows.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📦</div>
-
-              <div className="empty-title">No products analyzed yet</div>
-
-              <div className="empty-copy">
-                Once orders are available, Profit Leak Scanner will detect products selling below
-                cost, missing costs and margin issues.
-              </div>
-
-              <button className="empty-button">Run first analysis</button>
-            </div>
-          ) : (
-            <>
-              <div className="desktop-table-wrapper">
-                <table className="product-table">
-                  <thead>
-                    <tr>
-                      {[
-                        "Product",
-                        "Revenue",
-                        "COGS",
-                        "Profit",
-                        "Target Price",
-                        "Delta",
-                        "Margin",
-                        "Risk",
-                      ].map((h) => (
-                        <th key={h}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {sortedRiskRows.map((row) => (
-                      <React.Fragment key={row.productTitle}>
-                        <tr>
-                          <td>
-                            <div className="product-name-cell">
-                              <div className="product-icon">📦</div>
-
-                              <div>
-                                <div className="product-name">{row.productTitle}</div>
-                                <div className="product-subtitle">
-                                  Avg price {money(row.avgPrice)} • Avg cost{" "}
-                                  {money(row.avgCost)}
-                                  {row.missingCost && row.productId ? (
-                                    <>
-                                      {" "}
-                                      •{" "}
-                                      <a
-                                        href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="shopify-link"
-                                      >
-                                        Set cost
-                                      </a >
-                                    </>
-                                  ) : null}
-                                </div >
-                              </div >
-                            </div >
-                          </td >
-
-                          <td>{money(row.revenue)}</td>
-
-                          <td>{money(row.cogs)}</td>
-
-                          <td style={{ color: row.profit < 0 ? "#ef4444" : "#22c55e" }}>
-                            {money(row.profit)}
-                          </td>
-
-                          <td>{money(row.targetPrice)}</td>
-
-                          <td
-                            style={{
-                              color: row.targetDelta > 0 ? "#ff6b4a" : "#22c55e",
-                              fontWeight: 900,
-                            }}
-                          >
-                            {row.targetDelta > 0 ? "↑ " : "↓ "}
-                            {money(row.targetDelta)}
-                          </td>
-
-                          <td>{pct(row.marginPct)}</td>
-
-                          <td>
-                            <span
-                              className="risk-pill"
-                              style={{
-                                color: riskColor(row),
-                                background: riskBackground(row),
-                              }}
-                            >
-                              {riskLabel(row)}
-                            </span>
-                          </td>
-                        </tr >
-
-                        {(row.losing || row.targetDelta > 0) && (
-                          <tr>
-                            <td colSpan={8}>
-                              <div className="desktop-suggestion">
-                                <div className="suggestion-title">AI Suggestion</div>
-
-                                <div className="suggestion-copy">{row.suggestion}</div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment >
-                    ))}
-                  </tbody >
-                </table >
-              </div >
-
-              <div className="mobile-products">
-                {sortedRiskRows.map((row) => (
-                  <div key={row.productTitle} className="mobile-product-card">
-                    <div className="mobile-product-header">
-                      <div className="product-name-cell">
-                        <div className="product-icon">📦</div>
-
-                        <div>
-                          <div className="product-name">{row.productTitle}</div>
-                          <div className="product-subtitle">
-                            Avg price {money(row.avgPrice)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <span
-                        className="risk-pill"
-                        style={{
-                          color: riskColor(row),
-                          background: riskBackground(row),
-                        }}
-                      >
-                        {riskLabel(row)}
-                      </span>
-                    </div>
-
-                    <div className="mobile-product-grid">
-                      <div>
-                        <span>Revenue</span>
-                        <strong>{money(row.revenue)}</strong>
-                      </div>
-
-                      <div>
-                        <span>COGS</span>
-                        <strong>{money(row.cogs)}</strong>
-                      </div>
-
-                      <div>
-                        <span>Profit</span>
-                        <strong>{money(row.profit)}</strong>
-                      </div>
-
-                      <div>
-                        <span>Target</span>
-                        <strong>{money(row.targetPrice)}</strong>
-                      </div>
-
-                      <div>
-                        <span>Delta</span>
-                        <strong>{money(row.targetDelta)}</strong>
-                      </div>
-
-                      <div>
-                        <span>Margin</span>
-                        <strong>{pct(row.marginPct)}</strong>
-                      </div>
-                    </div>
-
-                    <div className="mobile-suggestion">
-                      <div className="suggestion-title">AI Suggestion</div>
-
-                      <div className="suggestion-copy">{row.suggestion}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div >
-
-        <div className="ai-panel" id="recommendations-section">
-          <div className="ai-glow" />
-
-          <div className="section-header ai-header">
-            <div>
-              <div className="ai-eyebrow">AI Recommendations</div>
-
-              <div className="ai-title">Smart margin optimization suggestions</div>
-            </div>
-
-            <div className="ai-badge">
-              LIVE ANALYSIS
-            </div>
-          </div>
-
-          <div className="ai-grid">
-            {recommendations.map(({ title, impact, confidence }) => (
-              <div key={title} className="ai-card">
-                <div className="ai-card-top">
-                  <div className="ai-priority">HIGH PRIORITY</div>
-
-                  <div className="ai-confidence-inline">
-                    {confidence}
-                  </div>
-                </div>
-
-                <div className="ai-card-title">
-                  {title}
-                </div>
-
-                <div className="ai-impact">
-                  {impact}
-                </div>
-
-                <div className="ai-recommendation">
-                  Recommended action: review pricing strategy and optimize margins.
-                </div>
-
-                <div className="ai-footer">
-                  <div>
-                    <div className="confidence-label">
-                      Analysis status
-                    </div>
-
-                    <div className="confidence-value">
-                      Live monitoring active
-                    </div>
-                  </div>
-
-                  <button className="apply-button">
-                    Review insight
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <RecommendationsPanel recommendations={recommendations} />
       </div >
     </div >
   );
