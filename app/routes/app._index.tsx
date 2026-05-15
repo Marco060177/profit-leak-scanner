@@ -313,7 +313,9 @@ export default function DashboardV2() {
         title: `Fix ${sourceRows.filter((row) => row.losing).length
           } underpriced products selling below cost`,
         impact: `${money(visualLeak)} potential recovery`,
-        confidence: "High confidence",
+        confidence: "High confidence", actionLabel: "Review pricing",
+        actionLink: "#products-section",
+
       }
       : null,
     summary.missingCostCount > 0
@@ -321,6 +323,8 @@ export default function DashboardV2() {
         title: "Update missing product costs in Shopify",
         impact: `${summary.missingCostCount} products affected`,
         confidence: "Critical issue",
+        actionLabel: "Update costs",
+        actionLink: "#products-section",
       }
       : null,
     lowMarginCount > 0
@@ -328,6 +332,8 @@ export default function DashboardV2() {
         title: "Review low-margin products below 10%",
         impact: `${lowMarginCount} products need attention`,
         confidence: "Medium confidence",
+        actionLabel: "Analyze products",
+        actionLink: "#products-section",
       }
       : null,
     rows.length > 0
@@ -335,12 +341,16 @@ export default function DashboardV2() {
         title: "Review target prices for worst-performing products",
         impact: "20% margin target available",
         confidence: "Rule-based insight",
+        actionLabel: "Open recommendations",
+        actionLink: "#products-section",
       }
       : null,
   ].filter(Boolean) as {
     title: string;
     impact: string;
     confidence: string;
+    actionLabel: string;
+    actionLink: string;
   }[];
 
   const insights = [

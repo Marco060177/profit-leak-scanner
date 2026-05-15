@@ -2,6 +2,8 @@ type Recommendation = {
   title: string;
   impact: string;
   confidence: string;
+  actionLabel: string;
+  actionLink: string;
 };
 
 type Props = {
@@ -58,7 +60,7 @@ export default function RecommendationsPanel({ recommendations }: Props) {
       </div>
 
       <div className="ai-grid">
-        {recommendations.map(({ title, impact, confidence }) => (
+        {recommendations.map(({ title, impact, confidence, actionLabel, actionLink }) => (
           <div
             key={title}
             className="ai-card"
@@ -66,7 +68,8 @@ export default function RecommendationsPanel({ recommendations }: Props) {
               position: "relative",
               overflow: "hidden",
             }}
-          ><div
+          >
+            <div
               style={{
                 position: "absolute",
                 top: -120,
@@ -79,12 +82,11 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 pointerEvents: "none",
               }}
             />
+
             <div className="ai-card-top">
               <div className="ai-priority">HIGH PRIORITY</div>
               <div className="ai-confidence-inline">{confidence}</div>
             </div>
-
-
 
             <div
               style={{
@@ -92,6 +94,8 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 alignItems: "center",
                 gap: 12,
                 marginBottom: 10,
+                position: "relative",
+                zIndex: 2,
               }}
             >
               <div
@@ -113,9 +117,7 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 {getRecommendationIcon(title)}
               </div>
 
-              <div className="ai-card-title">
-                {title}
-              </div>
+              <div className="ai-card-title">{title}</div>
             </div>
 
             <div className="ai-impact">{impact}</div>
@@ -131,7 +133,9 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 <div className="confidence-value">Live monitoring active</div>
               </div>
 
-              <button className="apply-button">Review insight</button>
+              <a href={actionLink} className="apply-button">
+                {actionLabel}
+              </a>
             </div>
           </div>
         ))}
