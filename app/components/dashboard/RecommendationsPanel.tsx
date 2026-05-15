@@ -84,27 +84,39 @@ export default function RecommendationsPanel({ recommendations }: Props) {
               <div className="ai-confidence-inline">{confidence}</div>
             </div>
 
+
+
             <div
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 18,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(255,90,54,0.12)",
-                border: "1px solid rgba(255,90,54,0.22)",
-                marginBottom: 22,
-                fontSize: 28,
-                fontWeight: 900,
-                color: "#ff7b59",
-                boxShadow: "0 14px 34px rgba(255,90,54,0.12)",
+                gap: 12,
+                marginBottom: 10,
               }}
             >
-              {getRecommendationIcon(title)}
-            </div>
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "rgba(255,90,54,0.12)",
+                  border: "1px solid rgba(255,90,54,0.18)",
+                  color: "#ff7b59",
+                  fontWeight: 800,
+                  fontSize: 18,
+                  flexShrink: 0,
+                }}
+              >
+                {getRecommendationIcon(title)}
+              </div>
 
-            <div className="ai-card-title">{title}</div>
+              <div className="ai-card-title">
+                {title}
+              </div>
+            </div>
 
             <div className="ai-impact">{impact}</div>
 
