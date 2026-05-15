@@ -88,10 +88,10 @@ export default function DashboardV2() {
       100,
       Math.round(
         100 -
-          summary.losingCount * 18 -
-          summary.missingCostCount * 8 -
-          lowMarginCount * 6 -
-          Math.max(0, 20 - summary.marginPct) * 2,
+        summary.losingCount * 18 -
+        summary.missingCostCount * 8 -
+        lowMarginCount * 6 -
+        Math.max(0, 20 - summary.marginPct) * 2,
       ),
     ),
   );
@@ -249,35 +249,35 @@ export default function DashboardV2() {
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-          icon: "⚠️",
-          issue: "Products selling below cost",
-          severity: "High",
-          loss: money(visualLeak),
-        }
+        icon: "⚠️",
+        issue: "Products selling below cost",
+        severity: "High",
+        loss: money(visualLeak),
+      }
       : null,
     visualMissingCostCount > 0
       ? {
-          icon: "📦",
-          issue: "Products missing cost data",
-          severity: "Medium",
-          loss: `${visualMissingCostCount} products`,
-        }
+        icon: "📦",
+        issue: "Products missing cost data",
+        severity: "Medium",
+        loss: `${visualMissingCostCount} products`,
+      }
       : null,
     lowMarginCount > 0
       ? {
-          icon: "🏷️",
-          issue: "Low-margin products detected",
-          severity: "Medium",
-          loss: `${lowMarginCount} products`,
-        }
+        icon: "🏷️",
+        issue: "Low-margin products detected",
+        severity: "Medium",
+        loss: `${lowMarginCount} products`,
+      }
       : null,
     productsAtRisk > 0
       ? {
-          icon: "🔥",
-          issue: "Products requiring margin review",
-          severity: "Low",
-          loss: `${productsAtRisk} at risk`,
-        }
+        icon: "🔥",
+        issue: "Products requiring margin review",
+        severity: "Low",
+        loss: `${productsAtRisk} at risk`,
+      }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -310,33 +310,32 @@ export default function DashboardV2() {
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-          title: `Fix ${
-            sourceRows.filter((row) => row.losing).length
-          } products selling below cost`,
-          impact: `${money(visualLeak)} potential recovery`,
-          confidence: "High confidence",
-        }
+        title: `Fix ${sourceRows.filter((row) => row.losing).length
+          } underpriced products selling below cost`,
+        impact: `${money(visualLeak)} potential recovery`,
+        confidence: "High confidence",
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-        }
+        title: "Update missing product costs in Shopify",
+        impact: `${summary.missingCostCount} products affected`,
+        confidence: "Critical issue",
+      }
       : null,
     lowMarginCount > 0
       ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-        }
+        title: "Review low-margin products below 10%",
+        impact: `${lowMarginCount} products need attention`,
+        confidence: "Medium confidence",
+      }
       : null,
     rows.length > 0
       ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-        }
+        title: "Review target prices for worst-performing products",
+        impact: "20% margin target available",
+        confidence: "Rule-based insight",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -347,64 +346,64 @@ export default function DashboardV2() {
   const insights = [
     hasWeakBestSeller
       ? {
-          eyebrow: "CRITICAL INSIGHT",
-          title: "Best seller with weak profitability detected",
-          badge: "Low margin",
-          description: (
-            <>
-              <strong>{weakBestSeller.productTitle}</strong> generated{" "}
-              <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
-              <strong>{pct(weakBestSellerMargin)}</strong> margin. This product may be reducing
-              your overall store profitability.
-            </>
-          ),
-        }
+        eyebrow: "CRITICAL INSIGHT",
+        title: "Best seller with weak profitability detected",
+        badge: "Low margin",
+        description: (
+          <>
+            <strong>{weakBestSeller.productTitle}</strong> generated{" "}
+            <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
+            <strong>{pct(weakBestSellerMargin)}</strong> margin. This product may be reducing
+            your overall store profitability.
+          </>
+        ),
+      }
       : null,
     marginDelta < -3
       ? {
-          eyebrow: "MARGIN DETERIORATION",
-          title: "Store profitability is decreasing",
-          badge: `${marginDelta.toFixed(1)}%`,
-          description: (
-            <>
-              Your store margin dropped from{" "}
-              <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
-              <strong>{pct(summary.marginPct)}</strong> compared to the previous period. Review
-              pricing, discounts and product costs to avoid further margin erosion.
-            </>
-          ),
-        }
+        eyebrow: "MARGIN DETERIORATION",
+        title: "Store profitability is decreasing",
+        badge: `${marginDelta.toFixed(1)}%`,
+        description: (
+          <>
+            Your store margin dropped from{" "}
+            <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
+            <strong>{pct(summary.marginPct)}</strong> compared to the previous period. Review
+            pricing, discounts and product costs to avoid further margin erosion.
+          </>
+        ),
+      }
       : null,
     hasRecoveryOpportunity
       ? {
-          eyebrow: "RECOVERY OPPORTUNITY",
-          title: "Recover hidden profit from underpriced products",
-          badge: money(recoverableProfit),
-          description: (
-            <>
-              Profit Leak Scanner detected{" "}
-              <strong>{recoveryProducts.length} products</strong> with pricing gaps. Adjusting
-              prices toward target margins could recover approximately{" "}
-              <strong>{money(recoverableProfit)}</strong> in additional profit.
-            </>
-          ),
-        }
+        eyebrow: "RECOVERY OPPORTUNITY",
+        title: "Recover hidden profit from underpriced products",
+        badge: money(recoverableProfit),
+        description: (
+          <>
+            Profit Leak Scanner detected{" "}
+            <strong>{recoveryProducts.length} products</strong> with pricing gaps. Adjusting
+            prices toward target margins could recover approximately{" "}
+            <strong>{money(recoverableProfit)}</strong> in additional profit.
+          </>
+        ),
+      }
       : null,
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
-          eyebrow: "GROWTH WARNING",
-          title: "Revenue is growing faster than profitability",
-          badge: `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
-          description: (
-            <>
-              Store revenue increased by{" "}
-              <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>, but margin dropped by{" "}
-              <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>. Rapid growth combined
-              with weakening margins may indicate aggressive discounts, rising costs or underpriced
-              best sellers.
-            </>
-          ),
-        }
+        eyebrow: "GROWTH WARNING",
+        title: "Revenue is growing faster than profitability",
+        badge: `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
+        description: (
+          <>
+            Store revenue increased by{" "}
+            <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>, but margin dropped by{" "}
+            <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>. Rapid growth combined
+            with weakening margins may indicate aggressive discounts, rising costs or underpriced
+            best sellers.
+          </>
+        ),
+      }
       : null,
   ].filter(Boolean);
 
@@ -441,14 +440,14 @@ export default function DashboardV2() {
     trend.length >= 2
       ? trend
       : [
-          { date: "Mon", revenue: 4200, profit: 1100 },
-          { date: "Tue", revenue: 5100, profit: 1600 },
-          { date: "Wed", revenue: 4800, profit: 1200 },
-          { date: "Thu", revenue: 6200, profit: 2100 },
-          { date: "Fri", revenue: 7200, profit: 2600 },
-          { date: "Sat", revenue: 6800, profit: 2400 },
-          { date: "Sun", revenue: 7600, profit: 3100 },
-        ];
+        { date: "Mon", revenue: 4200, profit: 1100 },
+        { date: "Tue", revenue: 5100, profit: 1600 },
+        { date: "Wed", revenue: 4800, profit: 1200 },
+        { date: "Thu", revenue: 6200, profit: 2100 },
+        { date: "Fri", revenue: 7200, profit: 2600 },
+        { date: "Sat", revenue: 6800, profit: 2400 },
+        { date: "Sun", revenue: 7600, profit: 3100 },
+      ];
 
   const maxChartValue = Math.max(
     ...chartData.map((d) => Math.max(d.revenue, d.profit)),
@@ -573,11 +572,10 @@ export default function DashboardV2() {
             {
               label: "Products analyzed",
               value: String(sourceRows.length),
-              note: `${
-                sourceRows.filter(
-                  (row) => row.losing || row.lowMargin || row.missingCost,
-                ).length
-              } at risk`,
+              note: `${sourceRows.filter(
+                (row) => row.losing || row.lowMargin || row.missingCost,
+              ).length
+                } at risk`,
               tone: "warning",
             },
             {
@@ -623,7 +621,7 @@ export default function DashboardV2() {
               value: pct(
                 sourceRows.length > 0
                   ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
-                      sourceRows.length
+                  sourceRows.length
                   : 0,
               ),
               note: "Across analyzed products",

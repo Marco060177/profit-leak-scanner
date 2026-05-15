@@ -59,7 +59,26 @@ export default function RecommendationsPanel({ recommendations }: Props) {
 
       <div className="ai-grid">
         {recommendations.map(({ title, impact, confidence }) => (
-          <div key={title} className="ai-card">
+          <div
+            key={title}
+            className="ai-card"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+            }}
+          ><div
+              style={{
+                position: "absolute",
+                top: -120,
+                right: -80,
+                width: 220,
+                height: 220,
+                borderRadius: "50%",
+                background: "rgba(255,90,54,0.08)",
+                filter: "blur(70px)",
+                pointerEvents: "none",
+              }}
+            />
             <div className="ai-card-top">
               <div className="ai-priority">HIGH PRIORITY</div>
               <div className="ai-confidence-inline">{confidence}</div>
