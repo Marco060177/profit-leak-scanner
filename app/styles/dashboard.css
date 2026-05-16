@@ -33,32 +33,11 @@
 .dashboard-shell {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 12% 8%, rgba(255,90,54,0.20), transparent 22%),
-    radial-gradient(circle at 88% 18%, rgba(255,122,89,0.10), transparent 20%),
-    radial-gradient(circle at 78% 90%, rgba(255,90,54,0.12), transparent 24%),
-
-    linear-gradient(115deg, transparent 0 18%, rgba(255,90,54,0.09) 18.2%, transparent 18.6% 42%, rgba(255,90,54,0.07) 42.2%, transparent 42.6% 100%),
-    linear-gradient(65deg, transparent 0 28%, rgba(255,90,54,0.07) 28.2%, transparent 28.6% 62%, rgba(255,90,54,0.06) 62.2%, transparent 62.6% 100%),
-    linear-gradient(145deg, transparent 0 36%, rgba(255,90,54,0.055) 36.2%, transparent 36.6% 74%, rgba(255,90,54,0.05) 74.2%, transparent 74.6% 100%),
-
-    linear-gradient(180deg, #050816 0%, #07101c 48%, #0b111b 100%);
-  background-size:
-    auto,
-    auto,
-    auto,
-    900px 620px,
-    760px 540px,
-    1100px 760px,
-    auto;
-  background-position:
-    top left,
-    top right,
-    bottom right,
-    0 0,
-    140px 80px,
-    -120px 220px,
-    center;
-  background-attachment: fixed;
+    radial-gradient(circle at top left, rgba(255,80,40,0.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(255,90,54,0.10), transparent 24%),
+    linear-gradient(180deg, #071019 0%, #0b111b 100%);
+  background-size: 120% 120%;
+  animation: gradientMove 18s ease infinite;
   padding: 32px;
   color: #f3f4f6;
   font-family: Inter, system-ui, sans-serif;
