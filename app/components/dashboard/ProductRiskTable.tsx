@@ -163,7 +163,16 @@ export default function ProductRiskTable({
                       color: row.profit < 0 ? "#ef4444" : "#22c55e",
                     }}
                   >
-                    {money(row.profit)}
+                    <div
+                      style={{
+                        color: row.profit < 0 ? "#ff6b4a" : "#22c55e",
+                        fontWeight: 800,
+                        fontSize: 28,
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                      {money(row.profit)}
+                    </div>
                   </td>
 
                   <td>{money(row.targetPrice)}</td>
@@ -178,7 +187,20 @@ export default function ProductRiskTable({
                     {money(row.targetDelta)}
                   </td>
 
-                  <td>{pct(row.marginPct)}</td>
+                  <div
+                    style={{
+                      color:
+                        row.marginPct < 0
+                          ? "#ff6b4a"
+                          : row.marginPct < 10
+                            ? "#f59e0b"
+                            : "#22c55e",
+                      fontWeight: 700,
+                      fontSize: 18,
+                    }}
+                  >
+                    {pct(row.marginPct)}
+                  </div>
 
                   <td>
                     <span
@@ -196,13 +218,29 @@ export default function ProductRiskTable({
                 {(row.losing || row.targetDelta > 0) && (
                   <tr>
                     <td colSpan={8}>
-                      <div className="desktop-suggestion">
+                      <div
+                        className="desktop-suggestion"
+                        style={{
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.06)",
+                          borderRadius: 18,
+                          padding: 18,
+                        }}
+                      >
                         <div className="suggestion-title">
                           AI Suggestion
                         </div>
 
-                        <div className="suggestion-copy">
+                        <div
+                          className="suggestion-copy"
+                          style={{
+                            lineHeight: 1.6,
+                            color: "#d6d9e0",
+                            fontSize: 15,
+                          }}
+                        >
                           {row.suggestion}
+
                           {row.productId ? (
                             <div style={{ marginTop: 14 }}>
                               <a
