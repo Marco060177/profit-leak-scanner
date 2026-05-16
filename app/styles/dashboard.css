@@ -51,10 +51,10 @@
   position: fixed;
   inset: 0;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.42;
   background-image:
-    linear-gradient(rgba(255, 90, 54, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 90, 54, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(255, 90, 54, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 90, 54, 0.16) 1px, transparent 1px);
   background-size: 140px 140px;
   mask-image: radial-gradient(circle at center, black, transparent 85%);
 }
