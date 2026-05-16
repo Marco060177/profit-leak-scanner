@@ -29,7 +29,7 @@ export default function TrendChart({
   visualMarginPct,
 }: Props) {
   const chartWidth = 1000;
-  const chartHeight = 300;
+  const chartHeight = 320;
 
   const paddingLeft = 70;
   const paddingRight = 40;
