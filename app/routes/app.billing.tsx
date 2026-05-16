@@ -388,7 +388,9 @@ const styles: Record<string, React.CSSProperties> = {
   },
   statValue: {
     marginTop: 8,
-    fontSize: 22,
+    fontSize: 18,
+    lineHeight: 1.2,
+    wordBreak: "keep-all",
     fontWeight: 900,
   },
   plansGrid: {
