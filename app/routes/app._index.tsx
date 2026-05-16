@@ -126,7 +126,7 @@ export default function DashboardV2() {
       qty: 86,
       revenue: 18460,
       cogs: 3740,
-      profit: -620,
+      profit: -4280,
       marginPct: -19.8,
       losing: true,
       lowMargin: false,
@@ -134,7 +134,7 @@ export default function DashboardV2() {
       avgCost: 43,
       breakEvenPrice: 43,
       targetPrice: 54,
-      targetDelta: 18,
+      targetDelta: 32,
       suggestion: "Product is selling below cost.",
       missingCost: false,
     },
@@ -617,7 +617,11 @@ export default function DashboardV2() {
             {
               label: "Best Margin Product",
               value: bestProduct ? bestProduct.productTitle : "No data",
-              note: bestProduct ? `${pct(bestProduct.marginPct)} margin` : "No products available",
+              note: bestProduct
+                ? bestProduct.missingCost
+                  ? "Missing cost data"
+                  : `${pct(bestProduct.marginPct)} margin`
+                : "No products available",
               tone: "positive",
             },
             {
