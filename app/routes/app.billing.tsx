@@ -321,7 +321,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hero: {
     display: "grid",
-    gridTemplateColumns: "minmax(340px, 0.82fr) minmax(720px, 1.18fr)",
+    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     gap: 28,
     alignItems: "stretch",
   },
@@ -395,9 +395,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 900,
   },
   plansGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 22,
+    display: "contents",
   },
   pricingCard: {
     position: "relative",
