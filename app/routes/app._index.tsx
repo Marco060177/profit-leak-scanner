@@ -551,19 +551,22 @@ export default function DashboardV2() {
           setAnalysisText={setAnalysisText}
         />
 
-        {!billingActive ? (
-          <div className="billing-banner">
-            <div>
-              <strong>Margin Intelligence preview mode</strong>
-              <span>
-                Activate your plan to unlock full margin analysis, product risk detection, pricing
-                insights and recovery opportunities.
-              </span>
-            </div>
+        {/* {!billingActive ? (
+  <div className="billing-banner">
+    <div>
+      <strong>Margin Intelligence preview mode</strong>
 
-            <button onClick={() => navigate("/app/billing")}>Activate plan</button>
-          </div>
-        ) : null}
+      <span>
+        Activate your plan to unlock full margin analysis, product risk detection,
+        pricing insights and recovery opportunities.
+      </span>
+    </div>
+
+    <button onClick={() => navigate("/app/billing")}>
+      Activate plan
+    </button>
+  </div>
+) : null} */}
 
         <ScoreCard
           score={score}

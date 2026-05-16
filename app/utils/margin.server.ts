@@ -287,7 +287,7 @@ export async function loadMarginDashboardData({
               : `Consider increasing price to ${moneyServer(
                 targetPrice,
               )} to improve product margins.`
-            : "Pricing looks healthy for current margin targets.";
+            :"Current pricing and margins appear stable based on available cost data."
 
       return {
         ...r,
