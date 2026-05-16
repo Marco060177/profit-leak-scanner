@@ -196,7 +196,8 @@ export default function ProductRiskTable({
                             ? "#f59e0b"
                             : "#22c55e",
                       fontWeight: 700,
-                      fontSize: 18,
+                      fontSize: 15,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {pct(row.marginPct)}
