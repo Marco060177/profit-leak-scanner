@@ -271,16 +271,23 @@ export async function loadMarginDashboardData({
 
       const targetDelta = targetPrice - avgPrice;
 
+      const aggressiveIncrease =
+        avgPrice > 0 && targetDelta / avgPrice > 0.3;
+
       const suggestion =
         profit < 0
-          ? `Increase price to ${moneyServer(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${moneyServer(
+          ? aggressiveIncrease
+            ? "Current margins are critically below target. Review product costs, pricing structure and discounts."
+            : `Increase price to ${moneyServer(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${moneyServer(
               targetDelta,
-            )} per unit) to reach a 20% margin.`
+            )} per unit) to reach a healthier margin.`
           : targetDelta > 0
-            ? `Consider increasing price to ${moneyServer(
+            ? aggressiveIncrease
+              ? "Margin improvement opportunity detected. Review pricing and fulfillment costs."
+              : `Consider increasing price to ${moneyServer(
                 targetPrice,
-              )} to reach a stronger 20% margin target.`
-            : "Pricing looks healthy for a 20% margin.";
+              )} to improve product margins.`
+            : "Pricing looks healthy for current margin targets.";
 
       return {
         ...r,

@@ -291,9 +291,12 @@ export default function DashboardV2() {
       ? [...sourceRows].sort((a, b) => a.profit - b.profit)[0]
       : null;
 
-  const bestProduct = [...sourceRows]
-    .filter((row) => !row.missingCost)
-    .sort((a, b) => b.marginPct - a.marginPct)[0];
+  const bestProduct =
+    sourceRows.length > 0
+      ? [...sourceRows]
+        .filter((row) => !row.missingCost)
+        .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null
+      : null;
 
   const recoverableProfit = sourceRows.reduce((acc, row) => {
     return acc + (row.targetDelta > 0 ? row.targetDelta * row.qty : 0);
