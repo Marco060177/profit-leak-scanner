@@ -341,7 +341,7 @@ export default function DashboardV2() {
         title: "Review target prices for worst-performing products",
         impact: "20% margin target available",
         confidence: "Rule-based insight",
-        actionLabel: "Open recommendations",
+        actionLabel: "Review",
         actionLink: "#products-section",
       }
       : null,
