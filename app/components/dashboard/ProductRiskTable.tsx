@@ -204,16 +204,29 @@ export default function ProductRiskTable({
                         <div className="suggestion-copy">
                           {row.suggestion}
                           {row.productId ? (
-                            <div style={{ marginTop: 14 }}>
-                              <a
-                                href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="apply-button"
-                              >
-                                Review product
-                              </a>
-                            </div>
+                            <>
+                              <div style={{ marginTop: 14 }}>
+                                <a
+                                  href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="apply-button"
+                                >
+                                  Review product
+                                </a>
+                              </div>
+
+                              <div style={{ marginTop: 10 }}>
+                                <a
+                                  href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="secondary-button"
+                                >
+                                  Review pricing
+                                </a>
+                              </div>
+                            </>
                           ) : null}
                         </div>
                       </div>
