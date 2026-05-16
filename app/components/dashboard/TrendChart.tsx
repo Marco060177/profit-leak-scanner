@@ -267,7 +267,7 @@ export default function TrendChart({
 
           <text
             x={chartWidth / 2}
-            y={chartHeight + 48}
+            y={chartHeight - 20}
             textAnchor="middle"
             fill="rgba(255,255,255,0.34)"
             fontSize="12"
