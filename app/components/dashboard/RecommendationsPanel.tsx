@@ -141,14 +141,23 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 <div className="confidence-value">Live monitoring active</div>
               </div>
 
-              <a
-                href={actionLink}
+              <button
+                type="button"
                 className="apply-button"
                 style={{
-                  textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
+                }}
+                onClick={() => {
+                  const section = document.querySelector(actionLink);
+
+                  if (section) {
+                    section.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                  }
                 }}
               >
                 <span
@@ -161,11 +170,11 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                   {actionLabel}
                   <span style={{ fontSize: 18 }}>→</span>
                 </span>
-              </a>
+              </button>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </div >
   );
 }
