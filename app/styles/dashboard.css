@@ -44,6 +44,7 @@
   font-family: Inter, system-ui, sans-serif;
   position: relative;
   overflow-x: hidden;
+  isolation: isolate;
 }
 
 .dashboard-shell::before {
