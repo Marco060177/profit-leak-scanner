@@ -120,7 +120,15 @@ export default function RecommendationsPanel({ recommendations }: Props) {
               <div className="ai-card-title">{title}</div>
             </div>
 
-            <div className="ai-impact">{impact}</div>
+            <div
+              className="ai-impact"
+              style={{
+                marginTop: 14,
+                marginBottom: 18,
+              }}
+            >
+              {impact}
+            </div>
 
             <div className="ai-recommendation">
               <strong>Recommended action:</strong>{" "}
@@ -133,8 +141,26 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                 <div className="confidence-value">Live monitoring active</div>
               </div>
 
-              <a href={actionLink} className="apply-button">
-                {actionLabel}
+              <a
+                href={actionLink}
+                className="apply-button"
+                style={{
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {actionLabel}
+                  <span style={{ fontSize: 18 }}>→</span>
+                </span>
               </a>
             </div>
           </div>
