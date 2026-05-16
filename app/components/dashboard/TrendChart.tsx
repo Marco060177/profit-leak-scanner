@@ -115,7 +115,7 @@ export default function TrendChart({
         </div>
 
         <svg
-          viewBox="0 0 1000 280"
+          viewBox="0 0 1000 240"
           preserveAspectRatio="none"
           className="chart-svg"
         >
@@ -159,7 +159,7 @@ export default function TrendChart({
             x="0"
             y="235"
             fill="rgba(255,255,255,0.35)"
-            fontSize="20"
+            fontSize="12"
             fontWeight="700"
           >
             0
@@ -169,7 +169,7 @@ export default function TrendChart({
             x="0"
             y="175"
             fill="rgba(255,255,255,0.35)"
-            fontSize="20"
+            fontSize="12"
             fontWeight="700"
           >
             Mid
@@ -179,7 +179,7 @@ export default function TrendChart({
             x="0"
             y="55"
             fill="rgba(255,255,255,0.35)"
-            fontSize="20"
+            fontSize="12"
             fontWeight="700"
           >
             High
@@ -244,7 +244,7 @@ export default function TrendChart({
                   y="262"
                   textAnchor="middle"
                   fill="rgba(255,255,255,0.45)"
-                  fontSize="22"
+                  fontSize="12"
                   fontWeight="700"
                 >
                   {point.date}
