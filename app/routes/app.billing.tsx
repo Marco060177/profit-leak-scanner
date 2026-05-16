@@ -378,6 +378,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 18,
     background: "rgba(0,0,0,0.20)",
     border: "1px solid rgba(255,255,255,0.07)",
+    minHeight: 120,
   },
   statLabel: {
     fontSize: 11,
@@ -642,7 +643,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   bottomGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    width: "100%",
     gap: 18,
     marginTop: 28,
   },
