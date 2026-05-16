@@ -241,10 +241,10 @@ export default function TrendChart({
 
                 <text
                   x={x}
-                  y="262"
+                  y="232"
                   textAnchor="middle"
                   fill="rgba(255,255,255,0.45)"
-                  fontSize="12"
+                  fontSize="14"
                   fontWeight="700"
                 >
                   {point.date}
