@@ -198,6 +198,9 @@ export default function ProductRiskTable({
                       fontWeight: 700,
                       fontSize: 15,
                       whiteSpace: "nowrap",
+                      display: "flex",
+                      alignItems: "center",
+                      height: "100%",
                     }}
                   >
                     {pct(row.marginPct)}
