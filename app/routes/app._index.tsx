@@ -104,9 +104,9 @@ export default function DashboardV2() {
   const demoRows: Row[] = [
     {
       productId: "1",
-      productTitle: "Arctic Hoodie",
+      productTitle: "Premium Oversized Hoodie",
       qty: 124,
-      revenue: 8420,
+      revenue: 28420,
       cogs: 5980,
       profit: 420,
       marginPct: 5,
@@ -122,9 +122,9 @@ export default function DashboardV2() {
     },
     {
       productId: "2",
-      productTitle: "Thermal Gloves",
+      productTitle: "Recovery Compression Leggings",
       qty: 86,
-      revenue: 3120,
+      revenue: 18460,
       cogs: 3740,
       profit: -620,
       marginPct: -19.8,
@@ -140,9 +140,9 @@ export default function DashboardV2() {
     },
     {
       productId: "3",
-      productTitle: "Winter Backpack",
+      productTitle: "Minimalist Travel Backpack",
       qty: 42,
-      revenue: 6890,
+      revenue: 32680,
       cogs: 4110,
       profit: 2780,
       marginPct: 40.3,
@@ -158,9 +158,9 @@ export default function DashboardV2() {
     },
     {
       productId: "4",
-      productTitle: "Snow Boots",
+      productTitle: "Performance Running Shoes",
       qty: 58,
-      revenue: 12300,
+      revenue: 41720,
       cogs: 8940,
       profit: 3360,
       marginPct: 27.3,
@@ -357,7 +357,7 @@ export default function DashboardV2() {
     hasWeakBestSeller
       ? {
         eyebrow: "CRITICAL INSIGHT",
-        title: "Best seller with weak profitability detected",
+        title: "Your best-selling product may be reducing profitability",
         badge: "Low margin",
         description: (
           <>
@@ -387,7 +387,7 @@ export default function DashboardV2() {
     hasRecoveryOpportunity
       ? {
         eyebrow: "RECOVERY OPPORTUNITY",
-        title: "Recover hidden profit from underpriced products",
+        title: "MarginLab detected recoverable profit opportunities",
         badge: money(recoverableProfit),
         description: (
           <>
@@ -402,7 +402,7 @@ export default function DashboardV2() {
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
         eyebrow: "GROWTH WARNING",
-        title: "Revenue is growing faster than profitability",
+        title: "Revenue growth is outpacing margin growth",
         badge: `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
         description: (
           <>
