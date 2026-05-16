@@ -14,13 +14,61 @@ type Props = {
   visualMarginPct: number;
 };
 
+function formatDateLabel(date: string) {
+  if (date.length >= 10) {
+    const [, month, day] = date.split("-");
+    return `${month}/${day}`;
+  }
+
+  return date;
+}
+
 export default function TrendChart({
   chartData,
   maxChartValue,
-  revenuePoints,
-  profitPoints,
   visualMarginPct,
 }: Props) {
+  const chartWidth = 1000;
+  const chartHeight = 300;
+
+  const paddingLeft = 70;
+  const paddingRight = 40;
+  const paddingTop = 55;
+  const paddingBottom = 58;
+
+  const plotWidth = chartWidth - paddingLeft - paddingRight;
+  const plotHeight = chartHeight - paddingTop - paddingBottom;
+  const plotBottom = paddingTop + plotHeight;
+
+  function getX(index: number) {
+    if (chartData.length === 1) return paddingLeft + plotWidth / 2;
+
+    return paddingLeft + (index / (chartData.length - 1)) * plotWidth;
+  }
+
+  function getY(value: number) {
+    return plotBottom - (value / maxChartValue) * plotHeight;
+  }
+
+  const revenuePoints = chartData
+    .map((point, index) => `${getX(index)},${getY(point.revenue)}`)
+    .join(" ");
+
+  const profitPoints = chartData
+    .map((point, index) => `${getX(index)},${getY(point.profit)}`)
+    .join(" ");
+
+  const visibleDateIndexes = chartData
+    .map((_, index) => index)
+    .filter((index) => {
+      if (chartData.length <= 7) return true;
+      if (index === 0) return true;
+      if (index === chartData.length - 1) return true;
+      if (index === Math.floor(chartData.length / 2)) return true;
+
+      return false;
+    });
+
   return (
     <div className="panel">
       <div className="section-header">
@@ -32,9 +80,7 @@ export default function TrendChart({
           </div>
         </div>
 
-        <div className="positive-trend">
-          {pct(visualMarginPct)} margin
-        </div>
+        <div className="positive-trend">{pct(visualMarginPct)} margin</div>
       </div>
 
       <div className="chart-card">
@@ -44,7 +90,7 @@ export default function TrendChart({
             alignItems: "center",
             justifyContent: "space-between",
             gap: 20,
-            marginBottom: 18,
+            marginBottom: 14,
             flexWrap: "wrap",
           }}
         >
@@ -66,15 +112,15 @@ export default function TrendChart({
                 fontWeight: 700,
               }}
             >
-              <div
+              <span
                 style={{
                   width: 12,
                   height: 12,
                   borderRadius: 999,
                   background: "#60a5fa",
+                  display: "inline-block",
                 }}
               />
-
               Revenue
             </div>
 
@@ -88,15 +134,15 @@ export default function TrendChart({
                 fontWeight: 700,
               }}
             >
-              <div
+              <span
                 style={{
                   width: 12,
                   height: 12,
                   borderRadius: 999,
                   background: "#22c55e",
+                  display: "inline-block",
                 }}
               />
-
               Profit
             </div>
           </div>
@@ -110,82 +156,68 @@ export default function TrendChart({
               textTransform: "uppercase",
             }}
           >
-            X = Time • Y = Revenue / Profit
+            X = Time • Y = Amount
           </div>
         </div>
 
         <svg
-          viewBox="0 0 1000 240"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           preserveAspectRatio="none"
           className="chart-svg"
         >
-          {/* GRID */}
-
           <line
-            x1="0"
-            y1="230"
-            x2="1000"
-            y2="230"
-            stroke="rgba(255,255,255,0.08)"
+            x1={paddingLeft}
+            y1={plotBottom}
+            x2={chartWidth - paddingRight}
+            y2={plotBottom}
+            stroke="rgba(255,255,255,0.10)"
           />
 
           <line
-            x1="0"
-            y1="170"
-            x2="1000"
-            y2="170"
+            x1={paddingLeft}
+            y1={paddingTop + plotHeight * 0.66}
+            x2={chartWidth - paddingRight}
+            y2={paddingTop + plotHeight * 0.66}
             stroke="rgba(255,255,255,0.05)"
           />
 
           <line
-            x1="0"
-            y1="110"
-            x2="1000"
-            y2="110"
+            x1={paddingLeft}
+            y1={paddingTop + plotHeight * 0.33}
+            x2={chartWidth - paddingRight}
+            y2={paddingTop + plotHeight * 0.33}
             stroke="rgba(255,255,255,0.05)"
           />
-
-          <line
-            x1="0"
-            y1="50"
-            x2="1000"
-            y2="50"
-            stroke="rgba(255,255,255,0.05)"
-          />
-
-          {/* Y AXIS LABELS */}
 
           <text
-            x="0"
-            y="235"
-            fill="rgba(255,255,255,0.35)"
-            fontSize="12"
+            x="12"
+            y={paddingTop + 4}
+            fill="rgba(255,255,255,0.38)"
+            fontSize="13"
             fontWeight="700"
           >
-            0
+            High
           </text>
 
           <text
-            x="0"
-            y="175"
-            fill="rgba(255,255,255,0.35)"
-            fontSize="12"
+            x="12"
+            y={paddingTop + plotHeight * 0.66 + 4}
+            fill="rgba(255,255,255,0.38)"
+            fontSize="13"
             fontWeight="700"
           >
             Mid
           </text>
 
           <text
-            x="0"
-            y="55"
-            fill="rgba(255,255,255,0.35)"
-            fontSize="12"
+            x="12"
+            y={plotBottom + 4}
+            fill="rgba(255,255,255,0.38)"
+            fontSize="13"
             fontWeight="700"
           >
-            High
+            0
           </text>
-
-          {/* REVENUE */}
 
           <polyline
             fill="none"
@@ -196,8 +228,6 @@ export default function TrendChart({
             points={revenuePoints}
           />
 
-          {/* PROFIT */}
-
           <polyline
             fill="none"
             stroke="#22c55e"
@@ -207,51 +237,44 @@ export default function TrendChart({
             points={profitPoints}
           />
 
-          {/* POINTS */}
-
           {chartData.map((point, index) => {
-            const x =
-              chartData.length === 1
-                ? 500
-                : (index / (chartData.length - 1)) * 1000;
+            const x = getX(index);
+            const revenueY = getY(point.revenue);
+            const profitY = getY(point.profit);
 
-            const revenueY =
-              230 - (point.revenue / maxChartValue) * 170;
-
-            const profitY =
-              230 - (point.profit / maxChartValue) * 170;
+            const showDate = visibleDateIndexes.includes(index);
 
             return (
-              <g key={point.date}>
-                <circle
-                  cx={x}
-                  cy={revenueY}
-                  r="6"
-                  fill="#60a5fa"
-                />
+              <g key={`${point.date}-${index}`}>
+                <circle cx={x} cy={revenueY} r="6" fill="#60a5fa" />
+                <circle cx={x} cy={profitY} r="5" fill="#22c55e" />
 
-                <circle
-                  cx={x}
-                  cy={profitY}
-                  r="5"
-                  fill="#22c55e"
-                />
-
-                {/* X AXIS */}
-
-                <text
-                  x={x}
-                  y="232"
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.45)"
-                  fontSize="14"
-                  fontWeight="700"
-                >
-                  {point.date}
-                </text>
+                {showDate ? (
+                  <text
+                    x={x}
+                    y={plotBottom + 34}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.48)"
+                    fontSize="13"
+                    fontWeight="700"
+                  >
+                    {formatDateLabel(point.date)}
+                  </text>
+                ) : null}
               </g>
             );
           })}
+
+          <text
+            x={chartWidth / 2}
+            y={chartHeight - 8}
+            textAnchor="middle"
+            fill="rgba(255,255,255,0.34)"
+            fontSize="12"
+            fontWeight="700"
+          >
+            Time period
+          </text>
         </svg>
       </div>
     </div>
