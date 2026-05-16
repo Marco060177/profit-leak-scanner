@@ -30,7 +30,10 @@ export async function action({ request }: { request: Request }) {
     return Response.json(
       {
         ok: false,
-        error: error instanceof Error ? error.message : "Unable to open Shopify pricing page",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to open Shopify pricing page",
       },
       { status: 500 },
     );
@@ -73,19 +76,19 @@ export default function Billing() {
           <div style={styles.heroLeft}>
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
-              MARGIN INTELLIGENCE PLAN
+              MARGIN INTELLIGENCE PLATFORM
             </div>
 
-            <h1 style={styles.title}>Protect your Shopify margins before leaks scale.</h1>
+            <h1 style={styles.title}>Choose the margin intelligence plan for your store.</h1>
 
             <p style={styles.subtitle}>
-              Unlock premium margin analysis, product risk detection, target pricing insights and
-              actionable recommendations built for Shopify merchants.
+              Start with core profit leak detection today. Upgrade later as MarginLab evolves into
+              forecasting, benchmark insights and advanced AI margin intelligence.
             </p>
 
             <div style={styles.heroStats}>
               <div style={styles.statCard}>
-                <div style={styles.statLabel}>Plan</div>
+                <div style={styles.statLabel}>Live plan</div>
                 <div style={styles.statValue}>Starter</div>
               </div>
 
@@ -95,69 +98,124 @@ export default function Billing() {
               </div>
 
               <div style={styles.statCard}>
-                <div style={styles.statLabel}>Setup</div>
-                <div style={styles.statValue}>No code</div>
+                <div style={styles.statLabel}>Next tier</div>
+                <div style={styles.statValue}>Growth</div>
               </div>
             </div>
           </div>
 
-          <div style={styles.pricingCard}>
-            <div style={styles.cardGlow} />
+          <div style={styles.plansGrid}>
+            <div style={styles.pricingCard}>
+              <div style={styles.cardGlow} />
 
-            <div style={styles.planHeader}>
-              <div>
-                <div style={styles.planEyebrow}>Starter</div>
-                <div style={styles.planTitle}>Margin Intelligence</div>
-              </div>
-
-              <div style={styles.popularBadge}>BEST START</div>
-            </div>
-
-            <div style={styles.priceRow}>
-              <div style={styles.price}>$39</div>
-              <div style={styles.priceMeta}>/ month</div>
-            </div>
-
-            <div style={styles.note}>14-day free trial. Cancel anytime through Shopify.</div>
-
-            <div style={styles.divider} />
-
-            <div style={styles.featureTitle}>What’s included</div>
-
-            <div style={styles.featuresGrid}>
-              {[
-                "Profit Leak Score",
-                "Product risk table",
-                "Margin and COGS analysis",
-                "Target price suggestions",
-                "Low-margin product detection",
-                "Missing cost alerts",
-                "AI-style recommendations",
-                "CSV-ready profitability insights",
-              ].map((feature) => (
-                <div key={feature} style={styles.featureItem}>
-                  <span style={styles.check}>✓</span>
-                  <span>{feature}</span>
+              <div style={styles.planHeader}>
+                <div>
+                  <div style={styles.planEyebrow}>Starter</div>
+                  <div style={styles.planTitle}>Margin Intelligence</div>
                 </div>
-              ))}
+
+                <div style={styles.popularBadge}>LIVE</div>
+              </div>
+
+              <div style={styles.priceRow}>
+                <div style={styles.price}>$39</div>
+                <div style={styles.priceMeta}>/ month</div>
+              </div>
+
+              <div style={styles.note}>14-day free trial. Cancel anytime through Shopify.</div>
+
+              <div style={styles.divider} />
+
+              <div style={styles.featureTitle}>What’s included</div>
+
+              <div style={styles.featuresGrid}>
+                {[
+                  "Profit Leak Score",
+                  "Product risk table",
+                  "Margin and COGS analysis",
+                  "Target price suggestions",
+                  "Low-margin product detection",
+                  "Missing cost alerts",
+                  "AI recommendations",
+                  "CSV export",
+                  "Shopify product deep links",
+                ].map((feature) => (
+                  <div key={feature} style={styles.featureItem}>
+                    <span style={styles.check}>✓</span>
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              {error ? (
+                <div style={styles.errorBox}>
+                  <div style={styles.errorTitle}>Billing error</div>
+                  <div style={styles.errorText}>{String(error)}</div>
+                </div>
+              ) : null}
+
+              <fetcher.Form method="post" style={styles.form}>
+                <button type="submit" style={styles.primaryBtn} disabled={isLoading}>
+                  {isLoading ? "Opening Shopify billing..." : "Activate Starter Plan"}
+                </button>
+              </fetcher.Form>
+
+              <button type="button" style={styles.secondaryBtn} onClick={() => navigate("/app")}>
+                Continue without activating
+              </button>
             </div>
 
-            {error ? (
-              <div style={styles.errorBox}>
-                <div style={styles.errorTitle}>Billing error</div>
-                <div style={styles.errorText}>{String(error)}</div>
+            <div style={styles.growthCard}>
+              <div style={styles.growthGlow} />
+
+              <div style={styles.planHeader}>
+                <div>
+                  <div style={styles.growthEyebrow}>Growth</div>
+                  <div style={styles.planTitle}>Advanced Intelligence</div>
+                </div>
+
+                <div style={styles.comingBadge}>COMING SOON</div>
               </div>
-            ) : null}
 
-            <fetcher.Form method="post" style={styles.form}>
-              <button type="submit" style={styles.primaryBtn} disabled={isLoading}>
-                {isLoading ? "Opening Shopify billing..." : "Activate Starter Plan"}
+              <div style={styles.priceRow}>
+                <div style={styles.price}>$99</div>
+                <div style={styles.priceMeta}>/ month</div>
+              </div>
+
+              <div style={styles.note}>
+                Built for growing Shopify stores that need deeper margin visibility.
+              </div>
+
+              <div style={styles.divider} />
+
+              <div style={styles.featureTitle}>Planned features</div>
+
+              <div style={styles.featuresGrid}>
+                {[
+                  "Weekly AI margin reports",
+                  "6–12 month historical analysis",
+                  "Forecasted profit trends",
+                  "Advanced recovery opportunities",
+                  "Benchmark margin insights",
+                  "Multi-store support",
+                  "Priority WhatsApp support",
+                  "Advanced AI recommendations",
+                ].map((feature) => (
+                  <div key={feature} style={styles.featureItem}>
+                    <span style={styles.futureCheck}>↗</span>
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button type="button" style={styles.disabledBtn} disabled>
+                Growth coming soon
               </button>
-            </fetcher.Form>
 
-            <button type="button" style={styles.secondaryBtn} onClick={() => navigate("/app")}>
-              Continue without activating
-            </button>
+              <div style={styles.earlyAccessText}>
+                Early access will be offered first to active Starter users.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -232,7 +290,7 @@ const styles: Record<string, React.CSSProperties> = {
     filter: "blur(80px)",
   },
   container: {
-    maxWidth: 1240,
+    maxWidth: 1480,
     margin: "0 auto",
     position: "relative",
     zIndex: 2,
@@ -263,7 +321,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hero: {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1.05fr) minmax(360px, 0.95fr)",
+    gridTemplateColumns: "minmax(340px, 0.82fr) minmax(720px, 1.18fr)",
     gap: 28,
     alignItems: "stretch",
   },
@@ -297,7 +355,7 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     margin: "26px 0 0",
     maxWidth: 760,
-    fontSize: 52,
+    fontSize: 48,
     lineHeight: 1.04,
     letterSpacing: -1.6,
     fontWeight: 950,
@@ -333,12 +391,26 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 900,
   },
+  plansGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 22,
+  },
   pricingCard: {
     position: "relative",
     overflow: "hidden",
     padding: 30,
     borderRadius: 30,
     background: "linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
+    border: "1px solid rgba(255,255,255,0.10)",
+    boxShadow: "0 28px 90px rgba(0,0,0,0.35)",
+  },
+  growthCard: {
+    position: "relative",
+    overflow: "hidden",
+    padding: 30,
+    borderRadius: 30,
+    background: "linear-gradient(135deg, rgba(34,197,94,0.10), rgba(59,130,246,0.08), rgba(255,255,255,0.035))",
     border: "1px solid rgba(255,255,255,0.10)",
     boxShadow: "0 28px 90px rgba(0,0,0,0.35)",
   },
@@ -351,6 +423,16 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: "50%",
     background: "rgba(34,197,94,0.10)",
     filter: "blur(50px)",
+  },
+  growthGlow: {
+    position: "absolute",
+    top: -130,
+    right: -100,
+    width: 280,
+    height: 280,
+    borderRadius: "50%",
+    background: "rgba(59,130,246,0.14)",
+    filter: "blur(60px)",
   },
   planHeader: {
     display: "flex",
@@ -367,6 +449,13 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 1,
     textTransform: "uppercase",
   },
+  growthEyebrow: {
+    fontSize: 12,
+    color: "#4ade80",
+    fontWeight: 900,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
   planTitle: {
     marginTop: 8,
     fontSize: 25,
@@ -379,6 +468,16 @@ const styles: Record<string, React.CSSProperties> = {
     background: "rgba(34,197,94,0.12)",
     border: "1px solid rgba(34,197,94,0.18)",
     color: "#4ade80",
+    fontSize: 11,
+    fontWeight: 950,
+    whiteSpace: "nowrap",
+  },
+  comingBadge: {
+    padding: "8px 11px",
+    borderRadius: 999,
+    background: "rgba(59,130,246,0.12)",
+    border: "1px solid rgba(59,130,246,0.22)",
+    color: "#93c5fd",
     fontSize: 11,
     fontWeight: 950,
     whiteSpace: "nowrap",
@@ -407,6 +506,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 10,
     color: "rgba(255,255,255,0.58)",
     fontSize: 14,
+    lineHeight: 1.5,
     position: "relative",
     zIndex: 2,
   },
@@ -449,6 +549,19 @@ const styles: Record<string, React.CSSProperties> = {
     background: "rgba(34,197,94,0.13)",
     border: "1px solid rgba(34,197,94,0.22)",
     color: "#4ade80",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 950,
+    flexShrink: 0,
+  },
+  futureCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: "50%",
+    background: "rgba(59,130,246,0.13)",
+    border: "1px solid rgba(59,130,246,0.24)",
+    color: "#93c5fd",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -501,6 +614,29 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
     fontWeight: 850,
     fontSize: 14,
+  },
+  disabledBtn: {
+    width: "100%",
+    marginTop: 26,
+    padding: "15px 18px",
+    borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.10)",
+    background: "rgba(255,255,255,0.05)",
+    color: "rgba(255,255,255,0.62)",
+    cursor: "not-allowed",
+    fontWeight: 950,
+    fontSize: 15,
+    position: "relative",
+    zIndex: 2,
+  },
+  earlyAccessText: {
+    marginTop: 12,
+    color: "rgba(255,255,255,0.48)",
+    fontSize: 13,
+    lineHeight: 1.5,
+    textAlign: "center",
+    position: "relative",
+    zIndex: 2,
   },
   bottomGrid: {
     display: "grid",
