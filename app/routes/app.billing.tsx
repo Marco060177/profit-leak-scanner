@@ -161,7 +161,7 @@ export default function Billing() {
               </fetcher.Form>
 
               <button type="button" style={styles.secondaryBtn} onClick={() => navigate("/app")}>
-                Continue without activating
+                Continue in preview mode
               </button>
             </div>
 
