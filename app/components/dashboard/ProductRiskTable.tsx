@@ -127,9 +127,7 @@ export default function ProductRiskTable({
                       <div className="product-icon">📦</div>
 
                       <div>
-                        <div className="product-name">
-                          {row.productTitle}
-                        </div>
+                        <div className="product-name">{row.productTitle}</div>
 
                         <div className="product-subtitle">
                           Avg price {money(row.avgPrice)} • Avg cost{" "}
@@ -158,17 +156,14 @@ export default function ProductRiskTable({
 
                   <td>{money(row.cogs)}</td>
 
-                  <td
-                    style={{
-                      color: row.profit < 0 ? "#ef4444" : "#22c55e",
-                    }}
-                  >
+                  <td>
                     <div
                       style={{
                         color: row.profit < 0 ? "#ff6b4a" : "#22c55e",
-                        fontWeight: 800,
-                        fontSize: 28,
+                        fontWeight: 900,
+                        fontSize: 26,
                         letterSpacing: "-0.03em",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {money(row.profit)}
@@ -181,30 +176,33 @@ export default function ProductRiskTable({
                     style={{
                       color: row.targetDelta > 0 ? "#ff6b4a" : "#22c55e",
                       fontWeight: 900,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {row.targetDelta > 0 ? "↑ " : "↓ "}
                     {money(row.targetDelta)}
                   </td>
 
-                  <div
-                    style={{
-                      color:
-                        row.marginPct < 0
-                          ? "#ff6b4a"
-                          : row.marginPct < 10
-                            ? "#f59e0b"
-                            : "#22c55e",
-                      fontWeight: 700,
-                      fontSize: 15,
-                      whiteSpace: "nowrap",
-                      display: "flex",
-                      alignItems: "center",
-                      height: "100%",
-                    }}
-                  >
-                    {pct(row.marginPct)}
-                  </div>
+                  <td>
+                    <div
+                      style={{
+                        color:
+                          row.marginPct < 0
+                            ? "#ff6b4a"
+                            : row.marginPct < 10
+                              ? "#f59e0b"
+                              : "#22c55e",
+                        fontWeight: 800,
+                        fontSize: 15,
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        alignItems: "center",
+                        height: "100%",
+                      }}
+                    >
+                      {pct(row.marginPct)}
+                    </div>
+                  </td>
 
                   <td>
                     <span
@@ -228,12 +226,10 @@ export default function ProductRiskTable({
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.06)",
                           borderRadius: 18,
-                          padding: 18,
+                          padding: 20,
                         }}
                       >
-                        <div className="suggestion-title">
-                          AI Suggestion
-                        </div>
+                        <div className="suggestion-title">AI Suggestion</div>
 
                         <div
                           className="suggestion-copy"
@@ -244,20 +240,27 @@ export default function ProductRiskTable({
                           }}
                         >
                           {row.suggestion}
-
-                          {row.productId ? (
-                            <div style={{ marginTop: 14 }}>
-                              <a
-                                href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="apply-button"
-                              >
-                                Review pricing
-                              </a>
-                            </div>
-                          ) : null}
                         </div>
+
+                        {row.productId ? (
+                          <div style={{ marginTop: 16 }}>
+                            <a
+                              href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="apply-button"
+                              style={{
+                                textDecoration: "none",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                              }}
+                            >
+                              Review pricing
+                              <span style={{ fontSize: 18 }}>→</span>
+                            </a>
+                          </div>
+                        ) : null}
                       </div>
                     </td>
                   </tr>
