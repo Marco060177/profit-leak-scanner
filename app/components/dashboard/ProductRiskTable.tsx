@@ -186,8 +186,9 @@ export default function ProductRiskTable({
                   <td>
                     <div
                       style={{
-                        color:
-                          row.marginPct < 0
+                        color: row.missingCost
+                          ? "#f59e0b"
+                          : row.marginPct < 0
                             ? "#ff6b4a"
                             : row.marginPct < 10
                               ? "#f59e0b"
@@ -200,7 +201,7 @@ export default function ProductRiskTable({
                         height: "100%",
                       }}
                     >
-                      {pct(row.marginPct)}
+                      {row.missingCost ? "Missing" : pct(row.marginPct)}
                     </div>
                   </td>
 
