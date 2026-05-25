@@ -1366,7 +1366,9 @@
     font-size: 23px;
   }
 
-  .ai-insights-center {
+ 
+}
+.ai-insights-center {
   margin-top: 28px;
 }
 
@@ -1502,5 +1504,4 @@
   .ai-insights-grid {
     grid-template-columns: 1fr;
   }
-}
 }
