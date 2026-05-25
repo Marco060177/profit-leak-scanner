@@ -177,4 +177,5 @@ export default function RecommendationsPanel({ recommendations }: Props) {
       </div>
     </div >
   );
+  
 }
