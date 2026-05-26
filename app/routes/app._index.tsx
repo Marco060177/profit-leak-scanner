@@ -14,6 +14,7 @@ import KpiGrid from "~/components/dashboard/KpiGrid";
 import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
+import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -576,7 +577,9 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
-        
+        <div style={{ background: "red", color: "white", padding: 40, fontSize: 40 }}>
+          TEST AI CENTER
+        </div>
 
         <KpiGrid
           items={[
