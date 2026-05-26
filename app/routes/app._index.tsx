@@ -579,54 +579,68 @@ export default function DashboardV2() {
 
         <section className="ai-insights-center">
           <div className="ai-insights-header">
-            <span>AI PROFIT INTELLIGENCE</span>
+            <span>PROFIT INTELLIGENCE BRIEF</span>
 
-            <h2>AI Insights Center</h2>
+            <h2>Operational Profit Insights</h2>
 
             <p>
-              MarginLab highlights the most important profit risks detected in your
-              Shopify data.
+              MarginLab analyzed your Shopify store and detected operational risks
+              affecting profitability and pricing efficiency.
             </p>
           </div>
 
           <div className="ai-insights-grid">
             <article className="ai-insight-card danger">
               <div className="ai-card-top">
-                <span>Margin risk</span>
-                <strong>High impact</strong>
+                <span>Profitability Risk</span>
+                <strong>Critical</strong>
               </div>
 
-              <h3>Margin Deterioration Detected</h3>
+              <h3>Low-margin products are reducing store profitability</h3>
 
               <p>
-                Store margin is under pressure across products with low or negative
-                profitability.
+                Several products are currently operating below target margin thresholds,
+                reducing overall contribution profit across the store.
               </p>
 
-              <div className="ai-card-metric">
-                {money(visualLeak)}
+              <div className="ai-recommendation-box">
+                <div className="ai-recommendation-label">
+                  Recommended action
+                </div>
+
+                <div className="ai-recommendation-text">
+                  Review pricing structure, discounts and product costs for
+                  underperforming products.
+                </div>
               </div>
 
               <button type="button">
-                View affected products
+                Analyze affected products
               </button>
             </article>
 
             <article className="ai-insight-card warning">
               <div className="ai-card-top">
-                <span>Data quality</span>
-                <strong>Needs review</strong>
+                <span>Data Integrity</span>
+                <strong>Warning</strong>
               </div>
 
-              <h3>Missing Product Costs</h3>
+              <h3>Missing product costs are affecting profit accuracy</h3>
 
               <p>
-                {visualMissingCostCount} products are missing cost data, hiding real
-                profitability.
+                Margin calculations may be incomplete because some Shopify products
+                still have missing cost information.
               </p>
 
-              <div className="ai-card-metric">
-                {visualMissingCostCount} products
+              <div className="ai-recommendation-box">
+                <div className="ai-recommendation-label">
+                  Recommended action
+                </div>
+
+                <div className="ai-recommendation-text">
+                  Complete missing cost fields to improve margin tracking and AI
+                  analysis reliability.
+                </div>
               </div>
 
               <button type="button">
@@ -636,19 +650,25 @@ export default function DashboardV2() {
 
             <article className="ai-insight-card recovery">
               <div className="ai-card-top">
-                <span>Recovery</span>
-                <strong>Opportunity</strong>
+                <span>Recovery Opportunity</span>
+                <strong>Detected</strong>
               </div>
 
-              <h3>Recoverable Profit Found</h3>
+              <h3>Pricing optimization opportunities identified</h3>
 
               <p>
-                Pricing gaps detected across products may be reducing your monthly
-                profit.
+                MarginLab detected products with potential pricing improvements capable
+                of increasing monthly profitability.
               </p>
 
-              <div className="ai-card-metric">
-                {money(recoverableProfit)}
+              <div className="ai-recommendation-box">
+                <div className="ai-recommendation-label">
+                  Recommended action
+                </div>
+
+                <div className="ai-recommendation-text">
+                  Review optimization suggestions and compare target pricing scenarios.
+                </div>
               </div>
 
               <button type="button">
