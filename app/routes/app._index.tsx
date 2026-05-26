@@ -576,6 +576,8 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
+        
+
         <KpiGrid
           items={[
             {
