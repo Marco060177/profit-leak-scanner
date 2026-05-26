@@ -614,7 +614,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button">
+              <button type="button" onClick={() => scrollToSection("products-section")}>
                 Analyze affected products
               </button>
             </article>
@@ -643,7 +643,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button">
+              <button type="button" onClick={() => scrollToSection("products-section")}>
                 Fix missing costs
               </button>
             </article>
@@ -671,7 +671,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button">
+              <button type="button" onClick={() => scrollToSection("products-section")}>
                 Review recommendations
               </button>
             </article>

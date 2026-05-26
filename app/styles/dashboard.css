@@ -1410,7 +1410,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 24px;
-  padding: 24px;
+  padding: 22px;
   background:
     linear-gradient(
       180deg,
@@ -1454,16 +1454,18 @@
 }
 
 .ai-insight-card h3 {
-  font-size: 24px;
-  line-height: 1.2;
-  margin-bottom: 14px;
+  font-size: 20px;
+  line-height: 1.25;
+  margin-bottom: 16px;
   color: #ffffff;
+  letter-spacing: -0.4px;
 }
 
 .ai-insight-card p {
   color: #98a2b3;
-  line-height: 1.6;
-  margin-bottom: 22px;
+  line-height: 1.7;
+  margin-bottom: 20px;
+  font-size: 15px;
 }
 
 .ai-card-metric {
@@ -1506,4 +1508,27 @@
   .ai-insights-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.ai-recommendation-box {
+  margin-bottom: 22px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.ai-recommendation-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ff8a3d;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.ai-recommendation-text {
+  color: #d4d8e3;
+  line-height: 1.6;
+  font-size: 14px;
 }
