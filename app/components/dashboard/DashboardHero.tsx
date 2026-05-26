@@ -31,52 +31,24 @@ export default function DashboardHero({
         </div>
 
         <div className="nav-tabs">
-          <div
-            className="nav-tab active"
-            onClick={() =>
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth",
-              })
-            }
-          >
+          <div className="nav-tab active">
             Overview
           </div>
 
           <div
             className="nav-tab"
-            onClick={() =>
-              scrollToSection("leaks-section")
-            }
-          >
-            Leaks
-          </div>
-
-          <div
-            className="nav-tab"
-            onClick={() =>
-              scrollToSection("products-section")
-            }
+            onClick={() => navigate("/app/products")}
           >
             Products
           </div>
 
-          <div
-            className="nav-tab"
-            onClick={() =>
-              scrollToSection(
-                "recommendations-section",
-              )
-            }
-          >
+          <div className="nav-tab">
             Recommendations
           </div>
 
           <div
             className="nav-tab"
-            onClick={() =>
-              navigate("/app/billing")
-            }
+            onClick={() => navigate("/app/billing")}
           >
             Billing
           </div>
