@@ -577,9 +577,9 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
-        <div style={{ background: "red", color: "white", padding: 40, fontSize: 40 }}>
-          TEST AI CENTER
-        </div>
+        <section className="ai-insights-center">
+          <h1>AI INSIGHTS TEST</h1>
+        </section>
 
         <KpiGrid
           items={[
