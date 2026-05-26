@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router";
+
 export default function ProductsPage() {
+  const navigate = useNavigate();
+
   return (
     <div
       style={{
@@ -15,11 +19,24 @@ export default function ProductsPage() {
           margin: "0 auto",
         }}
       >
-        <div
+        <button
+          type="button"
+          onClick={() => navigate("/app")}
           style={{
             marginBottom: "30px",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#ffffff",
+            padding: "12px 18px",
+            borderRadius: "14px",
+            cursor: "pointer",
+            fontWeight: 700,
           }}
         >
+          ← Back to dashboard
+        </button>
+
+        <div style={{ marginBottom: "30px" }}>
           <div
             style={{
               color: "#ff8a3d",
