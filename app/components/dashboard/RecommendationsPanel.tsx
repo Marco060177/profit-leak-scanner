@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 
-const navigate = useNavigate();
+
 
 type Recommendation = {
   title: string;
@@ -50,6 +50,8 @@ function getRecommendationAction(title: string) {
 export default function RecommendationsPanel({ recommendations }: Props) {
   if (recommendations.length === 0) return null;
 
+  const navigate = useNavigate();
+
   return (
     <div className="ai-panel" id="recommendations-section">
       <div className="ai-glow" />
@@ -88,7 +90,7 @@ export default function RecommendationsPanel({ recommendations }: Props) {
             />
 
             <div className="ai-card-top">
-              <div className="ai-priority">HIGH PRIORITY</div>
+              <div className="ai-priority">HIGH PRIORITYy</div>
               <div className="ai-confidence-inline">{confidence}</div>
             </div>
 
