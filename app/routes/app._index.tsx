@@ -782,16 +782,7 @@ export default function DashboardV2() {
           leakPercentage={leakPercentage}
         />
 
-        <ProductRiskTable
-          sortedRiskRows={sortedRiskRows}
-          onlyLosing={onlyLosing}
-          setOnlyLosing={setOnlyLosing}
-          period={period}
-          riskLabel={riskLabel}
-          riskColor={riskColor}
-          riskBackground={riskBackground}
-          shopHandle={shopHandle}
-        />
+        
 
         <RecommendationsPanel recommendations={recommendations} />
       </div>
