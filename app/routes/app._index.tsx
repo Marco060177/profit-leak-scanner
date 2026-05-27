@@ -776,11 +776,7 @@ export default function DashboardV2() {
           severityBorder={severityBorder}
         />
 
-        <MarginBreakdown
-          cogsPercentage={cogsPercentage}
-          profitPercentage={profitPercentage}
-          leakPercentage={leakPercentage}
-        />
+        
 
         
 

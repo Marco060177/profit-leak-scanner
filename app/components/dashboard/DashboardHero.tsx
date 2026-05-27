@@ -44,6 +44,13 @@ export default function DashboardHero({
 
           <div
             className="nav-tab"
+            onClick={() => navigate("/app/profit-intelligence")}
+          >
+            Profit Intelligence
+          </div>
+
+          <div
+            className="nav-tab"
             onClick={() => navigate("/app/recommendations")}
           >
             Recommendations
