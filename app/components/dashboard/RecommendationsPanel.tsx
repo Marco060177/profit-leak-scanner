@@ -90,7 +90,7 @@ export default function RecommendationsPanel({ recommendations }: Props) {
             />
 
             <div className="ai-card-top">
-              <div className="ai-priority">HIGH PRIORITYy</div>
+              <div className="ai-priority">HIGH PRIORITY</div>
               <div className="ai-confidence-inline">{confidence}</div>
             </div>
 
