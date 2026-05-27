@@ -15,7 +15,7 @@ import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
-import DashboardSidebar from "~/components/dashboard/DashboardSidebar";
+
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -556,24 +556,22 @@ export default function DashboardV2() {
   }
 
   return (
-    <div className="dashboard-layout">
-      <DashboardSidebar active="overview" />
 
-      <div className="dashboard-main-content">
-        <div className="dashboard-container">
-          <DashboardHero
-            period={period}
-            setPeriod={setPeriod}
-            navigate={navigate}
-            scrollToSection={scrollToSection}
-            analysisLoading={analysisLoading}
-            analysisText={analysisText}
-            analysisSteps={analysisSteps}
-            setAnalysisLoading={setAnalysisLoading}
-            setAnalysisText={setAnalysisText}
-          />
+    <div className="dashboard-shell">
+      <div className="dashboard-container"></div>
+      <DashboardHero
+        period={period}
+        setPeriod={setPeriod}
+        navigate={navigate}
+        scrollToSection={scrollToSection}
+        analysisLoading={analysisLoading}
+        analysisText={analysisText}
+        analysisSteps={analysisSteps}
+        setAnalysisLoading={setAnalysisLoading}
+        setAnalysisText={setAnalysisText}
+      />
 
-          {/* {!billingActive ? (
+      {/* {!billingActive ? (
               <div className="billing-banner">
                 <div>
                   <strong>Margin Intelligence preview mode</strong>
@@ -590,252 +588,250 @@ export default function DashboardV2() {
               </div>
             ) : null} */}
 
-          <ScoreCard
-            score={score}
-            scoreLabel={scoreLabel}
-            visualLeak={visualLeak}
-            visualProductsAtRisk={visualProductsAtRisk}
-            visualMarginPct={visualMarginPct}
-          />
+      <ScoreCard
+        score={score}
+        scoreLabel={scoreLabel}
+        visualLeak={visualLeak}
+        visualProductsAtRisk={visualProductsAtRisk}
+        visualMarginPct={visualMarginPct}
+      />
 
-          <section className="ai-insights-center">
-            <div className="ai-insights-header">
-              <span>PROFIT INTELLIGENCE BRIEF</span>
+      <section className="ai-insights-center">
+        <div className="ai-insights-header">
+          <span>PROFIT INTELLIGENCE BRIEF</span>
 
-              <h2>Operational Profit Insights</h2>
+          <h2>Operational Profit Insights</h2>
 
-              <p>
-                MarginLab analyzed your Shopify store and detected operational
-                risks affecting profitability and pricing efficiency.
-              </p>
-            </div>
-
-            <div className="ai-insights-grid">
-              <article className="ai-insight-card danger">
-                <div className="ai-card-top">
-                  <span>Profitability Risk</span>
-                  <strong>Critical</strong>
-                </div>
-
-                <h3>
-                  Low-margin products are reducing store profitability
-                </h3>
-
-                <p>
-                  Several products are currently operating below target margin
-                  thresholds, reducing overall contribution profit across the
-                  store.
-                </p>
-
-                <div className="ai-recommendation-box">
-                  <div className="ai-recommendation-label">
-                    Recommended action
-                  </div>
-
-                  <div className="ai-recommendation-text">
-                    Review pricing structure, discounts and product costs for
-                    underperforming products.
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/products")}
-                >
-                  Analyze affected products
-                </button>
-              </article>
-
-              <article className="ai-insight-card warning">
-                <div className="ai-card-top">
-                  <span>Data Integrity</span>
-                  <strong>Warning</strong>
-                </div>
-
-                <h3>
-                  Missing product costs are affecting profit accuracy
-                </h3>
-
-                <p>
-                  Margin calculations may be incomplete because some Shopify
-                  products still have missing cost information.
-                </p>
-
-                <div className="ai-recommendation-box">
-                  <div className="ai-recommendation-label">
-                    Recommended action
-                  </div>
-
-                  <div className="ai-recommendation-text">
-                    Complete missing cost fields to improve margin tracking
-                    and AI analysis reliability.
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/products")}
-                >
-                  Fix missing costs
-                </button>
-              </article>
-
-              <article className="ai-insight-card recovery">
-                <div className="ai-card-top">
-                  <span>Recovery Opportunity</span>
-                  <strong>Detected</strong>
-                </div>
-
-                <h3>
-                  Pricing optimization opportunities identified
-                </h3>
-
-                <p>
-                  MarginLab detected products with potential pricing
-                  improvements capable of increasing monthly profitability.
-                </p>
-
-                <div className="ai-recommendation-box">
-                  <div className="ai-recommendation-label">
-                    Recommended action
-                  </div>
-
-                  <div className="ai-recommendation-text">
-                    Review optimization suggestions and compare target pricing
-                    scenarios.
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => navigate("/app/products")}
-                >
-                  Review recommendations
-                </button>
-              </article>
-            </div>
-          </section>
-
-          <KpiGrid
-            items={[
-              {
-                label: "Revenue scanned",
-                value: money(
-                  sourceRows.reduce(
-                    (acc, row) => acc + row.revenue,
-                    0,
-                  ),
-                ),
-                note: `Last ${period} days`,
-                tone: "positive",
-              },
-              {
-                label: "Products analyzed",
-                value: String(sourceRows.length),
-                note: `${sourceRows.filter(
-                  (row) =>
-                    row.losing ||
-                    row.lowMargin ||
-                    row.missingCost,
-                ).length
-                  } at risk`,
-                tone: "warning",
-              },
-              {
-                label: "Low margin products",
-                value: String(
-                  sourceRows.filter((row) => row.lowMargin).length,
-                ),
-                note: "Below 10%",
-                tone: "warning",
-              },
-              {
-                label: "Missing costs",
-                value: String(
-                  sourceRows.filter((row) => row.missingCost).length,
-                ),
-                note: "Fix required",
-                tone: "danger",
-              },
-            ]}
-          />
-
-          <KpiGrid
-            marginBottom={24}
-            items={[
-              {
-                label: "Biggest Profit Leak",
-                value: worstProduct
-                  ? worstProduct.productTitle
-                  : "No data",
-                note: worstProduct
-                  ? `${money(
-                    Math.abs(worstProduct.profit),
-                  )} estimated loss`
-                  : "No issues detected",
-                tone: "danger",
-              },
-              {
-                label: "Best Margin Product",
-                value: bestProduct
-                  ? bestProduct.productTitle
-                  : "No data",
-                note: bestProduct
-                  ? bestProduct.missingCost
-                    ? "Missing cost data"
-                    : `${pct(bestProduct.marginPct)} margin`
-                  : "No products available",
-                tone: "positive",
-              },
-              {
-                label: "Recoverable Profit",
-                value: money(recoverableProfit),
-                note: "Potential margin recovery",
-                tone: "warning",
-              },
-              {
-                label: "AVERAGE PRODUCT MARGIN",
-                value: pct(
-                  sourceRows.length > 0
-                    ? sourceRows.reduce(
-                      (acc, row) => acc + row.marginPct,
-                      0,
-                    ) / sourceRows.length
-                    : 0,
-                ),
-                note: "Across analyzed products",
-                tone: "positive",
-              },
-            ]}
-          />
-
-          <TrendChart
-            chartData={chartData}
-            maxChartValue={maxChartValue}
-            revenuePoints={revenuePoints}
-            profitPoints={profitPoints}
-            visualMarginPct={visualMarginPct}
-          />
-
-          <RiskDistribution
-            criticalCount={criticalCount}
-            warningCount={warningCount}
-            missingCount={missingCount}
-            healthyCount={healthyCount}
-            riskTotal={riskTotal}
-          />
-
-          <InsightsPanel insights={insights as any[]} />
-
-          <TopLeaksPanel
-            topLeaks={topLeaks}
-            severityColor={severityColor}
-            severityBackground={severityBackground}
-            severityBorder={severityBorder}
-          />
+          <p>
+            MarginLab analyzed your Shopify store and detected operational
+            risks affecting profitability and pricing efficiency.
+          </p>
         </div>
-      </div>
-    </div>
 
-  );
+        <div className="ai-insights-grid">
+          <article className="ai-insight-card danger">
+            <div className="ai-card-top">
+              <span>Profitability Risk</span>
+              <strong>Critical</strong>
+            </div>
+
+            <h3>
+              Low-margin products are reducing store profitability
+            </h3>
+
+            <p>
+              Several products are currently operating below target margin
+              thresholds, reducing overall contribution profit across the
+              store.
+            </p>
+
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">
+                Recommended action
+              </div>
+
+              <div className="ai-recommendation-text">
+                Review pricing structure, discounts and product costs for
+                underperforming products.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/app/products")}
+            >
+              Analyze affected products
+            </button>
+          </article>
+
+          <article className="ai-insight-card warning">
+            <div className="ai-card-top">
+              <span>Data Integrity</span>
+              <strong>Warning</strong>
+            </div>
+
+            <h3>
+              Missing product costs are affecting profit accuracy
+            </h3>
+
+            <p>
+              Margin calculations may be incomplete because some Shopify
+              products still have missing cost information.
+            </p>
+
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">
+                Recommended action
+              </div>
+
+              <div className="ai-recommendation-text">
+                Complete missing cost fields to improve margin tracking
+                and AI analysis reliability.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/app/products")}
+            >
+              Fix missing costs
+            </button>
+          </article>
+
+          <article className="ai-insight-card recovery">
+            <div className="ai-card-top">
+              <span>Recovery Opportunity</span>
+              <strong>Detected</strong>
+            </div>
+
+            <h3>
+              Pricing optimization opportunities identified
+            </h3>
+
+            <p>
+              MarginLab detected products with potential pricing
+              improvements capable of increasing monthly profitability.
+            </p>
+
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">
+                Recommended action
+              </div>
+
+              <div className="ai-recommendation-text">
+                Review optimization suggestions and compare target pricing
+                scenarios.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => navigate("/app/products")}
+            >
+              Review recommendations
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <KpiGrid
+        items={[
+          {
+            label: "Revenue scanned",
+            value: money(
+              sourceRows.reduce(
+                (acc, row) => acc + row.revenue,
+                0,
+              ),
+            ),
+            note: `Last ${period} days`,
+            tone: "positive",
+          },
+          {
+            label: "Products analyzed",
+            value: String(sourceRows.length),
+            note: `${sourceRows.filter(
+              (row) =>
+                row.losing ||
+                row.lowMargin ||
+                row.missingCost,
+            ).length
+              } at risk`,
+            tone: "warning",
+          },
+          {
+            label: "Low margin products",
+            value: String(
+              sourceRows.filter((row) => row.lowMargin).length,
+            ),
+            note: "Below 10%",
+            tone: "warning",
+          },
+          {
+            label: "Missing costs",
+            value: String(
+              sourceRows.filter((row) => row.missingCost).length,
+            ),
+            note: "Fix required",
+            tone: "danger",
+          },
+        ]}
+      />
+
+      <KpiGrid
+        marginBottom={24}
+        items={[
+          {
+            label: "Biggest Profit Leak",
+            value: worstProduct
+              ? worstProduct.productTitle
+              : "No data",
+            note: worstProduct
+              ? `${money(
+                Math.abs(worstProduct.profit),
+              )} estimated loss`
+              : "No issues detected",
+            tone: "danger",
+          },
+          {
+            label: "Best Margin Product",
+            value: bestProduct
+              ? bestProduct.productTitle
+              : "No data",
+            note: bestProduct
+              ? bestProduct.missingCost
+                ? "Missing cost data"
+                : `${pct(bestProduct.marginPct)} margin`
+              : "No products available",
+            tone: "positive",
+          },
+          {
+            label: "Recoverable Profit",
+            value: money(recoverableProfit),
+            note: "Potential margin recovery",
+            tone: "warning",
+          },
+          {
+            label: "AVERAGE PRODUCT MARGIN",
+            value: pct(
+              sourceRows.length > 0
+                ? sourceRows.reduce(
+                  (acc, row) => acc + row.marginPct,
+                  0,
+                ) / sourceRows.length
+                : 0,
+            ),
+            note: "Across analyzed products",
+            tone: "positive",
+          },
+        ]}
+      />
+
+      <TrendChart
+        chartData={chartData}
+        maxChartValue={maxChartValue}
+        revenuePoints={revenuePoints}
+        profitPoints={profitPoints}
+        visualMarginPct={visualMarginPct}
+      />
+
+      <RiskDistribution
+        criticalCount={criticalCount}
+        warningCount={warningCount}
+        missingCount={missingCount}
+        healthyCount={healthyCount}
+        riskTotal={riskTotal}
+      />
+
+      <InsightsPanel insights={insights as any[]} />
+
+      <TopLeaksPanel
+        topLeaks={topLeaks}
+        severityColor={severityColor}
+        severityBackground={severityBackground}
+        severityBorder={severityBorder}
+      />
+        </div>
+  
+);
 }
