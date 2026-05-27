@@ -607,7 +607,7 @@ export default function DashboardV2() {
                 <h2>Operational Profit Insights</h2>
 
                 <p>
-                  MarginLab. analyzed your Shopify store and detected operational
+                  MarginLab analyzed your Shopify store and detected operational
                   risks affecting profitability and pricing efficiency.
                 </p>
               </div>

@@ -153,8 +153,23 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                   alignItems: "center",
                   gap: 8,
                 }}
-                onClick={() => navigate("/app/products")}
-                
+                onClick={() => {
+                  if (actionLink.startsWith("#")) {
+                    const section = document.querySelector(actionLink);
+
+                    if (section) {
+                      section.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }
+
+                    return;
+                  }
+
+                  navigate(actionLink);
+                }}
+
               >
                 <span
                   style={{
