@@ -614,7 +614,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button" onClick={() => scrollToSection("products-section")}>
+              <button type="button" onClick={() => navigate("/app/products")}>
                 Analyze affected products
               </button>
             </article>
@@ -643,7 +643,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button" onClick={() => scrollToSection("products-section")}>
+              <button type="button" onClick={() => navigate("/app/products")}>
                 Fix missing costs
               </button>
             </article>
@@ -671,7 +671,7 @@ export default function DashboardV2() {
                 </div>
               </div>
 
-              <button type="button" onClick={() => scrollToSection("products-section")}>
+              <button type="button" onClick={() => navigate("/app/products")}>
                 Review recommendations
               </button>
             </article>
