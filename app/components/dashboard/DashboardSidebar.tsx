@@ -1,12 +1,8 @@
-
-
 type Props = {
   active: "overview" | "products" | "recommendations" | "profit" | "billing";
 };
 
 export default function DashboardSidebar({ active }: Props) {
-  
-
   const items = [
     { id: "overview", label: "Overview", path: "/app" },
     { id: "products", label: "Products", path: "/app/products" },
@@ -34,8 +30,8 @@ export default function DashboardSidebar({ active }: Props) {
                 : "sidebar-nav-item"
             }
             onClick={() => {
-  window.location.href = item.path;
-}}
+              window.location.href = item.path;
+            }}
           >
             {item.label}
           </button>
