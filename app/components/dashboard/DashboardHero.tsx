@@ -42,7 +42,10 @@ export default function DashboardHero({
             Products
           </div>
 
-          <div className="nav-tab">
+          <div
+            className="nav-tab"
+            onClick={() => navigate("/app/recommendations")}
+          >
             Recommendations
           </div>
 
