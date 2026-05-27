@@ -1,3 +1,7 @@
+import { useNavigate } from "react-router";
+
+const navigate = useNavigate();
+
 type Recommendation = {
   title: string;
   impact: string;
@@ -149,9 +153,8 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                   alignItems: "center",
                   gap: 8,
                 }}
-                onClick={() => {
-                  window.location.href = "/app/products";
-                }}
+                onClick={() => navigate("/app/products")}
+                
               >
                 <span
                   style={{
