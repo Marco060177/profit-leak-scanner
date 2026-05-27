@@ -1,11 +1,11 @@
-import { useNavigate } from "react-router";
+
 
 type Props = {
   active: "overview" | "products" | "recommendations" | "profit" | "billing";
 };
 
 export default function DashboardSidebar({ active }: Props) {
-  const navigate = useNavigate();
+  
 
   const items = [
     { id: "overview", label: "Overview", path: "/app" },
@@ -33,7 +33,9 @@ export default function DashboardSidebar({ active }: Props) {
                 ? "sidebar-nav-item active"
                 : "sidebar-nav-item"
             }
-            onClick={() => navigate(item.path)}
+            onClick={() => {
+  window.location.href = item.path;
+}}
           >
             {item.label}
           </button>
