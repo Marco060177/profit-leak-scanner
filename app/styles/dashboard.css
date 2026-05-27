@@ -1644,3 +1644,13 @@
     margin-top: 24px;
   }
 }
+
+.dashboard-main-content,
+.dashboard-container {
+  background: transparent;
+  color: #f3f4f6;
+}
+
+.dashboard-layout {
+  background: transparent;
+}
