@@ -150,14 +150,7 @@ export default function RecommendationsPanel({ recommendations }: Props) {
                   gap: 8,
                 }}
                 onClick={() => {
-                  const section = document.querySelector(actionLink);
-
-                  if (section) {
-                    section.scrollIntoView({
-                      behavior: "smooth",
-                      block: "start",
-                    });
-                  }
+                  window.location.href = "/app/products";
                 }}
               >
                 <span
@@ -177,5 +170,5 @@ export default function RecommendationsPanel({ recommendations }: Props) {
       </div>
     </div >
   );
-  
+
 }
