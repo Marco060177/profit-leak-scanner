@@ -15,7 +15,7 @@ import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
-import DashboardSidebar from "~/components/dashboard/DashboardSidebar";
+
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -558,10 +558,7 @@ export default function DashboardV2() {
 
   return (
     <div className="dashboard-shell">
-      <div className="dashboard-layout">
-        <DashboardSidebar active="overview" />
-
-        <div className="dashboard-main-content">
+      <div className="dashboard-container">
           <div className="dashboard-container">
             <DashboardHero
               period={period}
@@ -839,6 +836,6 @@ export default function DashboardV2() {
           </div>
         </div>
       </div>
-    </div>
+    
   );
 }
