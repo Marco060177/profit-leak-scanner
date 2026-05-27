@@ -784,7 +784,7 @@ export default function DashboardV2() {
 
         
 
-        <RecommendationsPanel recommendations={recommendations} />
+        
       </div>
     </div>
   );
