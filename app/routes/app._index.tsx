@@ -360,6 +360,19 @@ export default function DashboardV2() {
     severity: string;
   }[];
 
+  const prioritizedInsights = [...contributionInsights].sort((a, b) => {
+    const severityWeight = {
+      Critical: 3,
+      High: 2,
+      Medium: 1,
+    };
+
+    return (
+      severityWeight[b.severity as keyof typeof severityWeight] -
+      severityWeight[a.severity as keyof typeof severityWeight]
+    );
+  }).slice(0, 3);
+
   const worstProduct =
     sourceRows.length > 0
       ? [...sourceRows].sort((a, b) => a.profit - b.profit)[0]
@@ -897,7 +910,7 @@ export default function DashboardV2() {
         severityBorder={severityBorder}
       />
 
-      <ContributionInsightsPanel insights={contributionInsights} />
+      <ContributionInsightsPanel insights={prioritizedInsights} />
 
     </div>
 
