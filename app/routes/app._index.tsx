@@ -229,16 +229,27 @@ export default function DashboardV2() {
     ? sourceRows.filter((row) => row.losing)
     : sourceRows;
 
+  const productRiskScore = (row: Row) => {
+    const revenueShare =
+      totalRevenue > 0 ? (row.revenue / totalRevenue) * 100 : 0;
+
+    let score = 0;
+
+    if (row.losing) score += 40;
+    if (row.missingCost) score += 25;
+    if (row.lowMargin) score += 20;
+
+    score += Math.min(15, revenueShare);
+
+    if (row.marginPct < 5) score += 10;
+    if (row.targetDelta > 0) score += Math.min(10, row.targetDelta / 10);
+
+    return Math.min(100, Math.round(score));
+  };
+
   const sortedRiskRows = filteredRows
     .slice()
-    .sort((a, b) => {
-      if (a.losing !== b.losing) return a.losing ? -1 : 1;
-      if (a.missingCost !== b.missingCost)
-        return a.missingCost ? -1 : 1;
-      if (a.lowMargin !== b.lowMargin)
-        return a.lowMargin ? -1 : 1;
-      return a.profit - b.profit;
-    })
+    .sort((a, b) => productRiskScore(b) - productRiskScore(a))
     .slice(0, 12);
 
   const weakBestSeller = [...sourceRows]
@@ -331,6 +342,7 @@ export default function DashboardV2() {
         description:
           "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
         severity: "Critical",
+        confidence: "High confidence"
       }
       : null,
 
@@ -341,6 +353,7 @@ export default function DashboardV2() {
         description:
           "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
         severity: "High",
+        confidence: "High confidence"
       }
       : null,
 
@@ -351,6 +364,7 @@ export default function DashboardV2() {
         description:
           "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
         severity: "Medium",
+        confidence: "Moderate confidence"
       }
       : null,
   ].filter(Boolean) as {
@@ -358,6 +372,7 @@ export default function DashboardV2() {
     value: string;
     description: string;
     severity: string;
+    confidence: string;
   }[];
 
   const prioritizedInsights = [...contributionInsights].sort((a, b) => {
