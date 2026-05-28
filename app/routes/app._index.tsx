@@ -15,7 +15,7 @@ import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
-
+import ContributionInsightsPanel from "~/components/dashboard/ContributionInsightsPanel";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -293,6 +293,71 @@ export default function DashboardV2() {
     issue: string;
     severity: string;
     loss: string;
+  }[];
+
+  const riskyRows = sourceRows.filter(
+    (row) => row.losing || row.lowMargin || row.missingCost,
+  );
+
+  const totalRevenue = Math.max(
+    sourceRows.reduce((acc, row) => acc + row.revenue, 0),
+    1,
+  );
+
+  const riskyRevenue = riskyRows.reduce((acc, row) => acc + row.revenue, 0);
+
+  const riskyRevenueShare = (riskyRevenue / totalRevenue) * 100;
+
+  const topRevenueProducts = [...sourceRows]
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 3);
+
+  const topRevenueTotal = topRevenueProducts.reduce(
+    (acc, row) => acc + row.revenue,
+    0,
+  );
+
+  const topRevenueShare = (topRevenueTotal / totalRevenue) * 100;
+
+  const weakTopProducts = topRevenueProducts.filter(
+    (row) => row.marginPct < 15 || row.lowMargin || row.losing,
+  );
+
+  const contributionInsights = [
+    riskyRevenueShare > 25
+      ? {
+        title: "High-risk products are driving a significant share of revenue",
+        value: `${riskyRevenueShare.toFixed(1)}% of revenue`,
+        description:
+          "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
+        severity: "Critical",
+      }
+      : null,
+
+    topRevenueShare > 50
+      ? {
+        title: "Revenue is concentrated in a small group of products",
+        value: `${topRevenueShare.toFixed(1)}% from top 3 products`,
+        description:
+          "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
+        severity: "High",
+      }
+      : null,
+
+    weakTopProducts.length > 0
+      ? {
+        title: "Top-selling products show weak contribution quality",
+        value: `${weakTopProducts.length} top products at risk`,
+        description:
+          "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
+        severity: "Medium",
+      }
+      : null,
+  ].filter(Boolean) as {
+    title: string;
+    value: string;
+    description: string;
+    severity: string;
   }[];
 
   const worstProduct =
@@ -831,7 +896,10 @@ export default function DashboardV2() {
         severityBackground={severityBackground}
         severityBorder={severityBorder}
       />
-        </div>
-  
-);
+
+      <ContributionInsightsPanel insights={contributionInsights} />
+
+    </div>
+
+  );
 }
