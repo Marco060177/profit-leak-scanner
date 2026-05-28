@@ -339,7 +339,7 @@ export default function DashboardV2() {
     (row) => row.losing || row.lowMargin || row.missingCost,
   );
 
-  
+
 
   const riskyRevenue = riskyRows.reduce((acc, row) => acc + row.revenue, 0);
 
