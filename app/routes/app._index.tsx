@@ -229,6 +229,11 @@ export default function DashboardV2() {
     ? sourceRows.filter((row) => row.losing)
     : sourceRows;
 
+  const totalRevenue = Math.max(
+    sourceRows.reduce((acc, row) => acc + row.revenue, 0),
+    1,
+  );
+
   const productRiskScore = (row: Row) => {
     const revenueShare =
       totalRevenue > 0 ? (row.revenue / totalRevenue) * 100 : 0;
@@ -245,6 +250,30 @@ export default function DashboardV2() {
     if (row.targetDelta > 0) score += Math.min(10, row.targetDelta / 10);
 
     return Math.min(100, Math.round(score));
+  };
+
+  const getRiskLevel = (score: number) => {
+    if (score >= 75) {
+      return {
+        label: "Critical",
+        color: "#ff6b4a",
+        background: "rgba(255,107,74,0.14)",
+      };
+    }
+
+    if (score >= 50) {
+      return {
+        label: "High",
+        color: "#ffb347",
+        background: "rgba(255,179,71,0.14)",
+      };
+    }
+
+    return {
+      label: "Moderate",
+      color: "#4ade80",
+      background: "rgba(74,222,128,0.14)",
+    };
   };
 
   const sortedRiskRows = filteredRows
@@ -310,10 +339,7 @@ export default function DashboardV2() {
     (row) => row.losing || row.lowMargin || row.missingCost,
   );
 
-  const totalRevenue = Math.max(
-    sourceRows.reduce((acc, row) => acc + row.revenue, 0),
-    1,
-  );
+  
 
   const riskyRevenue = riskyRows.reduce((acc, row) => acc + row.revenue, 0);
 
