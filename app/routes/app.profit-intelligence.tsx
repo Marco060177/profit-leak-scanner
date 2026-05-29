@@ -101,6 +101,21 @@ export default function ProfitIntelligencePage() {
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 3);
 
+  const healthyProfitProducts = rows.filter(
+    (row) => row.revenue > 0 && row.marginPct >= 30,
+  ).length;
+
+  const weakProfitProducts = rows.filter(
+    (row) => row.revenue > 0 && row.marginPct < 15,
+  ).length;
+
+  const profitQualityLevel =
+    weakProfitProducts > healthyProfitProducts
+      ? "Weak"
+      : weakProfitProducts > 0
+        ? "Mixed"
+        : "Healthy";
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -273,6 +288,31 @@ export default function ProfitIntelligencePage() {
                 <strong>{row.marginPct.toFixed(1)}%</strong>
               </div>
             ))}
+          </div>
+        </div>
+        <div className="ai-recommendation-box">
+          <div className="ai-recommendation-label">
+            Profit quality summary
+          </div>
+
+          <div className="ai-recommendation-text">
+            {healthyProfitProducts} products show healthy margins, while{" "}
+            {weakProfitProducts} products show weak profit quality.
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              fontWeight: 800,
+              color:
+                profitQualityLevel === "Weak"
+                  ? "#ff6b4a"
+                  : profitQualityLevel === "Mixed"
+                    ? "#f59e0b"
+                    : "#22c55e",
+            }}
+          >
+            {profitQualityLevel} profit quality
           </div>
         </div>
       </div>
