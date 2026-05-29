@@ -83,6 +83,8 @@ export default function ProfitIntelligencePage() {
         ? "Moderate"
         : "Low";
 
+
+
   const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
 
   const totalProfitBase = Math.max(summary.profit, 1);
@@ -116,6 +118,19 @@ export default function ProfitIntelligencePage() {
         ? "Mixed"
         : "Healthy";
 
+  const intelligenceScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        100 -
+        top3RevenueShare * 0.35 -
+        Math.max(0, top3ProfitShare - 60) * 0.4 -
+        weakProfitProducts * 5,
+      ),
+    ),
+  );
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -136,6 +151,90 @@ export default function ProfitIntelligencePage() {
 
             <div className="hero-description">
               Understand how revenue turns into costs, profit and detected margin leakage.
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-score-card" style={{ marginBottom: 28 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1.4fr 1fr",
+              gap: 24,
+            }}
+          >
+            <div>
+              <div className="eyebrow">
+                PROFIT INTELLIGENCE SCORE
+              </div>
+
+              <div
+                style={{
+                  fontSize: 72,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  marginTop: 12,
+                  color: "#f3f4f6",
+                }}
+              >
+                {intelligenceScore}
+                <span
+                  style={{
+                    fontSize: 34,
+                    opacity: 0.45,
+                  }}
+                >
+                  /100
+                </span>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 18,
+                  fontSize: 22,
+                  fontWeight: 700,
+                  color: "#ff6b4a",
+                }}
+              >
+                {dependencyLevel} concentration risk
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  color: "rgba(255,255,255,0.7)",
+                  maxWidth: 520,
+                }}
+              >
+                Evaluate how revenue concentration, profit dependency
+                and weak profit drivers impact business stability.
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderRadius: 24,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+                padding: 24,
+              }}
+            >
+              <div className="panel-eyebrow">
+                KEY SIGNALS
+              </div>
+
+              <div style={{ marginTop: 18 }}>
+                Top 3 Revenue Share: {top3RevenueShare.toFixed(1)}%
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                Top 3 Profit Share: {top3ProfitShare.toFixed(1)}%
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                Weak Profit Products: {weakProfitProducts}
+              </div>
             </div>
           </div>
         </div>
