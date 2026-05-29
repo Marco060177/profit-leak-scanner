@@ -96,6 +96,11 @@ export default function ProfitIntelligencePage() {
   const topProductProfitShare = (topProductProfit / totalProfitBase) * 100;
   const top3ProfitShare = (top3Profit / totalProfitBase) * 100;
 
+  const weakProfitDrivers = rows
+    .filter((row) => row.revenue > 0 && row.marginPct < 15)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 3);
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -237,6 +242,37 @@ export default function ProfitIntelligencePage() {
             }}
           >
             {top3ProfitShare > 60 ? "High" : top3ProfitShare > 35 ? "Moderate" : "Low"} profit dependency
+          </div>
+        </div>
+        <div className="ai-recommendation-box">
+          <div className="ai-recommendation-label">
+            Weak profit drivers
+          </div>
+
+          <div className="ai-recommendation-text">
+            {weakProfitDrivers.length > 0
+              ? `${weakProfitDrivers.length} high-revenue products are contributing weak profit quality.`
+              : "No major weak profit drivers detected in the current period."}
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            {weakProfitDrivers.map((row) => (
+              <div
+                key={row.productId}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  padding: "10px 0",
+                  borderTop: "1px solid rgba(255,255,255,0.06)",
+                  color: "rgba(255,255,255,0.72)",
+                  fontSize: 14,
+                }}
+              >
+                <span>{row.productTitle}</span>
+                <strong>{row.marginPct.toFixed(1)}%</strong>
+              </div>
+            ))}
           </div>
         </div>
       </div>
