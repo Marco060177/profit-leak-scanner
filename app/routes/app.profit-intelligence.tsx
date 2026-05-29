@@ -83,6 +83,19 @@ export default function ProfitIntelligencePage() {
         ? "Moderate"
         : "Low";
 
+  const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
+
+  const totalProfitBase = Math.max(summary.profit, 1);
+
+  const topProductProfit = sortedProfitRows[0]?.profit || 0;
+
+  const top3Profit = sortedProfitRows
+    .slice(0, 3)
+    .reduce((acc, row) => acc + row.profit, 0);
+
+  const topProductProfitShare = (topProductProfit / totalProfitBase) * 100;
+  const top3ProfitShare = (top3Profit / totalProfitBase) * 100;
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -204,6 +217,26 @@ export default function ProfitIntelligencePage() {
                 {dependencyLevel} dependency
               </div>
             </div>
+          </div>
+        </div>
+        <div className="ai-recommendation-box">
+          <div className="ai-recommendation-label">
+            Profit concentration
+          </div>
+
+          <div className="ai-recommendation-text">
+            Top product: {topProductProfitShare.toFixed(1)}% · Top 3 products:{" "}
+            {top3ProfitShare.toFixed(1)}% of total profit.
+          </div>
+
+          <div
+            style={{
+              marginTop: 12,
+              fontWeight: 800,
+              color: top3ProfitShare > 60 ? "#ff6b4a" : top3ProfitShare > 35 ? "#f59e0b" : "#22c55e",
+            }}
+          >
+            {top3ProfitShare > 60 ? "High" : top3ProfitShare > 35 ? "Moderate" : "Low"} profit dependency
           </div>
         </div>
       </div>
