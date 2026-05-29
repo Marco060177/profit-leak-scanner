@@ -281,6 +281,8 @@ export default function DashboardV2() {
     .sort((a, b) => productRiskScore(b) - productRiskScore(a))
     .slice(0, 12);
 
+  
+
   const weakBestSeller = [...sourceRows]
     .filter((p) => p.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue)[0];

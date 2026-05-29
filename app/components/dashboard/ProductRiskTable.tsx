@@ -204,7 +204,58 @@ export default function ProductRiskTable({
                       {row.missingCost ? "Missing" : pct(row.marginPct)}
                     </div>
                   </td>
+                  <td>
+                    {(() => {
+                      const score =
+                        (row.losing ? 40 : 0) +
+                        (row.missingCost ? 25 : 0) +
+                        (row.lowMargin ? 20 : 0);
 
+                      return (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            minWidth: 90,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 60,
+                              height: 6,
+                              borderRadius: 999,
+                              background: "rgba(255,255,255,0.08)",
+                              overflow: "hidden",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.min(score, 100)}%`,
+                                height: "100%",
+                                background:
+                                  score >= 60
+                                    ? "#ff6b4a"
+                                    : score >= 30
+                                      ? "#f59e0b"
+                                      : "#22c55e",
+                              }}
+                            />
+                          </div>
+
+                          <span
+                            style={{
+                              fontWeight: 800,
+                              color: "#f3f4f6",
+                              minWidth: 30,
+                            }}
+                          >
+                            {Math.min(score, 100)}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td>
                     <span
                       className="risk-pill"
@@ -220,7 +271,7 @@ export default function ProductRiskTable({
 
                 {(row.losing || row.targetDelta > 0) && (
                   <tr>
-                    <td colSpan={8}>
+                    <td colSpan={9}>
                       <div
                         className="desktop-suggestion"
                         style={{
