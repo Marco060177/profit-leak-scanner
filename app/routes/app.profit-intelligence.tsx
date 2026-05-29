@@ -32,13 +32,34 @@ export const loader = async ({ request }: { request: Request }): Promise<LoaderD
 };
 
 export default function ProfitIntelligencePage() {
-  const { summary } = useLoaderData() as LoaderData;
+  const { summary, trend } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
 
   const totalRevenue = Math.max(summary.revenue, 1);
   const cogsPercentage = Math.min(100, Math.max(0, (summary.cogs / totalRevenue) * 100));
   const profitPercentage = Math.min(100, Math.max(0, (summary.profit / totalRevenue) * 100));
   const leakPercentage = Math.min(100, Math.max(0, (summary.totalLeak / totalRevenue) * 100));
+  const firstTrendPoint = trend[0];
+  const lastTrendPoint = trend[trend.length - 1];
+
+  const revenueTrendPct =
+    firstTrendPoint && lastTrendPoint && firstTrendPoint.revenue > 0
+      ? ((lastTrendPoint.revenue - firstTrendPoint.revenue) /
+        firstTrendPoint.revenue) *
+      100
+      : 0;
+
+  const profitTrendPct =
+    firstTrendPoint && lastTrendPoint && firstTrendPoint.profit > 0
+      ? ((lastTrendPoint.profit - firstTrendPoint.profit) /
+        firstTrendPoint.profit) *
+      100
+      : 0;
+
+  const marginDeteriorating = summary.marginDelta < -3;
+  const profitDeteriorating = profitTrendPct < -5;
+  const revenueGrowingWhileProfitFalls =
+    revenueTrendPct > 5 && profitTrendPct < 0;
 
   return (
     <div className="dashboard-shell">
@@ -69,6 +90,56 @@ export default function ProfitIntelligencePage() {
           profitPercentage={profitPercentage}
           leakPercentage={leakPercentage}
         />
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">TIMELINE INTELLIGENCE</div>
+              <h2 className="panel-title">Profit trend signals</h2>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 18,
+              marginTop: 24,
+            }}
+          >
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">Margin direction</div>
+              <div className="ai-recommendation-text">
+                {marginDeteriorating
+                  ? `Margin deteriorated by ${Math.abs(summary.marginDelta).toFixed(
+                    1,
+                  )}% compared to the previous period.`
+                  : "Margin is stable compared to the previous period."}
+              </div>
+            </div>
+
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">Profit movement</div>
+              <div className="ai-recommendation-text">
+                {profitDeteriorating
+                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
+                    1,
+                  )}% across the selected trend window.`
+                  : `Profit changed by ${profitTrendPct.toFixed(
+                    1,
+                  )}% across the selected trend window.`}
+              </div>
+            </div>
+
+            <div className="ai-recommendation-box">
+              <div className="ai-recommendation-label">Growth quality</div>
+              <div className="ai-recommendation-text">
+                {revenueGrowingWhileProfitFalls
+                  ? "Revenue is growing while profit is falling. Growth quality may be weakening."
+                  : "Revenue and profit movement do not currently show a major divergence.."}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
