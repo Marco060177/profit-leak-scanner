@@ -168,8 +168,8 @@ export default function ProfitIntelligencePage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1.3fr 1fr",
-              gap: 26,
+              gridTemplateColumns: "1.05fr 1fr",
+              gap: 28,
               alignItems: "stretch",
             }}
           >
@@ -210,16 +210,18 @@ export default function ProfitIntelligencePage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab evaluates how revenue concentration, profit dependency
-                and weak profit drivers impact business stability.
+                MarginLab evaluates revenue concentration, profit dependency and weak
+                profit drivers to estimate business stability.
               </p>
+
               <div
                 style={{
+                  marginTop: 28,
+                  paddingTop: 22,
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
                   display: "grid",
                   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  gap: 14,
-                  marginTop: 26,
-                  maxWidth: 640,
+                  gap: 18,
                 }}
               >
                 {[
@@ -227,19 +229,10 @@ export default function ProfitIntelligencePage() {
                   ["Profit dependency", `${top3ProfitShare.toFixed(1)}%`],
                   ["Weak products", `${weakProfitProducts}`],
                 ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    style={{
-                      borderRadius: 18,
-                      padding: "16px 18px",
-                      background:
-                        "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
+                  <div key={label}>
                     <div
                       style={{
-                        fontSize: 26,
+                        fontSize: 34,
                         fontWeight: 950,
                         color: "#f3f4f6",
                         lineHeight: 1,
@@ -255,7 +248,7 @@ export default function ProfitIntelligencePage() {
                         fontWeight: 900,
                         letterSpacing: "0.08em",
                         textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.45)",
+                        color: "rgba(255,255,255,0.42)",
                       }}
                     >
                       {label}
@@ -267,37 +260,68 @@ export default function ProfitIntelligencePage() {
 
             <div
               style={{
-                borderRadius: 26,
+                borderRadius: 28,
                 border: "1px solid rgba(255,255,255,0.08)",
                 background:
-                  "linear-gradient(180deg, rgba(14,20,32,0.96), rgba(8,12,21,0.96))",
-                padding: 26,
-                boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
+                  "radial-gradient(circle at 50% 35%, rgba(255,90,54,0.20), transparent 28%), linear-gradient(180deg, rgba(16,22,35,0.96), rgba(7,11,20,0.96))",
+                padding: 32,
+                boxShadow: "0 24px 80px rgba(0,0,0,0.42)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 280,
               }}
             >
-              <div className="panel-eyebrow">KEY SIGNALS</div>
-
-              {[
-                ["Top 3 revenue share", `${top3RevenueShare.toFixed(1)}%`],
-                ["Top 3 profit share", `${top3ProfitShare.toFixed(1)}%`],
-                ["Weak profit products", `${weakProfitProducts}`],
-              ].map(([label, value]) => (
+              <div
+                style={{
+                  width: 170,
+                  height: 170,
+                  borderRadius: "50%",
+                  border: "16px solid rgba(255,255,255,0.08)",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: `0 0 46px ${statusColor}44`,
+                }}
+              >
                 <div
-                  key={label}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 16,
-                    padding: "16px 0",
-                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    position: "absolute",
+                    inset: -16,
+                    borderRadius: "50%",
+                    background: `conic-gradient(${statusColor} ${intelligenceScore * 3.6}deg, transparent 0deg)`,
+                    mask: "radial-gradient(circle, transparent 58%, black 59%)",
+                    WebkitMask: "radial-gradient(circle, transparent 58%, black 59%)",
                   }}
-                >
-                  <span style={{ color: "rgba(255,255,255,0.58)" }}>
-                    {label}
-                  </span>
-                  <strong style={{ color: "#f3f4f6" }}>{value}</strong>
+                />
+
+                <div style={{ textAlign: "center", position: "relative" }}>
+                  <div
+                    style={{
+                      fontSize: 44,
+                      fontWeight: 950,
+                      color: "#f3f4f6",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {intelligenceScore}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 8,
+                      fontSize: 12,
+                      fontWeight: 900,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: statusColor,
+                    }}
+                  >
+                    {dependencyLevel} risk
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
