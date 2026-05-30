@@ -6,7 +6,7 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
-
+import DashboardNav from "~/components/dashboard/DashboardNav";
 import {
   type LoaderData,
   type Row,
@@ -50,14 +50,34 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
 
-  const sortedRiskRows = [...rows].sort((a, b) => {
-    const score = (row: Row) =>
-      (row.losing ? 100 : 0) +
-      (row.missingCost ? 60 : 0) +
-      (row.lowMargin ? 40 : 0) +
-      Math.max(0, row.targetDelta);
+  const productRiskScore = (row: Row) => {
+    let score = 0;
 
-    return score(b) - score(a);
+    if (row.losing) score += 40;
+    if (row.missingCost) score += 25;
+    if (row.lowMargin) score += 20;
+
+    score += Math.min(15, row.revenue / 1000);
+
+    if (row.marginPct < 5) score += 10;
+    if (row.targetDelta > 0) score += Math.min(10, row.targetDelta / 10);
+
+    return Math.min(100, Math.round(score));
+  };
+
+  const visibleRows = onlyLosing
+    ? rows.filter((row) => row.losing)
+    : rows;
+
+  const sortedRiskRows = [...visibleRows].sort((a, b) => {
+    const scoreA = productRiskScore(a);
+    const scoreB = productRiskScore(b);
+
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA;
+    }
+
+    return b.revenue - a.revenue;
   });
 
   const riskLabel = (row: Row) => {
@@ -81,61 +101,23 @@ export default function ProductsPage() {
     return "rgba(34,197,94,0.12)";
   };
 
-  const criticalProducts = rows.filter(
-    (row) =>
-      (row.losing ? 40 : 0) +
-      (row.missingCost ? 25 : 0) +
-      (row.lowMargin ? 20 : 0) >=
-      60,
+  const criticalProducts = rows.filter((row) => row.losing).length;
+
+  const highProducts = rows.filter(
+    (row) => !row.losing && (row.missingCost || row.lowMargin),
   ).length;
 
-  const highProducts = rows.filter((row) => {
-    const score =
-      (row.losing ? 40 : 0) +
-      (row.missingCost ? 25 : 0) +
-      (row.lowMargin ? 20 : 0);
-
-    return score >= 30 && score < 60;
-  }).length;
-
-  const moderateProducts = rows.filter((row) => {
-    const score =
-      (row.losing ? 40 : 0) +
-      (row.missingCost ? 25 : 0) +
-      (row.lowMargin ? 20 : 0);
-
-    return score < 30;
-  }).length;
+  const moderateProducts = rows.filter(
+    (row) => !row.losing && !row.missingCost && !row.lowMargin,
+  ).length;
 
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <div className="navbar" style={{ marginBottom: 28 }}>
-          <div className="brand-mark">
-            MARGIN<span>LAB</span>
-          </div>
-
-          <div className="nav-tabs">
-            {[
-              ["Overview", "/app"],
-              ["Products", "/app/products"],
-              ["Profit Intelligence", "/app/profit-intelligence"],
-              ["Recommendations", "/app/recommendations"],
-              ["Billing", "/app/billing"],
-            ].map(([label, path]) => (
-              <button
-                key={label}
-                type="button"
-                className={label === "Profit Intelligence" ? "active" : ""}
-                onClick={() => {
-                  if (path !== "/app/profit-intelligence") navigate(path);
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <DashboardNav
+          active="products"
+          navigate={navigate}
+        />
 
         <div className="hero-header">
           <div>
