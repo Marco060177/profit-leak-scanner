@@ -55,15 +55,15 @@ export default function ProfitIntelligencePage() {
   const revenueTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.revenue > 0
       ? ((lastTrendPoint.revenue - firstTrendPoint.revenue) /
-          firstTrendPoint.revenue) *
-        100
+        firstTrendPoint.revenue) *
+      100
       : 0;
 
   const profitTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.profit > 0
       ? ((lastTrendPoint.profit - firstTrendPoint.profit) /
-          firstTrendPoint.profit) *
-        100
+        firstTrendPoint.profit) *
+      100
       : 0;
 
   const marginDeteriorating = summary.marginDelta < -3;
@@ -129,9 +129,9 @@ export default function ProfitIntelligencePage() {
       100,
       Math.round(
         100 -
-          top3RevenueShare * 0.35 -
-          Math.max(0, top3ProfitShare - 60) * 0.4 -
-          weakProfitProducts * 5,
+        top3RevenueShare * 0.35 -
+        Math.max(0, top3ProfitShare - 60) * 0.4 -
+        weakProfitProducts * 5,
       ),
     ),
   );
@@ -146,14 +146,29 @@ export default function ProfitIntelligencePage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <button
-          type="button"
-          onClick={() => navigate("/app")}
-          className="secondary-button"
-          style={{ marginBottom: 24 }}
-        >
-          ← Back to dashboard
-        </button>
+        <div className="navbar" style={{ marginBottom: 28 }}>
+          <div className="brand-mark">
+            MARGIN<span>LAB</span>
+          </div>
+
+          <div className="nav-tabs">
+            <button type="button" onClick={() => navigate("/app")}>
+              Overview
+            </button>
+            <button type="button" onClick={() => navigate("/app/products")}>
+              Products
+            </button>
+            <button type="button" className="active">
+              Profit Intelligence
+            </button>
+            <button type="button" onClick={() => navigate("/app/recommendations")}>
+              Recommendations
+            </button>
+            <button type="button" onClick={() => navigate("/app/billing")}>
+              Billing
+            </button>
+          </div>
+        </div>
 
         <div className="hero-header">
           <div>
@@ -281,19 +296,19 @@ export default function ProfitIntelligencePage() {
                 "Margin direction",
                 marginDeteriorating
                   ? `Margin deteriorated by ${Math.abs(
-                      summary.marginDelta,
-                    ).toFixed(1)}% compared to the previous period.`
+                    summary.marginDelta,
+                  ).toFixed(1)}% compared to the previous period.`
                   : "Margin is stable compared to the previous period.",
               ],
               [
                 "Profit movement",
                 profitDeteriorating
                   ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                      1,
-                    )}% across the selected trend window.`
+                    1,
+                  )}% across the selected trend window.`
                   : `Profit changed by ${profitTrendPct.toFixed(
-                      1,
-                    )}% across the selected trend window.`,
+                    1,
+                  )}% across the selected trend window.`,
               ],
               [
                 "Growth quality",
@@ -339,13 +354,12 @@ export default function ProfitIntelligencePage() {
           <ConcentrationCard
             eyebrow="PROFIT CONCENTRATION"
             title="Profit dependency"
-            status={`${
-              top3ProfitShare > 60
+            status={`${top3ProfitShare > 60
                 ? "High"
                 : top3ProfitShare > 35
                   ? "Moderate"
                   : "Low"
-            } profit dependency`}
+              } profit dependency`}
             statusColor={
               top3ProfitShare > 60
                 ? "#ff6b4a"
