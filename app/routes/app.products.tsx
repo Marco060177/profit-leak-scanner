@@ -271,7 +271,7 @@ export default function ProductsPage() {
                     lineHeight: 1,
                   }}
                 >
-                  {criticalProducts}
+                  {criticalProducts + highProducts}
                 </div>
 
                 <div
@@ -284,7 +284,7 @@ export default function ProductsPage() {
                     color: "rgba(255,255,255,0.52)",
                   }}
                 >
-                  Critical products
+                  Products at risk
                 </div>
 
                 <div
