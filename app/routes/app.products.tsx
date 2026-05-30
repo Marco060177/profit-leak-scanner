@@ -107,7 +107,7 @@ export default function ProductsPage() {
     (row) => !row.losing && (row.missingCost || row.lowMargin),
   ).length;
 
-  const moderateProducts = rows.filter(
+  const healthyProducts = rows.filter(
     (row) => !row.losing && !row.missingCost && !row.lowMargin,
   ).length;
 
@@ -181,10 +181,10 @@ export default function ProductsPage() {
 
             <div>
               <div style={{ color: "#22c55e", fontSize: 30, fontWeight: 900 }}>
-                {moderateProducts}
+                {healthyProducts}
               </div>
               <div style={{ color: "rgba(255,255,255,0.6)" }}>
-                Moderate
+                Healthy
               </div>
             </div>
           </div>
