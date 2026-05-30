@@ -213,6 +213,56 @@ export default function ProfitIntelligencePage() {
                 MarginLab evaluates how revenue concentration, profit dependency
                 and weak profit drivers impact business stability.
               </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 14,
+                  marginTop: 26,
+                  maxWidth: 640,
+                }}
+              >
+                {[
+                  ["Revenue dependency", `${top3RevenueShare.toFixed(1)}%`],
+                  ["Profit dependency", `${top3ProfitShare.toFixed(1)}%`],
+                  ["Weak products", `${weakProfitProducts}`],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    style={{
+                      borderRadius: 18,
+                      padding: "16px 18px",
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 26,
+                        fontWeight: 950,
+                        color: "#f3f4f6",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {value}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 9,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.45)",
+                      }}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div
@@ -505,7 +555,7 @@ export default function ProfitIntelligencePage() {
   );
 }
 
-  function ConcentrationCard({
+function ConcentrationCard({
   eyebrow,
   title,
   status,
