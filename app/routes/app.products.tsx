@@ -258,47 +258,84 @@ export default function ProductsPage() {
                 minHeight: 260,
               }}
             >
-              <div
-                style={{
-                  textAlign: "center",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 56,
-                    fontWeight: 950,
-                    color: "#ff6b4a",
-                    lineHeight: 1,
-                  }}
-                >
-                  {criticalProducts + highProducts}
-                </div>
+              {(() => {
+                const productScore = Math.max(
+                  0,
+                  Math.min(
+                    100,
+                    Math.round(100 - criticalProducts * 14 - highProducts * 7),
+                  ),
+                );
 
-                <div
-                  style={{
-                    marginTop: 10,
-                    fontSize: 13,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.52)",
-                  }}
-                >
-                  Products at risk
-                </div>
+                const productScoreColor =
+                  productScore < 40
+                    ? "#ff6b4a"
+                    : productScore < 70
+                      ? "#f59e0b"
+                      : "#22c55e";
 
-                <div
-                  style={{
-                    marginTop: 22,
-                    color: "rgba(255,255,255,0.68)",
-                    lineHeight: 1.7,
-                    maxWidth: 320,
-                  }}
-                >
-                  Products with negative margins, missing cost data or severe pricing
-                  gaps should be reviewed first.
-                </div>
-              </div>
+                const productScoreLabel =
+                  productScore < 40
+                    ? "High risk"
+                    : productScore < 70
+                      ? "Moderate risk"
+                      : "Healthy";
+
+                return (
+                  <div
+                    style={{
+                      width: 170,
+                      height: 170,
+                      borderRadius: "50%",
+                      border: "16px solid rgba(255,255,255,0.08)",
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: `0 0 46px ${productScoreColor}44`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: -16,
+                        borderRadius: "50%",
+                        background: `conic-gradient(${productScoreColor} ${productScore * 3.6
+                          }deg, transparent 0deg)`,
+                        mask: "radial-gradient(circle, transparent 58%, black 59%)",
+                        WebkitMask:
+                          "radial-gradient(circle, transparent 58%, black 59%)",
+                      }}
+                    />
+
+                    <div style={{ textAlign: "center", position: "relative" }}>
+                      <div
+                        style={{
+                          fontSize: 44,
+                          fontWeight: 950,
+                          color: "#f3f4f6",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {productScore}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 8,
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          color: productScoreColor,
+                        }}
+                      >
+                        {productScoreLabel}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
