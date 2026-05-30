@@ -113,6 +113,11 @@ export default function ProductsPage() {
   const healthyProducts = rows.filter(
     (row) => !row.losing && !row.missingCost && !row.lowMargin,
   ).length;
+  const totalProducts = Math.max(rows.length, 1);
+
+  const criticalPct = (criticalProducts / totalProducts) * 100;
+  const highPct = (highProducts / totalProducts) * 100;
+  const healthyPct = (healthyProducts / totalProducts) * 100;
 
   return (
     <div className="dashboard-shell">
@@ -135,61 +140,111 @@ export default function ProductsPage() {
           </div>
         </div>
         <div
+          className="panel"
           style={{
             marginBottom: 24,
-            padding: 24,
-            borderRadius: 24,
-            border: "1px solid rgba(255,255,255,0.08)",
-            background:
-              "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
           }}
         >
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "rgba(255,255,255,0.5)",
-              marginBottom: 18,
-            }}
-          >
-            Product Risk Distribution
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">PRODUCT RISK DISTRIBUTION</div>
+              <h2 className="panel-title">Catalog risk overview</h2>
+            </div>
           </div>
 
           <div
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 20,
+              gap: 18,
+              marginTop: 24,
             }}
           >
-            <div>
-              <div style={{ color: "#ff6b4a", fontSize: 30, fontWeight: 900 }}>
-                {criticalProducts}
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.6)" }}>
-                Critical
-              </div>
-            </div>
+            {[
+              {
+                label: "Critical",
+                count: criticalProducts,
+                pct: criticalPct,
+                color: "#ff6b4a",
+              },
+              {
+                label: "High",
+                count: highProducts,
+                pct: highPct,
+                color: "#f59e0b",
+              },
+              {
+                label: "Healthy",
+                count: healthyProducts,
+                pct: healthyPct,
+                color: "#22c55e",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  borderRadius: 22,
+                  padding: 22,
+                  background:
+                    "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 18px 46px rgba(0,0,0,0.32)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.48)",
+                  }}
+                >
+                  {item.label}
+                </div>
 
-            <div>
-              <div style={{ color: "#f59e0b", fontSize: 30, fontWeight: 900 }}>
-                {highProducts}
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.6)" }}>
-                High
-              </div>
-            </div>
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontSize: 42,
+                    fontWeight: 950,
+                    lineHeight: 1,
+                    color: item.color,
+                  }}
+                >
+                  {item.count}
+                </div>
 
-            <div>
-              <div style={{ color: "#22c55e", fontSize: 30, fontWeight: 900 }}>
-                {healthyProducts}
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "rgba(255,255,255,0.58)",
+                    fontWeight: 800,
+                  }}
+                >
+                  {item.pct.toFixed(1)}% of catalog
+                </div>
+
+                <div
+                  style={{
+                    height: 8,
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.07)",
+                    overflow: "hidden",
+                    marginTop: 18,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.min(100, Math.max(0, item.pct))}%`,
+                      height: "100%",
+                      borderRadius: 999,
+                      background: item.color,
+                    }}
+                  />
+                </div>
               </div>
-              <div style={{ color: "rgba(255,255,255,0.6)" }}>
-                Healthy
-              </div>
-            </div>
+            ))}
           </div>
         </div>
         <div
