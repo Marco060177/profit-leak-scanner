@@ -23,9 +23,7 @@ export default function DashboardNav({ active, navigate }: Props) {
           <div
             key={item.id}
             className={active === item.id ? "nav-tab active" : "nav-tab"}
-            onClick={() => {
-              if (active !== item.id) navigate(item.path);
-            }}
+            onClick={() => active !== item.id && navigate(item.path)}
           >
             {item.label}
           </div>
