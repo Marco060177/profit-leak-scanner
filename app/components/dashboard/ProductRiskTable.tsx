@@ -325,7 +325,7 @@ export default function ProductRiskTable({
                     </td>
                   </tr>
 
-                  {(row.losing || row.targetDelta > 0 || row.missingCost) && (
+                  {(row.losing || row.missingCost || row.marginPct < 10) && (
                     <tr>
                       <td colSpan={9}>
                         <div
@@ -335,7 +335,7 @@ export default function ProductRiskTable({
                               "linear-gradient(180deg, rgba(255,90,54,0.07), rgba(255,255,255,0.025))",
                             border: "1px solid rgba(255,90,54,0.12)",
                             borderRadius: 20,
-                            padding: 22,
+                            padding: "14px 18px",
                           }}
                         >
                           <div className="suggestion-title">
@@ -357,7 +357,7 @@ export default function ProductRiskTable({
                           </div>
 
                           {row.productId ? (
-                            <div style={{ marginTop: 16 }}>
+                            <div style={{ marginTop: 10 }}>
                               <a
                                 href={`https://admin.shopify.com/store/${shopHandle}/products/${row.productId}`}
                                 target="_blank"
