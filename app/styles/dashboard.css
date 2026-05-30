@@ -1566,32 +1566,4 @@
     margin-top: 24px;
   }
 
-  .nav-tabs button {
-  border: none;
-  background: transparent;
-  color: rgba(255,255,255,0.72);
-  font: inherit;
-  font-weight: 800;
-  cursor: pointer;
-  padding: 14px 18px;
-  border-radius: 14px;
-}
-
-.nav-tabs button:hover {
-  color: #ffffff;
-  background: rgba(255,255,255,0.06);
-}
-
-.nav-tabs button.active {
-  color: #ffffff;
-  background: rgba(255,255,255,0.10);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
-}
-
-.nav-tab {
-  border: none;
-  appearance: none;
-  background: transparent;
-  font-family: inherit;
-}
-}
+ } 
