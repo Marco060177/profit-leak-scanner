@@ -55,44 +55,43 @@ export default function RecommendationsPage() {
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-          title: `Fix ${
-            sourceRows.filter((row) => row.losing).length
+        title: `Fix ${sourceRows.filter((row) => row.losing).length
           } underpriced products selling below cost`,
-          impact: `${money(visualLeak)} potential recovery`,
-          confidence: "High confidence",
-          actionLabel: "Review pricing",
-          actionLink: "/app/products",
-        }
+        impact: `${money(visualLeak)} potential recovery`,
+        confidence: "High confidence",
+        actionLabel: "Review pricing",
+        actionLink: "/app/products",
+      }
       : null,
 
     summary.missingCostCount > 0
       ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-          actionLabel: "Update costs",
-          actionLink: "/app/products",
-        }
+        title: "Update missing product costs in Shopify",
+        impact: `${summary.missingCostCount} products affected`,
+        confidence: "Critical issue",
+        actionLabel: "Update costs",
+        actionLink: "/app/products",
+      }
       : null,
 
     lowMarginCount > 0
       ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-          actionLabel: "Analyze products",
-          actionLink: "/app/products",
-        }
+        title: "Review low-margin products below 10%",
+        impact: `${lowMarginCount} products need attention`,
+        confidence: "Medium confidence",
+        actionLabel: "Analyze products",
+        actionLink: "/app/products",
+      }
       : null,
 
     rows.length > 0
       ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-          actionLabel: "Review",
-          actionLink: "/app/products",
-        }
+        title: "Review target prices for worst-performing products",
+        impact: "20% margin target available",
+        confidence: "Rule-based insight",
+        actionLabel: "Review",
+        actionLink: "/app/products",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -105,14 +104,32 @@ export default function RecommendationsPage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <button
-          type="button"
-          onClick={() => navigate("/app")}
-          className="secondary-button"
-          style={{ marginBottom: 24 }}
-        >
-          ← Back to dashboard
-        </button>
+        <div className="navbar" style={{ marginBottom: 28 }}>
+          <div className="brand-mark">
+            MARGIN<span>LAB</span>
+          </div>
+
+          <div className="nav-tabs">
+            {[
+              ["Overview", "/app"],
+              ["Products", "/app/products"],
+              ["Profit Intelligence", "/app/profit-intelligence"],
+              ["Recommendations", "/app/recommendations"],
+              ["Billing", "/app/billing"],
+            ].map(([label, path]) => (
+              <button
+                key={label}
+                type="button"
+                className={label === "Profit Intelligence" ? "active" : ""}
+                onClick={() => {
+                  if (path !== "/app/profit-intelligence") navigate(path);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="hero-header">
           <div>
