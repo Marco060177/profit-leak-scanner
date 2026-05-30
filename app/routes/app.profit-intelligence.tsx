@@ -7,6 +7,8 @@ import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { type LoaderData } from "~/utils/margin";
 
+import DashboardNav from "~/components/dashboard/DashboardNav";
+
 export const links = () => [{ rel: "stylesheet", href: dashboardStylesUrl }];
 
 export const loader = async ({
@@ -146,29 +148,10 @@ export default function ProfitIntelligencePage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <div className="navbar" style={{ marginBottom: 28 }}>
-          <div className="brand-mark">
-            MARGIN<span>LAB</span>
-          </div>
-
-          <div className="nav-tabs">
-            <button type="button" onClick={() => navigate("/app")}>
-              Overview
-            </button>
-            <button type="button" onClick={() => navigate("/app/products")}>
-              Products
-            </button>
-            <button type="button" className="active">
-              Profit Intelligence
-            </button>
-            <button type="button" onClick={() => navigate("/app/recommendations")}>
-              Recommendations
-            </button>
-            <button type="button" onClick={() => navigate("/app/billing")}>
-              Billing
-            </button>
-          </div>
-        </div>
+        <DashboardNav
+          active="profit"
+          navigate={navigate}
+        />
 
         <div className="hero-header">
           <div>
@@ -292,34 +275,89 @@ export default function ProfitIntelligencePage() {
             }}
           >
             {[
-              [
-                "Margin direction",
-                marginDeteriorating
-                  ? `Margin deteriorated by ${Math.abs(
-                    summary.marginDelta,
-                  ).toFixed(1)}% compared to the previous period.`
+              {
+                label: "Margin direction",
+                value: marginDeteriorating ? "Deteriorating" : "Stable",
+                text: marginDeteriorating
+                  ? `Margin dropped by ${Math.abs(summary.marginDelta).toFixed(1)}% compared to the previous period.`
                   : "Margin is stable compared to the previous period.",
-              ],
-              [
-                "Profit movement",
-                profitDeteriorating
-                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                    1,
-                  )}% across the selected trend window.`
-                  : `Profit changed by ${profitTrendPct.toFixed(
-                    1,
-                  )}% across the selected trend window.`,
-              ],
-              [
-                "Growth quality",
-                revenueGrowingWhileProfitFalls
+                color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
+              },
+              {
+                label: "Profit movement",
+                value: profitDeteriorating ? "Declining" : "Stable",
+                text: profitDeteriorating
+                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(1)}% across the selected trend window.`
+                  : `Profit changed by ${profitTrendPct.toFixed(1)}% across the selected trend window.`,
+                color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
+              },
+              {
+                label: "Growth quality",
+                value: revenueGrowingWhileProfitFalls ? "Weakening" : "Aligned",
+                text: revenueGrowingWhileProfitFalls
                   ? "Revenue is growing while profit is falling. Growth quality may be weakening."
                   : "Revenue and profit movement do not currently show a major divergence.",
-              ],
-            ].map(([label, text]) => (
-              <div key={label} className="ai-recommendation-box">
-                <div className="ai-recommendation-label">{label}</div>
-                <div className="ai-recommendation-text">{text}</div>
+                color: revenueGrowingWhileProfitFalls ? "#f59e0b" : "#22c55e",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  position: "relative",
+                  overflow: "hidden",
+                  borderRadius: 22,
+                  padding: 22,
+                  background:
+                    "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 18px 46px rgba(0,0,0,0.36)",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: `radial-gradient(circle at top right, ${item.color}22, transparent 42%)`,
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: "relative",
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.48)",
+                  }}
+                >
+                  {item.label}
+                </div>
+
+                <div
+                  style={{
+                    position: "relative",
+                    marginTop: 12,
+                    fontSize: 24,
+                    fontWeight: 950,
+                    color: item.color,
+                  }}
+                >
+                  {item.value}
+                </div>
+
+                <div
+                  style={{
+                    position: "relative",
+                    marginTop: 12,
+                    color: "rgba(255,255,255,0.66)",
+                    lineHeight: 1.65,
+                    fontSize: 14,
+                  }}
+                >
+                  {item.text}
+                </div>
               </div>
             ))}
           </div>
@@ -355,10 +393,10 @@ export default function ProfitIntelligencePage() {
             eyebrow="PROFIT CONCENTRATION"
             title="Profit dependency"
             status={`${top3ProfitShare > 60
-                ? "High"
-                : top3ProfitShare > 35
-                  ? "Moderate"
-                  : "Low"
+              ? "High"
+              : top3ProfitShare > 35
+                ? "Moderate"
+                : "Low"
               } profit dependency`}
             statusColor={
               top3ProfitShare > 60
