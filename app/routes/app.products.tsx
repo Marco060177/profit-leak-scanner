@@ -49,6 +49,7 @@ export default function ProductsPage() {
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
+  const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
   const productRiskScore = (row: Row) => {
     let score = 0;
@@ -69,16 +70,18 @@ export default function ProductsPage() {
     ? rows.filter((row) => row.losing)
     : rows;
 
-  const sortedRiskRows = [...visibleRows].sort((a, b) => {
-    const scoreA = productRiskScore(a);
-    const scoreB = productRiskScore(b);
+  const sortedRiskRows = [...visibleRows]
+    .sort((a, b) => {
+      const scoreA = productRiskScore(a);
+      const scoreB = productRiskScore(b);
 
-    if (scoreA !== scoreB) {
-      return scoreB - scoreA;
-    }
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA;
+      }
 
-    return b.revenue - a.revenue;
-  });
+      return b.revenue - a.revenue;
+    })
+    .slice(0, visibleLimit);
 
   const riskLabel = (row: Row) => {
     if (row.losing) return "Critical";
@@ -188,6 +191,25 @@ export default function ProductsPage() {
               </div>
             </div>
           </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 10,
+            marginBottom: 16,
+          }}
+        >
+          {[10, 20, 50].map((limit) => (
+            <button
+              key={limit}
+              type="button"
+              className={visibleLimit === limit ? "table-filter-btn active" : "table-filter-btn"}
+              onClick={() => setVisibleLimit(limit as 10 | 20 | 50)}
+            >
+              Show {limit}
+            </button>
+          ))}
         </div>
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
