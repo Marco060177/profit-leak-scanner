@@ -139,6 +139,169 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+
+        <div className="hero-score-card" style={{ marginBottom: 28 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1.1fr 1fr",
+              gap: 28,
+              alignItems: "stretch",
+            }}
+          >
+            <div>
+              <div className="eyebrow">PRODUCT INTELLIGENCE SCORE</div>
+
+              <div
+                style={{
+                  fontSize: 82,
+                  fontWeight: 950,
+                  lineHeight: 1,
+                  marginTop: 14,
+                  color: "#f3f4f6",
+                  letterSpacing: "-3px",
+                }}
+              >
+                {Math.max(
+                  0,
+                  Math.min(
+                    100,
+                    Math.round(100 - criticalProducts * 14 - highProducts * 7),
+                  ),
+                )}
+                <span style={{ fontSize: 34, opacity: 0.45 }}>/100</span>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 18,
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: criticalProducts > 0 ? "#ff6b4a" : highProducts > 0 ? "#f59e0b" : "#22c55e",
+                }}
+              >
+                {criticalProducts > 0
+                  ? "Critical product risk detected"
+                  : highProducts > 0
+                    ? "Moderate catalog risk"
+                    : "Healthy catalog"}
+              </div>
+
+              <p
+                style={{
+                  marginTop: 14,
+                  color: "rgba(255,255,255,0.66)",
+                  maxWidth: 620,
+                  lineHeight: 1.7,
+                  fontSize: 15,
+                }}
+              >
+                MarginLab ranks products by real margin risk, missing cost data and
+                recoverable pricing opportunities.
+              </p>
+
+              <div
+                style={{
+                  marginTop: 28,
+                  paddingTop: 22,
+                  borderTop: "1px solid rgba(255,255,255,0.08)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 18,
+                }}
+              >
+                {[
+                  ["Products at risk", `${criticalProducts + highProducts}`],
+                  ["Critical products", `${criticalProducts}`],
+                  ["Healthy products", `${healthyProducts}`],
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <div
+                      style={{
+                        fontSize: 34,
+                        fontWeight: 950,
+                        color: "#f3f4f6",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {value}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 9,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.42)",
+                      }}
+                    >
+                      {label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                borderRadius: 28,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background:
+                  "radial-gradient(circle at 50% 35%, rgba(255,90,54,0.20), transparent 28%), linear-gradient(180deg, rgba(16,22,35,0.96), rgba(7,11,20,0.96))",
+                padding: 32,
+                boxShadow: "0 24px 80px rgba(0,0,0,0.42)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minHeight: 260,
+              }}
+            >
+              <div
+                style={{
+                  textAlign: "center",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 56,
+                    fontWeight: 950,
+                    color: "#ff6b4a",
+                    lineHeight: 1,
+                  }}
+                >
+                  {criticalProducts}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontSize: 13,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.52)",
+                  }}
+                >
+                  Critical products
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 22,
+                    color: "rgba(255,255,255,0.68)",
+                    lineHeight: 1.7,
+                    maxWidth: 320,
+                  }}
+                >
+                  Products with negative margins, missing cost data or severe pricing
+                  gaps should be reviewed first.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div
           className="panel"
           style={{
@@ -265,8 +428,8 @@ export default function ProductsPage() {
               Show {limit}
             </button>
           ))}
-          
-          
+
+
         </div>
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
