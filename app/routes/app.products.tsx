@@ -265,6 +265,32 @@ export default function ProductsPage() {
               Show {limit}
             </button>
           ))}
+          <div
+            style={{
+              marginBottom: 18,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              gap: 20,
+            }}
+          >
+            <div>
+              <div className="panel-eyebrow">PRODUCT RISK RANKING</div>
+              <h2 className="panel-title" style={{ marginTop: 8 }}>
+                Prioritized products requiring review
+              </h2>
+            </div>
+
+            <div
+              style={{
+                color: "rgba(255,255,255,0.56)",
+                fontWeight: 800,
+                fontSize: 14,
+              }}
+            >
+              Showing {sortedRiskRows.length} of {visibleRows.length} products
+            </div>
+          </div>
         </div>
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
