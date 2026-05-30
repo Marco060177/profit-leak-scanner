@@ -505,7 +505,7 @@ export default function ProfitIntelligencePage() {
   );
 }
 
-function ConcentrationCard({
+  function ConcentrationCard({
   eyebrow,
   title,
   status,
@@ -521,33 +521,61 @@ function ConcentrationCard({
   return (
     <div className="panel" style={{ marginBottom: 0 }}>
       <div className="panel-eyebrow">{eyebrow}</div>
+
       <h2 className="panel-title" style={{ marginTop: 8 }}>
         {title}
       </h2>
 
-      <div style={{ marginTop: 22, display: "grid", gap: 18 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${rows.length}, 1fr)`,
+          gap: 14,
+          marginTop: 24,
+        }}
+      >
         {rows.map(([label, value]) => (
-          <div key={label}>
+          <div
+            key={label}
+            style={{
+              borderRadius: 22,
+              padding: 20,
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: 8,
-                fontWeight: 800,
+                fontSize: 36,
+                fontWeight: 950,
+                lineHeight: 1,
+                color: "#f3f4f6",
               }}
             >
-              <span style={{ color: "rgba(255,255,255,0.62)" }}>
-                {label}
-              </span>
-              <span style={{ color: "#f3f4f6" }}>{value.toFixed(1)}%</span>
+              {value.toFixed(1)}%
             </div>
 
             <div
               style={{
-                height: 9,
+                marginTop: 10,
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.48)",
+              }}
+            >
+              {label}
+            </div>
+
+            <div
+              style={{
+                height: 7,
                 borderRadius: 999,
                 background: "rgba(255,255,255,0.07)",
                 overflow: "hidden",
+                marginTop: 16,
               }}
             >
               <div
