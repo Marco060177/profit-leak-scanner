@@ -7,14 +7,13 @@ import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { type LoaderData } from "~/utils/margin";
 
-export const links = () => [
-  {
-    rel: "stylesheet",
-    href: dashboardStylesUrl,
-  },
-];
+export const links = () => [{ rel: "stylesheet", href: dashboardStylesUrl }];
 
-export const loader = async ({ request }: { request: Request }): Promise<LoaderData> => {
+export const loader = async ({
+  request,
+}: {
+  request: Request;
+}): Promise<LoaderData> => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
@@ -36,38 +35,48 @@ export default function ProfitIntelligencePage() {
   const navigate = useNavigate();
 
   const totalRevenue = Math.max(summary.revenue, 1);
-  const cogsPercentage = Math.min(100, Math.max(0, (summary.cogs / totalRevenue) * 100));
-  const profitPercentage = Math.min(100, Math.max(0, (summary.profit / totalRevenue) * 100));
-  const leakPercentage = Math.min(100, Math.max(0, (summary.totalLeak / totalRevenue) * 100));
+
+  const cogsPercentage = Math.min(
+    100,
+    Math.max(0, (summary.cogs / totalRevenue) * 100),
+  );
+  const profitPercentage = Math.min(
+    100,
+    Math.max(0, (summary.profit / totalRevenue) * 100),
+  );
+  const leakPercentage = Math.min(
+    100,
+    Math.max(0, (summary.totalLeak / totalRevenue) * 100),
+  );
+
   const firstTrendPoint = trend[0];
   const lastTrendPoint = trend[trend.length - 1];
 
   const revenueTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.revenue > 0
       ? ((lastTrendPoint.revenue - firstTrendPoint.revenue) /
-        firstTrendPoint.revenue) *
-      100
+          firstTrendPoint.revenue) *
+        100
       : 0;
 
   const profitTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.profit > 0
       ? ((lastTrendPoint.profit - firstTrendPoint.profit) /
-        firstTrendPoint.profit) *
-      100
+          firstTrendPoint.profit) *
+        100
       : 0;
 
   const marginDeteriorating = summary.marginDelta < -3;
   const profitDeteriorating = profitTrendPct < -5;
   const revenueGrowingWhileProfitFalls =
     revenueTrendPct > 5 && profitTrendPct < 0;
+
   const sortedRevenueRows = [...rows].sort((a, b) => b.revenue - a.revenue);
 
   const topProductRevenue = sortedRevenueRows[0]?.revenue || 0;
-
   const top3Revenue = sortedRevenueRows
     .slice(0, 3)
     .reduce((acc, row) => acc + row.revenue, 0);
-
   const top5Revenue = sortedRevenueRows
     .slice(0, 5)
     .reduce((acc, row) => acc + row.revenue, 0);
@@ -83,14 +92,10 @@ export default function ProfitIntelligencePage() {
         ? "Moderate"
         : "Low";
 
-
-
   const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
 
   const totalProfitBase = Math.max(summary.profit, 1);
-
   const topProductProfit = sortedProfitRows[0]?.profit || 0;
-
   const top3Profit = sortedProfitRows
     .slice(0, 3)
     .reduce((acc, row) => acc + row.profit, 0);
@@ -124,12 +129,19 @@ export default function ProfitIntelligencePage() {
       100,
       Math.round(
         100 -
-        top3RevenueShare * 0.35 -
-        Math.max(0, top3ProfitShare - 60) * 0.4 -
-        weakProfitProducts * 5,
+          top3RevenueShare * 0.35 -
+          Math.max(0, top3ProfitShare - 60) * 0.4 -
+          weakProfitProducts * 5,
       ),
     ),
   );
+
+  const statusColor =
+    intelligenceScore < 40
+      ? "#ff6b4a"
+      : intelligenceScore < 70
+        ? "#f59e0b"
+        : "#22c55e";
 
   return (
     <div className="dashboard-shell">
@@ -146,11 +158,10 @@ export default function ProfitIntelligencePage() {
         <div className="hero-header">
           <div>
             <div className="eyebrow">PROFIT INTELLIGENCE</div>
-
-            <div className="hero-title">Margin Breakdown</div>
-
+            <div className="hero-title">Profit Intelligence</div>
             <div className="hero-description">
-              Understand how revenue turns into costs, profit and detected margin leakage.
+              Understand revenue concentration, profit dependency and margin
+              quality across your Shopify business.
             </div>
           </div>
         </div>
@@ -159,82 +170,86 @@ export default function ProfitIntelligencePage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1.4fr 1fr",
-              gap: 24,
+              gridTemplateColumns: "1.3fr 1fr",
+              gap: 26,
+              alignItems: "stretch",
             }}
           >
             <div>
-              <div className="eyebrow">
-                PROFIT INTELLIGENCE SCORE
-              </div>
+              <div className="eyebrow">PROFIT INTELLIGENCE SCORE</div>
 
               <div
                 style={{
-                  fontSize: 72,
-                  fontWeight: 900,
+                  fontSize: 82,
+                  fontWeight: 950,
                   lineHeight: 1,
-                  marginTop: 12,
+                  marginTop: 14,
                   color: "#f3f4f6",
+                  letterSpacing: "-3px",
                 }}
               >
                 {intelligenceScore}
-                <span
-                  style={{
-                    fontSize: 34,
-                    opacity: 0.45,
-                  }}
-                >
-                  /100
-                </span>
+                <span style={{ fontSize: 34, opacity: 0.45 }}>/100</span>
               </div>
 
               <div
                 style={{
                   marginTop: 18,
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "#ff6b4a",
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: statusColor,
                 }}
               >
                 {dependencyLevel} concentration risk
               </div>
 
-              <div
+              <p
                 style={{
-                  marginTop: 12,
-                  color: "rgba(255,255,255,0.7)",
-                  maxWidth: 520,
+                  marginTop: 14,
+                  color: "rgba(255,255,255,0.66)",
+                  maxWidth: 620,
+                  lineHeight: 1.7,
+                  fontSize: 15,
                 }}
               >
-                Evaluate how revenue concentration, profit dependency
+                MarginLab evaluates how revenue concentration, profit dependency
                 and weak profit drivers impact business stability.
-              </div>
+              </p>
             </div>
 
             <div
               style={{
-                borderRadius: 24,
+                borderRadius: 26,
                 border: "1px solid rgba(255,255,255,0.08)",
                 background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
-                padding: 24,
+                  "linear-gradient(180deg, rgba(14,20,32,0.96), rgba(8,12,21,0.96))",
+                padding: 26,
+                boxShadow: "0 24px 70px rgba(0,0,0,0.35)",
               }}
             >
-              <div className="panel-eyebrow">
-                KEY SIGNALS
-              </div>
+              <div className="panel-eyebrow">KEY SIGNALS</div>
 
-              <div style={{ marginTop: 18 }}>
-                Top 3 Revenue Share: {top3RevenueShare.toFixed(1)}%
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                Top 3 Profit Share: {top3ProfitShare.toFixed(1)}%
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                Weak Profit Products: {weakProfitProducts}
-              </div>
+              {[
+                ["Top 3 revenue share", `${top3RevenueShare.toFixed(1)}%`],
+                ["Top 3 profit share", `${top3ProfitShare.toFixed(1)}%`],
+                ["Weak profit products", `${weakProfitProducts}`],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    padding: "16px 0",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                  }}
+                >
+                  <span style={{ color: "rgba(255,255,255,0.58)" }}>
+                    {label}
+                  </span>
+                  <strong style={{ color: "#f3f4f6" }}>{value}</strong>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -244,6 +259,7 @@ export default function ProfitIntelligencePage() {
           profitPercentage={profitPercentage}
           leakPercentage={leakPercentage}
         />
+
         <div className="panel">
           <div className="panel-header">
             <div>
@@ -260,160 +276,254 @@ export default function ProfitIntelligencePage() {
               marginTop: 24,
             }}
           >
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">Margin direction</div>
-              <div className="ai-recommendation-text">
-                {marginDeteriorating
-                  ? `Margin deteriorated by ${Math.abs(summary.marginDelta).toFixed(
-                    1,
-                  )}% compared to the previous period.`
-                  : "Margin is stable compared to the previous period."}
-              </div>
-            </div>
-
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">Profit movement</div>
-              <div className="ai-recommendation-text">
-                {profitDeteriorating
+            {[
+              [
+                "Margin direction",
+                marginDeteriorating
+                  ? `Margin deteriorated by ${Math.abs(
+                      summary.marginDelta,
+                    ).toFixed(1)}% compared to the previous period.`
+                  : "Margin is stable compared to the previous period.",
+              ],
+              [
+                "Profit movement",
+                profitDeteriorating
                   ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                    1,
-                  )}% across the selected trend window.`
+                      1,
+                    )}% across the selected trend window.`
                   : `Profit changed by ${profitTrendPct.toFixed(
-                    1,
-                  )}% across the selected trend window.`}
-              </div>
-            </div>
-
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">Growth quality</div>
-              <div className="ai-recommendation-text">
-                {revenueGrowingWhileProfitFalls
+                      1,
+                    )}% across the selected trend window.`,
+              ],
+              [
+                "Growth quality",
+                revenueGrowingWhileProfitFalls
                   ? "Revenue is growing while profit is falling. Growth quality may be weakening."
-                  : "Revenue and profit movement do not currently show a major divergence."}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="panel" style={{ marginTop: 24 }}>
-          <div className="panel-header">
-            <div>
-              <div className="panel-eyebrow">REVENUE DEPENDENCY</div>
-              <h2 className="panel-title">Revenue concentration risk</h2>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              marginTop: 24,
-            }}
-          >
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">
-                Dependency level
-              </div>
-
-              <div className="ai-recommendation-text">
-                Top product: {topProductRevenueShare.toFixed(1)}% · Top 3 products:{" "}
-                {top3RevenueShare.toFixed(1)}% · Top 5 products:{" "}
-                {top5RevenueShare.toFixed(1)}%.
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  fontWeight: 800,
-                  color:
-                    dependencyLevel === "High"
-                      ? "#ff6b4a"
-                      : dependencyLevel === "Moderate"
-                        ? "#f59e0b"
-                        : "#22c55e",
-                }}
-              >
-                {dependencyLevel} dependency
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="ai-recommendation-box">
-          <div className="ai-recommendation-label">
-            Profit concentration
-          </div>
-
-          <div className="ai-recommendation-text">
-            Top product: {topProductProfitShare.toFixed(1)}% · Top 3 products:{" "}
-            {top3ProfitShare.toFixed(1)}% of total profit.
-          </div>
-
-          <div
-            style={{
-              marginTop: 12,
-              fontWeight: 800,
-              color: top3ProfitShare > 60 ? "#ff6b4a" : top3ProfitShare > 35 ? "#f59e0b" : "#22c55e",
-            }}
-          >
-            {top3ProfitShare > 60 ? "High" : top3ProfitShare > 35 ? "Moderate" : "Low"} profit dependency
-          </div>
-        </div>
-        <div className="ai-recommendation-box">
-          <div className="ai-recommendation-label">
-            Weak profit drivers
-          </div>
-
-          <div className="ai-recommendation-text">
-            {weakProfitDrivers.length > 0
-              ? `${weakProfitDrivers.length} high-revenue products are contributing weak profit quality.`
-              : "No major weak profit drivers detected in the current period."}
-          </div>
-
-          <div style={{ marginTop: 12 }}>
-            {weakProfitDrivers.map((row) => (
-              <div
-                key={row.productId}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  padding: "10px 0",
-                  borderTop: "1px solid rgba(255,255,255,0.06)",
-                  color: "rgba(255,255,255,0.72)",
-                  fontSize: 14,
-                }}
-              >
-                <span>{row.productTitle}</span>
-                <strong>{row.marginPct.toFixed(1)}%</strong>
+                  : "Revenue and profit movement do not currently show a major divergence.",
+              ],
+            ].map(([label, text]) => (
+              <div key={label} className="ai-recommendation-box">
+                <div className="ai-recommendation-label">{label}</div>
+                <div className="ai-recommendation-text">{text}</div>
               </div>
             ))}
           </div>
         </div>
-        <div className="ai-recommendation-box">
-          <div className="ai-recommendation-label">
-            Profit quality summary
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 22,
+            marginTop: 24,
+          }}
+        >
+          <ConcentrationCard
+            eyebrow="REVENUE DEPENDENCY"
+            title="Revenue concentration"
+            status={`${dependencyLevel} dependency`}
+            statusColor={
+              dependencyLevel === "High"
+                ? "#ff6b4a"
+                : dependencyLevel === "Moderate"
+                  ? "#f59e0b"
+                  : "#22c55e"
+            }
+            rows={[
+              ["Top product", topProductRevenueShare],
+              ["Top 3 products", top3RevenueShare],
+              ["Top 5 products", top5RevenueShare],
+            ]}
+          />
+
+          <ConcentrationCard
+            eyebrow="PROFIT CONCENTRATION"
+            title="Profit dependency"
+            status={`${
+              top3ProfitShare > 60
+                ? "High"
+                : top3ProfitShare > 35
+                  ? "Moderate"
+                  : "Low"
+            } profit dependency`}
+            statusColor={
+              top3ProfitShare > 60
+                ? "#ff6b4a"
+                : top3ProfitShare > 35
+                  ? "#f59e0b"
+                  : "#22c55e"
+            }
+            rows={[
+              ["Top product", topProductProfitShare],
+              ["Top 3 products", top3ProfitShare],
+            ]}
+          />
+        </div>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.35fr 1fr",
+            gap: 22,
+            marginTop: 24,
+          }}
+        >
+          <div className="panel" style={{ marginBottom: 0 }}>
+            <div className="panel-eyebrow">WEAK PROFIT DRIVERS</div>
+            <h2 className="panel-title" style={{ marginTop: 8 }}>
+              High-revenue products with weak margins
+            </h2>
+
+            <div style={{ marginTop: 22 }}>
+              {weakProfitDrivers.length > 0 ? (
+                weakProfitDrivers.map((row) => (
+                  <div
+                    key={row.productId}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 100px 100px",
+                      gap: 16,
+                      padding: "15px 0",
+                      borderTop: "1px solid rgba(255,255,255,0.07)",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, color: "#f3f4f6" }}>
+                      {row.productTitle}
+                    </div>
+
+                    <div style={{ color: "rgba(255,255,255,0.58)" }}>
+                      ${row.revenue.toFixed(0)}
+                    </div>
+
+                    <strong
+                      style={{
+                        color: row.marginPct < 0 ? "#ff6b4a" : "#f59e0b",
+                        textAlign: "right",
+                      }}
+                    >
+                      {row.marginPct.toFixed(1)}%
+                    </strong>
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: "rgba(255,255,255,0.58)" }}>
+                  No major weak profit drivers detected in the current period.
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="ai-recommendation-text">
-            {healthyProfitProducts} products show healthy margins, while{" "}
-            {weakProfitProducts} products show weak profit quality.
-          </div>
+          <div className="panel" style={{ marginBottom: 0 }}>
+            <div className="panel-eyebrow">PROFIT QUALITY</div>
+            <h2 className="panel-title" style={{ marginTop: 8 }}>
+              {profitQualityLevel} profit quality
+            </h2>
 
-          <div
-            style={{
-              marginTop: 12,
-              fontWeight: 800,
-              color:
-                profitQualityLevel === "Weak"
-                  ? "#ff6b4a"
-                  : profitQualityLevel === "Mixed"
-                    ? "#f59e0b"
-                    : "#22c55e",
-            }}
-          >
-            {profitQualityLevel} profit quality
+            <div
+              style={{
+                marginTop: 24,
+                fontSize: 44,
+                fontWeight: 950,
+                color:
+                  profitQualityLevel === "Weak"
+                    ? "#ff6b4a"
+                    : profitQualityLevel === "Mixed"
+                      ? "#f59e0b"
+                      : "#22c55e",
+              }}
+            >
+              {healthyProfitProducts}/{rows.length}
+            </div>
+
+            <p
+              style={{
+                marginTop: 12,
+                color: "rgba(255,255,255,0.64)",
+                lineHeight: 1.7,
+              }}
+            >
+              {healthyProfitProducts} products show healthy margins, while{" "}
+              {weakProfitProducts} products show weak profit quality.
+            </p>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ConcentrationCard({
+  eyebrow,
+  title,
+  status,
+  statusColor,
+  rows,
+}: {
+  eyebrow: string;
+  title: string;
+  status: string;
+  statusColor: string;
+  rows: [string, number][];
+}) {
+  return (
+    <div className="panel" style={{ marginBottom: 0 }}>
+      <div className="panel-eyebrow">{eyebrow}</div>
+      <h2 className="panel-title" style={{ marginTop: 8 }}>
+        {title}
+      </h2>
+
+      <div style={{ marginTop: 22, display: "grid", gap: 18 }}>
+        {rows.map(([label, value]) => (
+          <div key={label}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginBottom: 8,
+                fontWeight: 800,
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.62)" }}>
+                {label}
+              </span>
+              <span style={{ color: "#f3f4f6" }}>{value.toFixed(1)}%</span>
+            </div>
+
+            <div
+              style={{
+                height: 9,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.07)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(100, Math.max(0, value))}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background:
+                    "linear-gradient(90deg, #ff5a36 0%, #f59e0b 100%)",
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          marginTop: 22,
+          display: "inline-flex",
+          padding: "9px 13px",
+          borderRadius: 999,
+          background: "rgba(255,255,255,0.06)",
+          color: statusColor,
+          fontWeight: 900,
+        }}
+      >
+        {status}
       </div>
     </div>
   );
