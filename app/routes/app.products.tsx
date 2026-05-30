@@ -81,17 +81,61 @@ export default function ProductsPage() {
     return "rgba(34,197,94,0.12)";
   };
 
+  const criticalProducts = rows.filter(
+    (row) =>
+      (row.losing ? 40 : 0) +
+      (row.missingCost ? 25 : 0) +
+      (row.lowMargin ? 20 : 0) >=
+      60,
+  ).length;
+
+  const highProducts = rows.filter((row) => {
+    const score =
+      (row.losing ? 40 : 0) +
+      (row.missingCost ? 25 : 0) +
+      (row.lowMargin ? 20 : 0);
+
+    return score >= 30 && score < 60;
+  }).length;
+
+  const moderateProducts = rows.filter((row) => {
+    const score =
+      (row.losing ? 40 : 0) +
+      (row.missingCost ? 25 : 0) +
+      (row.lowMargin ? 20 : 0);
+
+    return score < 30;
+  }).length;
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <button
-          type="button"
-          onClick={() => navigate("/app")}
-          className="secondary-button"
-          style={{ marginBottom: 24 }}
-        >
-          ← Back to dashboard
-        </button>
+        <div className="navbar" style={{ marginBottom: 28 }}>
+          <div className="brand-mark">
+            MARGIN<span>LAB</span>
+          </div>
+
+          <div className="nav-tabs">
+            {[
+              ["Overview", "/app"],
+              ["Products", "/app/products"],
+              ["Profit Intelligence", "/app/profit-intelligence"],
+              ["Recommendations", "/app/recommendations"],
+              ["Billing", "/app/billing"],
+            ].map(([label, path]) => (
+              <button
+                key={label}
+                type="button"
+                className={label === "Profit Intelligence" ? "active" : ""}
+                onClick={() => {
+                  if (path !== "/app/profit-intelligence") navigate(path);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="hero-header">
           <div>
@@ -105,7 +149,64 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+        <div
+          style={{
+            marginBottom: 24,
+            padding: 24,
+            borderRadius: 24,
+            border: "1px solid rgba(255,255,255,0.08)",
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.5)",
+              marginBottom: 18,
+            }}
+          >
+            Product Risk Distribution
+          </div>
 
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 20,
+            }}
+          >
+            <div>
+              <div style={{ color: "#ff6b4a", fontSize: 30, fontWeight: 900 }}>
+                {criticalProducts}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)" }}>
+                Critical
+              </div>
+            </div>
+
+            <div>
+              <div style={{ color: "#f59e0b", fontSize: 30, fontWeight: 900 }}>
+                {highProducts}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)" }}>
+                High
+              </div>
+            </div>
+
+            <div>
+              <div style={{ color: "#22c55e", fontSize: 30, fontWeight: 900 }}>
+                {moderateProducts}
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)" }}>
+                Moderate
+              </div>
+            </div>
+          </div>
+        </div>
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
           onlyLosing={onlyLosing}

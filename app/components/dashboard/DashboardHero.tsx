@@ -1,3 +1,5 @@
+import DashboardNav from "./DashboardNav";
+
 type Props = {
   period: string;
   setPeriod: (next: "7" | "30" | "90") => void;
@@ -25,45 +27,10 @@ export default function DashboardHero({
 }: Props) {
   return (
     <>
-      <div className="navbar">
-        <div className="logo">
-          MARGIN<span>LAB</span>
-        </div>
-
-        <div className="nav-tabs">
-          <div className="nav-tab active">
-            Overview
-          </div>
-
-          <div
-            className="nav-tab"
-            onClick={() => navigate("/app/products")}
-          >
-            Products
-          </div>
-
-          <div
-            className="nav-tab"
-            onClick={() => navigate("/app/profit-intelligence")}
-          >
-            Profit Intelligence
-          </div>
-
-          <div
-            className="nav-tab"
-            onClick={() => navigate("/app/recommendations")}
-          >
-            Recommendations
-          </div>
-
-          <div
-            className="nav-tab"
-            onClick={() => navigate("/app/billing")}
-          >
-            Billing
-          </div>
-        </div>
-      </div>
+      <DashboardNav
+        active="overview"
+        navigate={navigate}
+      />
 
       <div className="hero-header">
         <div>

@@ -6,6 +6,8 @@ import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
+import DashboardNav from "~/components/dashboard/DashboardNav";
+
 import {
   type LoaderData,
   money,
@@ -104,32 +106,10 @@ export default function RecommendationsPage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <div className="navbar" style={{ marginBottom: 28 }}>
-          <div className="brand-mark">
-            MARGIN<span>LAB</span>
-          </div>
-
-          <div className="nav-tabs">
-            {[
-              ["Overview", "/app"],
-              ["Products", "/app/products"],
-              ["Profit Intelligence", "/app/profit-intelligence"],
-              ["Recommendations", "/app/recommendations"],
-              ["Billing", "/app/billing"],
-            ].map(([label, path]) => (
-              <button
-                key={label}
-                type="button"
-                className={label === "Profit Intelligence" ? "active" : ""}
-                onClick={() => {
-                  if (path !== "/app/profit-intelligence") navigate(path);
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <DashboardNav
+          active="recommendations"
+          navigate={navigate}
+        />
 
         <div className="hero-header">
           <div>
