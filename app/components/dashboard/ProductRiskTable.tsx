@@ -24,7 +24,15 @@ function getProductRiskScore(row: Row) {
   return Math.min(100, Math.round(score));
 }
 
-function getScoreStyle(score: number) {
+function getScoreStyle(score: number, row: Row) {
+  if (row.missingCost) {
+    return {
+      label: "Data issue",
+      color: "#f59e0b",
+      background: "rgba(245,158,11,0.14)",
+    };
+  }
+
   if (score >= 70) {
     return {
       label: "Critical",
@@ -168,7 +176,7 @@ export default function ProductRiskTable({
           <tbody>
             {sortedRiskRows.map((row) => {
               const score = getProductRiskScore(row);
-              const scoreStyle = getScoreStyle(score);
+              const scoreStyle = getScoreStyle(score, row);
 
               return (
                 <React.Fragment key={row.productTitle}>
@@ -280,20 +288,7 @@ export default function ProductRiskTable({
                             {score}
                           </span>
 
-                          <span
-                            style={{
-                              padding: "5px 9px",
-                              borderRadius: 999,
-                              background: scoreStyle.background,
-                              color: scoreStyle.color,
-                              fontWeight: 900,
-                              fontSize: 11,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                            }}
-                          >
-                            {scoreStyle.label}
-                          </span>
+
                         </div>
 
                         <div
