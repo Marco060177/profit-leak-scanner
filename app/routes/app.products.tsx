@@ -45,10 +45,12 @@ export const loader = async ({
 };
 
 export default function ProductsPage() {
-  const { rows, period, shopHandle } = useLoaderData() as LoaderData;
+  const { summary, rows, period, shopHandle } =
+    useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
+
   const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
   const productRiskScore = (row: Row) => {
@@ -206,13 +208,14 @@ export default function ProductsPage() {
                   paddingTop: 22,
                   borderTop: "1px solid rgba(255,255,255,0.08)",
                   display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
                   gap: 18,
                 }}
               >
                 {[
                   ["Products at risk", `${criticalProducts + highProducts}`],
                   ["Critical products", `${criticalProducts}`],
+                  ["Recoverable profit", `$${summary.totalLeak.toFixed(0)}`],
                   ["Healthy products", `${healthyProducts}`],
                 ].map(([label, value]) => (
                   <div key={label}>
