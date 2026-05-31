@@ -1566,4 +1566,27 @@
     margin-top: 24px;
   }
 
- } 
+}
+
+.dashboard-shell,
+.dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+  overflow-x: hidden;
+}
+
+.navbar,
+.hero-header,
+.score-card,
+.panel,
+.ai-panel,
+.kpi-grid,
+.chart-card {
+  max-width: 100%;
+}
+
+img,
+svg,
+table {
+  max-width: 100%;
+}
