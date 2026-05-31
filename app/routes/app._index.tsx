@@ -936,13 +936,7 @@ export default function DashboardV2() {
         visualMarginPct={visualMarginPct}
       />
 
-      <RiskDistribution
-        criticalCount={criticalCount}
-        warningCount={warningCount}
-        missingCount={missingCount}
-        healthyCount={healthyCount}
-        riskTotal={riskTotal}
-      />
+      
 
       <InsightsPanel insights={insights as any[]} />
 
@@ -953,7 +947,7 @@ export default function DashboardV2() {
         severityBorder={severityBorder}
       />
 
-      <ContributionInsightsPanel insights={prioritizedInsights} />
+      
 
     </div>
 
