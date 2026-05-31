@@ -2,7 +2,7 @@ import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
-import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
+
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
@@ -54,54 +54,54 @@ export default function RecommendationsPage() {
   const priorityActions = [
     losingProducts.length > 0
       ? {
-          priority: "Critical",
-          title: `Fix ${losingProducts.length} products selling below cost`,
-          impact: `${money(visualLeak)} potential recovery`,
-          description:
-            "These products are generating negative contribution margin and should be reviewed before any growth or pricing optimization work.",
-          actionLabel: "Review pricing",
-          actionLink: "/app/products",
-          color: "#ff6b4a",
-        }
+        priority: "Critical",
+        title: `Fix ${losingProducts.length} products selling below cost`,
+        impact: `${money(visualLeak)} potential recovery`,
+        description:
+          "These products are generating negative contribution margin and should be reviewed before any growth or pricing optimization work.",
+        actionLabel: "Review pricing",
+        actionLink: "/app/products",
+        color: "#ff6b4a",
+      }
       : null,
 
     missingCostProducts.length > 0
       ? {
-          priority: "High",
-          title: "Complete missing product cost data",
-          impact: `${missingCostProducts.length} products affected`,
-          description:
-            "Missing costs reduce margin accuracy and can hide real product-level risk. Add cost data before trusting profitability signals.",
-          actionLabel: "Update costs",
-          actionLink: "/app/products",
-          color: "#f59e0b",
-        }
+        priority: "High",
+        title: "Complete missing product cost data",
+        impact: `${missingCostProducts.length} products affected`,
+        description:
+          "Missing costs reduce margin accuracy and can hide real product-level risk. Add cost data before trusting profitability signals.",
+        actionLabel: "Update costs",
+        actionLink: "/app/products",
+        color: "#f59e0b",
+      }
       : null,
 
     lowMarginProducts.length > 0
       ? {
-          priority: "Medium",
-          title: "Review low-margin product group",
-          impact: `${lowMarginProducts.length} products need attention`,
-          description:
-            "Low-margin products may be acceptable strategically, but they should be monitored because they can weaken profit quality at scale.",
-          actionLabel: "Analyze products",
-          actionLink: "/app/products",
-          color: "#f59e0b",
-        }
+        priority: "Medium",
+        title: "Review low-margin product group",
+        impact: `${lowMarginProducts.length} products need attention`,
+        description:
+          "Low-margin products may be acceptable strategically, but they should be monitored because they can weaken profit quality at scale.",
+        actionLabel: "Analyze products",
+        actionLink: "/app/products",
+        color: "#f59e0b",
+      }
       : null,
 
     rows.length > 0
       ? {
-          priority: "Low",
-          title: "Review target prices for weak products",
-          impact: "20% margin target available",
-          description:
-            "Compare current prices against target margin recommendations to identify realistic recovery opportunities.",
-          actionLabel: "Review targets",
-          actionLink: "/app/products",
-          color: "#22c55e",
-        }
+        priority: "Low",
+        title: "Review target prices for weak products",
+        impact: "20% margin target available",
+        description:
+          "Compare current prices against target margin recommendations to identify realistic recovery opportunities.",
+        actionLabel: "Review targets",
+        actionLink: "/app/products",
+        color: "#22c55e",
+      }
       : null,
   ].filter(Boolean) as {
     priority: string;
@@ -132,20 +132,7 @@ export default function RecommendationsPage() {
   const actionScoreColor =
     actionScore < 40 ? "#ff6b4a" : actionScore < 70 ? "#f59e0b" : "#22c55e";
 
-  const recommendations = priorityActions.map((action) => ({
-    title: action.title,
-    impact: action.impact,
-    confidence:
-      action.priority === "Critical"
-        ? "High confidence"
-        : action.priority === "High"
-          ? "Important issue"
-          : action.priority === "Medium"
-            ? "Moderate confidence"
-            : "Rule-based insight",
-    actionLabel: action.actionLabel,
-    actionLink: action.actionLink,
-  }));
+  
 
   return (
     <div className="dashboard-shell">
@@ -295,9 +282,8 @@ export default function RecommendationsPage() {
                     position: "absolute",
                     inset: -16,
                     borderRadius: "50%",
-                    background: `conic-gradient(${actionScoreColor} ${
-                      actionScore * 3.6
-                    }deg, transparent 0deg)`,
+                    background: `conic-gradient(${actionScoreColor} ${actionScore * 3.6
+                      }deg, transparent 0deg)`,
                     mask:
                       "radial-gradient(circle, transparent 58%, black 59%)",
                     WebkitMask:
@@ -439,7 +425,112 @@ export default function RecommendationsPage() {
           </div>
         </div>
 
-        <RecommendationsPanel recommendations={recommendations} />
+        <div className="panel" style={{ marginBottom: 28 }}>
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">AI INSIGHTS</div>
+              <h2 className="panel-title">Why these actions matter</h2>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 18,
+              marginTop: 24,
+            }}
+          >
+            {[
+              {
+                title: "Pricing risk is concentrated",
+                value: `${losingProducts.length} losing products`,
+                text:
+                  losingProducts.length > 0
+                    ? "A small number of underpriced products may be responsible for most detected profit leakage."
+                    : "No products are currently selling below cost.",
+                color: "#ff6b4a",
+              },
+              {
+                title: "Cost data quality affects accuracy",
+                value: `${missingCostProducts.length} missing costs`,
+                text:
+                  missingCostProducts.length > 0
+                    ? "Missing cost data reduces confidence in product-level profitability and should be fixed before deeper analysis."
+                    : "Cost data coverage looks healthy for the current period.",
+                color: "#f59e0b",
+              },
+              {
+                title: "Margin quality needs monitoring",
+                value: `${lowMarginProducts.length} low-margin products`,
+                text:
+                  lowMarginProducts.length > 0
+                    ? "Low-margin products may be strategic, but they can weaken store profit quality when they scale."
+                    : "No major low-margin product group detected.",
+                color: "#22c55e",
+              },
+            ].map((insight) => (
+              <div
+                key={insight.title}
+                style={{
+                  position: "relative",
+                  overflow: "hidden",
+                  borderRadius: 22,
+                  padding: 22,
+                  background:
+                    "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: "0 18px 46px rgba(0,0,0,0.32)",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: `radial-gradient(circle at top right, ${insight.color}22, transparent 42%)`,
+                    pointerEvents: "none",
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: "relative",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.48)",
+                  }}
+                >
+                  {insight.title}
+                </div>
+
+                <div
+                  style={{
+                    position: "relative",
+                    marginTop: 14,
+                    fontSize: 28,
+                    fontWeight: 950,
+                    color: insight.color,
+                  }}
+                >
+                  {insight.value}
+                </div>
+
+                <div
+                  style={{
+                    position: "relative",
+                    marginTop: 12,
+                    color: "rgba(255,255,255,0.66)",
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {insight.text}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
