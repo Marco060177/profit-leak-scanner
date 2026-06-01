@@ -21,9 +21,7 @@ export async function loadMarginDashboardData({
   const days = Number.parseInt(period, 10);
 
   const safeDays =
-    Number.isFinite(days) && days > 0
-      ? days
-      : 30;
+    Number.isFinite(days) && days > 0 ? days : 30;
 
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - safeDays);
@@ -62,109 +60,110 @@ export async function loadMarginDashboardData({
 
   const response = await admin.graphql(
     `#graphql
-  query OrdersForLeak($q: String!) {
-    orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
-      edges {
-        node {
-          id
-          name
-          processedAt
+    query OrdersForLeak($q: String!) {
+      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+        edges {
+          node {
+            id
+            name
+            processedAt
 
-          subtotalPriceSet {
-            shopMoney {
-              amount
+            subtotalPriceSet {
+              shopMoney {
+                amount
+              }
             }
-          }
 
-          totalDiscountsSet {
-            shopMoney {
-              amount
+            totalDiscountsSet {
+              shopMoney {
+                amount
+              }
             }
-          }
 
-          totalShippingPriceSet {
-            shopMoney {
-              amount
+            totalShippingPriceSet {
+              shopMoney {
+                amount
+              }
             }
-          }
 
-          totalTaxSet {
-            shopMoney {
-              amount
+            totalTaxSet {
+              shopMoney {
+                amount
+              }
             }
-          }
 
-          totalRefundedSet {
-            shopMoney {
-              amount
+            totalRefundedSet {
+              shopMoney {
+                amount
+              }
             }
-          }
 
-          refunds {
-            refundLineItems(first: 100) {
-              edges {
-                node {
-                  quantity
+            refunds {
+              refundLineItems(first: 100) {
+                edges {
+                  node {
+                    quantity
 
-                  subtotalSet {
-                    shopMoney {
-                      amount
+                    subtotalSet {
+                      shopMoney {
+                        amount
+                      }
                     }
-                  }
 
-                  lineItem {
-                    variant {
-                      product {
-                        id
-                        title
+                    lineItem {
+                      variant {
+                        product {
+                          id
+                          title
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
 
-          lineItems(first: 250) {
-            edges {
-              node {
-                quantity
+            lineItems(first: 250) {
+              edges {
+                node {
+                  quantity
 
-                discountedTotalSet {
-                  shopMoney {
-                    amount
-                  }
-                }
-
-                originalTotalSet {
-                  shopMoney {
-                    amount
-                  }
-                }
-
-                discountAllocations {
-                  allocatedAmountSet {
+                  discountedTotalSet {
                     shopMoney {
                       amount
                     }
                   }
-                }
 
-                originalUnitPriceSet {
-                  shopMoney {
-                    amount
-                  }
-                }
-
-                variant {
-                  product {
-                    id
-                    title
-                  }
-
-                  inventoryItem {
-                    unitCost {
+                  originalTotalSet {
+                    shopMoney {
                       amount
+                    }
+                  }
+
+                  discountAllocations {
+                    allocatedAmountSet {
+                      shopMoney {
+                        amount
+                      }
+                    }
+                  }
+
+                  originalUnitPriceSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+
+                  variant {
+                    product {
+                      id
+                      title
+                    }
+
+                    inventoryItem {
+                      unitCost {
+                        amount
+                      }
                     }
                   }
                 }
@@ -173,8 +172,7 @@ export async function loadMarginDashboardData({
           }
         }
       }
-    }
-  }`,
+    }`,
     {
       variables: {
         q: queryString,
@@ -183,8 +181,6 @@ export async function loadMarginDashboardData({
   );
 
   const gql = await response.json();
-
-
 
   const previousResponse = await admin.graphql(
     `#graphql
@@ -196,12 +192,23 @@ export async function loadMarginDashboardData({
               edges {
                 node {
                   quantity
+
                   originalUnitPriceSet {
-                    shopMoney { amount }
+                    shopMoney {
+                      amount
+                    }
                   }
+
                   variant {
+                    product {
+                      id
+                      title
+                    }
+
                     inventoryItem {
-                      unitCost { amount }
+                      unitCost {
+                        amount
+                      }
                     }
                   }
                 }
@@ -211,7 +218,11 @@ export async function loadMarginDashboardData({
         }
       }
     }`,
-    { variables: { q: previousQueryString } },
+    {
+      variables: {
+        q: previousQueryString,
+      },
+    },
   );
 
   const previousGql = await previousResponse.json();
@@ -244,6 +255,16 @@ export async function loadMarginDashboardData({
     }
   > = {};
 
+  const previousByProduct: Record<
+    string,
+    {
+      productId: string;
+      productTitle: string;
+      revenue: number;
+      cogs: number;
+    }
+  > = {};
+
   let totalRevenue = 0;
   let totalCogs = 0;
 
@@ -254,16 +275,6 @@ export async function loadMarginDashboardData({
 
   let previousRevenue = 0;
   let previousCogs = 0;
-
-  const previousByProduct: Record<
-    string,
-    {
-      productId: string;
-      productTitle: string;
-      revenue: number;
-      cogs: number;
-    }
-  > = {};
 
   for (const o of orderEdges) {
     const order = o?.node;
@@ -289,11 +300,11 @@ export async function loadMarginDashboardData({
         return refund?.refundLineItems?.edges ?? [];
       }) ?? [];
 
-
     for (const refundEdge of refundEdges) {
       const refundNode = refundEdge?.node;
 
-      const refundProduct = refundNode?.lineItem?.variant?.product;
+      const refundProduct =
+        refundNode?.lineItem?.variant?.product;
 
       const refundProductTitle =
         refundProduct?.title ?? "Unknown product";
@@ -338,25 +349,17 @@ export async function loadMarginDashboardData({
 
       const cost = Number(costRaw ?? 0);
 
+      const product = li?.node?.variant?.product;
+
       const productTitle =
-        li?.node?.title ?? "Unknown product";
+        product?.title ?? "Unknown product";
 
-      const productId = productTitle;
-
-      if (!previousByProduct[productTitle]) {
-        previousByProduct[productTitle] = {
-          productId,
-          productTitle,
-          revenue: 0,
-          cogs: 0,
-        };
-      }
-
-      previousByProduct[productTitle].revenue += price * qty;
-      previousByProduct[productTitle].cogs += cost * qty;
+      const productId =
+        product?.id ? extractNumericId(product.id) : productTitle;
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
+
       const lineDiscounts = (
         li?.node?.discountAllocations ?? []
       ).reduce((acc: number, allocation: any) => {
@@ -368,7 +371,7 @@ export async function loadMarginDashboardData({
         );
       }, 0);
 
-      const processedAt = o?.node?.processedAt ?? "";
+      const processedAt = order?.processedAt ?? "";
       const day = processedAt.slice(0, 10);
 
       if (!byDay[day]) {
@@ -388,9 +391,9 @@ export async function loadMarginDashboardData({
           qty: 0,
           revenue: 0,
           cogs: 0,
-          missingCost: false,
           discounts: 0,
           refunds: 0,
+          missingCost: false,
         };
       }
 
@@ -423,8 +426,31 @@ export async function loadMarginDashboardData({
 
       const cost = Number(costRaw ?? 0);
 
-      previousRevenue += price * qty;
-      previousCogs += cost * qty;
+      const product = li?.node?.variant?.product;
+
+      const productTitle =
+        product?.title ?? "Unknown product";
+
+      const productId =
+        product?.id ? extractNumericId(product.id) : productTitle;
+
+      const lineRevenue = price * qty;
+      const lineCogs = cost * qty;
+
+      if (!previousByProduct[productTitle]) {
+        previousByProduct[productTitle] = {
+          productId,
+          productTitle,
+          revenue: 0,
+          cogs: 0,
+        };
+      }
+
+      previousByProduct[productTitle].revenue += lineRevenue;
+      previousByProduct[productTitle].cogs += lineCogs;
+
+      previousRevenue += lineRevenue;
+      previousCogs += lineCogs;
     }
   }
 
@@ -433,19 +459,19 @@ export async function loadMarginDashboardData({
       const profit = r.revenue - r.cogs;
 
       const marginPct =
-        r.revenue > 0
-          ? (profit / r.revenue) * 100
-          : 0;
+        r.revenue > 0 ? (profit / r.revenue) * 100 : 0;
 
-      const previousProduct = previousByProduct[r.productTitle];
+      const previousProduct =
+        previousByProduct[r.productTitle];
 
       const previousProfit = previousProduct
         ? previousProduct.revenue - previousProduct.cogs
         : 0;
 
-      const previousMarginPct = previousProduct?.revenue
-        ? (previousProfit / previousProduct.revenue) * 100
-        : null;
+      const previousMarginPct =
+        previousProduct?.revenue
+          ? (previousProfit / previousProduct.revenue) * 100
+          : null;
 
       const productMarginDelta =
         previousMarginPct !== null
@@ -477,15 +503,15 @@ export async function loadMarginDashboardData({
           ? aggressiveIncrease
             ? "Current margins are critically below target. Review product costs, pricing structure and discounts."
             : `Increase price to ${moneyServer(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${moneyServer(
-              targetDelta,
-            )} per unit) to reach a healthier margin.`
+                targetDelta,
+              )} per unit) to reach a healthier margin.`
           : targetDelta > 0
             ? aggressiveIncrease
               ? "Margin improvement opportunity detected. Review pricing and fulfillment costs."
               : `Consider increasing price to ${moneyServer(
-                targetPrice,
-              )} to improve product margins.`
-            : "Current pricing and margins appear stable based on available cost data."
+                  targetPrice,
+                )} to improve product margins.`
+            : "Current pricing and margins appear stable based on available cost data.";
 
       return {
         ...r,
@@ -527,6 +553,7 @@ export async function loadMarginDashboardData({
 
   const contributionMarginPct =
     netRevenue > 0 ? (contributionProfit / netRevenue) * 100 : 0;
+
   const previousProfit = previousRevenue - previousCogs;
 
   const previousMarginPct =
