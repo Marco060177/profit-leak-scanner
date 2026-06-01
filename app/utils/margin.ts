@@ -33,6 +33,8 @@ export type Row = {
   refunds: number;
   profit: number;
   marginPct: number;
+  previousMarginPct: number | null;
+  productMarginDelta: number | null;
   losing: boolean;
   lowMargin: boolean;
   avgPrice: number;
@@ -53,6 +55,7 @@ export type TrendPoint = {
 export type LoaderData = {
   summary: Summary;
   rows: Row[];
+  marginDeterioration: Row[];
   trend: TrendPoint[];
   billingActive: boolean;
   period: string;

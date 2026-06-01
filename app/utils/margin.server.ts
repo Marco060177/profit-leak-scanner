@@ -255,6 +255,16 @@ export async function loadMarginDashboardData({
   let previousRevenue = 0;
   let previousCogs = 0;
 
+  const previousByProduct: Record<
+    string,
+    {
+      productId: string;
+      productTitle: string;
+      revenue: number;
+      cogs: number;
+    }
+  > = {};
+
   for (const o of orderEdges) {
     const order = o?.node;
 
@@ -278,7 +288,7 @@ export async function loadMarginDashboardData({
       order?.refunds?.flatMap((refund: any) => {
         return refund?.refundLineItems?.edges ?? [];
       }) ?? [];
-    
+
 
     for (const refundEdge of refundEdges) {
       const refundNode = refundEdge?.node;
@@ -328,13 +338,22 @@ export async function loadMarginDashboardData({
 
       const cost = Number(costRaw ?? 0);
 
-      const product = li?.node?.variant?.product;
-
       const productTitle =
-        product?.title ?? "Unknown product";
+        li?.node?.title ?? "Unknown product";
 
-      const productId =
-        product?.id ? extractNumericId(product.id) : "";
+      const productId = productTitle;
+
+      if (!previousByProduct[productTitle]) {
+        previousByProduct[productTitle] = {
+          productId,
+          productTitle,
+          revenue: 0,
+          cogs: 0,
+        };
+      }
+
+      previousByProduct[productTitle].revenue += price * qty;
+      previousByProduct[productTitle].cogs += cost * qty;
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
@@ -418,6 +437,21 @@ export async function loadMarginDashboardData({
           ? (profit / r.revenue) * 100
           : 0;
 
+      const previousProduct = previousByProduct[r.productTitle];
+
+      const previousProfit = previousProduct
+        ? previousProduct.revenue - previousProduct.cogs
+        : 0;
+
+      const previousMarginPct = previousProduct?.revenue
+        ? (previousProfit / previousProduct.revenue) * 100
+        : null;
+
+      const productMarginDelta =
+        previousMarginPct !== null
+          ? marginPct - previousMarginPct
+          : null;
+
       const avgPrice =
         r.qty > 0 ? r.revenue / r.qty : 0;
 
@@ -457,6 +491,8 @@ export async function loadMarginDashboardData({
         ...r,
         profit,
         marginPct,
+        previousMarginPct,
+        productMarginDelta,
         losing: profit < 0,
         lowMargin: marginPct > 0 && marginPct < 10,
         avgPrice,
@@ -469,6 +505,15 @@ export async function loadMarginDashboardData({
       };
     })
     .sort((a, b) => a.profit - b.profit);
+
+  const marginDeterioration = rows
+    .filter(
+      (row): row is Row & { productMarginDelta: number } =>
+        row.productMarginDelta !== null,
+    )
+    .filter((row) => row.productMarginDelta < -3)
+    .sort((a, b) => a.productMarginDelta - b.productMarginDelta)
+    .slice(0, 5);
 
   const netRevenue = Math.max(
     0,
@@ -547,6 +592,7 @@ export async function loadMarginDashboardData({
       revenueDeltaPct,
     },
     rows,
+    marginDeterioration,
     trend,
     billingActive,
     period: String(safeDays),

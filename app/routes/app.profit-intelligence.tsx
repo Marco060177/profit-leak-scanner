@@ -36,7 +36,7 @@ export const loader = async ({
 };
 
 export default function ProfitIntelligencePage() {
-  const { summary, trend, rows } = useLoaderData() as LoaderData;
+  const { summary, trend, rows, marginDeterioration } = useLoaderData() as LoaderData;
   const topDiscountProducts = [...rows]
     .filter((row) => row.discounts > 0)
     .sort((a, b) => b.discounts - a.discounts)
@@ -461,6 +461,75 @@ export default function ProfitIntelligencePage() {
             </div>
           )}
         </div>
+
+        {marginDeterioration.length > 0 && (
+          <div className="panel">
+            <div className="panel-header">
+              <div>
+                <div className="panel-eyebrow">MARGIN DETERIORATION</div>
+                <h2 className="panel-title">Products losing profitability</h2>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+              {marginDeterioration.map((row) => (
+                <div
+                  key={row.productId || row.productTitle}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 24,
+                    padding: 18,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 900, color: "#f3f4f6" }}>
+                      {row.productTitle}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.58)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Product margin declined compared to the previous selected period.
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    <div
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 950,
+                        color: "#ef4444",
+                      }}
+                    >
+                      {row.productMarginDelta?.toFixed(1)} pts
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 13,
+                        fontWeight: 800,
+                        color: "rgba(255,255,255,0.58)",
+                      }}
+                    >
+                      {row.previousMarginPct?.toFixed(1)}% →{" "}
+                      {row.marginPct.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {topDiscountProducts.length > 0 && (
           <div className="panel">
