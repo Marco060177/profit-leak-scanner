@@ -62,28 +62,58 @@ export async function loadMarginDashboardData({
 
   const response = await admin.graphql(
     `#graphql
-    query OrdersForLeak($q: String!) {
-      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
-        edges {
-          node {
-            id
-            name
-            processedAt
-            lineItems(first: 250) {
-              edges {
-                node {
-                  quantity
-                  originalUnitPriceSet {
-                    shopMoney { amount }
+  query OrdersForLeak($q: String!) {
+    orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+      edges {
+        node {
+          id
+          name
+          processedAt
+
+          subtotalPriceSet {
+            shopMoney { amount }
+          }
+
+          totalDiscountsSet {
+            shopMoney { amount }
+          }
+
+          totalShippingPriceSet {
+            shopMoney { amount }
+          }
+
+          totalTaxSet {
+            shopMoney { amount }
+          }
+
+          totalRefundedSet {
+            shopMoney { amount }
+          }
+
+          lineItems(first: 250) {
+            edges {
+              node {
+                quantity
+
+                discountedTotalSet {
+                  shopMoney { amount }
+                }
+
+                originalTotalSet {
+                  shopMoney { amount }
+                }
+
+                originalUnitPriceSet {
+                  shopMoney { amount }
+                }
+
+                variant {
+                  product {
+                    id
+                    title
                   }
-                  variant {
-                    product {
-                      id
-                      title
-                    }
-                    inventoryItem {
-                      unitCost { amount }
-                    }
+                  inventoryItem {
+                    unitCost { amount }
                   }
                 }
               }
@@ -91,11 +121,20 @@ export async function loadMarginDashboardData({
           }
         }
       }
-    }`,
+    }
+  }`,
     { variables: { q: queryString } },
   );
 
   const gql = await response.json();
+
+  console.log(
+    JSON.stringify(
+      gql?.data?.orders?.edges?.[0]?.node,
+      null,
+      2,
+    ),
+  );
 
   const previousResponse = await admin.graphql(
     `#graphql
@@ -287,7 +326,7 @@ export async function loadMarginDashboardData({
               : `Consider increasing price to ${moneyServer(
                 targetPrice,
               )} to improve product margins.`
-            :"Current pricing and margins appear stable based on available cost data."
+            : "Current pricing and margins appear stable based on available cost data."
 
       return {
         ...r,
