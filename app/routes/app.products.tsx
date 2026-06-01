@@ -133,6 +133,15 @@ export default function ProductsPage() {
     }))
     .sort((a, b) => b.riskValue - a.riskValue)
     .slice(0, 5);
+  const totalRevenueAtRisk = revenueAtRisk.reduce(
+    (sum, product) => sum + product.revenue,
+    0
+  );
+
+  const totalRevenueAtRiskOpportunity = revenueAtRisk.reduce(
+    (sum, product) => sum + product.riskValue,
+    0
+  );
 
   return (
     <div className="dashboard-shell">
@@ -468,6 +477,9 @@ export default function ProductsPage() {
             <div>
               <div className="panel-eyebrow">REVENUE AT RISK</div>
               <h2 className="panel-title">High revenue, low margin products</h2>
+              <p className="panel-subtitle">
+                ${totalRevenueAtRisk.toFixed(0)} in revenue is currently operating below the 20% target margin, with an estimated ${totalRevenueAtRiskOpportunity.toFixed(0)} margin opportunity.
+              </p>
             </div>
           </div>
 
