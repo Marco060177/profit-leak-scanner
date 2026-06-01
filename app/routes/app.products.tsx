@@ -121,6 +121,19 @@ export default function ProductsPage() {
   const highPct = (highProducts / totalProducts) * 100;
   const healthyPct = (healthyProducts / totalProducts) * 100;
 
+  const targetMarginPct = 20;
+
+  const revenueAtRisk = rows
+    .filter((row) => row.revenue > 0)
+    .filter((row) => row.marginPct < targetMarginPct)
+    .map((row) => ({
+      ...row,
+      marginGap: targetMarginPct - row.marginPct,
+      riskValue: row.revenue * ((targetMarginPct - row.marginPct) / 100),
+    }))
+    .sort((a, b) => b.riskValue - a.riskValue)
+    .slice(0, 5);
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -457,7 +470,136 @@ export default function ProductsPage() {
             gap: 10,
             marginBottom: 16,
           }}
+
         >
+          <div className="panel" style={{ marginBottom: 24 }}>
+            <div className="panel-header">
+              <div>
+                <div className="panel-eyebrow">REVENUE AT RISK</div>
+                <h2 className="panel-title">High revenue, low margin products</h2>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                gap: 14,
+                marginTop: 24,
+              }}
+            >
+              {revenueAtRisk.length > 0 ? (
+                revenueAtRisk.map((product) => (
+                  <div
+                    key={product.productId}
+                    style={{
+                      borderRadius: 20,
+                      padding: 18,
+                      background:
+                        "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        color: "#f3f4f6",
+                        lineHeight: 1.35,
+                        minHeight: 36,
+                      }}
+                    >
+                      {product.productTitle}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 16,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.42)",
+                      }}
+                    >
+                      Revenue
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 24,
+                        fontWeight: 950,
+                        color: "#f3f4f6",
+                      }}
+                    >
+                      ${product.revenue.toFixed(0)}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 14,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        color: "rgba(255,255,255,0.62)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                      }}
+                    >
+                      <span>Margin</span>
+                      <span style={{ color: "#ff6b4a" }}>
+                        {product.marginPct.toFixed(1)}%
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 8,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        color: "rgba(255,255,255,0.62)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                      }}
+                    >
+                      <span>Opportunity</span>
+                      <span>${product.riskValue.toFixed(0)}</span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 14,
+                        paddingTop: 14,
+                        borderTop: "1px solid rgba(255,255,255,0.07)",
+                        color: "rgba(255,255,255,0.52)",
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      High revenue product operating below the 20% target margin.
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    gridColumn: "1 / -1",
+                    padding: 22,
+                    borderRadius: 18,
+                    background: "rgba(34,197,94,0.08)",
+                    border: "1px solid rgba(34,197,94,0.18)",
+                    color: "rgba(255,255,255,0.68)",
+                    fontWeight: 800,
+                  }}
+                >
+                  No high-revenue products are currently below the target margin.
+                </div>
+              )}
+            </div>
+          </div>
+          
           {[10, 20, 50].map((limit) => (
             <button
               key={limit}
@@ -482,6 +624,6 @@ export default function ProductsPage() {
           shopHandle={shopHandle}
         />
       </div>
-    </div>
+    </div >
   );
 }

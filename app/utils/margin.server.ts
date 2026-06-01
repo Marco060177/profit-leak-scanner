@@ -278,8 +278,7 @@ export async function loadMarginDashboardData({
       order?.refunds?.flatMap((refund: any) => {
         return refund?.refundLineItems?.edges ?? [];
       }) ?? [];
-    console.log("Refund debug", JSON.stringify(order?.refunds, null, 2));
-    console.log("Refund edges", JSON.stringify(refundEdges, null, 2));
+    
 
     for (const refundEdge of refundEdges) {
       const refundNode = refundEdge?.node;
