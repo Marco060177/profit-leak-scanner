@@ -75,23 +75,36 @@ export default function ProfitIntelligencePage() {
   const profitDeteriorating = profitTrendPct < -5;
   const revenueGrowingWhileProfitFalls =
     revenueTrendPct > 5 && profitTrendPct < 0;
-  const profitLossDrivers = [
+  const totalBusinessImpact =
+    summary.discounts +
+    summary.refunds +
+    summary.shipping;
+
+  const businessDrivers = [
     {
       label: "Discounts",
       value: summary.discounts,
-      description: "Revenue lost through discounts applied to orders.",
+      description: "Revenue reduced through promotional discounts.",
     },
     {
       label: "Refunds",
       value: summary.refunds,
-      description: "Revenue reversed through refunds.",
+      description: "Revenue reversed through returned orders.",
     },
     {
       label: "Shipping",
       value: summary.shipping,
-      description: "Shipping charges tracked at order level.",
+      description: "Shipping charges recorded on orders.",
     },
-  ].filter((driver) => driver.value > 0);
+  ]
+    .filter((driver) => driver.value > 0)
+    .map((driver) => ({
+      ...driver,
+      impactPct:
+        totalBusinessImpact > 0
+          ? (driver.value / totalBusinessImpact) * 100
+          : 0,
+    }));
 
   const sortedRevenueRows = [...rows].sort((a, b) => b.revenue - a.revenue);
 
@@ -355,11 +368,11 @@ export default function ProfitIntelligencePage() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">PROFIT LOSS ATTRIBUTION</div>
-              <h2 className="panel-title">What is reducing contribution profit?</h2>
+              <h2 className="panel-title">Business Impact Analysis</h2>
             </div>
           </div>
 
-          {profitLossDrivers.length > 0 ? (
+          {businessDrivers.length > 0 ? (
             <div
               style={{
                 display: "grid",
@@ -367,44 +380,30 @@ export default function ProfitIntelligencePage() {
                 marginTop: 24,
               }}
             >
-              {profitLossDrivers.map((driver) => (
+              {businessDrivers.map((driver) => (
                 <div
-                  key={driver.label}
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 24,
-                    padding: 18,
-                    borderRadius: 18,
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,255,255,0.07)",
+                    textAlign: "right",
                   }}
                 >
-                  <div>
-                    <div style={{ fontWeight: 900, color: "#f3f4f6" }}>
-                      {driver.label}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 6,
-                        color: "rgba(255,255,255,0.58)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {driver.description}
-                    </div>
-                  </div>
-
                   <div
                     style={{
                       fontSize: 24,
                       fontWeight: 950,
                       color: "#ff6b4a",
-                      whiteSpace: "nowrap",
                     }}
                   >
                     {money(driver.value)}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 4,
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.55)",
+                    }}
+                  >
+                    {driver.impactPct.toFixed(1)}% impact
                   </div>
                 </div>
               ))}
