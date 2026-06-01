@@ -37,6 +37,10 @@ export const loader = async ({
 
 export default function ProfitIntelligencePage() {
   const { summary, trend, rows } = useLoaderData() as LoaderData;
+  const topDiscountProducts = [...rows]
+    .filter((row) => row.discounts > 0)
+    .sort((a, b) => b.discounts - a.discounts)
+    .slice(0, 5);
   const navigate = useNavigate();
 
   const totalRevenue = Math.max(summary.revenue, 1);
@@ -372,6 +376,7 @@ export default function ProfitIntelligencePage() {
             </div>
           </div>
 
+
           {businessDrivers.length > 0 ? (
             <div
               style={{
@@ -452,6 +457,62 @@ export default function ProfitIntelligencePage() {
             </div>
           )}
         </div>
+        
+        {topDiscountProducts.length > 0 && (
+          <div className="panel">
+            <div className="panel-header">
+              <div>
+                <div className="panel-eyebrow">DISCOUNT EXPOSURE</div>
+                <h2 className="panel-title">Products most affected by discounts</h2>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+              {topDiscountProducts.map((row) => (
+                <div
+                  key={row.productId || row.productTitle}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 24,
+                    padding: 18,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 900, color: "#f3f4f6" }}>
+                      {row.productTitle}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.58)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Discount absorbed by this product during the selected period.
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 950,
+                      color: "#f59e0b",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {money(row.discounts)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="panel">
           <div className="panel-header">

@@ -71,23 +71,33 @@ export async function loadMarginDashboardData({
           processedAt
 
           subtotalPriceSet {
-            shopMoney { amount }
+            shopMoney {
+              amount
+            }
           }
 
           totalDiscountsSet {
-            shopMoney { amount }
+            shopMoney {
+              amount
+            }
           }
 
           totalShippingPriceSet {
-            shopMoney { amount }
+            shopMoney {
+              amount
+            }
           }
 
           totalTaxSet {
-            shopMoney { amount }
+            shopMoney {
+              amount
+            }
           }
 
           totalRefundedSet {
-            shopMoney { amount }
+            shopMoney {
+              amount
+            }
           }
 
           lineItems(first: 250) {
@@ -96,15 +106,29 @@ export async function loadMarginDashboardData({
                 quantity
 
                 discountedTotalSet {
-                  shopMoney { amount }
+                  shopMoney {
+                    amount
+                  }
                 }
 
                 originalTotalSet {
-                  shopMoney { amount }
+                  shopMoney {
+                    amount
+                  }
+                }
+
+                discountAllocations {
+                  allocatedAmountSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
                 }
 
                 originalUnitPriceSet {
-                  shopMoney { amount }
+                  shopMoney {
+                    amount
+                  }
                 }
 
                 variant {
@@ -112,8 +136,11 @@ export async function loadMarginDashboardData({
                     id
                     title
                   }
+
                   inventoryItem {
-                    unitCost { amount }
+                    unitCost {
+                      amount
+                    }
                   }
                 }
               }
@@ -123,7 +150,11 @@ export async function loadMarginDashboardData({
       }
     }
   }`,
-    { variables: { q: queryString } },
+    {
+      variables: {
+        q: queryString,
+      },
+    },
   );
 
   const gql = await response.json();
@@ -182,6 +213,7 @@ export async function loadMarginDashboardData({
       qty: number;
       revenue: number;
       cogs: number;
+      discounts: number;
       missingCost: boolean;
     }
   > = {};
@@ -242,6 +274,16 @@ export async function loadMarginDashboardData({
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
+      const lineDiscounts = (
+        li?.node?.discountAllocations ?? []
+      ).reduce((acc: number, allocation: any) => {
+        return (
+          acc +
+          Number(
+            allocation?.allocatedAmountSet?.shopMoney?.amount ?? 0,
+          )
+        );
+      }, 0);
 
       const processedAt = o?.node?.processedAt ?? "";
       const day = processedAt.slice(0, 10);
@@ -264,6 +306,7 @@ export async function loadMarginDashboardData({
           revenue: 0,
           cogs: 0,
           missingCost: false,
+          discounts: 0,
         };
       }
 
@@ -274,6 +317,7 @@ export async function loadMarginDashboardData({
       byProduct[productTitle].qty += qty;
       byProduct[productTitle].revenue += lineRevenue;
       byProduct[productTitle].cogs += lineCogs;
+      byProduct[productTitle].discounts += lineDiscounts;
 
       totalRevenue += lineRevenue;
       totalCogs += lineCogs;
