@@ -5,7 +5,10 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import { type LoaderData } from "~/utils/margin";
+import {
+  type LoaderData,
+  money,
+} from "~/utils/margin";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
@@ -72,6 +75,23 @@ export default function ProfitIntelligencePage() {
   const profitDeteriorating = profitTrendPct < -5;
   const revenueGrowingWhileProfitFalls =
     revenueTrendPct > 5 && profitTrendPct < 0;
+  const profitLossDrivers = [
+    {
+      label: "Discounts",
+      value: summary.discounts,
+      description: "Revenue lost through discounts applied to orders.",
+    },
+    {
+      label: "Refunds",
+      value: summary.refunds,
+      description: "Revenue reversed through refunds.",
+    },
+    {
+      label: "Shipping",
+      value: summary.shipping,
+      description: "Shipping charges tracked at order level.",
+    },
+  ].filter((driver) => driver.value > 0);
 
   const sortedRevenueRows = [...rows].sort((a, b) => b.revenue - a.revenue);
 
@@ -331,6 +351,81 @@ export default function ProfitIntelligencePage() {
           profitPercentage={profitPercentage}
           leakPercentage={leakPercentage}
         />
+        <div className="panel">
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">PROFIT LOSS ATTRIBUTION</div>
+              <h2 className="panel-title">What is reducing contribution profit?</h2>
+            </div>
+          </div>
+
+          {profitLossDrivers.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gap: 16,
+                marginTop: 24,
+              }}
+            >
+              {profitLossDrivers.map((driver) => (
+                <div
+                  key={driver.label}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 24,
+                    padding: 18,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 900, color: "#f3f4f6" }}>
+                      {driver.label}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.58)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {driver.description}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 950,
+                      color: "#ff6b4a",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {money(driver.value)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                marginTop: 24,
+                padding: 22,
+                borderRadius: 18,
+                background: "rgba(255,255,255,0.035)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                color: "rgba(255,255,255,0.64)",
+                lineHeight: 1.6,
+              }}
+            >
+              No discounts, refunds or shipping impact were detected in the selected
+              period. Contribution profit currently matches product-level gross profit.
+            </div>
+          )}
+        </div>
 
         <div className="panel">
           <div className="panel-header">
