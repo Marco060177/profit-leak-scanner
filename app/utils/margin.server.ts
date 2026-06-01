@@ -100,6 +100,31 @@ export async function loadMarginDashboardData({
             }
           }
 
+          refunds {
+            refundLineItems(first: 100) {
+              edges {
+                node {
+                  quantity
+
+                  subtotalSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+
+                  lineItem {
+                    variant {
+                      product {
+                        id
+                        title
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           lineItems(first: 250) {
             edges {
               node {
@@ -214,6 +239,7 @@ export async function loadMarginDashboardData({
       revenue: number;
       cogs: number;
       discounts: number;
+      refunds: number;
       missingCost: boolean;
     }
   > = {};
@@ -247,6 +273,43 @@ export async function loadMarginDashboardData({
     totalRefunds += Number(
       order?.totalRefundedSet?.shopMoney?.amount ?? 0,
     );
+
+    const refundEdges =
+      order?.refunds?.flatMap((refund: any) => {
+        return refund?.refundLineItems?.edges ?? [];
+      }) ?? [];
+
+    for (const refundEdge of refundEdges) {
+      const refundNode = refundEdge?.node;
+
+      const refundProduct = refundNode?.lineItem?.variant?.product;
+
+      const refundProductTitle =
+        refundProduct?.title ?? "Unknown product";
+
+      const refundProductId =
+        refundProduct?.id ? extractNumericId(refundProduct.id) : "";
+
+      const refundAmount = Number(
+        refundNode?.subtotalSet?.shopMoney?.amount ?? 0,
+      );
+
+      if (!byProduct[refundProductTitle]) {
+        byProduct[refundProductTitle] = {
+          productId: refundProductId,
+          productTitle: refundProductTitle,
+          qty: 0,
+          revenue: 0,
+          cogs: 0,
+          discounts: 0,
+          refunds: 0,
+          missingCost: false,
+        };
+      }
+
+      byProduct[refundProductTitle].refunds += refundAmount;
+    }
+
     const items = order?.lineItems?.edges ?? [];
 
     for (const li of items) {
@@ -307,6 +370,7 @@ export async function loadMarginDashboardData({
           cogs: 0,
           missingCost: false,
           discounts: 0,
+          refunds: 0,
         };
       }
 

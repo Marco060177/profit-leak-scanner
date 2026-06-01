@@ -3,9 +3,20 @@ export type Summary = {
   cogs: number;
   profit: number;
   marginPct: number;
+
+  discounts: number;
+  shipping: number;
+  taxes: number;
+  refunds: number;
+
+  netRevenue: number;
+  contributionProfit: number;
+  contributionMarginPct: number;
+
   totalLeak: number;
   losingCount: number;
   missingCostCount: number;
+
   previousMarginPct: number;
   marginDelta: number;
   previousRevenue: number;
@@ -18,6 +29,8 @@ export type Row = {
   qty: number;
   revenue: number;
   cogs: number;
+  discounts: number;
+  refunds: number;
   profit: number;
   marginPct: number;
   losing: boolean;
