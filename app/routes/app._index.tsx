@@ -61,16 +61,7 @@ export const loader = async ({
 export default function DashboardV2() {
   const { summary, rows, trend, billingActive, period, shopHandle } =
     useLoaderData() as LoaderData;
-  console.log("MarginLab summary", {
-    revenue: summary.revenue,
-    discounts: summary.discounts,
-    shipping: summary.shipping,
-    taxes: summary.taxes,
-    refunds: summary.refunds,
-    netRevenue: summary.netRevenue,
-    contributionProfit: summary.contributionProfit,
-    contributionMarginPct: summary.contributionMarginPct,
-  });
+  
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
