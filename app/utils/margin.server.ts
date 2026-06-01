@@ -128,13 +128,7 @@ export async function loadMarginDashboardData({
 
   const gql = await response.json();
 
-  console.log(
-    JSON.stringify(
-      gql?.data?.orders?.edges?.[0]?.node,
-      null,
-      2,
-    ),
-  );
+  
 
   const previousResponse = await admin.graphql(
     `#graphql
