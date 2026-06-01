@@ -537,7 +537,7 @@ export async function loadMarginDashboardData({
       (row): row is Row & { productMarginDelta: number } =>
         row.productMarginDelta !== null,
     )
-    .filter((row) => row.productMarginDelta < 0)
+    .filter((row) => row.productMarginDelta < -3)
     .sort((a, b) => a.productMarginDelta - b.productMarginDelta)
     .slice(0, 5);
 
