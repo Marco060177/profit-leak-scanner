@@ -128,7 +128,7 @@ export async function loadMarginDashboardData({
 
   const gql = await response.json();
 
-  
+
 
   const previousResponse = await admin.graphql(
     `#graphql
@@ -189,11 +189,33 @@ export async function loadMarginDashboardData({
   let totalRevenue = 0;
   let totalCogs = 0;
 
+  let totalDiscounts = 0;
+  let totalShipping = 0;
+  let totalTaxes = 0;
+  let totalRefunds = 0;
+
   let previousRevenue = 0;
   let previousCogs = 0;
 
   for (const o of orderEdges) {
-    const items = o?.node?.lineItems?.edges ?? [];
+    const order = o?.node;
+
+    totalDiscounts += Number(
+      order?.totalDiscountsSet?.shopMoney?.amount ?? 0,
+    );
+
+    totalShipping += Number(
+      order?.totalShippingPriceSet?.shopMoney?.amount ?? 0,
+    );
+
+    totalTaxes += Number(
+      order?.totalTaxSet?.shopMoney?.amount ?? 0,
+    );
+
+    totalRefunds += Number(
+      order?.totalRefundedSet?.shopMoney?.amount ?? 0,
+    );
+    const items = order?.lineItems?.edges ?? [];
 
     for (const li of items) {
       const qty = Number(li?.node?.quantity ?? 0);
@@ -339,7 +361,18 @@ export async function loadMarginDashboardData({
     })
     .sort((a, b) => a.profit - b.profit);
 
+  const netRevenue = Math.max(
+    0,
+    totalRevenue - totalDiscounts - totalRefunds,
+  );
+
+  const contributionProfit =
+    netRevenue - totalCogs - totalShipping;
+
   const totalProfit = totalRevenue - totalCogs;
+
+  const contributionMarginPct =
+    netRevenue > 0 ? (contributionProfit / netRevenue) * 100 : 0;
   const previousProfit = previousRevenue - previousCogs;
 
   const previousMarginPct =
@@ -389,6 +422,13 @@ export async function loadMarginDashboardData({
       cogs: totalCogs,
       profit: totalProfit,
       marginPct,
+      discounts: totalDiscounts,
+      shipping: totalShipping,
+      taxes: totalTaxes,
+      refunds: totalRefunds,
+      netRevenue,
+      contributionProfit,
+      contributionMarginPct,
       totalLeak,
       losingCount,
       missingCostCount,
