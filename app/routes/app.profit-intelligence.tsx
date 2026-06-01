@@ -37,6 +37,18 @@ export const loader = async ({
 
 export default function ProfitIntelligencePage() {
   const { summary, trend, rows, marginDeterioration } = useLoaderData() as LoaderData;
+  alert(
+  JSON.stringify(
+    rows.slice(0, 3).map((r) => ({
+      product: r.productTitle,
+      prev: r.previousMarginPct,
+      current: r.marginPct,
+      delta: r.productMarginDelta,
+    })),
+    null,
+    2,
+  ),
+);
   const topDiscountProducts = [...rows]
     .filter((row) => row.discounts > 0)
     .sort((a, b) => b.discounts - a.discounts)
