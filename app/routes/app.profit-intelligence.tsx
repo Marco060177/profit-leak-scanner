@@ -367,8 +367,8 @@ export default function ProfitIntelligencePage() {
         <div className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">PROFIT LOSS ATTRIBUTION</div>
-              <h2 className="panel-title">Business Impact Analysis</h2>
+              <div className="panel-eyebrow">BUSINESS IMPACT ANALYSIS</div>
+              <h2 className="panel-title">Where is profit being eroded?</h2>
             </div>
           </div>
 
@@ -382,28 +382,55 @@ export default function ProfitIntelligencePage() {
             >
               {businessDrivers.map((driver) => (
                 <div
+                  key={driver.label}
                   style={{
-                    textAlign: "right",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 24,
+                    padding: 18,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 950,
-                      color: "#ff6b4a",
-                    }}
-                  >
-                    {money(driver.value)}
+                  <div>
+                    <div style={{ fontWeight: 900, color: "#f3f4f6" }}>
+                      {driver.label}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.58)",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {driver.description}
+                    </div>
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.55)",
-                    }}
-                  >
-                    {driver.impactPct.toFixed(1)}% impact
+                  <div style={{ textAlign: "right" }}>
+                    <div
+                      style={{
+                        fontSize: 24,
+                        fontWeight: 950,
+                        color: "#ff6b4a",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {money(driver.value)}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 4,
+                        fontSize: 12,
+                        color: "rgba(255,255,255,0.55)",
+                      }}
+                    >
+                      {driver.impactPct.toFixed(1)}% impact
+                    </div>
                   </div>
                 </div>
               ))}
