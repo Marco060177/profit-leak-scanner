@@ -7,6 +7,7 @@ import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+
 import {
   type LoaderData,
   type Row,
@@ -50,7 +51,6 @@ export default function ProductsPage() {
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
-
   const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
   const productRiskScore = (row: Row) => {
@@ -115,6 +115,7 @@ export default function ProductsPage() {
   const healthyProducts = rows.filter(
     (row) => !row.losing && !row.missingCost && !row.lowMargin,
   ).length;
+
   const totalProducts = Math.max(rows.length, 1);
 
   const criticalPct = (criticalProducts / totalProducts) * 100;
@@ -130,26 +131,30 @@ export default function ProductsPage() {
       ...row,
       marginGap: targetMarginPct - row.marginPct,
       riskValue: row.revenue * ((targetMarginPct - row.marginPct) / 100),
+      riskLevel:
+        row.marginPct < 0
+          ? "Critical"
+          : row.marginPct < 10
+            ? "High"
+            : "Medium",
     }))
     .sort((a, b) => b.riskValue - a.riskValue)
     .slice(0, 5);
+
   const totalRevenueAtRisk = revenueAtRisk.reduce(
     (sum, product) => sum + product.revenue,
-    0
+    0,
   );
 
   const totalRevenueAtRiskOpportunity = revenueAtRisk.reduce(
     (sum, product) => sum + product.riskValue,
-    0
+    0,
   );
 
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <DashboardNav
-          active="products"
-          navigate={navigate}
-        />
+        <DashboardNav active="products" navigate={navigate} />
 
         <div className="hero-header">
           <div>
@@ -201,7 +206,12 @@ export default function ProductsPage() {
                   marginTop: 18,
                   fontSize: 24,
                   fontWeight: 900,
-                  color: criticalProducts > 0 ? "#ff6b4a" : highProducts > 0 ? "#f59e0b" : "#22c55e",
+                  color:
+                    criticalProducts > 0
+                      ? "#ff6b4a"
+                      : highProducts > 0
+                        ? "#f59e0b"
+                        : "#22c55e",
                 }}
               >
                 {criticalProducts > 0
@@ -220,8 +230,8 @@ export default function ProductsPage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab ranks products by real margin risk, missing cost data and
-                recoverable pricing opportunities.
+                MarginLab ranks products by real margin risk, missing cost data
+                and recoverable pricing opportunities.
               </p>
 
               <div
@@ -325,9 +335,11 @@ export default function ProductsPage() {
                         position: "absolute",
                         inset: -16,
                         borderRadius: "50%",
-                        background: `conic-gradient(${productScoreColor} ${productScore * 3.6
-                          }deg, transparent 0deg)`,
-                        mask: "radial-gradient(circle, transparent 58%, black 59%)",
+                        background: `conic-gradient(${productScoreColor} ${
+                          productScore * 3.6
+                        }deg, transparent 0deg)`,
+                        mask:
+                          "radial-gradient(circle, transparent 58%, black 59%)",
                         WebkitMask:
                           "radial-gradient(circle, transparent 58%, black 59%)",
                       }}
@@ -364,12 +376,8 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
-        <div
-          className="panel"
-          style={{
-            marginBottom: 24,
-          }}
-        >
+
+        <div className="panel" style={{ marginBottom: 24 }}>
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">PRODUCT RISK DISTRIBUTION</div>
@@ -472,13 +480,17 @@ export default function ProductsPage() {
             ))}
           </div>
         </div>
+
         <div className="panel" style={{ marginBottom: 24 }}>
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">REVENUE AT RISK</div>
               <h2 className="panel-title">High revenue, low margin products</h2>
+
               <p className="panel-subtitle">
-                ${totalRevenueAtRisk.toFixed(0)} in revenue is currently operating below the 20% target margin, with an estimated ${totalRevenueAtRiskOpportunity.toFixed(0)} margin opportunity.
+                ${totalRevenueAtRisk.toFixed(0)} in revenue is currently
+                operating below the 20% target margin, with an estimated $
+                {totalRevenueAtRiskOpportunity.toFixed(0)} margin opportunity.
               </p>
             </div>
           </div>
@@ -513,6 +525,33 @@ export default function ProductsPage() {
                     }}
                   >
                     {product.productTitle}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 12,
+                      display: "inline-flex",
+                      padding: "6px 10px",
+                      borderRadius: 999,
+                      background:
+                        product.riskLevel === "Critical"
+                          ? "rgba(239,68,68,0.14)"
+                          : product.riskLevel === "High"
+                            ? "rgba(249,115,22,0.14)"
+                            : "rgba(234,179,8,0.14)",
+                      color:
+                        product.riskLevel === "Critical"
+                          ? "#ff6b6b"
+                          : product.riskLevel === "High"
+                            ? "#ff8a4c"
+                            : "#facc15",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {product.riskLevel}
                   </div>
 
                   <div
@@ -602,6 +641,7 @@ export default function ProductsPage() {
             )}
           </div>
         </div>
+
         <div
           style={{
             display: "flex",
@@ -609,23 +649,23 @@ export default function ProductsPage() {
             gap: 10,
             marginBottom: 16,
           }}
-
         >
-
-
           {[10, 20, 50].map((limit) => (
             <button
               key={limit}
               type="button"
-              className={visibleLimit === limit ? "table-filter-btn active" : "table-filter-btn"}
+              className={
+                visibleLimit === limit
+                  ? "table-filter-btn active"
+                  : "table-filter-btn"
+              }
               onClick={() => setVisibleLimit(limit as 10 | 20 | 50)}
             >
               Show {limit}
             </button>
           ))}
-
-
         </div>
+
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
           onlyLosing={onlyLosing}
@@ -637,6 +677,6 @@ export default function ProductsPage() {
           shopHandle={shopHandle}
         />
       </div>
-    </div >
+    </div>
   );
 }
