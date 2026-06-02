@@ -335,9 +335,8 @@ export default function ProductsPage() {
                         position: "absolute",
                         inset: -16,
                         borderRadius: "50%",
-                        background: `conic-gradient(${productScoreColor} ${
-                          productScore * 3.6
-                        }deg, transparent 0deg)`,
+                        background: `conic-gradient(${productScoreColor} ${productScore * 3.6
+                          }deg, transparent 0deg)`,
                         mask:
                           "radial-gradient(circle, transparent 58%, black 59%)",
                         WebkitMask:
@@ -498,7 +497,7 @@ export default function ProductsPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
               gap: 14,
               marginTop: 24,
             }}
@@ -509,10 +508,11 @@ export default function ProductsPage() {
                   key={product.productId}
                   style={{
                     borderRadius: 20,
-                    padding: 18,
+                    padding: 24,
                     background:
-                      "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
-                    border: "1px solid rgba(255,255,255,0.07)",
+                      "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 35%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
+
+                    border: "1px solid rgba(255,115,60,0.18)",
                   }}
                 >
                   <div
@@ -521,7 +521,7 @@ export default function ProductsPage() {
                       fontWeight: 900,
                       color: "#f3f4f6",
                       lineHeight: 1.35,
-                      minHeight: 36,
+                      minHeight: 48,
                     }}
                   >
                     {product.productTitle}
@@ -570,7 +570,7 @@ export default function ProductsPage() {
                   <div
                     style={{
                       marginTop: 6,
-                      fontSize: 24,
+                      fontSize: 30,
                       fontWeight: 950,
                       color: "#f3f4f6",
                     }}
