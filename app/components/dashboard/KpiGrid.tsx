@@ -38,16 +38,15 @@ export default function KpiGrid({
                 width: 30,
                 height: 30,
                 borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: "grid",
+                placeItems: "center",
                 background: "rgba(255,115,60,0.10)",
                 border: "1px solid rgba(255,115,60,0.22)",
+                boxShadow: "none",
                 color: "#ff733c",
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 900,
                 lineHeight: 1,
-                boxShadow: "none",
               }}
             >
               {item.icon}
