@@ -42,7 +42,7 @@ export default function KpiGrid({
                 alignItems: "center",
                 justifyContent: "center",
                 background: "rgba(255,115,60,0.08)",
-                border: "1px solid rgba(255,115,60,0.18)",
+                border: "none",
                 color: "#ff733c",
                 fontSize: 14,
                 fontWeight: 900,
