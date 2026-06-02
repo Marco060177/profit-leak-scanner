@@ -61,7 +61,7 @@ export const loader = async ({
 export default function DashboardV2() {
   const { summary, rows, trend, billingActive, period, shopHandle } =
     useLoaderData() as LoaderData;
-  
+
 
   const navigate = useNavigate();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
@@ -115,6 +115,8 @@ export default function DashboardV2() {
       refunds: 0,
       profit: 420,
       marginPct: 5,
+      previousMarginPct: null,
+      productMarginDelta: null,
       losing: false,
       lowMargin: true,
       avgPrice: 68,
@@ -135,6 +137,8 @@ export default function DashboardV2() {
       refunds: 0,
       profit: -4280,
       marginPct: -19.8,
+      previousMarginPct: null,
+      productMarginDelta: null,
       losing: true,
       lowMargin: false,
       avgPrice: 36,
@@ -155,6 +159,8 @@ export default function DashboardV2() {
       refunds: 0,
       profit: 2780,
       marginPct: 40.3,
+      previousMarginPct: null,
+      productMarginDelta: null,
       losing: false,
       lowMargin: false,
       avgPrice: 164,
@@ -175,6 +181,8 @@ export default function DashboardV2() {
       refunds: 0,
       profit: 3360,
       marginPct: 27.3,
+      previousMarginPct: null,
+      productMarginDelta: null,
       losing: false,
       lowMargin: false,
       avgPrice: 212,
@@ -855,6 +863,7 @@ export default function DashboardV2() {
               ),
             ),
             note: `Last ${period} days`,
+            icon: "$",
             tone: "positive",
           },
           {
@@ -867,6 +876,7 @@ export default function DashboardV2() {
                 row.missingCost,
             ).length
               } at risk`,
+            icon: "◈",
             tone: "warning",
           },
           {
@@ -875,6 +885,7 @@ export default function DashboardV2() {
               sourceRows.filter((row) => row.lowMargin).length,
             ),
             note: "Below 10%",
+            icon: "↓",
             tone: "warning",
           },
           {
@@ -883,6 +894,7 @@ export default function DashboardV2() {
               sourceRows.filter((row) => row.missingCost).length,
             ),
             note: "Fix required",
+            icon: "⚠",
             tone: "danger",
           },
         ]}

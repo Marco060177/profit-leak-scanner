@@ -2,6 +2,7 @@ type Kpi = {
   label: string;
   value: string;
   note: string;
+  icon?: string;
   tone?: "positive" | "warning" | "danger";
 };
 
@@ -28,6 +29,29 @@ export default function KpiGrid({
           key={item.label}
           className="kpi-card"
         >
+          {item.icon && (
+            <div
+              style={{
+                position: "absolute",
+                top: 22,
+                right: 22,
+                width: 30,
+                height: 30,
+                borderRadius: 999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255,115,60,0.08)",
+                border: "1px solid rgba(255,115,60,0.18)",
+                color: "#ff733c",
+                fontSize: 14,
+                fontWeight: 900,
+              }}
+            >
+              {item.icon}
+            </div>
+          )}
+
           <div className="kpi-label">
             {item.label}
           </div>
