@@ -913,6 +913,7 @@ export default function DashboardV2() {
                 Math.abs(worstProduct.profit),
               )} estimated loss`
               : "No issues detected",
+            icon: "↓",
             tone: "danger",
           },
           {
@@ -925,12 +926,14 @@ export default function DashboardV2() {
                 ? "Missing cost data"
                 : `${pct(bestProduct.marginPct)} margin`
               : "No products available",
+            icon: "↑",
             tone: "positive",
           },
           {
             label: "Recoverable Profit",
             value: money(recoverableProfit),
             note: "Potential margin recovery",
+            icon: "+",
             tone: "warning",
           },
           {
@@ -944,6 +947,7 @@ export default function DashboardV2() {
                 : 0,
             ),
             note: "Across analyzed products",
+            icon: "%",
             tone: "positive",
           },
         ]}
