@@ -33,22 +33,24 @@ export default function KpiGrid({
             <div
               style={{
                 position: "absolute",
-                top: 22,
-                right: 22,
-                width: 30,
-                height: 30,
+                top: 26,
+                right: 26,
+                width: 28,
+                height: 28,
                 borderRadius: 999,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(255,115,60,0.08)",
-                border: "none",
+                background: "rgba(255,115,60,0.10)",
                 color: "#ff733c",
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 900,
+                lineHeight: 1,
               }}
             >
-              {item.icon}
+              <span style={{ transform: "translateY(-1px)" }}>
+                {item.icon}
+              </span>
             </div>
           )}
 
