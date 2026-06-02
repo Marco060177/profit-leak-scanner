@@ -844,6 +844,7 @@ export default function DashboardV2() {
               money(sourceRows.reduce((acc, row) => acc + row.revenue, 0)),
               `Last ${period} days`,
               "positive",
+              "$",
             ],
 
             [
@@ -851,9 +852,9 @@ export default function DashboardV2() {
               String(sourceRows.length),
               `${sourceRows.filter(
                 (row) => row.losing || row.lowMargin || row.missingCost,
-              ).length
-              } at risk`,
+              ).length} at risk`,
               "warning",
+              "□",
             ],
 
             [
@@ -861,6 +862,7 @@ export default function DashboardV2() {
               String(sourceRows.filter((row) => row.lowMargin).length),
               "Below 10%",
               "warning",
+              "!",
             ],
 
             [
@@ -868,8 +870,9 @@ export default function DashboardV2() {
               String(sourceRows.filter((row) => row.missingCost).length),
               "Fix required",
               "danger",
+              "⚠",
             ],
-          ].map(([label, value, note, tone]) => (
+          ].map(([label, value, note, tone, icon]) => (
             <div key={label} className="kpi-card">
               <div className="kpi-label">{label}</div>
 
@@ -894,6 +897,26 @@ export default function DashboardV2() {
 
         <div className="kpi-grid" style={{ marginBottom: 24 }}>
           <div className="kpi-card">
+            <div
+              style={{
+                position: "absolute",
+                top: 22,
+                right: 22,
+                width: 26,
+                height: 26,
+                borderRadius: 999,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255,115,60,0.08)",
+                border: "1px solid rgba(255,115,60,0.16)",
+                color: "#ff733c",
+                fontSize: 12,
+                fontWeight: 900,
+              }}
+            >
+              
+            </div>
             <div className="kpi-label">Biggest Profit Leak</div>
 
             <div className="kpi-value" style={{ fontSize: 24 }}>

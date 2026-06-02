@@ -1877,18 +1877,7 @@ table {
   overflow: hidden;
 }
 
-.kpi-card::after {
-  content: "";
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background: rgba(var(--ml-orange), 0.08);
-  border: 1px solid rgba(var(--ml-orange), 0.16);
-  opacity: 0.8;
-}
+
 
 .kpi-card:hover {
   transform: translateY(-2px);

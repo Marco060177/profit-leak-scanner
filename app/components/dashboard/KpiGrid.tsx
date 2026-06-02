@@ -33,8 +33,8 @@ export default function KpiGrid({
             <div
               style={{
                 position: "absolute",
-                top: 26,
-                right: 26,
+                top: 27,
+                right: 27,
                 color: "#ff733c",
                 fontSize: 18,
                 fontWeight: 900,
