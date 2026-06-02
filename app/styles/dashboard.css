@@ -1611,3 +1611,408 @@ table {
     font-size: 23px;
   }
 }
+
+/* ==========================================================
+   MARGINLAB DASHBOARD — FINAL V1 PREMIUM PASS
+   Visual-only overrides. No business logic affected.
+   Paste-safe: this file can replace dashboard.css as a whole.
+   ========================================================== */
+
+:root {
+  --ml-bg: #05070b;
+  --ml-bg-2: #080d15;
+  --ml-surface: rgba(12, 18, 30, 0.98);
+  --ml-surface-2: rgba(7, 12, 22, 0.98);
+  --ml-orange: 255, 115, 60;
+  --ml-orange-soft: rgba(255, 115, 60, 0.18);
+  --ml-orange-mid: rgba(255, 115, 60, 0.22);
+  --ml-orange-strong: rgba(255, 115, 60, 0.30);
+  --ml-text: #f8fafc;
+  --ml-muted: rgba(226, 232, 240, 0.72);
+  --ml-muted-2: rgba(226, 232, 240, 0.55);
+}
+
+.dashboard-shell {
+  background:
+    radial-gradient(circle at 12% 4%, rgba(var(--ml-orange), 0.075), transparent 26%),
+    radial-gradient(circle at 90% 24%, rgba(59, 130, 246, 0.045), transparent 26%),
+    radial-gradient(circle at 50% 100%, rgba(var(--ml-orange), 0.035), transparent 28%),
+    linear-gradient(180deg, #03050a 0%, #070c14 48%, #05070b 100%);
+}
+
+.navbar,
+.score-card,
+.panel,
+.kpi-card,
+.ai-panel,
+.ai-card,
+.ai-insight-card,
+.insight-panel,
+.risk-block,
+.breakdown-row,
+.chart-card,
+.mobile-product-card {
+  background:
+    radial-gradient(circle at top left, rgba(var(--ml-orange), 0.055), transparent 34%),
+    linear-gradient(135deg, rgba(17, 24, 39, 0.985), rgba(5, 10, 20, 0.99));
+  border: 1px solid var(--ml-orange-soft);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 22px 58px rgba(0, 0, 0, 0.28);
+}
+
+.score-card,
+.ai-insight-card,
+.insight-panel,
+.panel {
+  border-color: var(--ml-orange-mid);
+}
+
+.nav-tab.active,
+.period-tab.active,
+.table-filter-btn.active {
+  border-color: rgba(var(--ml-orange), 0.34);
+  background: rgba(var(--ml-orange), 0.15);
+}
+
+/* HERO SCORE V2 */
+.score-card {
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  align-items: stretch;
+  padding: 36px;
+  min-height: 315px;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(var(--ml-orange), 0.11), transparent 36%),
+    radial-gradient(circle at 82% 45%, rgba(var(--ml-orange), 0.075), transparent 30%),
+    linear-gradient(135deg, rgba(17, 24, 39, 0.99), rgba(5, 10, 20, 0.99));
+}
+
+.score-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.section-eyebrow {
+  color: rgba(226, 232, 240, 0.64);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.score-number {
+  font-size: 86px;
+  line-height: 0.9;
+  margin-top: 18px;
+  letter-spacing: -3px;
+}
+
+.score-number span {
+  font-size: 30px;
+  color: rgba(226, 232, 240, 0.50);
+}
+
+.score-risk {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: #ff8a6b;
+  background: rgba(var(--ml-orange), 0.10);
+  border: 1px solid rgba(var(--ml-orange), 0.22);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.score-copy {
+  max-width: 620px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.score-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(var(--ml-orange), 0.18);
+}
+
+.score-mini-card {
+  min-width: 0;
+  padding-right: 22px;
+}
+
+.score-mini-card + .score-mini-card {
+  padding-left: 22px;
+  border-left: 1px solid rgba(var(--ml-orange), 0.14);
+}
+
+.score-mini-card div {
+  color: rgba(226, 232, 240, 0.56);
+  font-size: 11px;
+}
+
+.score-mini-card strong {
+  font-size: 30px;
+  color: #ffffff;
+}
+
+.gauge-card {
+  border-radius: 24px;
+  border-color: rgba(var(--ml-orange), 0.24);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--ml-orange), 0.13), transparent 40%),
+    linear-gradient(180deg, rgba(12, 18, 30, 0.96), rgba(5, 9, 17, 0.99));
+}
+
+.gauge {
+  width: 205px;
+  height: 205px;
+}
+
+.gauge-center div {
+  font-size: 48px;
+}
+
+.gauge-copy {
+  max-width: 330px;
+  color: rgba(226, 232, 240, 0.68);
+}
+
+/* OPERATIONAL INSIGHTS */
+.ai-insights-center {
+  margin-top: 30px;
+}
+
+.ai-insights-header h2 {
+  font-size: 34px;
+  letter-spacing: -0.9px;
+}
+
+.ai-insights-header p {
+  color: rgba(226, 232, 240, 0.76);
+}
+
+.ai-insights-grid {
+  gap: 20px;
+}
+
+.ai-insight-card {
+  padding: 28px;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 26px;
+}
+
+.ai-insight-card.danger,
+.ai-insight-card.warning,
+.ai-insight-card.recovery {
+  border-color: rgba(var(--ml-orange), 0.26);
+}
+
+.ai-card-top {
+  margin-bottom: 18px;
+}
+
+.ai-card-top span {
+  color: rgba(147, 197, 253, 0.8);
+  font-weight: 700;
+}
+
+.ai-card-top strong {
+  color: #ff9a70;
+  font-weight: 950;
+}
+
+.ai-insight-card h3 {
+  font-size: 22px;
+  line-height: 1.22;
+  margin-bottom: 14px;
+}
+
+.ai-insight-card p {
+  color: rgba(226, 232, 240, 0.74);
+  line-height: 1.62;
+  font-size: 14px;
+}
+
+.ai-recommendation-box {
+  margin-top: auto;
+  margin-bottom: 20px;
+  background:
+    linear-gradient(180deg, rgba(13, 19, 31, 0.92), rgba(7, 12, 22, 0.92));
+  border: 1px solid rgba(var(--ml-orange), 0.16);
+}
+
+.ai-recommendation-label {
+  color: #ff9a70;
+}
+
+.ai-insight-card button {
+  width: fit-content;
+  padding: 12px 17px;
+  border-radius: 14px;
+  background: rgba(var(--ml-orange), 0.13);
+  border-color: rgba(var(--ml-orange), 0.30);
+  color: #ff9a70;
+  font-weight: 900;
+}
+
+/* KPI GRID FINAL */
+.kpi-grid {
+  gap: 20px;
+}
+
+.kpi-card {
+  position: relative;
+  min-height: 136px;
+  padding: 26px;
+  border-color: rgba(var(--ml-orange), 0.20);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.kpi-card::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(var(--ml-orange), 0.08);
+  border: 1px solid rgba(var(--ml-orange), 0.16);
+  opacity: 0.8;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(var(--ml-orange), 0.30);
+}
+
+.kpi-label {
+  color: rgba(226, 232, 240, 0.60);
+  font-size: 11px;
+  letter-spacing: 0.13em;
+}
+
+.kpi-value {
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.kpi-note {
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+/* PROFIT TREND CONSISTENCY */
+.panel .chart-svg {
+  overflow: visible;
+}
+
+.panel .section-header [style*="Daily"] {
+  display: none;
+}
+
+/* RECOVERY OPPORTUNITY stays green but receives premium sizing */
+.insight-panel[style*="34,197,94"],
+.insight-panel[style*="34, 197, 94"] {
+  min-height: 340px;
+  border-color: rgba(34, 197, 94, 0.28) !important;
+}
+
+/* TOP PROFIT LEAKS */
+.leak-row {
+  min-height: 78px;
+  padding: 20px 0;
+  border-top: 1px solid rgba(var(--ml-orange), 0.14);
+  transition: all 0.18s ease;
+}
+
+.leak-row:hover {
+  background: rgba(var(--ml-orange), 0.035);
+  border-radius: 16px;
+  padding-left: 12px;
+  padding-right: 12px;
+  transform: translateY(-1px);
+}
+
+.leak-icon,
+.product-icon {
+  border-color: rgba(var(--ml-orange), 0.20);
+  background:
+    radial-gradient(circle at center, rgba(var(--ml-orange), 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(7, 12, 22, 0.98));
+}
+
+.leak-title {
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.leak-subtitle {
+  color: rgba(226, 232, 240, 0.62);
+}
+
+.severity-pill {
+  border: 1px solid rgba(var(--ml-orange), 0.22);
+}
+
+.leak-loss div {
+  font-size: 18px;
+}
+
+/* Buttons */
+.primary-button,
+.empty-button {
+  box-shadow: 0 18px 42px rgba(255, 90, 54, 0.24);
+}
+
+.secondary-orange-button,
+.secondary-button,
+.table-filter-btn,
+.apply-button {
+  border-color: rgba(var(--ml-orange), 0.22);
+}
+
+/* Mobile polish */
+@media (max-width: 900px) {
+  .score-card {
+    grid-template-columns: 1fr;
+  }
+
+  .score-mini-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .score-mini-card + .score-mini-card {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .ai-insight-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .score-number {
+    font-size: 66px;
+  }
+
+  .kpi-card {
+    min-height: 120px;
+  }
+
+  .kpi-value {
+    font-size: 32px;
+  }
+}
