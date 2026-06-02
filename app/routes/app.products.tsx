@@ -497,7 +497,7 @@ export default function ProductsPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
               gap: 14,
               marginTop: 24,
             }}
@@ -508,7 +508,7 @@ export default function ProductsPage() {
                   key={product.productId}
                   style={{
                     borderRadius: 20,
-                    padding: 24,
+                    padding: 22,
                     background:
                       "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 35%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
 
@@ -521,7 +521,7 @@ export default function ProductsPage() {
                       fontWeight: 900,
                       color: "#f3f4f6",
                       lineHeight: 1.35,
-                      minHeight: 48,
+                      minHeight: 34,
                     }}
                   >
                     {product.productTitle}
@@ -570,7 +570,7 @@ export default function ProductsPage() {
                   <div
                     style={{
                       marginTop: 6,
-                      fontSize: 30,
+                      fontSize: 28,
                       fontWeight: 950,
                       color: "#f3f4f6",
                     }}
