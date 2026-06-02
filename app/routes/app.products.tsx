@@ -240,7 +240,7 @@ export default function ProductsPage() {
                   paddingTop: 22,
                   borderTop: "1px solid rgba(255,255,255,0.08)",
                   display: "grid",
-                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
                   gap: 18,
                 }}
               >
@@ -416,7 +416,7 @@ export default function ProductsPage() {
                 key={item.label}
                 style={{
                   borderRadius: 22,
-                  padding: 22,
+                  padding: 18,
                   background:
                     "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
                   border: "1px solid rgba(255,255,255,0.07)",
@@ -570,7 +570,7 @@ export default function ProductsPage() {
                   <div
                     style={{
                       marginTop: 6,
-                      fontSize: 28,
+                      fontSize: 24,
                       fontWeight: 950,
                       color: "#f3f4f6",
                     }}
