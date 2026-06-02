@@ -33,30 +33,24 @@ export default function KpiGrid({
             <div
               style={{
                 position: "absolute",
-                top: 22,
-                right: 22,
-                width: 38,
-                height: 38,
+                top: 24,
+                right: 24,
+                width: 30,
+                height: 30,
                 borderRadius: "50%",
-                display: "grid",
-                placeItems: "center",
-                background: "rgba(255,115,60,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255,115,60,0.10)",
                 border: "1px solid rgba(255,115,60,0.22)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.04)",
+                color: "#ff733c",
+                fontSize: 16,
+                fontWeight: 900,
+                lineHeight: 1,
+                boxShadow: "none",
               }}
             >
-              <span
-                style={{
-                  color: "#ff733c",
-                  fontSize: 18,
-                  fontWeight: 800,
-                  lineHeight: 1,
-                  display: "block",
-                }}
-              >
-                {item.icon}
-              </span>
+              {item.icon}
             </div>
           )}
 
