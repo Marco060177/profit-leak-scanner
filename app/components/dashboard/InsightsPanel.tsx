@@ -26,7 +26,7 @@ export default function InsightsPanel({ insights }: Props) {
                 padding: 42,
                 minHeight: 300,
                 display: "grid",
-                gridTemplateColumns: "1.35fr 0.65fr",
+                gridTemplateColumns: "1.5fr 0.5fr",
                 gap: 38,
                 alignItems: "center",
                 background:
@@ -78,10 +78,10 @@ export default function InsightsPanel({ insights }: Props) {
 
                 <div
                   style={{
-                    maxWidth: 620,
+                    maxWidth: 720,
                     color: "#f8fafc",
-                    fontSize: 38,
-                    lineHeight: 1.08,
+                    fontSize: 34,
+                    lineHeight: 1.16,
                     fontWeight: 950,
                     letterSpacing: "-0.04em",
                   }}
