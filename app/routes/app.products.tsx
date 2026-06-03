@@ -398,50 +398,74 @@ export default function ProductsPage() {
                 count: criticalProducts,
                 pct: criticalPct,
                 color: "#ff6b4a",
+                description: "Products with negative or severely weak margins.",
               },
               {
                 label: "High",
                 count: highProducts,
                 pct: highPct,
                 color: "#f59e0b",
+                description: "Products requiring pricing or cost review.",
               },
               {
                 label: "Healthy",
                 count: healthyProducts,
                 pct: healthyPct,
                 color: "#22c55e",
+                description: "Products currently operating within healthy margins.",
               },
             ].map((item) => (
               <div
                 key={item.label}
                 style={{
-                  borderRadius: 22,
-                  padding: 18,
+                  borderRadius: 24,
+                  padding: 24,
                   background:
-                    "linear-gradient(180deg, rgba(16,22,35,0.96), rgba(9,13,22,0.96))",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  boxShadow: "0 18px 46px rgba(0,0,0,0.32)",
+                    "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 36%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
+                  border: "1px solid rgba(255,115,60,0.18)",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(255,255,255,0.035), 0 22px 55px rgba(0,0,0,0.30)",
                 }}
               >
                 <div
                   style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.48)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 14,
                   }}
                 >
-                  {item.label}
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.54)",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: item.color,
+                      boxShadow: `0 0 18px ${item.color}66`,
+                    }}
+                  />
                 </div>
 
                 <div
                   style={{
-                    marginTop: 14,
-                    fontSize: 42,
+                    marginTop: 18,
+                    fontSize: 52,
                     fontWeight: 950,
                     lineHeight: 1,
                     color: item.color,
+                    letterSpacing: "-0.04em",
                   }}
                 >
                   {item.count}
@@ -449,9 +473,9 @@ export default function ProductsPage() {
 
                 <div
                   style={{
-                    marginTop: 8,
-                    color: "rgba(255,255,255,0.58)",
-                    fontWeight: 800,
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.64)",
+                    fontWeight: 850,
                   }}
                 >
                   {item.pct.toFixed(1)}% of catalog
@@ -459,11 +483,23 @@ export default function ProductsPage() {
 
                 <div
                   style={{
-                    height: 8,
+                    marginTop: 10,
+                    minHeight: 42,
+                    color: "rgba(255,255,255,0.48)",
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {item.description}
+                </div>
+
+                <div
+                  style={{
+                    height: 9,
                     borderRadius: 999,
                     background: "rgba(255,255,255,0.07)",
                     overflow: "hidden",
-                    marginTop: 18,
+                    marginTop: 20,
                   }}
                 >
                   <div
@@ -472,6 +508,7 @@ export default function ProductsPage() {
                       height: "100%",
                       borderRadius: 999,
                       background: item.color,
+                      boxShadow: `0 0 18px ${item.color}55`,
                     }}
                   />
                 </div>
