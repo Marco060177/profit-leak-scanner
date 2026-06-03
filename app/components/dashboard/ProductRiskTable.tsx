@@ -254,7 +254,7 @@ export default function ProductRiskTable({
                         style={{
                           color: row.profit < 0 ? "#ff6b4a" : "#22c55e",
                           fontWeight: 950,
-                          fontSize: 24,
+                          fontSize: 26,
                           letterSpacing: "-0.03em",
                           whiteSpace: "nowrap",
                         }}
