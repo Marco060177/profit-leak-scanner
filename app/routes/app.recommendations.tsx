@@ -51,6 +51,9 @@ export default function RecommendationsPage() {
 
   const visualLeak = Math.max(summary.totalLeak, 0);
 
+  const totalDiscounts = summary.discounts || 0;
+  const totalRefunds = summary.refunds || 0;
+
   const priorityActions = [
     losingProducts.length > 0
       ? {
@@ -75,6 +78,32 @@ export default function RecommendationsPage() {
         actionLabel: "Update costs",
         actionLink: "/app/products",
         color: "#f59e0b",
+      }
+      : null,
+
+    totalDiscounts > 0
+      ? {
+        priority: "High",
+        title: "Review discount impact on profitability",
+        impact: `${money(totalDiscounts)} discounted revenue`,
+        description:
+          "Discount activity is reducing realized margin. Verify that promotional campaigns are generating enough incremental revenue to justify margin erosion.",
+        actionLabel: "Review discounts",
+        actionLink: "/app/profit-intelligence",
+        color: "#f59e0b",
+      }
+      : null,
+
+    totalRefunds > 0
+      ? {
+        priority: "High",
+        title: "Investigate refunded revenue",
+        impact: `${money(totalRefunds)} refunded revenue`,
+        description:
+          "Refunds directly reduce profitability and may indicate product quality, fulfillment or customer satisfaction issues.",
+        actionLabel: "Review refunds",
+        actionLink: "/app/profit-intelligence",
+        color: "#ff6b4a",
       }
       : null,
 
@@ -132,7 +161,7 @@ export default function RecommendationsPage() {
   const actionScoreColor =
     actionScore < 40 ? "#ff6b4a" : actionScore < 70 ? "#f59e0b" : "#22c55e";
 
-  
+
 
   return (
     <div className="dashboard-shell">
