@@ -136,7 +136,7 @@ export default function Billing() {
                   "Target price suggestions",
                   "Low-margin product detection",
                   "Missing cost alerts",
-                  "AI recommendations",
+                  "Action Center recommendations",
                   "CSV export",
                   "Shopify product deep links",
                 ].map((feature) => (
@@ -200,6 +200,8 @@ export default function Billing() {
                   "Multi-store support",
                   "Priority WhatsApp support",
                   "Advanced AI recommendations",
+                  "AI Margin Assistant",
+                  "Chat with your profitability data",
                 ].map((feature) => (
                   <div key={feature} style={styles.featureItem}>
                     <span style={styles.futureCheck}>↗</span>
