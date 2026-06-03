@@ -168,7 +168,18 @@ export default function ProductRiskTable({
                 "Risk Score",
                 "Risk",
               ].map((h) => (
-                <th key={h}>{h}</th>
+                <th
+                  key={h}
+                  style={{
+                    color: "rgba(255,255,255,0.55)",
+                    fontSize: 11,
+                    letterSpacing: "0.10em",
+                    textTransform: "uppercase",
+                    fontWeight: 900,
+                  }}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
@@ -183,14 +194,30 @@ export default function ProductRiskTable({
                   <tr
                     style={{
                       background:
-                        score >= 70
+                        score >= 84
                           ? "linear-gradient(90deg, rgba(255,107,74,0.08), transparent 42%)"
                           : undefined,
                     }}
                   >
                     <td>
                       <div className="product-name-cell">
-                        <div className="product-icon">📦</div>
+                        <div
+                          className="product-icon"
+                          style={{
+                            width: 42,
+                            height: 42,
+                            borderRadius: 12,
+                            background: "rgba(255,115,60,0.10)",
+                            border: "1px solid rgba(255,115,60,0.18)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#ff733c",
+                            fontWeight: 900,
+                          }}
+                        >
+                          P
+                        </div>
 
                         <div>
                           <div className="product-name">{row.productTitle}</div>
