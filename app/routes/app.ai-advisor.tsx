@@ -1,10 +1,60 @@
-import { useNavigate } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import { authenticate } from "~/shopify.server";
+import { loadMarginDashboardData } from "~/utils/margin.server";
+import type { LoaderData } from "~/utils/margin";
 import "~/styles/dashboard.css";
+
+export async function loader({ request }: { request: Request }) {
+    const { admin, session } = await authenticate.admin(request);
+
+    const url = new URL(request.url);
+    const period = url.searchParams.get("period") ?? "30";
+
+    return loadMarginDashboardData({
+        admin,
+        session,
+        period,
+    });
+}
 
 export default function AiAdvisorPage() {
     const navigate = useNavigate();
+    const { summary, rows } = useLoaderData() as LoaderData;
+
+    const losingProducts = rows.filter((row) => row.losing);
+    const missingCostProducts = rows.filter((row) => row.missingCost);
+    const lowMarginProducts = rows.filter((row) => row.lowMargin);
+
+    const topProfitLeak = [...rows].sort((a, b) => a.profit - b.profit)[0];
+
+    const recoverableProducts = rows.filter((row) => row.targetDelta > 0);
+    const recoverableProfit = recoverableProducts.reduce(
+        (sum, row) => sum + row.targetDelta * row.qty,
+        0,
+    );
+
+    const aiFindings = [
+        losingProducts.length > 0
+            ? `${losingProducts.length} products are currently selling below cost.`
+            : null,
+        missingCostProducts.length > 0
+            ? `${missingCostProducts.length} products are missing cost data.`
+            : null,
+        lowMarginProducts.length > 0
+            ? `${lowMarginProducts.length} products are operating below healthy margin.`
+            : null,
+        summary.discounts > 0
+            ? `Discounts reduced revenue by ${summary.discounts.toFixed(2)} during this period.`
+            : null,
+        summary.refunds > 0
+            ? `Refunds reduced net revenue by ${summary.refunds.toFixed(2)} during this period.`
+            : null,
+        recoverableProfit > 0
+            ? `MarginLab detected approximately ${recoverableProfit.toFixed(0)} in recoverable profit opportunities.`
+            : null,
+    ].filter(Boolean) as string[];
 
     return (
         <div className="dashboard-shell">
