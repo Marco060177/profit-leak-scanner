@@ -132,7 +132,7 @@ export default function AiAdvisorPage() {
                                     color: "#ff9a70",
                                 }}
                             >
-                                Example analysis
+                                AI Store Health Report
                             </div>
 
                             <div
@@ -145,8 +145,9 @@ export default function AiAdvisorPage() {
                                     letterSpacing: "-0.04em",
                                 }}
                             >
-                                Your margin is under pressure from discounts and weak product
-                                profitability.
+                                {topProfitLeak
+  ? `${topProfitLeak.productTitle} is currently the biggest profitability risk.`
+  : "MarginLab did not detect a critical product risk during this period."}
                             </div>
 
                             <div
@@ -156,12 +157,13 @@ export default function AiAdvisorPage() {
                                     gap: 14,
                                 }}
                             >
-                                {[
-                                    "3 products are operating below target margin.",
-                                    "Discount activity is reducing realized profit.",
-                                    "Refunds are lowering net revenue during this period.",
-                                    "Recoverable profit opportunities should be reviewed first.",
-                                ].map((text) => (
+                                {(aiFindings.length > 0
+                                    ? aiFindings
+                                    : [
+                                        "No critical margin issues detected during the selected period.",
+                                        "Product costs, discounts and refunds appear stable based on available data.",
+                                    ]
+                                ).map((text) => (
                                     <div
                                         key={text}
                                         style={{
