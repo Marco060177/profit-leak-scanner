@@ -58,47 +58,15 @@ export default function AiAdvisorPage() {
     ].filter(Boolean) as string[];
 
     const aiAnswers = {
-        profitRisk: [
-            topProfitLeak
-                ? `Your biggest current profit risk is ${topProfitLeak.productTitle}. MarginLab detected it as the product with the weakest profitability impact in the selected period.`
-                : "MarginLab did not detect a single dominant product risk during this period.",
+        profitRisk: topProfitLeak
+            ? `Your store is currently exposed to profitability risk because ${topProfitLeak.productTitle} has the strongest negative impact in the selected period. ${losingProducts.length} products are selling below cost, which means they generate revenue but reduce overall profit. MarginLab also detected approximately ${recoverableProfit.toFixed(0)} in recoverable profit opportunities if pricing gaps are reviewed.`
+            : `MarginLab did not detect a single dominant product risk during this period. Based on available cost and order data, your current profitability risk appears more distributed across the catalog.`,
 
-            losingProducts.length > 0
-                ? `${losingProducts.length} products are selling below cost, which means they directly reduce store profitability instead of contributing to it.`
-                : "No products are currently selling below cost based on available cost data.",
+        marginPressure: `Your margin is being affected by a combination of discounts, refunds and product-level profitability. Discounts reduced revenue by ${summary.discounts.toFixed(2)}, while refunds reduced net revenue by ${summary.refunds.toFixed(2)}. ${lowMarginProducts.length} products are operating below healthy margin levels, which can make revenue look acceptable while profit quality weakens.`,
 
-            recoverableProfit > 0
-                ? `There is approximately ${recoverableProfit.toFixed(0)} in potential recoverable profit if pricing gaps are reviewed.`
-                : "No major recoverable profit opportunity was detected during this period.",
-        ],
-
-        marginPressure: [
-            summary.discounts > 0
-                ? `Discounts reduced revenue by ${summary.discounts.toFixed(2)}. If discount campaigns are not increasing order volume enough, they may be silently eroding margin.`
-                : "Discount impact appears limited during this period.",
-
-            summary.refunds > 0
-                ? `Refunds reduced net revenue by ${summary.refunds.toFixed(2)}. Refund activity should be reviewed because it can hide product quality, fulfillment or expectation issues.`
-                : "Refund activity appears stable during this period.",
-
-            lowMarginProducts.length > 0
-                ? `${lowMarginProducts.length} products are operating below healthy margin levels. These products may look acceptable in revenue reports but still weaken profit quality.`
-                : "No major low-margin product group was detected.",
-        ],
-
-        priority: [
-            missingCostProducts.length > 0
-                ? `Start by fixing missing cost data for ${missingCostProducts.length} products. Without accurate costs, margin analysis and pricing recommendations become less reliable.`
-                : "Cost data appears complete enough for the selected period.",
-
-            topProfitLeak
-                ? `Then review ${topProfitLeak.productTitle}. It currently deserves priority because it has the strongest negative impact on profitability.`
-                : "No critical product requires immediate priority review.",
-
-            recoverableProfit > 0
-                ? "After cost accuracy and high-risk products are reviewed, focus on recoverable profit opportunities to improve margin without increasing order volume."
-                : "After checking cost accuracy, continue monitoring margins and refund trends before making pricing changes.",
-        ],
+        priority: missingCostProducts.length > 0
+            ? `Start by fixing missing cost data for ${missingCostProducts.length} products. Without accurate costs, MarginLab cannot fully trust margin calculations or pricing recommendations. After that, review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"} and focus on recoverable profit opportunities.`
+            : `Cost data appears complete enough for the selected period. The next priority is to review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"} and focus on recoverable profit opportunities before making broader pricing changes.`,
     };
 
     const [selectedQuestion, setSelectedQuestion] =
@@ -435,9 +403,9 @@ export default function AiAdvisorPage() {
                                         fontWeight: 700,
                                     }}
                                 >
-                                    {aiAnswers[selectedQuestion].map((answer) => (
-                                        <div key={answer}>• {answer}</div>
-                                    ))}
+                                    <div>
+                                        {aiAnswers[selectedQuestion]}
+                                    </div>
                                 </div>
                             </div>
 
