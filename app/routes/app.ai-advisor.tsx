@@ -67,10 +67,20 @@ export default function AiAdvisorPage() {
         priority: missingCostProducts.length > 0
             ? `Start by fixing missing cost data for ${missingCostProducts.length} products. Without accurate costs, MarginLab cannot fully trust margin calculations or pricing recommendations. After that, review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"} and focus on recoverable profit opportunities.`
             : `Cost data appears complete enough for the selected period. The next priority is to review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"} and focus on recoverable profit opportunities before making broader pricing changes.`,
+
+        fastestImprovement:
+            recoverableProfit > 0
+                ? `The fastest profit improvement would come from reviewing products with recoverable pricing opportunities. MarginLab estimates approximately ${recoverableProfit.toFixed(0)} in potential recoverable profit. Start with products selling below cost, then complete missing cost data, and only after that review pricing gaps.`
+                : `The fastest improvement right now is improving data accuracy. Start with missing cost data and high-risk products before making pricing changes.`,
     };
 
     const [selectedQuestion, setSelectedQuestion] =
-        React.useState<"profitRisk" | "marginPressure" | "priority">("profitRisk");
+        React.useState<
+            | "profitRisk"
+            | "marginPressure"
+            | "priority"
+            | "fastestImprovement"
+        >("profitRisk");
 
     const healthScore = Math.max(
         0,
@@ -336,6 +346,10 @@ export default function AiAdvisorPage() {
                                         id: "priority",
                                         label: "What should I check first?",
                                     },
+                                    {
+                                        id: "fastestImprovement",
+                                        label: "What would improve profit fastest?",
+                                    },
                                 ].map((question) => (
                                     <button
                                         key={question.id}
@@ -344,7 +358,8 @@ export default function AiAdvisorPage() {
                                                 question.id as
                                                 | "profitRisk"
                                                 | "marginPressure"
-                                                | "priority",
+                                                | "priority"
+                                                | "fastestImprovement",
                                             )
                                         }
                                         style={{
