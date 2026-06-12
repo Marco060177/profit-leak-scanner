@@ -74,6 +74,8 @@ export default function AiAdvisorPage() {
                 : `The fastest improvement right now is improving data accuracy. Start with missing cost data and high-risk products before making pricing changes.`,
     };
 
+
+
     const [selectedQuestion, setSelectedQuestion] =
         React.useState<
             | "profitRisk"
@@ -81,6 +83,9 @@ export default function AiAdvisorPage() {
             | "priority"
             | "fastestImprovement"
         >("profitRisk");
+
+    const [showFullAnalysis, setShowFullAnalysis] =
+        React.useState(false);
 
     const healthScore = Math.max(
         0,
@@ -101,6 +106,61 @@ export default function AiAdvisorPage() {
             : healthScore < 70
                 ? "Moderate Risk"
                 : "Healthy";
+
+    const fullAnalysis = {
+        health: healthLabel,
+
+        summary:
+            healthScore < 40
+                ? "MarginLab detected significant profitability risk in the selected period."
+                : healthScore < 70
+                    ? "MarginLab detected moderate profitability risk in the selected period."
+                    : "MarginLab detected a generally healthy margin profile in the selected period.",
+
+        risks: [
+            losingProducts.length > 0
+                ? `${losingProducts.length} products are selling below cost.`
+                : null,
+
+            missingCostProducts.length > 0
+                ? `${missingCostProducts.length} products are missing cost data.`
+                : null,
+
+            lowMarginProducts.length > 0
+                ? `${lowMarginProducts.length} products are operating below healthy margin.`
+                : null,
+
+            summary.discounts > 0
+                ? `Discounts reduced revenue by ${summary.discounts.toFixed(2)}.`
+                : null,
+
+            summary.refunds > 0
+                ? `Refunds reduced net revenue by ${summary.refunds.toFixed(2)}.`
+                : null,
+        ].filter(Boolean) as string[],
+
+        actions: [
+            missingCostProducts.length > 0
+                ? "Complete missing product costs before relying on margin recommendations."
+                : null,
+
+            topProfitLeak
+                ? `Review ${topProfitLeak.productTitle} because it is currently the strongest profitability risk.`
+                : null,
+
+            recoverableProfit > 0
+                ? `Review pricing gaps with approximately ${recoverableProfit.toFixed(0)} in recoverable profit opportunity.`
+                : null,
+
+            summary.discounts > 0
+                ? "Review discount campaigns to confirm they are creating enough incremental revenue."
+                : null,
+
+            summary.refunds > 0
+                ? "Investigate refund activity for product, fulfillment or customer expectation issues."
+                : null,
+        ].filter(Boolean) as string[],
+    };
 
     return (
         <div className="dashboard-shell">
@@ -423,6 +483,130 @@ export default function AiAdvisorPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            <button
+                                onClick={() => setShowFullAnalysis((value) => !value)}
+                                style={{
+                                    marginTop: 18,
+                                    width: "100%",
+                                    padding: "15px 18px",
+                                    borderRadius: 16,
+                                    border: "1px solid rgba(255,115,60,0.34)",
+                                    background:
+                                        "linear-gradient(135deg, rgba(255,90,54,0.24), rgba(255,115,60,0.12))",
+                                    color: "#ffffff",
+                                    fontWeight: 900,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                {showFullAnalysis ? "Hide Full Analysis" : "Generate Full Analysis"}
+                            </button>
+                            {showFullAnalysis && (
+                                <div
+                                    style={{
+                                        marginTop: 18,
+                                        padding: 20,
+                                        borderRadius: 20,
+                                        background:
+                                            "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                                        border: "1px solid rgba(255,115,60,0.22)",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            fontSize: 11,
+                                            fontWeight: 900,
+                                            letterSpacing: "0.12em",
+                                            textTransform: "uppercase",
+                                            color: "#ff9a70",
+                                        }}
+                                    >
+                                        Full AI Analysis
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            marginTop: 14,
+                                            color: "#f8fafc",
+                                            fontSize: 20,
+                                            fontWeight: 950,
+                                            lineHeight: 1.25,
+                                        }}
+                                    >
+                                        {fullAnalysis.summary}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            marginTop: 18,
+                                            color: "rgba(255,255,255,0.55)",
+                                            fontSize: 11,
+                                            fontWeight: 900,
+                                            letterSpacing: "0.10em",
+                                            textTransform: "uppercase",
+                                        }}
+                                    >
+                                        Key Risks
+                                    </div>
+
+                                    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                                        {fullAnalysis.risks.length > 0 ? (
+                                            fullAnalysis.risks.map((risk) => (
+                                                <div
+                                                    key={risk}
+                                                    style={{
+                                                        color: "rgba(255,255,255,0.76)",
+                                                        fontSize: 14,
+                                                        lineHeight: 1.55,
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    • {risk}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ color: "rgba(255,255,255,0.68)" }}>
+                                                No major risk detected.
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            marginTop: 18,
+                                            color: "rgba(255,255,255,0.55)",
+                                            fontSize: 11,
+                                            fontWeight: 900,
+                                            letterSpacing: "0.10em",
+                                            textTransform: "uppercase",
+                                        }}
+                                    >
+                                        Recommended Focus
+                                    </div>
+
+                                    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                                        {fullAnalysis.actions.length > 0 ? (
+                                            fullAnalysis.actions.map((action) => (
+                                                <div
+                                                    key={action}
+                                                    style={{
+                                                        color: "rgba(255,255,255,0.76)",
+                                                        fontSize: 14,
+                                                        lineHeight: 1.55,
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    • {action}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ color: "rgba(255,255,255,0.68)" }}>
+                                                Continue monitoring margin performance.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div
                                 style={{
