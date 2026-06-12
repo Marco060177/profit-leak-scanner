@@ -620,8 +620,10 @@ export default function AiAdvisorPage() {
                                     fontWeight: 700,
                                 }}
                             >
-                                🔒 Available in the future Growth plan. This preview does not
-                                use live AI yet.
+                                🔒 Growth preview
+                                This analysis is currently available in preview mode. 
+                                Advanced AI answers and full conversational analysis will be part 
+                                of the Growth plan.
                             </div>
                         </div>
                     </div>
