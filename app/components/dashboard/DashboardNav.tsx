@@ -6,6 +6,7 @@ type Props = {
   | "recommendations"
   | "ai-advisor"
   | "recovery-simulator"
+  | "forecasting"
   | "billing";
   navigate: (path: string) => void;
 };
@@ -22,6 +23,11 @@ export default function DashboardNav({ active, navigate }: Props) {
       id: "recovery-simulator",
       label: "Recovery",
       path: "/app/recovery-simulator",
+    },
+    {
+      id: "forecasting",
+      label: "Forecasting",
+      path: "/app/forecasting",
     },
     { id: "billing", label: "Billing", path: "/app/billing" },
   ] as const;
