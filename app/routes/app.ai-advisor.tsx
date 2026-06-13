@@ -169,15 +169,13 @@ export default function AiAdvisorPage() {
                 missingCostProducts.length,
             estimatedMarginGain:
                 recoverableProfit > 0
-                    ? Math.min(
-                        15,
-                        Number(
-                            (
-                                (recoverableProfit /
-                                    Math.max(summary.revenue, 1)) *
-                                100
-                            ).toFixed(1),
-                        ),
+                    ? Number(
+                        Math.min(
+                            15,
+                            (recoverableProfit /
+                                Math.max(summary.revenue, 1)) *
+                            100,
+                        ).toFixed(1),
                     )
                     : 0,
         },
