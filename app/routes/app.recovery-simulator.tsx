@@ -35,20 +35,22 @@ export default function RecoverySimulatorPage() {
           : row.avgPrice;
 
       const priceDelta = Math.max(0, targetPrice - row.avgPrice);
+      const increasePct =
+        row.avgPrice > 0 ? (priceDelta / row.avgPrice) * 100 : 0;
       const potentialProfit = priceDelta * row.qty;
 
       return {
         ...row,
         simulatorTargetPrice: targetPrice,
         simulatorPriceDelta: priceDelta,
+        simulatorIncreasePct: increasePct,
         simulatorPotentialProfit: potentialProfit,
       };
     })
     .filter((row) => row.simulatorPotentialProfit > 0)
     .sort(
       (a, b) =>
-        b.simulatorPotentialProfit -
-        a.simulatorPotentialProfit,
+        b.simulatorPotentialProfit - a.simulatorPotentialProfit,
     )
     .slice(0, 8);
 
@@ -56,6 +58,16 @@ export default function RecoverySimulatorPage() {
     (sum, row) => sum + row.simulatorPotentialProfit,
     0,
   );
+
+  const averageIncrease =
+    simulatorRows.length > 0
+      ? simulatorRows.reduce(
+          (sum, row) => sum + row.simulatorIncreasePct,
+          0,
+        ) / simulatorRows.length
+      : 0;
+
+  const highestOpportunity = simulatorRows[0];
 
   return (
     <div className="dashboard-shell">
@@ -95,7 +107,9 @@ export default function RecoverySimulatorPage() {
         <div className="panel">
           <div className="section-header">
             <div>
-              <div className="section-title">Profit Recovery Scenario</div>
+              <div className="section-title">
+                Profit Recovery Scenario
+              </div>
 
               <div className="section-subtitle">
                 Choose a target margin and see estimated recoverable profit
@@ -156,6 +170,37 @@ export default function RecoverySimulatorPage() {
               >
                 Estimated additional profit if selected products move toward a{" "}
                 <strong>{targetMargin}%</strong> target margin.
+              </div>
+
+              <div
+                style={{
+                  marginTop: 24,
+                  display: "grid",
+                  gap: 10,
+                }}
+              >
+                <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
+                  Products impacted:{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {simulatorRows.length}
+                  </strong>
+                </div>
+
+                <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
+                  Average increase required:{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    +{averageIncrease.toFixed(1)}%
+                  </strong>
+                </div>
+
+                <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
+                  Highest opportunity:{" "}
+                  <strong style={{ color: "#22c55e" }}>
+                    {highestOpportunity
+                      ? `${highestOpportunity.productTitle} (+$${highestOpportunity.simulatorPotentialProfit.toFixed(0)})`
+                      : "No opportunity detected"}
+                  </strong>
+                </div>
               </div>
 
               <div
@@ -272,13 +317,21 @@ export default function RecoverySimulatorPage() {
                           Current margin {row.marginPct.toFixed(1)}% · Target
                           price ${row.simulatorTargetPrice.toFixed(2)}
                         </div>
+
+                        <div
+                          style={{
+                            marginTop: 5,
+                            color: "#f59e0b",
+                            fontSize: 12,
+                            fontWeight: 900,
+                          }}
+                        >
+                          Increase needed +{row.simulatorIncreasePct.toFixed(1)}%
+                          {" "}(${row.simulatorPriceDelta.toFixed(2)})
+                        </div>
                       </div>
 
-                      <div
-                        style={{
-                          textAlign: "right",
-                        }}
-                      >
+                      <div style={{ textAlign: "right" }}>
                         <div
                           style={{
                             color: "#22c55e",
@@ -335,7 +388,7 @@ export default function RecoverySimulatorPage() {
           >
             Growth preview. Estimates are based on Shopify order data, product
             costs and selected target margin. This simulator does not change
-            prices automatically..
+            prices automatically.
           </div>
         </div>
       </div>
