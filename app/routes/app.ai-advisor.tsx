@@ -160,6 +160,27 @@ export default function AiAdvisorPage() {
                 ? "Investigate refund activity for product, fulfillment or customer expectation issues."
                 : null,
         ].filter(Boolean) as string[],
+        impact: {
+            recoverableProfit: recoverableProfit.toFixed(0),
+            affectedProducts:
+                losingProducts.length +
+                lowMarginProducts.length,
+            missingCosts:
+                missingCostProducts.length,
+            estimatedMarginGain:
+                recoverableProfit > 0
+                    ? Math.min(
+                        15,
+                        Number(
+                            (
+                                (recoverableProfit /
+                                    Math.max(summary.revenue, 1)) *
+                                100
+                            ).toFixed(1),
+                        ),
+                    )
+                    : 0,
+        },
     };
 
     return (
@@ -605,6 +626,82 @@ export default function AiAdvisorPage() {
                                             </div>
                                         )}
                                     </div>
+                                    <div
+                                        style={{
+                                            marginTop: 22,
+                                            color: "rgba(255,255,255,0.55)",
+                                            fontSize: 11,
+                                            fontWeight: 900,
+                                            letterSpacing: "0.10em",
+                                            textTransform: "uppercase",
+                                        }}
+                                    >
+                                        Expected Impact
+                                    </div>
+
+                                    <div
+                                        style={{
+                                            marginTop: 12,
+                                            display: "grid",
+                                            gridTemplateColumns: "repeat(2,1fr)",
+                                            gap: 12,
+                                        }}
+                                    >
+                                        {[
+                                            [
+                                                "Recoverable Profit",
+                                                `$${fullAnalysis.impact.recoverableProfit}`,
+                                            ],
+
+                                            [
+                                                "Products Affected",
+                                                fullAnalysis.impact.affectedProducts,
+                                            ],
+
+                                            [
+                                                "Missing Costs",
+                                                fullAnalysis.impact.missingCosts,
+                                            ],
+
+                                            [
+                                                "Potential Margin Gain",
+                                                `+${fullAnalysis.impact.estimatedMarginGain}%`,
+                                            ],
+                                        ].map(([label, value]) => (
+                                            <div
+                                                key={String(label)}
+                                                style={{
+                                                    padding: 14,
+                                                    borderRadius: 14,
+                                                    background: "rgba(255,255,255,0.04)",
+                                                    border: "1px solid rgba(255,115,60,0.12)",
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        fontSize: 10,
+                                                        textTransform: "uppercase",
+                                                        color: "rgba(255,255,255,0.45)",
+                                                        fontWeight: 900,
+                                                        letterSpacing: "0.08em",
+                                                    }}
+                                                >
+                                                    {label}
+                                                </div>
+
+                                                <div
+                                                    style={{
+                                                        marginTop: 6,
+                                                        fontSize: 22,
+                                                        fontWeight: 900,
+                                                        color: "#f8fafc",
+                                                    }}
+                                                >
+                                                    {value}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 
@@ -621,8 +718,8 @@ export default function AiAdvisorPage() {
                                 }}
                             >
                                 🔒 Growth preview
-                                This analysis is currently available in preview mode. 
-                                Advanced AI answers and full conversational analysis will be part 
+                                This analysis is currently available in preview mode.
+                                Advanced AI answers and full conversational analysis will be part
                                 of the Growth plan.
                             </div>
                         </div>
