@@ -233,6 +233,8 @@ export default function AiAdvisorPage() {
                             gap: 24,
                             marginTop: 24,
                         }}
+
+                        
                     >
                         <div
                             style={{
@@ -520,7 +522,28 @@ export default function AiAdvisorPage() {
                             >
                                 {showFullAnalysis ? "Hide Full Analysis" : "Generate Full Analysis"}
                             </button>
-                            {showFullAnalysis && (
+                            
+
+                            <div
+                                style={{
+                                    marginTop: 24,
+                                    padding: 18,
+                                    borderRadius: 18,
+                                    background: "rgba(255,115,60,0.08)",
+                                    border: "1px solid rgba(255,115,60,0.20)",
+                                    color: "rgba(255,255,255,0.70)",
+                                    lineHeight: 1.6,
+                                    fontWeight: 700,
+                                }}
+                            >
+                                🔒 Growth preview
+                                This analysis is currently available in preview mode.
+                                Advanced AI answers and full conversational analysis will be part
+                                of the Growth plan.
+                            </div>
+                        </div>
+                    </div>
+                    {showFullAnalysis && (
                                 <div
                                     style={{
                                         marginTop: 18,
@@ -702,26 +725,6 @@ export default function AiAdvisorPage() {
                                     </div>
                                 </div>
                             )}
-
-                            <div
-                                style={{
-                                    marginTop: 24,
-                                    padding: 18,
-                                    borderRadius: 18,
-                                    background: "rgba(255,115,60,0.08)",
-                                    border: "1px solid rgba(255,115,60,0.20)",
-                                    color: "rgba(255,255,255,0.70)",
-                                    lineHeight: 1.6,
-                                    fontWeight: 700,
-                                }}
-                            >
-                                🔒 Growth preview
-                                This analysis is currently available in preview mode.
-                                Advanced AI answers and full conversational analysis will be part
-                                of the Growth plan.
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
