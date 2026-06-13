@@ -1,25 +1,30 @@
 type Props = {
   active:
-    | "overview"
-    | "products"
-    | "profit"
-    | "recommendations"
-    | "ai-advisor"
-    | "billing";
+  | "overview"
+  | "products"
+  | "profit"
+  | "recommendations"
+  | "ai-advisor"
+  | "recovery-simulator"
+  | "billing";
   navigate: (path: string) => void;
 };
 
 export default function DashboardNav({ active, navigate }: Props) {
   const items = [
-  { id: "overview", label: "Overview", path: "/app" },
-  { id: "products", label: "Products", path: "/app/products" },
-  { id: "profit", label: "Profit Intelligence", path: "/app/profit-intelligence" },
-  { id: "recommendations", label: "Recommendations", path: "/app/recommendations" },
+    { id: "overview", label: "Overview", path: "/app" },
+    { id: "products", label: "Products", path: "/app/products" },
+    { id: "profit", label: "Profit Intelligence", path: "/app/profit-intelligence" },
+    { id: "recommendations", label: "Recommendations", path: "/app/recommendations" },
 
-  { id: "ai-advisor", label: "AI Advisor", path: "/app/ai-advisor" },
-
-  { id: "billing", label: "Billing", path: "/app/billing" },
-] as const;
+    { id: "ai-advisor", label: "AI Advisor", path: "/app/ai-advisor" },
+    {
+      id: "recovery-simulator",
+      label: "Recovery",
+      path: "/app/recovery-simulator",
+    },
+    { id: "billing", label: "Billing", path: "/app/billing" },
+  ] as const;
 
   return (
     <div className="navbar">
