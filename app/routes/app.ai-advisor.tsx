@@ -234,7 +234,7 @@ export default function AiAdvisorPage() {
                             marginTop: 24,
                         }}
 
-                        
+
                     >
                         <div
                             style={{
@@ -522,7 +522,7 @@ export default function AiAdvisorPage() {
                             >
                                 {showFullAnalysis ? "Hide Full Analysis" : "Generate Full Analysis"}
                             </button>
-                            
+
 
                             <div
                                 style={{
@@ -544,187 +544,201 @@ export default function AiAdvisorPage() {
                         </div>
                     </div>
                     {showFullAnalysis && (
-                                <div
-                                    style={{
-                                        marginTop: 18,
-                                        padding: 20,
-                                        borderRadius: 20,
-                                        background:
-                                            "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                                        border: "1px solid rgba(255,115,60,0.22)",
-                                    }}
-                                >
+                        <div
+                            style={{
+                                marginTop: 18,
+                                padding: 20,
+                                borderRadius: 20,
+                                background:
+                                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                                border: "1px solid rgba(255,115,60,0.22)",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    letterSpacing: "0.12em",
+                                    textTransform: "uppercase",
+                                    color: "#ff9a70",
+                                }}
+                            >
+                                Full AI Analysis
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 14,
+                                    color: "#f8fafc",
+                                    fontSize: 24,
+                                    fontWeight: 950,
+                                    lineHeight: 1.18,
+                                    letterSpacing: "-0.03em",
+                                }}
+                            >
+                                {fullAnalysis.summary}
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 18,
+                                    color: "rgba(255,255,255,0.55)",
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    letterSpacing: "0.10em",
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Key Risks
+                            </div>
+
+                            <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                                {fullAnalysis.risks.length > 0 ? (
+                                    fullAnalysis.risks.map((risk) => (
+                                        <div
+                                            key={risk}
+                                            style={{
+                                                color: "rgba(255,255,255,0.76)",
+                                                fontSize: 14,
+                                                lineHeight: 1.55,
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            • {risk}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ color: "rgba(255,255,255,0.68)" }}>
+                                        No major risk detected.
+                                    </div>
+                                )}
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 18,
+                                    color: "rgba(255,255,255,0.55)",
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    letterSpacing: "0.10em",
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Recommended Focus
+                            </div>
+
+                            <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                                {fullAnalysis.actions.length > 0 ? (
+                                    fullAnalysis.actions.map((action) => (
+                                        <div
+                                            key={action}
+                                            style={{
+                                                color: "rgba(255,255,255,0.76)",
+                                                fontSize: 14,
+                                                lineHeight: 1.55,
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            • {action}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ color: "rgba(255,255,255,0.68)" }}>
+                                        Continue monitoring margin performance.
+                                    </div>
+                                )}
+                            </div>
+                            <div
+                                style={{
+                                    marginTop: 22,
+                                    color: "rgba(255,255,255,0.55)",
+                                    fontSize: 11,
+                                    fontWeight: 900,
+                                    letterSpacing: "0.10em",
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                Expected Impact
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 12,
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(2,1fr)",
+                                    gap: 12,
+                                }}
+                            >
+                                {[
+                                    [
+                                        "Recoverable Profit",
+                                        `$${fullAnalysis.impact.recoverableProfit}`,
+                                    ],
+
+                                    [
+                                        "Products Affected",
+                                        fullAnalysis.impact.affectedProducts,
+                                    ],
+
+                                    [
+                                        "Missing Costs",
+                                        fullAnalysis.impact.missingCosts,
+                                    ],
+
+                                    [
+                                        "Potential Margin Gain",
+                                        `+${fullAnalysis.impact.estimatedMarginGain}%`,
+                                    ],
+                                ].map(([label, value]) => (
                                     <div
+                                        key={String(label)}
                                         style={{
-                                            fontSize: 11,
-                                            fontWeight: 900,
-                                            letterSpacing: "0.12em",
-                                            textTransform: "uppercase",
-                                            color: "#ff9a70",
+                                            padding: 18,
+                                            borderRadius: 16,
+                                            background:
+                                                label === "Recoverable Profit"
+                                                    ? "linear-gradient(135deg, rgba(34,197,94,0.16), rgba(8,13,22,0.92))"
+                                                    : "rgba(255,255,255,0.04)",
+                                            border:
+                                                label === "Recoverable Profit"
+                                                    ? "1px solid rgba(34,197,94,0.28)"
+                                                    : "1px solid rgba(255,115,60,0.12)",
                                         }}
                                     >
-                                        Full AI Analysis
+                                        <div
+                                            style={{
+                                                fontSize: 10,
+                                                textTransform: "uppercase",
+                                                color: "rgba(255,255,255,0.45)",
+                                                fontWeight: 900,
+                                                letterSpacing: "0.08em",
+                                            }}
+                                        >
+                                            {label}
+                                        </div>
+
+                                        <div
+                                            style={{
+                                                marginTop: 8,
+                                                fontSize:
+                                                    label === "Recoverable Profit"
+                                                        ? 34
+                                                        : 24,
+                                                fontWeight: 900,
+                                                color:
+                                                    label === "Recoverable Profit"
+                                                        ? "#22c55e"
+                                                        : "#f8fafc",
+                                                lineHeight: 1,
+                                            }}
+                                        >
+                                            {value}
+                                        </div>
                                     </div>
-
-                                    <div
-                                        style={{
-                                            marginTop: 14,
-                                            color: "#f8fafc",
-                                            fontSize: 20,
-                                            fontWeight: 950,
-                                            lineHeight: 1.25,
-                                        }}
-                                    >
-                                        {fullAnalysis.summary}
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            marginTop: 18,
-                                            color: "rgba(255,255,255,0.55)",
-                                            fontSize: 11,
-                                            fontWeight: 900,
-                                            letterSpacing: "0.10em",
-                                            textTransform: "uppercase",
-                                        }}
-                                    >
-                                        Key Risks
-                                    </div>
-
-                                    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                                        {fullAnalysis.risks.length > 0 ? (
-                                            fullAnalysis.risks.map((risk) => (
-                                                <div
-                                                    key={risk}
-                                                    style={{
-                                                        color: "rgba(255,255,255,0.76)",
-                                                        fontSize: 14,
-                                                        lineHeight: 1.55,
-                                                        fontWeight: 700,
-                                                    }}
-                                                >
-                                                    • {risk}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div style={{ color: "rgba(255,255,255,0.68)" }}>
-                                                No major risk detected.
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            marginTop: 18,
-                                            color: "rgba(255,255,255,0.55)",
-                                            fontSize: 11,
-                                            fontWeight: 900,
-                                            letterSpacing: "0.10em",
-                                            textTransform: "uppercase",
-                                        }}
-                                    >
-                                        Recommended Focus
-                                    </div>
-
-                                    <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                                        {fullAnalysis.actions.length > 0 ? (
-                                            fullAnalysis.actions.map((action) => (
-                                                <div
-                                                    key={action}
-                                                    style={{
-                                                        color: "rgba(255,255,255,0.76)",
-                                                        fontSize: 14,
-                                                        lineHeight: 1.55,
-                                                        fontWeight: 700,
-                                                    }}
-                                                >
-                                                    • {action}
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div style={{ color: "rgba(255,255,255,0.68)" }}>
-                                                Continue monitoring margin performance.
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div
-                                        style={{
-                                            marginTop: 22,
-                                            color: "rgba(255,255,255,0.55)",
-                                            fontSize: 11,
-                                            fontWeight: 900,
-                                            letterSpacing: "0.10em",
-                                            textTransform: "uppercase",
-                                        }}
-                                    >
-                                        Expected Impact
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            marginTop: 12,
-                                            display: "grid",
-                                            gridTemplateColumns: "repeat(2,1fr)",
-                                            gap: 12,
-                                        }}
-                                    >
-                                        {[
-                                            [
-                                                "Recoverable Profit",
-                                                `$${fullAnalysis.impact.recoverableProfit}`,
-                                            ],
-
-                                            [
-                                                "Products Affected",
-                                                fullAnalysis.impact.affectedProducts,
-                                            ],
-
-                                            [
-                                                "Missing Costs",
-                                                fullAnalysis.impact.missingCosts,
-                                            ],
-
-                                            [
-                                                "Potential Margin Gain",
-                                                `+${fullAnalysis.impact.estimatedMarginGain}%`,
-                                            ],
-                                        ].map(([label, value]) => (
-                                            <div
-                                                key={String(label)}
-                                                style={{
-                                                    padding: 14,
-                                                    borderRadius: 14,
-                                                    background: "rgba(255,255,255,0.04)",
-                                                    border: "1px solid rgba(255,115,60,0.12)",
-                                                }}
-                                            >
-                                                <div
-                                                    style={{
-                                                        fontSize: 10,
-                                                        textTransform: "uppercase",
-                                                        color: "rgba(255,255,255,0.45)",
-                                                        fontWeight: 900,
-                                                        letterSpacing: "0.08em",
-                                                    }}
-                                                >
-                                                    {label}
-                                                </div>
-
-                                                <div
-                                                    style={{
-                                                        marginTop: 6,
-                                                        fontSize: 22,
-                                                        fontWeight: 900,
-                                                        color: "#f8fafc",
-                                                    }}
-                                                >
-                                                    {value}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
