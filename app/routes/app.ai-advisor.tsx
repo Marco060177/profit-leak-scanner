@@ -1,5 +1,6 @@
 import * as React from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
+import { generateAiMarginAnalysis } from "~/utils/openai.server";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
@@ -20,8 +21,21 @@ export async function loader({ request }: { request: Request }) {
     });
 }
 
+export async function action({ request }: { request: Request }) {
+    const formData = await request.formData();
+
+    const storeSummary = String(formData.get("storeSummary") || "");
+
+    const result = await generateAiMarginAnalysis({
+        storeSummary,
+    });
+
+    return result;
+}
+
 export default function AiAdvisorPage() {
     const navigate = useNavigate();
+    const aiFetcher = useFetcher<{ text: string }>();
     const { summary, rows } = useLoaderData() as LoaderData;
 
     const losingProducts = rows.filter((row) => row.losing);
@@ -180,6 +194,32 @@ export default function AiAdvisorPage() {
                     : 0,
         },
     };
+
+    const aiPrompt = `
+Analyze this Shopify store profitability data.
+
+Revenue: ${summary.revenue}
+Profit: ${summary.profit}
+Margin: ${summary.marginPct}%
+Discounts: ${summary.discounts}
+Refunds: ${summary.refunds}
+Recoverable profit: ${recoverableProfit}
+Products selling below cost: ${losingProducts.length}
+Products with missing costs: ${missingCostProducts.length}
+Low-margin products: ${lowMarginProducts.length}
+Top profitability risk: ${topProfitLeak ? topProfitLeak.productTitle : "None"}
+
+Write a practical MarginLab AI Advisor report.
+
+Include:
+1. Store health assessment
+2. Main profitability risks
+3. What the merchant should check first
+4. Expected profit opportunity
+
+Do not invent numbers.
+Keep it clear, concise and business-focused.
+`;
 
     return (
         <div className="dashboard-shell">
@@ -505,24 +545,52 @@ export default function AiAdvisorPage() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => setShowFullAnalysis((value) => !value)}
-                                style={{
-                                    marginTop: 18,
-                                    width: "100%",
-                                    padding: "15px 18px",
-                                    borderRadius: 16,
-                                    border: "1px solid rgba(255,115,60,0.34)",
-                                    background:
-                                        "linear-gradient(135deg, rgba(255,90,54,0.24), rgba(255,115,60,0.12))",
-                                    color: "#ffffff",
-                                    fontWeight: 900,
-                                    cursor: "pointer",
-                                }}
-                            >
-                                {showFullAnalysis ? "Hide Full Analysis" : "Generate Full Analysis"}
-                            </button>
+                            <aiFetcher.Form method="post">
+                                <input
+                                    type="hidden"
+                                    name="storeSummary"
+                                    value={aiPrompt}
+                                />
 
+                                <button
+                                    type="submit"
+                                    style={{
+                                        marginTop: 18,
+                                        width: "100%",
+                                        padding: "15px 18px",
+                                        borderRadius: 16,
+                                        border: "1px solid rgba(255,115,60,0.34)",
+                                        background:
+                                            "linear-gradient(135deg, rgba(255,90,54,0.24), rgba(255,115,60,0.12))",
+                                        color: "#ffffff",
+                                        fontWeight: 900,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    {aiFetcher.state !== "idle"
+                                        ? "Generating AI Analysis..."
+                                        : "Generate AI Analysis"}
+                                </button>
+                            </aiFetcher.Form>
+
+                            {aiFetcher.data?.text && (
+                                <div
+                                    style={{
+                                        marginTop: 18,
+                                        padding: 20,
+                                        borderRadius: 20,
+                                        background:
+                                            "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                                        border: "1px solid rgba(255,115,60,0.22)",
+                                        color: "rgba(255,255,255,0.78)",
+                                        lineHeight: 1.7,
+                                        fontWeight: 700,
+                                        whiteSpace: "pre-wrap",
+                                    }}
+                                >
+                                    {aiFetcher.data.text}
+                                </div>
+                            )}
 
                             <div
                                 style={{
