@@ -77,7 +77,7 @@ export default function ForecastingPage() {
 
             <div className="hero-description">
               Estimate how your store performance could
-              improve if margin opportunities are addressed..
+              improve if margin opportunities are addressed.
             </div>
           </div>
 
