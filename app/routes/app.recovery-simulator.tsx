@@ -62,9 +62,9 @@ export default function RecoverySimulatorPage() {
   const averageIncrease =
     simulatorRows.length > 0
       ? simulatorRows.reduce(
-          (sum, row) => sum + row.simulatorIncreasePct,
-          0,
-        ) / simulatorRows.length
+        (sum, row) => sum + row.simulatorIncreasePct,
+        0,
+      ) / simulatorRows.length
       : 0;
 
   const highestOpportunity = simulatorRows[0];
@@ -213,41 +213,82 @@ export default function RecoverySimulatorPage() {
                   color: "rgba(255,255,255,0.52)",
                 }}
               >
-                Target Margin
+                Recovery Scenario
               </div>
 
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(4,1fr)",
                   gap: 10,
                   marginTop: 14,
                 }}
               >
-                {[15, 20, 25, 30].map((value) => (
+                {[
+                  {
+                    label: "Conservative",
+                    margin: 20,
+                    description: "Low pricing adjustments",
+                  },
+                  {
+                    label: "Balanced",
+                    margin: 25,
+                    description: "Recommended scenario",
+                  },
+                  {
+                    label: "Aggressive",
+                    margin: 30,
+                    description: "Maximum recovery focus",
+                  },
+                ].map((scenario) => (
                   <button
-                    key={value}
-                    onClick={() => setTargetMargin(value)}
+                    key={scenario.margin}
+                    onClick={() => setTargetMargin(scenario.margin)}
                     style={{
-                      padding: "12px 10px",
-                      borderRadius: 14,
+                      padding: 14,
+                      borderRadius: 16,
+                      textAlign: "left",
                       border:
-                        targetMargin === value
+                        targetMargin === scenario.margin
                           ? "1px solid rgba(34,197,94,0.45)"
                           : "1px solid rgba(255,115,60,0.14)",
                       background:
-                        targetMargin === value
-                          ? "rgba(34,197,94,0.14)"
+                        targetMargin === scenario.margin
+                          ? "rgba(34,197,94,0.12)"
                           : "rgba(255,115,60,0.08)",
-                      color:
-                        targetMargin === value
-                          ? "#86efac"
-                          : "#f8fafc",
-                      fontWeight: 900,
                       cursor: "pointer",
                     }}
                   >
-                    {value}%
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 900,
+                        fontSize: 14,
+                      }}
+                    >
+                      {scenario.label}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: "rgba(255,255,255,0.55)",
+                        fontSize: 12,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {scenario.description}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "#22c55e",
+                        fontSize: 12,
+                        fontWeight: 900,
+                      }}
+                    >
+                      Target margin {scenario.margin}%
+                    </div>
                   </button>
                 ))}
               </div>
