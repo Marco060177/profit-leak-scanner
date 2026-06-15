@@ -157,29 +157,48 @@ export default function AiAdvisorPage() {
   };
 
   const aiPrompt = `
-Analyze this Shopify store profitability data.
+You are analyzing a Shopify store using MarginLab profitability data.
 
-Revenue: ${summary.revenue}
-Profit: ${summary.profit}
-Margin: ${summary.marginPct}%
-Discounts: ${summary.discounts}
-Refunds: ${summary.refunds}
-Recoverable profit: ${recoverableProfit}
+STORE SUMMARY
+Revenue: $${summary.revenue.toFixed(2)}
+Profit: $${summary.profit.toFixed(2)}
+Margin: ${summary.marginPct.toFixed(1)}%
+Discounts: $${summary.discounts.toFixed(2)}
+Refunds: $${summary.refunds.toFixed(2)}
+Recoverable profit: $${recoverableProfit.toFixed(0)}
+
+PRODUCT RISK
 Products selling below cost: ${losingProducts.length}
 Products with missing costs: ${missingCostProducts.length}
 Low-margin products: ${lowMarginProducts.length}
 Top profitability risk: ${topProfitLeak ? topProfitLeak.productTitle : "None"}
+Top risk profit impact: ${topProfitLeak ? `$${topProfitLeak.profit.toFixed(2)}` : "N/A"
+    }
+Top risk margin: ${topProfitLeak ? `${topProfitLeak.marginPct.toFixed(1)}%` : "N/A"
+    }
 
-Write a practical MarginLab AI Advisor report.
+TASK
+Write a MarginLab AI Business Analysis for a Shopify merchant.
 
-Include:
-1. Store health assessment
-2. Main profitability risks
-3. What the merchant should check first
-4. Expected profit opportunity
+Use EXACTLY these sections:
 
-Do not invent numbers.
-Keep it clear, concise and business-focused.
+STORE HEALTH
+
+MAIN RISKS
+
+WHAT TO CHECK FIRST
+
+PROFIT OPPORTUNITY
+
+Rules:
+- Do not invent numbers.
+- Use only the data provided.
+- Be concise and executive.
+- Use short bullet points.
+- Explain why the issues matter.
+- Mention the top profitability risk if available.
+- Mention recoverable profit if available.
+- Do not recommend actions outside the available data.
 `;
 
   return (
@@ -538,7 +557,7 @@ Keep it clear, concise and business-focused.
                     borderRadius: 22,
                     background:
                       "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border: "1px solid rgba(255,115,60,0.22)",
+                    border: "1px solid rgba(255,115,60,0.28)",
                     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
                   }}
                 >
@@ -552,7 +571,7 @@ Keep it clear, concise and business-focused.
                       marginBottom: 14,
                     }}
                   >
-                    MarginLab AI Analysis
+                    AI BUSINESS ANALYSIS
                   </div>
 
                   <div
