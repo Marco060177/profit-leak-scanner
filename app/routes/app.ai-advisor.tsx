@@ -90,6 +90,26 @@ export default function AiAdvisorPage() {
         ? "Moderate Risk"
         : "Healthy";
 
+  const weeklyReport = {
+    health: healthLabel,
+
+    mainRisk: topProfitLeak
+      ? topProfitLeak.productTitle
+      : "No critical product risk detected",
+
+    opportunity:
+      recoverableProfit > 0
+        ? `$${recoverableProfit.toFixed(0)} recoverable profit identified`
+        : "No significant recovery opportunity detected",
+
+    recommendation:
+      missingCostProducts.length > 0
+        ? `Complete cost data for ${missingCostProducts.length} products`
+        : topProfitLeak
+          ? `Review pricing and costs for ${topProfitLeak.productTitle}`
+          : "Continue monitoring profitability trends",
+  };
+
   const healthColor =
     healthScore < 40
       ? "#ff6b4a"
@@ -178,9 +198,23 @@ Top risk margin: ${topProfitLeak ? `${topProfitLeak.marginPct.toFixed(1)}%` : "N
     }
 
 TASK
-Write a MarginLab AI Business Analysis for a Shopify merchant.
 
-Use EXACTLY these sections:
+You are MarginLab AI Advisor.
+
+Analyze the store like a profitability consultant reviewing a Shopify business.
+
+Your objective is not to repeat numbers.
+
+Your objective is to explain:
+
+- What is most important.
+- What is causing profitability pressure.
+- What should be reviewed first.
+- Where the biggest recovery opportunity exists.
+
+Write EXACTLY these sections:
+
+EXECUTIVE SUMMARY
 
 STORE HEALTH
 
@@ -191,14 +225,18 @@ WHAT TO CHECK FIRST
 PROFIT OPPORTUNITY
 
 Rules:
+
 - Do not invent numbers.
-- Use only the data provided.
-- Be concise and executive.
-- Use short bullet points.
-- Explain why the issues matter.
+- Do not invent products.
+- Use only the supplied data.
+- Be concise.
+- Write for a business owner, not a data analyst.
+- Focus on decisions, not metrics.
+- Explain why each issue matters.
 - Mention the top profitability risk if available.
 - Mention recoverable profit if available.
-- Do not recommend actions outside the available data.
+- Prioritize actions by business impact.
+- Maximum 3 bullet points per section.
 `;
 
   return (
@@ -587,6 +625,130 @@ Rules:
                   </div>
                 </div>
               )}
+
+              <div
+                style={{
+                  marginTop: 22,
+                  padding: 20,
+                  borderRadius: 20,
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border: "1px solid rgba(255,115,60,0.22)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#ff9a70",
+                    marginBottom: 14,
+                  }}
+                >
+                  Weekly AI Report Preview
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 12,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Store Health
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 900,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.health}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Main Risk
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 800,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.mainRisk}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Opportunity
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#22c55e",
+                        fontWeight: 800,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.opportunity}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Recommended Action
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 800,
+                        marginTop: 4,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {weeklyReport.recommendation}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div
                 style={{
