@@ -441,6 +441,129 @@ Rules:
                   </div>
                 ))}
               </div>
+              <div
+                style={{
+                  marginTop: 22,
+                  padding: 20,
+                  borderRadius: 20,
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border: "1px solid rgba(255,115,60,0.22)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#ff9a70",
+                    marginBottom: 14,
+                  }}
+                >
+                  Weekly AI Report Preview
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 12,
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Store Health
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 900,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.health}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Main Risk
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 800,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.mainRisk}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Opportunity
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#22c55e",
+                        fontWeight: 800,
+                        marginTop: 4,
+                      }}
+                    >
+                      {weeklyReport.opportunity}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.45)",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Recommended Action
+                    </div>
+
+                    <div
+                      style={{
+                        color: "#f8fafc",
+                        fontWeight: 800,
+                        marginTop: 4,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {weeklyReport.recommendation}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div
@@ -626,129 +749,7 @@ Rules:
                 </div>
               )}
 
-              <div
-                style={{
-                  marginTop: 22,
-                  padding: 20,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border: "1px solid rgba(255,115,60,0.22)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                    marginBottom: 14,
-                  }}
-                >
-                  Weekly AI Report Preview
-                </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Store Health
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 900,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.health}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Main Risk
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 800,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.mainRisk}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Opportunity
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#22c55e",
-                        fontWeight: 800,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.opportunity}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Recommended Action
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 800,
-                        marginTop: 4,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {weeklyReport.recommendation}
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <div
                 style={{
