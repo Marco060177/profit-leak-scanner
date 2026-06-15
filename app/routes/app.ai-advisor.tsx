@@ -477,7 +477,7 @@ Rules:
               </div>
               <div
                 style={{
-                  marginTop: 22,
+                  marginTop: 18,
                   padding: 20,
                   borderRadius: 20,
                   background:
@@ -498,255 +498,48 @@ Rules:
                   Weekly AI Report Preview
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: 12,
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Store Health
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 900,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.health}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Main Risk
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 800,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.mainRisk}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Opportunity
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#22c55e",
-                        fontWeight: 800,
-                        marginTop: 4,
-                      }}
-                    >
-                      {weeklyReport.opportunity}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.45)",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      Recommended Action
-                    </div>
-
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 800,
-                        marginTop: 4,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {weeklyReport.recommendation}
-                    </div>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginTop: 18,
-                    padding: 20,
-                    borderRadius: 20,
-                    background:
-                      "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border: "1px solid rgba(255,115,60,0.18)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "#ff9a70",
-                      marginBottom: 14,
-                    }}
-                  >
-                    Margin Alerts Preview
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gap: 10,
-                    }}
-                  >
-                    {marginAlerts.map((alert) => (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {[
+                    ["Store Health", weeklyReport.health],
+                    ["Main Risk", weeklyReport.mainRisk],
+                    ["Opportunity", weeklyReport.opportunity],
+                    ["Recommended Action", weeklyReport.recommendation],
+                  ].map(([label, value]) => (
+                    <div key={label}>
                       <div
-                        key={alert.message}
                         style={{
-                          padding: 12,
-                          borderRadius: 14,
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,115,60,0.12)",
+                          color: "rgba(255,255,255,0.45)",
+                          fontSize: 11,
+                          fontWeight: 900,
+                          textTransform: "uppercase",
                         }}
                       >
-                        <div
-                          style={{
-                            fontSize: 10,
-                            fontWeight: 900,
-                            textTransform: "uppercase",
-                            color: "#ff9a70",
-                            marginBottom: 4,
-                          }}
-                        >
-                          {alert.level}
-                        </div>
-
-                        <div
-                          style={{
-                            color: "#f8fafc",
-                            fontWeight: 700,
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {alert.message}
-                        </div>
+                        {label}
                       </div>
-                    ))}
-                  </div>
+
+                      <div
+                        style={{
+                          color: label === "Opportunity" ? "#22c55e" : "#f8fafc",
+                          fontWeight: 900,
+                          marginTop: 4,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {value}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 28,
-                padding: 28,
-                background:
-                  "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                border: "1px solid rgba(255,115,60,0.18)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 900,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.55)",
-                }}
-              >
-                Ask MarginLab
-              </div>
-
-              <div
-                style={{
-                  marginTop: 20,
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                {[
-                  {
-                    id: "profitRisk",
-                    label: "Why is my profit at risk?",
-                  },
-                  {
-                    id: "marginPressure",
-                    label: "What is hurting my margin?",
-                  },
-                  {
-                    id: "priority",
-                    label: "What should I check first?",
-                  },
-                  {
-                    id: "fastestImprovement",
-                    label: "What would improve profit fastest?",
-                  },
-                ].map((question) => (
-                  <button
-                    key={question.id}
-                    onClick={() =>
-                      setSelectedQuestion(question.id as SelectedQuestion)
-                    }
-                    style={{
-                      padding: "14px 16px",
-                      borderRadius: 14,
-                      border:
-                        selectedQuestion === question.id
-                          ? "1px solid rgba(255,115,60,0.45)"
-                          : "1px solid rgba(255,115,60,0.14)",
-                      background:
-                        selectedQuestion === question.id
-                          ? "rgba(255,115,60,0.14)"
-                          : "rgba(255,115,60,0.08)",
-                      color: "#f8fafc",
-                      fontWeight: 850,
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {question.label}
-                  </button>
-                ))}
               </div>
 
               <div
                 style={{
                   marginTop: 18,
                   padding: 20,
-                  borderRadius: 18,
+                  borderRadius: 20,
                   background:
-                    "linear-gradient(180deg, rgba(255,115,60,0.10), rgba(8,13,22,0.86))",
-                  border: "1px solid rgba(255,115,60,0.22)",
-                  minHeight: 150,
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border: "1px solid rgba(255,115,60,0.18)",
                 }}
               >
                 <div
@@ -759,112 +552,253 @@ Rules:
                     marginBottom: 14,
                   }}
                 >
-                  MarginLab answer
+                  Margin Alerts Preview
                 </div>
 
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.78)",
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    fontWeight: 700,
-                  }}
-                >
-                  {aiAnswers[selectedQuestion]}
+                <div style={{ display: "grid", gap: 10 }}>
+                  {marginAlerts.map((alert) => (
+                    <div
+                      key={alert.message}
+                      style={{
+                        padding: 14,
+                        borderRadius: 14,
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,115,60,0.12)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 900,
+                          textTransform: "uppercase",
+                          color:
+                            alert.level === "Critical"
+                              ? "#ff6b4a"
+                              : alert.level === "Warning"
+                                ? "#f59e0b"
+                                : alert.level === "Opportunity"
+                                  ? "#22c55e"
+                                  : "#ff9a70",
+                          marginBottom: 5,
+                        }}
+                      >
+                        {alert.level}
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#f8fafc",
+                          fontWeight: 800,
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {alert.message}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
+            </div>
+          </div>
 
-              <aiFetcher.Form
-                method="post"
-                onSubmit={() => {
-                  setShowAiReport(false);
+          <div
+            style={{
+              borderRadius: 28,
+              padding: 28,
+              background:
+                "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+              border: "1px solid rgba(255,115,60,0.18)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.55)",
+              }}
+            >
+              Ask MarginLab
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              {[
+                {
+                  id: "profitRisk",
+                  label: "Why is my profit at risk?",
+                },
+                {
+                  id: "marginPressure",
+                  label: "What is hurting my margin?",
+                },
+                {
+                  id: "priority",
+                  label: "What should I check first?",
+                },
+                {
+                  id: "fastestImprovement",
+                  label: "What would improve profit fastest?",
+                },
+              ].map((question) => (
+                <button
+                  key={question.id}
+                  onClick={() =>
+                    setSelectedQuestion(question.id as SelectedQuestion)
+                  }
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: 14,
+                    border:
+                      selectedQuestion === question.id
+                        ? "1px solid rgba(255,115,60,0.45)"
+                        : "1px solid rgba(255,115,60,0.14)",
+                    background:
+                      selectedQuestion === question.id
+                        ? "rgba(255,115,60,0.14)"
+                        : "rgba(255,115,60,0.08)",
+                    color: "#f8fafc",
+                    fontWeight: 850,
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  {question.label}
+                </button>
+              ))}
+            </div>
+
+            <div
+              style={{
+                marginTop: 18,
+                padding: 20,
+                borderRadius: 18,
+                background:
+                  "linear-gradient(180deg, rgba(255,115,60,0.10), rgba(8,13,22,0.86))",
+                border: "1px solid rgba(255,115,60,0.22)",
+                minHeight: 150,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 900,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#ff9a70",
+                  marginBottom: 14,
                 }}
               >
-                <input
-                  type="hidden"
-                  name="storeSummary"
-                  value={aiPrompt}
-                />
-
-                <button
-                  type="submit"
-                  style={{
-                    marginTop: 18,
-                    width: "100%",
-                    padding: "15px 18px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(255,115,60,0.34)",
-                    background:
-                      "linear-gradient(135deg, rgba(255,90,54,0.30), rgba(255,115,60,0.14))",
-                    color: "#ffffff",
-                    fontWeight: 950,
-                    cursor: "pointer",
-                    boxShadow: "0 18px 42px rgba(255,90,54,0.10)",
-                  }}
-                >
-                  {aiFetcher.state !== "idle"
-                    ? "Generating AI Analysis..."
-                    : "Generate AI Analysis"}
-                </button>
-              </aiFetcher.Form>
-
-              {showAiReport && aiFetcher.data?.text && (
-                <div
-                  style={{
-                    marginTop: 18,
-                    padding: 24,
-                    borderRadius: 22,
-                    background:
-                      "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border: "1px solid rgba(255,115,60,0.28)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "#ff9a70",
-                      marginBottom: 14,
-                    }}
-                  >
-                    AI BUSINESS ANALYSIS
-                  </div>
-
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,0.82)",
-                      fontSize: 15,
-                      lineHeight: 1.9,
-                      fontWeight: 700,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {aiFetcher.data.text}
-                  </div>
-                </div>
-              )}
-
-
+                MarginLab answer
+              </div>
 
               <div
                 style={{
-                  marginTop: 24,
-                  padding: 18,
-                  borderRadius: 18,
-                  background: "rgba(255,115,60,0.08)",
-                  border: "1px solid rgba(255,115,60,0.20)",
-                  color: "rgba(255,255,255,0.70)",
-                  lineHeight: 1.6,
+                  color: "rgba(255,255,255,0.78)",
+                  fontSize: 14,
+                  lineHeight: 1.65,
                   fontWeight: 700,
                 }}
               >
-                🔒 Growth preview. This analysis is currently available in
-                preview mode. Advanced AI answers and full conversational
-                analysis will be part of the Growth plan.
+                {aiAnswers[selectedQuestion]}
               </div>
+            </div>
+
+            <aiFetcher.Form
+              method="post"
+              onSubmit={() => {
+                setShowAiReport(false);
+              }}
+            >
+              <input
+                type="hidden"
+                name="storeSummary"
+                value={aiPrompt}
+              />
+
+              <button
+                type="submit"
+                style={{
+                  marginTop: 18,
+                  width: "100%",
+                  padding: "15px 18px",
+                  borderRadius: 16,
+                  border: "1px solid rgba(255,115,60,0.34)",
+                  background:
+                    "linear-gradient(135deg, rgba(255,90,54,0.30), rgba(255,115,60,0.14))",
+                  color: "#ffffff",
+                  fontWeight: 950,
+                  cursor: "pointer",
+                  boxShadow: "0 18px 42px rgba(255,90,54,0.10)",
+                }}
+              >
+                {aiFetcher.state !== "idle"
+                  ? "Generating AI Analysis..."
+                  : "Generate AI Analysis"}
+              </button>
+            </aiFetcher.Form>
+
+            {showAiReport && aiFetcher.data?.text && (
+              <div
+                style={{
+                  marginTop: 18,
+                  padding: 24,
+                  borderRadius: 22,
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border: "1px solid rgba(255,115,60,0.28)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#ff9a70",
+                    marginBottom: 14,
+                  }}
+                >
+                  AI BUSINESS ANALYSIS
+                </div>
+
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.82)",
+                    fontSize: 15,
+                    lineHeight: 1.9,
+                    fontWeight: 700,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {aiFetcher.data.text}
+                </div>
+              </div>
+            )}
+
+            <div
+              style={{
+                marginTop: 24,
+                padding: 18,
+                borderRadius: 18,
+                background: "rgba(255,115,60,0.08)",
+                border: "1px solid rgba(255,115,60,0.20)",
+                color: "rgba(255,255,255,0.70)",
+                lineHeight: 1.6,
+                fontWeight: 700,
+              }}
+            >
+              🔒 Growth preview. This analysis is currently available in
+              preview mode. Advanced AI answers and full conversational
+              analysis will be part of the Growth plan.
             </div>
           </div>
         </div>
