@@ -76,9 +76,9 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-          losingProducts.length * 15 -
-          missingCostProducts.length * 10 -
-          lowMarginProducts.length * 4,
+        losingProducts.length * 15 -
+        missingCostProducts.length * 10 -
+        lowMarginProducts.length * 4,
       ),
     ),
   );
@@ -109,52 +109,50 @@ export default function AiAdvisorPage() {
       : null,
     summary.discounts > 0
       ? `Discounts reduced revenue by $${summary.discounts.toFixed(
-          2,
-        )} during this period.`
+        2,
+      )} during this period.`
       : null,
     summary.refunds > 0
       ? `Refunds reduced net revenue by $${summary.refunds.toFixed(
-          2,
-        )} during this period.`
+        2,
+      )} during this period.`
       : null,
     recoverableProfit > 0
       ? `MarginLab detected approximately $${recoverableProfit.toFixed(
-          0,
-        )} in recoverable profit opportunities.`
+        0,
+      )} in recoverable profit opportunities.`
       : null,
-  ].filter(Boolean) as string[];
+  ]
+    .filter(Boolean)
+    .slice(0, 3) as string[];
 
   const aiAnswers: Record<SelectedQuestion, string> = {
     profitRisk: topProfitLeak
       ? `Your store is currently exposed to profitability risk because ${topProfitLeak.productTitle} has the strongest negative impact in the selected period. ${losingProducts.length} products are selling below cost, which means they generate revenue but reduce overall profit. MarginLab also detected approximately $${recoverableProfit.toFixed(
-          0,
-        )} in recoverable profit opportunities if pricing gaps are reviewed.`
+        0,
+      )} in recoverable profit opportunities if pricing gaps are reviewed.`
       : "MarginLab did not detect a single dominant product risk during this period. Based on available cost and order data, your current profitability risk appears more distributed across the catalog.",
 
     marginPressure: `Your margin is being affected by a combination of discounts, refunds and product-level profitability. Discounts reduced revenue by $${summary.discounts.toFixed(
       2,
     )}, while refunds reduced net revenue by $${summary.refunds.toFixed(
       2,
-    )}. ${
-      lowMarginProducts.length
-    } products are operating below healthy margin levels, which can make revenue look acceptable while profit quality weakens.`,
+    )}. ${lowMarginProducts.length
+      } products are operating below healthy margin levels, which can make revenue look acceptable while profit quality weakens.`,
 
     priority:
       missingCostProducts.length > 0
-        ? `Start by fixing missing cost data for ${
-            missingCostProducts.length
-          } products. Without accurate costs, MarginLab cannot fully trust margin calculations or pricing recommendations. After that, review ${
-            topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
-          } and focus on recoverable profit opportunities.`
-        : `Cost data appears complete enough for the selected period. The next priority is to review ${
-            topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
-          } and focus on recoverable profit opportunities before making broader pricing changes.`,
+        ? `Start by fixing missing cost data for ${missingCostProducts.length
+        } products. Without accurate costs, MarginLab cannot fully trust margin calculations or pricing recommendations. After that, review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
+        } and focus on recoverable profit opportunities.`
+        : `Cost data appears complete enough for the selected period. The next priority is to review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
+        } and focus on recoverable profit opportunities before making broader pricing changes.`,
 
     fastestImprovement:
       recoverableProfit > 0
         ? `The fastest profit improvement would come from reviewing products with recoverable pricing opportunities. MarginLab estimates approximately $${recoverableProfit.toFixed(
-            0,
-          )} in potential recoverable profit. Start with products selling below cost, then complete missing cost data, and only after that review pricing gaps.`
+          0,
+        )} in potential recoverable profit. Start with products selling below cost, then complete missing cost data, and only after that review pricing gaps.`
         : "The fastest improvement right now is improving data accuracy. Start with missing cost data and high-risk products before making pricing changes.",
   };
 
@@ -257,13 +255,14 @@ Keep it clear, concise and business-focused.
                   color: "#ff9a70",
                 }}
               >
-                AI Store Health Report
+                Store Health Assessment
               </div>
 
               <div
                 style={{
                   marginTop: 18,
-                  fontSize: 34,
+                  fontSize: 28,
+                  maxWidth: 700,
                   fontWeight: 950,
                   lineHeight: 1.08,
                   color: "#ffffff",
@@ -365,9 +364,9 @@ Keep it clear, concise and business-focused.
                 {(aiFindings.length > 0
                   ? aiFindings
                   : [
-                      "No critical margin issues detected during the selected period.",
-                      "Product costs, discounts and refunds appear stable based on available data.",
-                    ]
+                    "No critical margin issues detected during the selected period.",
+                    "Product costs, discounts and refunds appear stable based on available data.",
+                  ]
                 ).map((text) => (
                   <div
                     key={text}
