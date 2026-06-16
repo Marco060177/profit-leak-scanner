@@ -211,42 +211,82 @@ export default function AiAdvisorPage() {
   };
 
   const aiPrompt = `
-You are analyzing a Shopify store using MarginLab profitability data.
+You are MarginLab AI Advisor.
+
+Analyze this Shopify store profitability data.
 
 STORE SUMMARY
-Revenue: $${summary.revenue.toFixed(2)}
-Profit: $${summary.profit.toFixed(2)}
-Margin: ${summary.marginPct.toFixed(1)}%
-Discounts: $${summary.discounts.toFixed(2)}
-Refunds: $${summary.refunds.toFixed(2)}
-Recoverable profit: $${recoverableProfit.toFixed(0)}
 
-PRODUCT RISK
+Revenue: ${summary.revenue}
+Profit: ${summary.profit}
+Margin: ${summary.marginPct}%
+
+Discounts: ${summary.discounts}
+Refunds: ${summary.refunds}
+
+Recoverable profit: ${recoverableProfit}
+
+PRODUCT RISKS
+
 Products selling below cost: ${losingProducts.length}
 Products with missing costs: ${missingCostProducts.length}
 Low-margin products: ${lowMarginProducts.length}
-Top profitability risk: ${topProfitLeak ? topProfitLeak.productTitle : "None"}
-Top risk profit impact: ${topProfitLeak ? `$${topProfitLeak.profit.toFixed(2)}` : "N/A"
-    }
-Top risk margin: ${topProfitLeak ? `${topProfitLeak.marginPct.toFixed(1)}%` : "N/A"
-    }
+
+Top profitability risk:
+${topProfitLeak ? topProfitLeak.productTitle : "None"}
+
+Top risk profit impact:
+${topProfitLeak ? topProfitLeak.profit : "N/A"}
+
+Top risk margin:
+${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
+
+TOP LOSING PRODUCTS
+
+${[...losingProducts]
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Profit ${p.profit.toFixed(2)} | Margin ${p.marginPct.toFixed(1)}%`,
+      )
+      .join("\n") || "None"}
+
+TOP LOW-MARGIN PRODUCTS
+
+${[...lowMarginProducts]
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Profit ${p.profit.toFixed(2)} | Margin ${p.marginPct.toFixed(1)}%`,
+      )
+      .join("\n") || "None"}
+
+TOP RECOVERY OPPORTUNITIES
+
+${[...rows]
+      .filter((r) => r.targetDelta > 0)
+      .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Potential Recovery ${(p.targetDelta * p.qty).toFixed(0)}`,
+      )
+      .join("\n") || "None"}
 
 TASK
 
-You are MarginLab AI Advisor.
+Act like a profitability consultant reviewing a Shopify business.
 
-Analyze the store like a profitability consultant reviewing a Shopify business.
-
-Your objective is not to repeat numbers.
+Your objective is not to repeat metrics.
 
 Your objective is to explain:
 
-- What is most important.
-- What is causing profitability pressure.
+- What matters most.
+- What is creating profitability pressure.
 - What should be reviewed first.
 - Where the biggest recovery opportunity exists.
 
-Write EXACTLY these sections:
+Use EXACTLY these sections:
 
 EXECUTIVE SUMMARY
 
@@ -262,15 +302,13 @@ Rules:
 
 - Do not invent numbers.
 - Do not invent products.
-- Use only the supplied data.
+- Use only supplied data.
 - Be concise.
-- Write for a business owner, not a data analyst.
-- Focus on decisions, not metrics.
-- Explain why each issue matters.
-- Mention the top profitability risk if available.
-- Mention recoverable profit if available.
-- Prioritize actions by business impact.
+- Use short bullet points.
 - Maximum 3 bullet points per section.
+- Prioritize actions by business impact.
+- Mention the most important product risks.
+- Mention recoverable profit opportunities.
 `;
 
   return (
@@ -783,7 +821,7 @@ Rules:
                 </div>
               )}
 
-                            <div
+              <div
                 style={{
                   marginTop: 24,
                   padding: 18,
