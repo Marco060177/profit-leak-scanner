@@ -4,7 +4,7 @@ import {
   useLoaderData,
   useNavigate,
 } from "react-router";
-
+import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
@@ -25,11 +25,23 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
-  return loadMarginDashboardData({
+  const dashboardData = await loadMarginDashboardData({
     admin,
     session,
     period,
   });
+
+  const assumptions =
+    (await prisma.profitAssumptions.findUnique({
+      where: {
+        shop: session.shop,
+      },
+    })) ?? null;
+
+  return {
+    ...dashboardData,
+    assumptions,
+  };
 }
 
 export async function action({ request }: { request: Request }) {
@@ -46,7 +58,17 @@ export async function action({ request }: { request: Request }) {
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const aiFetcher = useFetcher<{ text: string }>();
-  const { summary, rows } = useLoaderData() as LoaderData;
+  const { summary, rows, assumptions } =
+    useLoaderData() as LoaderData & {
+      assumptions: {
+        monthlyAds: number;
+        monthlyShipping: number;
+        monthlyOperating: number;
+        paymentFeePct: number;
+        transactionFeePct: number;
+        taxReservePct: number;
+      } | null;
+    };
 
   const [selectedQuestion, setSelectedQuestion] =
     React.useState<SelectedQuestion>("profitRisk");
@@ -69,6 +91,39 @@ export default function AiAdvisorPage() {
     (sum, row) => sum + Math.max(0, row.targetDelta) * row.qty,
     0,
   );
+
+  const monthlyAds = assumptions?.monthlyAds ?? 0;
+  const monthlyShipping = assumptions?.monthlyShipping ?? 0;
+  const monthlyOperating = assumptions?.monthlyOperating ?? 0;
+
+  const paymentFeePct = assumptions?.paymentFeePct ?? 0;
+  const transactionFeePct = assumptions?.transactionFeePct ?? 0;
+  const taxReservePct = assumptions?.taxReservePct ?? 0;
+
+  const estimatedPaymentFees =
+    summary.revenue * (paymentFeePct / 100);
+
+  const estimatedTransactionFees =
+    summary.revenue * (transactionFeePct / 100);
+
+  const estimatedTaxReserve =
+    summary.revenue * (taxReservePct / 100);
+
+  const totalEstimatedCosts =
+    monthlyAds +
+    monthlyShipping +
+    monthlyOperating +
+    estimatedPaymentFees +
+    estimatedTransactionFees +
+    estimatedTaxReserve;
+
+  const estimatedNetProfit =
+    summary.profit - totalEstimatedCosts;
+
+  const estimatedNetMargin =
+    summary.revenue > 0
+      ? (estimatedNetProfit / summary.revenue) * 100
+      : 0;
 
   const healthScore = Math.max(
     0,
@@ -218,13 +273,32 @@ Analyze this Shopify store profitability data.
 STORE SUMMARY
 
 Revenue: ${summary.revenue}
-Profit: ${summary.profit}
-Margin: ${summary.marginPct}%
+Gross Profit: ${summary.profit}
+Gross Margin: ${summary.marginPct}%
 
 Discounts: ${summary.discounts}
 Refunds: ${summary.refunds}
 
 Recoverable profit: ${recoverableProfit}
+
+ESTIMATED NET PROFIT
+
+Monthly advertising spend: ${monthlyAds}
+Monthly shipping costs: ${monthlyShipping}
+Monthly operating costs: ${monthlyOperating}
+
+Payment processing fee percentage: ${paymentFeePct}%
+Transaction fee percentage: ${transactionFeePct}%
+Tax reserve percentage: ${taxReservePct}%
+
+Estimated payment fees: ${estimatedPaymentFees}
+Estimated transaction fees: ${estimatedTransactionFees}
+Estimated tax reserve: ${estimatedTaxReserve}
+
+Total estimated costs outside product costs: ${totalEstimatedCosts}
+
+Estimated net profit: ${estimatedNetProfit}
+Estimated net margin: ${estimatedNetMargin}%
 
 PRODUCT RISKS
 
@@ -281,6 +355,7 @@ Your objective is not to repeat metrics.
 
 Your objective is to explain:
 
+- Whether the store is profitable after estimated operating assumptions.
 - What matters most.
 - What is creating profitability pressure.
 - What should be reviewed first.
@@ -290,7 +365,7 @@ Use EXACTLY these sections:
 
 EXECUTIVE SUMMARY
 
-STORE HEALTH
+GROSS VS NET PROFIT
 
 MAIN RISKS
 
@@ -307,6 +382,8 @@ Rules:
 - Use short bullet points.
 - Maximum 3 bullet points per section.
 - Prioritize actions by business impact.
+- Mention estimated net profit if assumptions are provided.
+- Mention estimated net margin if assumptions are provided.
 - Mention the most important product risks.
 - Mention recoverable profit opportunities.
 `;
