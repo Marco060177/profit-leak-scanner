@@ -32,3 +32,18 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+model ProfitAssumptions {
+  id                    String   @id @default(cuid())
+  shop                  String   @unique
+
+  monthlyAds            Float    @default(0)
+  monthlyShipping       Float    @default(0)
+  monthlyOperating      Float    @default(0)
+
+  paymentFeePct         Float    @default(0)
+  transactionFeePct     Float    @default(0)
+  taxReservePct         Float    @default(0)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
