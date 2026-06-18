@@ -71,6 +71,18 @@ export default function RecoverySimulatorPage() {
 
   const impactedProducts = simulatorRows.length;
 
+  const topRecoveryProducts =
+    simulatorRows.slice(0, 3);
+
+  const recoverySummary =
+    totalPotentialProfit > 0
+      ? `MarginLab identified approximately $${totalPotentialProfit.toFixed(
+        0,
+      )} in recoverable profit opportunities across ${impactedProducts} products.`
+      : "No significant recovery opportunities were detected for the selected target margin.";
+
+  
+
   const averagePriceIncrease =
     simulatorRows.length > 0
       ? simulatorRows.reduce(
@@ -210,6 +222,7 @@ export default function RecoverySimulatorPage() {
           <div className="section-header">
             <div>
               <div className="section-title">
+
                 Profit Recovery Scenario
               </div>
 
@@ -515,6 +528,83 @@ export default function RecoverySimulatorPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 24,
+              padding: 24,
+              borderRadius: 24,
+              background:
+                "linear-gradient(135deg, rgba(255,115,60,0.10), rgba(8,13,22,0.92))",
+              border: "1px solid rgba(255,115,60,0.22)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "#ff9a70",
+              }}
+            >
+              AI Recovery Summary
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                color: "rgba(255,255,255,0.78)",
+                lineHeight: 1.7,
+                fontWeight: 750,
+              }}
+            >
+              {recoverySummary}
+            </div>
+
+            {topRecoveryProducts.length > 0 && (
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "grid",
+                  gap: 10,
+                }}
+              >
+                {topRecoveryProducts.map((product) => (
+                  <div
+                    key={product.productId}
+                    style={{
+                      padding: 14,
+                      borderRadius: 14,
+                      background: "rgba(255,255,255,0.04)",
+                      border:
+                        "1px solid rgba(255,115,60,0.12)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontWeight: 900,
+                        color: "#f8fafc",
+                      }}
+                    >
+                      {product.productTitle}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: "#22c55e",
+                        fontWeight: 800,
+                      }}
+                    >
+                      Potential Recovery $
+                      {product.simulatorPotentialProfit.toFixed(0)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div
