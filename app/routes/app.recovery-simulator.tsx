@@ -69,6 +69,16 @@ export default function RecoverySimulatorPage() {
 
   const highestOpportunity = simulatorRows[0];
 
+  const impactedProducts = simulatorRows.length;
+
+  const averagePriceIncrease =
+    simulatorRows.length > 0
+      ? simulatorRows.reduce(
+        (sum, row) => sum + row.simulatorPriceDelta,
+        0,
+      ) / simulatorRows.length
+      : 0;
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -105,6 +115,98 @@ export default function RecoverySimulatorPage() {
         </div>
 
         <div className="panel">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,1fr)",
+              gap: 20,
+              marginBottom: 24,
+            }}
+          >
+            {[
+              [
+                "Total Recoverable Profit",
+                `$${totalPotentialProfit.toFixed(0)}`,
+                "Estimated opportunity",
+              ],
+
+              [
+                "Products Impacted",
+                impactedProducts.toString(),
+                "Pricing gaps detected",
+              ],
+
+              [
+                "Average Price Increase",
+                `$${averagePriceIncrease.toFixed(2)}`,
+                "Per product",
+              ],
+
+              [
+                "Highest Recovery Product",
+                highestOpportunity?.productTitle ?? "None",
+                highestOpportunity
+                  ? `+$${highestOpportunity.simulatorPotentialProfit.toFixed(0)}`
+                  : "No opportunity",
+              ],
+            ].map(([label, value, note]) => (
+              <div
+                key={label}
+                style={{
+                  borderRadius: 24,
+                  padding: 24,
+                  background:
+                    label === "Total Recoverable Profit"
+                      ? "radial-gradient(circle at top left, rgba(34,197,94,0.16), transparent 35%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))"
+                      : "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border:
+                    label === "Total Recoverable Profit"
+                      ? "1px solid rgba(34,197,94,0.28)"
+                      : "1px solid rgba(255,115,60,0.18)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    color:
+                      label === "Total Recoverable Profit"
+                        ? "#4ade80"
+                        : "rgba(255,255,255,0.55)",
+                    fontWeight: 900,
+                  }}
+                >
+                  {label}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontSize: 28,
+                    fontWeight: 950,
+                    color:
+                      label === "Total Recoverable Profit"
+                        ? "#22c55e"
+                        : "#f8fafc",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {value}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "rgba(255,255,255,0.62)",
+                    fontWeight: 750,
+                  }}
+                >
+                  {note}
+                </div>
+              </div>
+            ))}
+          </div>
           <div className="section-header">
             <div>
               <div className="section-title">
