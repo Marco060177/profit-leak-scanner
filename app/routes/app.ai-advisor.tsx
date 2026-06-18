@@ -933,103 +933,7 @@ Rules:
                 </div>
               )}
 
-              <askFetcher.Form method="post">
-                <input
-                  type="hidden"
-                  name="intent"
-                  value="ask"
-                />
 
-                <input
-                  type="hidden"
-                  name="storeSummary"
-                  value={aiPrompt}
-                />
-
-                <div
-                  style={{
-                    marginTop: 24,
-                    padding: 20,
-                    borderRadius: 20,
-                    background:
-                      "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border:
-                      "1px solid rgba(255,115,60,0.22)",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "#ff9a70",
-                    }}
-                  >
-                    Ask MarginLab
-                  </div>
-
-                  <input
-                    name="question"
-                    value={question}
-                    onChange={(e) =>
-                      setQuestion(e.target.value)
-                    }
-                    placeholder="Why did my profit drop?"
-                    style={{
-                      width: "100%",
-                      marginTop: 14,
-                      padding: "14px 16px",
-                      borderRadius: 14,
-                      border:
-                        "1px solid rgba(255,115,60,0.18)",
-                      background: "rgba(255,255,255,0.04)",
-                      color: "#fff",
-                      outline: "none",
-                    }}
-                  />
-
-                  <button
-                    type="submit"
-                    style={{
-                      marginTop: 14,
-                      width: "100%",
-                      padding: "14px",
-                      borderRadius: 14,
-                      border:
-                        "1px solid rgba(255,115,60,0.22)",
-                      background:
-                        "linear-gradient(135deg, rgba(255,115,60,0.22), rgba(255,115,60,0.10))",
-                      color: "#fff",
-                      fontWeight: 900,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {askFetcher.state !== "idle"
-                      ? "Thinking..."
-                      : "Ask AI"}
-                  </button>
-                </div>
-              </askFetcher.Form>
-
-              {askFetcher.data?.text && (
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 20,
-                    borderRadius: 20,
-                    background:
-                      "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border:
-                      "1px solid rgba(34,197,94,0.22)",
-                    color: "rgba(255,255,255,0.82)",
-                    lineHeight: 1.7,
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {askFetcher.data.text}
-                </div>
-              )}
 
               <div
                 style={{
@@ -1048,6 +952,103 @@ Rules:
                 analysis will be part of the Growth plan.
               </div>
             </div>
+            <askFetcher.Form method="post">
+              <input
+                type="hidden"
+                name="intent"
+                value="ask"
+              />
+
+              <input
+                type="hidden"
+                name="storeSummary"
+                value={aiPrompt}
+              />
+
+              <div
+                style={{
+                  marginTop: 24,
+                  padding: 20,
+                  borderRadius: 20,
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border:
+                    "1px solid rgba(255,115,60,0.22)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#ff9a70",
+                  }}
+                >
+                  Ask MarginLab
+                </div>
+
+                <input
+                  name="question"
+                  value={question}
+                  onChange={(e) =>
+                    setQuestion(e.target.value)
+                  }
+                  placeholder="Why did my profit drop?"
+                  style={{
+                    width: "100%",
+                    marginTop: 14,
+                    padding: "14px 16px",
+                    borderRadius: 14,
+                    border:
+                      "1px solid rgba(255,115,60,0.18)",
+                    background: "rgba(255,255,255,0.04)",
+                    color: "#fff",
+                    outline: "none",
+                  }}
+                />
+
+                <button
+                  type="submit"
+                  style={{
+                    marginTop: 14,
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: 14,
+                    border:
+                      "1px solid rgba(255,115,60,0.22)",
+                    background:
+                      "linear-gradient(135deg, rgba(255,115,60,0.22), rgba(255,115,60,0.10))",
+                    color: "#fff",
+                    fontWeight: 900,
+                    cursor: "pointer",
+                  }}
+                >
+                  {askFetcher.state !== "idle"
+                    ? "Thinking..."
+                    : "Ask AI"}
+                </button>
+              </div>
+            </askFetcher.Form>
+
+            {askFetcher.data?.text && (
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: 20,
+                  borderRadius: 20,
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                  border:
+                    "1px solid rgba(34,197,94,0.22)",
+                  color: "rgba(255,255,255,0.82)",
+                  lineHeight: 1.7,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {askFetcher.data.text}
+              </div>
+            )}
           </div>
         </div>
       </div>
