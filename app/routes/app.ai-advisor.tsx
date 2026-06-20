@@ -795,9 +795,10 @@ Rules:
                 ].map((question) => (
                   <button
                     key={question.id}
-                    onClick={() =>
-                      setSelectedQuestion(question.id as SelectedQuestion)
-                    }
+                    onClick={() => {
+                      setSelectedQuestion(question.id as SelectedQuestion);
+                      setQuestion(question.label);
+                    }}
                     style={{
                       padding: "14px 16px",
                       borderRadius: 14,
