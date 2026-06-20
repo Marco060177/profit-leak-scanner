@@ -1746,7 +1746,7 @@ table {
   padding-right: 22px;
 }
 
-.score-mini-card + .score-mini-card {
+.score-mini-card+.score-mini-card {
   padding-left: 22px;
   border-left: 1px solid rgba(var(--ml-orange), 0.14);
 }
@@ -1982,7 +1982,7 @@ table {
     gap: 16px;
   }
 
-  .score-mini-card + .score-mini-card {
+  .score-mini-card+.score-mini-card {
     padding-left: 0;
     border-left: none;
   }
@@ -2004,4 +2004,8 @@ table {
   .kpi-value {
     font-size: 32px;
   }
+}
+
+.nav-tab:hover .nav-more-menu {
+  display: block !important;
 }

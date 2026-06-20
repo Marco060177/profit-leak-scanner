@@ -1,5 +1,4 @@
-type Props = {
-  active:
+type NavId =
   | "overview"
   | "products"
   | "profit"
@@ -7,18 +6,32 @@ type Props = {
   | "ai-advisor"
   | "recovery-simulator"
   | "forecasting"
+  | "profit-assumptions"
   | "billing";
+
+type Props = {
+  active: NavId;
   navigate: (path: string) => void;
 };
 
 export default function DashboardNav({ active, navigate }: Props) {
-  const items = [
+  const mainItems = [
     { id: "overview", label: "Overview", path: "/app" },
     { id: "products", label: "Products", path: "/app/products" },
-    { id: "profit", label: "Profit Intelligence", path: "/app/profit-intelligence" },
-    { id: "recommendations", label: "Recommendations", path: "/app/recommendations" },
-
+    {
+      id: "profit",
+      label: "Profit Intelligence",
+      path: "/app/profit-intelligence",
+    },
     { id: "ai-advisor", label: "AI Advisor", path: "/app/ai-advisor" },
+  ] as const;
+
+  const moreItems = [
+    {
+      id: "recommendations",
+      label: "Recommendations",
+      path: "/app/recommendations",
+    },
     {
       id: "recovery-simulator",
       label: "Recovery",
@@ -29,8 +42,15 @@ export default function DashboardNav({ active, navigate }: Props) {
       label: "Forecasting",
       path: "/app/forecasting",
     },
+    {
+      id: "profit-assumptions",
+      label: "Profit Assumptions",
+      path: "/app/profit-assumptions",
+    },
     { id: "billing", label: "Billing", path: "/app/billing" },
   ] as const;
+
+  const moreActive = moreItems.some((item) => item.id === active);
 
   return (
     <div className="navbar">
@@ -39,7 +59,7 @@ export default function DashboardNav({ active, navigate }: Props) {
       </div>
 
       <div className="nav-tabs">
-        {items.map((item) => (
+        {mainItems.map((item) => (
           <div
             key={item.id}
             className={active === item.id ? "nav-tab active" : "nav-tab"}
@@ -48,6 +68,56 @@ export default function DashboardNav({ active, navigate }: Props) {
             {item.label}
           </div>
         ))}
+
+        <div
+          className={moreActive ? "nav-tab active" : "nav-tab"}
+          style={{
+            position: "relative",
+          }}
+        >
+          More ▾
+
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 10px)",
+              right: 0,
+              minWidth: 220,
+              padding: 8,
+              borderRadius: 16,
+              background:
+                "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(8,13,22,0.98))",
+              border: "1px solid rgba(255,115,60,0.22)",
+              boxShadow: "0 22px 60px rgba(0,0,0,0.45)",
+              display: "none",
+              zIndex: 50,
+            }}
+            className="nav-more-menu"
+          >
+            {moreItems.map((item) => (
+              <div
+                key={item.id}
+                onClick={() => active !== item.id && navigate(item.path)}
+                style={{
+                  padding: "11px 12px",
+                  borderRadius: 12,
+                  color:
+                    active === item.id
+                      ? "#ff9a70"
+                      : "rgba(255,255,255,0.72)",
+                  fontWeight: 850,
+                  cursor: "pointer",
+                  background:
+                    active === item.id
+                      ? "rgba(255,115,60,0.12)"
+                      : "transparent",
+                }}
+              >
+                {item.label}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
