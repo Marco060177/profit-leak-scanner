@@ -2009,3 +2009,7 @@ table {
 .nav-tab:hover .nav-more-menu {
   display: block !important;
 }
+
+.nav-tab .nav-more-menu:hover {
+  display: block !important;
+}
