@@ -5,10 +5,7 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import {
-  type LoaderData,
-  money,
-} from "~/utils/margin";
+import { type LoaderData, money } from "~/utils/margin";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
@@ -36,17 +33,15 @@ export const loader = async ({
 };
 
 export default function ProfitIntelligencePage() {
-  const { summary, trend, rows, marginDeterioration } = useLoaderData() as LoaderData;
-  
+  const { summary, trend, rows, marginDeterioration } =
+    useLoaderData() as LoaderData;
+
+  const navigate = useNavigate();
+
   const topDiscountProducts = [...rows]
     .filter((row) => row.discounts > 0)
     .sort((a, b) => b.discounts - a.discounts)
     .slice(0, 5);
-  const topRefundProducts = [...rows]
-    .filter((row) => row.refunds > 0)
-    .sort((a, b) => b.refunds - a.refunds)
-    .slice(0, 5);
-  const navigate = useNavigate();
 
   const totalRevenue = Math.max(summary.revenue, 1);
 
@@ -54,10 +49,12 @@ export default function ProfitIntelligencePage() {
     100,
     Math.max(0, (summary.cogs / totalRevenue) * 100),
   );
+
   const profitPercentage = Math.min(
     100,
     Math.max(0, (summary.profit / totalRevenue) * 100),
   );
+
   const leakPercentage = Math.min(
     100,
     Math.max(0, (summary.totalLeak / totalRevenue) * 100),
@@ -69,25 +66,24 @@ export default function ProfitIntelligencePage() {
   const revenueTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.revenue > 0
       ? ((lastTrendPoint.revenue - firstTrendPoint.revenue) /
-        firstTrendPoint.revenue) *
-      100
+          firstTrendPoint.revenue) *
+        100
       : 0;
 
   const profitTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.profit > 0
       ? ((lastTrendPoint.profit - firstTrendPoint.profit) /
-        firstTrendPoint.profit) *
-      100
+          firstTrendPoint.profit) *
+        100
       : 0;
 
   const marginDeteriorating = summary.marginDelta < -3;
   const profitDeteriorating = profitTrendPct < -5;
   const revenueGrowingWhileProfitFalls =
     revenueTrendPct > 5 && profitTrendPct < 0;
+
   const totalBusinessImpact =
-    summary.discounts +
-    summary.refunds +
-    summary.shipping;
+    summary.discounts + summary.refunds + summary.shipping;
 
   const businessDrivers = [
     {
@@ -173,9 +169,9 @@ export default function ProfitIntelligencePage() {
       100,
       Math.round(
         100 -
-        top3RevenueShare * 0.35 -
-        Math.max(0, top3ProfitShare - 60) * 0.4 -
-        weakProfitProducts * 5,
+          top3RevenueShare * 0.35 -
+          Math.max(0, top3ProfitShare - 60) * 0.4 -
+          weakProfitProducts * 5,
       ),
     ),
   );
@@ -187,13 +183,17 @@ export default function ProfitIntelligencePage() {
         ? "#f59e0b"
         : "#22c55e";
 
+  const profitQualityColor =
+    profitQualityLevel === "Weak"
+      ? "#ff6b4a"
+      : profitQualityLevel === "Mixed"
+        ? "#f59e0b"
+        : "#22c55e";
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <DashboardNav
-          active="profit"
-          navigate={navigate}
-        />
+        <DashboardNav active="profit" navigate={navigate} />
 
         <div className="hero-header">
           <div>
@@ -252,8 +252,8 @@ export default function ProfitIntelligencePage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab evaluates revenue concentration, profit dependency and weak
-                profit drivers to estimate business stability.
+                MarginLab evaluates revenue concentration, profit dependency and
+                weak profit drivers to estimate business stability.
               </p>
 
               <div
@@ -332,9 +332,12 @@ export default function ProfitIntelligencePage() {
                     position: "absolute",
                     inset: -16,
                     borderRadius: "50%",
-                    background: `conic-gradient(${statusColor} ${intelligenceScore * 3.6}deg, transparent 0deg)`,
+                    background: `conic-gradient(${statusColor} ${
+                      intelligenceScore * 3.6
+                    }deg, transparent 0deg)`,
                     mask: "radial-gradient(circle, transparent 58%, black 59%)",
-                    WebkitMask: "radial-gradient(circle, transparent 58%, black 59%)",
+                    WebkitMask:
+                      "radial-gradient(circle, transparent 58%, black 59%)",
                   }}
                 />
 
@@ -373,6 +376,7 @@ export default function ProfitIntelligencePage() {
           profitPercentage={profitPercentage}
           leakPercentage={leakPercentage}
         />
+
         <div className="panel">
           <div className="panel-header">
             <div>
@@ -381,15 +385,8 @@ export default function ProfitIntelligencePage() {
             </div>
           </div>
 
-
           {businessDrivers.length > 0 ? (
-            <div
-              style={{
-                display: "grid",
-                gap: 16,
-                marginTop: 24,
-              }}
-            >
+            <div style={{ display: "grid", gap: 16, marginTop: 24 }}>
               {businessDrivers.map((driver) => (
                 <div
                   key={driver.label}
@@ -457,8 +454,9 @@ export default function ProfitIntelligencePage() {
                 lineHeight: 1.6,
               }}
             >
-              No discounts, refunds or shipping impact were detected in the selected
-              period. Contribution profit currently matches product-level gross profit.
+              No discounts, refunds or shipping impact were detected in the
+              selected period. Contribution profit currently matches
+              product-level gross profit.
             </div>
           )}
         </div>
@@ -499,7 +497,8 @@ export default function ProfitIntelligencePage() {
                         lineHeight: 1.5,
                       }}
                     >
-                      Product margin declined compared to the previous selected period.
+                      Product margin declined compared to the previous selected
+                      period.
                     </div>
                   </div>
 
@@ -537,7 +536,9 @@ export default function ProfitIntelligencePage() {
             <div className="panel-header">
               <div>
                 <div className="panel-eyebrow">DISCOUNT EXPOSURE</div>
-                <h2 className="panel-title">Products most affected by discounts</h2>
+                <h2 className="panel-title">
+                  Products most affected by discounts
+                </h2>
               </div>
             </div>
 
@@ -572,7 +573,8 @@ export default function ProfitIntelligencePage() {
                           lineHeight: 1.5,
                         }}
                       >
-                        Discount absorbed by this product during the selected period.
+                        Discount absorbed by this product during the selected
+                        period.
                       </div>
 
                       <div
@@ -604,8 +606,6 @@ export default function ProfitIntelligencePage() {
           </div>
         )}
 
-
-
         <div className="panel">
           <div className="panel-header">
             <div>
@@ -627,7 +627,9 @@ export default function ProfitIntelligencePage() {
                 label: "Margin direction",
                 value: marginDeteriorating ? "Deteriorating" : "Stable",
                 text: marginDeteriorating
-                  ? `Margin dropped by ${Math.abs(summary.marginDelta).toFixed(1)}% compared to the previous period.`
+                  ? `Margin dropped by ${Math.abs(
+                      summary.marginDelta,
+                    ).toFixed(1)}% compared to the previous period.`
                   : "Margin is stable compared to the previous period.",
                 color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
               },
@@ -635,8 +637,12 @@ export default function ProfitIntelligencePage() {
                 label: "Profit movement",
                 value: profitDeteriorating ? "Declining" : "Stable",
                 text: profitDeteriorating
-                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(1)}% across the selected trend window.`
-                  : `Profit changed by ${profitTrendPct.toFixed(1)}% across the selected trend window.`,
+                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
+                      1,
+                    )}% across the selected trend window.`
+                  : `Profit changed by ${profitTrendPct.toFixed(
+                      1,
+                    )}% across the selected trend window.`,
                 color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
@@ -740,12 +746,13 @@ export default function ProfitIntelligencePage() {
           <ConcentrationCard
             eyebrow="PROFIT CONCENTRATION"
             title="Profit dependency"
-            status={`${top3ProfitShare > 60
-              ? "High"
-              : top3ProfitShare > 35
-                ? "Moderate"
-                : "Low"
-              } profit dependency`}
+            status={`${
+              top3ProfitShare > 60
+                ? "High"
+                : top3ProfitShare > 35
+                  ? "Moderate"
+                  : "Low"
+            } profit dependency`}
             statusColor={
               top3ProfitShare > 60
                 ? "#ff6b4a"
@@ -768,84 +775,241 @@ export default function ProfitIntelligencePage() {
             marginTop: 24,
           }}
         >
-          <div className="panel" style={{ marginBottom: 0 }}>
-            <div className="panel-eyebrow">WEAK PROFIT DRIVERS</div>
+          <div
+            className="panel"
+            style={{
+              marginBottom: 0,
+              border: "1px solid rgba(255,115,60,0.24)",
+              background:
+                "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+            }}
+          >
+            <div className="panel-eyebrow">TOP PROFIT LEAKS</div>
+
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              High-revenue products with weak margins
+              Products creating margin pressure
             </h2>
 
-            <div style={{ marginTop: 22 }}>
+            <div
+              style={{
+                marginTop: 10,
+                color: "rgba(255,255,255,0.58)",
+                lineHeight: 1.6,
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              High-revenue products with weak margins can make sales look strong
+              while reducing profit quality.
+            </div>
+
+            <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
               {weakProfitDrivers.length > 0 ? (
-                weakProfitDrivers.map((row) => (
+                weakProfitDrivers.map((row, index) => (
                   <div
                     key={row.productId}
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "1fr 100px 100px",
+                      gridTemplateColumns: "46px 1fr auto",
                       gap: 16,
-                      padding: "15px 0",
-                      borderTop: "1px solid rgba(255,255,255,0.07)",
+                      padding: 18,
+                      borderRadius: 18,
+                      background:
+                        "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
+                      border:
+                        index === 0
+                          ? "1px solid rgba(255,107,74,0.34)"
+                          : "1px solid rgba(255,115,60,0.14)",
                       alignItems: "center",
                     }}
                   >
-                    <div style={{ fontWeight: 800, color: "#f3f4f6" }}>
-                      {row.productTitle}
-                    </div>
-
-                    <div style={{ color: "rgba(255,255,255,0.58)" }}>
-                      ${row.revenue.toFixed(0)}
-                    </div>
-
-                    <strong
+                    <div
                       style={{
-                        color: row.marginPct < 0 ? "#ff6b4a" : "#f59e0b",
-                        textAlign: "right",
+                        width: 38,
+                        height: 38,
+                        borderRadius: 14,
+                        background:
+                          index === 0
+                            ? "rgba(255,107,74,0.16)"
+                            : "rgba(255,115,60,0.10)",
+                        border:
+                          index === 0
+                            ? "1px solid rgba(255,107,74,0.32)"
+                            : "1px solid rgba(255,115,60,0.20)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: index === 0 ? "#ff6b4a" : "#ff9a70",
+                        fontWeight: 950,
                       }}
                     >
-                      {row.marginPct.toFixed(1)}%
-                    </strong>
+                      #{index + 1}
+                    </div>
+
+                    <div>
+                      <div
+                        style={{
+                          fontWeight: 950,
+                          color: "#f8fafc",
+                          lineHeight: 1.35,
+                        }}
+                      >
+                        {row.productTitle}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 7,
+                          display: "flex",
+                          gap: 10,
+                          flexWrap: "wrap",
+                          color: "rgba(255,255,255,0.52)",
+                          fontSize: 12,
+                          fontWeight: 800,
+                        }}
+                      >
+                        <span>Revenue {money(row.revenue)}</span>
+                        <span>•</span>
+                        <span>Profit {money(row.profit)}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <div
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 950,
+                          color: row.marginPct < 0 ? "#ff6b4a" : "#f59e0b",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {row.marginPct.toFixed(1)}%
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 7,
+                          fontSize: 10,
+                          fontWeight: 900,
+                          letterSpacing: "0.08em",
+                          textTransform: "uppercase",
+                          color: "rgba(255,255,255,0.44)",
+                        }}
+                      >
+                        Margin
+                      </div>
+                    </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: "rgba(255,255,255,0.58)" }}>
+                <div
+                  style={{
+                    padding: 22,
+                    borderRadius: 18,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(34,197,94,0.18)",
+                    color: "rgba(255,255,255,0.66)",
+                    lineHeight: 1.6,
+                    fontWeight: 700,
+                  }}
+                >
                   No major weak profit drivers detected in the current period.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="panel" style={{ marginBottom: 0 }}>
+          <div
+            className="panel"
+            style={{
+              marginBottom: 0,
+              border: `1px solid ${profitQualityColor}55`,
+              background: `radial-gradient(circle at top right, ${profitQualityColor}18, transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))`,
+            }}
+          >
             <div className="panel-eyebrow">PROFIT QUALITY</div>
+
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              {profitQualityLevel} profit quality
+              Margin health signal
             </h2>
 
             <div
               style={{
-                marginTop: 24,
-                fontSize: 44,
+                marginTop: 26,
+                display: "inline-flex",
+                padding: "12px 18px",
+                borderRadius: 999,
+                background: `${profitQualityColor}18`,
+                border: `1px solid ${profitQualityColor}55`,
+                color: profitQualityColor,
+                fontSize: 13,
                 fontWeight: 950,
-                color:
-                  profitQualityLevel === "Weak"
-                    ? "#ff6b4a"
-                    : profitQualityLevel === "Mixed"
-                      ? "#f59e0b"
-                      : "#22c55e",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {profitQualityLevel}
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                fontSize: 58,
+                fontWeight: 950,
+                color: profitQualityColor,
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
               }}
             >
               {healthyProfitProducts}/{rows.length}
             </div>
 
+            <div
+              style={{
+                marginTop: 9,
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.42)",
+              }}
+            >
+              Healthy margin products
+            </div>
+
             <p
               style={{
-                marginTop: 12,
-                color: "rgba(255,255,255,0.64)",
-                lineHeight: 1.7,
+                marginTop: 18,
+                color: "rgba(255,255,255,0.66)",
+                lineHeight: 1.75,
+                fontWeight: 700,
               }}
             >
               {healthyProfitProducts} products show healthy margins, while{" "}
               {weakProfitProducts} products show weak profit quality.
             </p>
+
+            <div
+              style={{
+                marginTop: 22,
+                height: 9,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.07)",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(0, (healthyProfitProducts / Math.max(rows.length, 1)) * 100),
+                  )}%`,
+                  height: "100%",
+                  borderRadius: 999,
+                  background: `linear-gradient(90deg, ${profitQualityColor}, ${profitQualityColor}88)`,
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
