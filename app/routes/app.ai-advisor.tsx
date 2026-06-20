@@ -1,9 +1,5 @@
 import * as React from "react";
-import {
-  useFetcher,
-  useLoaderData,
-  useNavigate,
-} from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
@@ -52,18 +48,11 @@ export async function action({ request }: { request: Request }) {
 
   const formData = await request.formData();
 
-  const intent = String(
-    formData.get("intent") || "analysis",
-  );
-
-  const storeSummary = String(
-    formData.get("storeSummary") || "",
-  );
+  const intent = String(formData.get("intent") || "analysis");
+  const storeSummary = String(formData.get("storeSummary") || "");
 
   if (intent === "ask") {
-    const question = String(
-      formData.get("question") || "",
-    );
+    const question = String(formData.get("question") || "");
 
     return generateAiAnswer({
       question,
@@ -82,24 +71,23 @@ Do not generate a complete analysis.
     storeSummary,
   });
 }
+
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const aiFetcher = useFetcher<{ text: string }>();
   const askFetcher = useFetcher<{ text: string }>();
 
-  const [question, setQuestion] =
-    React.useState("");
-  const { summary, rows, assumptions } =
-    useLoaderData() as LoaderData & {
-      assumptions: {
-        monthlyAds: number;
-        monthlyShipping: number;
-        monthlyOperating: number;
-        paymentFeePct: number;
-        transactionFeePct: number;
-        taxReservePct: number;
-      } | null;
-    };
+  const [question, setQuestion] = React.useState("");
+  const { summary, rows, assumptions } = useLoaderData() as LoaderData & {
+    assumptions: {
+      monthlyAds: number;
+      monthlyShipping: number;
+      monthlyOperating: number;
+      paymentFeePct: number;
+      transactionFeePct: number;
+      taxReservePct: number;
+    } | null;
+  };
 
   const [selectedQuestion, setSelectedQuestion] =
     React.useState<SelectedQuestion>("profitRisk");
@@ -131,14 +119,9 @@ export default function AiAdvisorPage() {
   const transactionFeePct = assumptions?.transactionFeePct ?? 0;
   const taxReservePct = assumptions?.taxReservePct ?? 0;
 
-  const estimatedPaymentFees =
-    summary.revenue * (paymentFeePct / 100);
-
-  const estimatedTransactionFees =
-    summary.revenue * (transactionFeePct / 100);
-
-  const estimatedTaxReserve =
-    summary.revenue * (taxReservePct / 100);
+  const estimatedPaymentFees = summary.revenue * (paymentFeePct / 100);
+  const estimatedTransactionFees = summary.revenue * (transactionFeePct / 100);
+  const estimatedTaxReserve = summary.revenue * (taxReservePct / 100);
 
   const totalEstimatedCosts =
     monthlyAds +
@@ -148,13 +131,10 @@ export default function AiAdvisorPage() {
     estimatedTransactionFees +
     estimatedTaxReserve;
 
-  const estimatedNetProfit =
-    summary.profit - totalEstimatedCosts;
+  const estimatedNetProfit = summary.profit - totalEstimatedCosts;
 
   const estimatedNetMargin =
-    summary.revenue > 0
-      ? (estimatedNetProfit / summary.revenue) * 100
-      : 0;
+    summary.revenue > 0 ? (estimatedNetProfit / summary.revenue) * 100 : 0;
 
   const healthScore = Math.max(
     0,
@@ -162,9 +142,9 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        losingProducts.length * 15 -
-        missingCostProducts.length * 10 -
-        lowMarginProducts.length * 4,
+          losingProducts.length * 15 -
+          missingCostProducts.length * 10 -
+          lowMarginProducts.length * 4,
       ),
     ),
   );
@@ -199,43 +179,39 @@ export default function AiAdvisorPage() {
   const marginAlerts = [
     losingProducts.length > 0
       ? {
-        level: "Critical",
-        message: `${losingProducts.length} products are currently selling below cost.`,
-      }
+          level: "Critical",
+          message: `${losingProducts.length} products are currently selling below cost.`,
+        }
       : null,
 
     missingCostProducts.length > 0
       ? {
-        level: "Warning",
-        message: `${missingCostProducts.length} products are missing cost data.`,
-      }
+          level: "Warning",
+          message: `${missingCostProducts.length} products are missing cost data.`,
+        }
       : null,
 
     summary.refunds > 0
       ? {
-        level: "Notice",
-        message: `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
-      }
+          level: "Notice",
+          message: `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
+        }
       : null,
 
     recoverableProfit > 0
       ? {
-        level: "Opportunity",
-        message: `$${recoverableProfit.toFixed(
-          0,
-        )} recoverable profit opportunity detected.`,
-      }
+          level: "Opportunity",
+          message: `$${recoverableProfit.toFixed(
+            0,
+          )} recoverable profit opportunity detected.`,
+        }
       : null,
   ].filter(
     (alert): alert is { level: string; message: string } => alert !== null,
   );
 
   const healthColor =
-    healthScore < 40
-      ? "#ff6b4a"
-      : healthScore < 70
-        ? "#f59e0b"
-        : "#22c55e";
+    healthScore < 40 ? "#ff6b4a" : healthScore < 70 ? "#f59e0b" : "#22c55e";
 
   const aiFindings = [
     losingProducts.length > 0
@@ -249,52 +225,22 @@ export default function AiAdvisorPage() {
       : null,
     summary.discounts > 0
       ? `Discounts reduced revenue by $${summary.discounts.toFixed(
-        2,
-      )} during this period.`
+          2,
+        )} during this period.`
       : null,
     summary.refunds > 0
       ? `Refunds reduced net revenue by $${summary.refunds.toFixed(
-        2,
-      )} during this period.`
+          2,
+        )} during this period.`
       : null,
     recoverableProfit > 0
       ? `MarginLab detected approximately $${recoverableProfit.toFixed(
-        0,
-      )} in recoverable profit opportunities.`
+          0,
+        )} in recoverable profit opportunities.`
       : null,
   ]
     .filter(Boolean)
     .slice(0, 3) as string[];
-
-  const aiAnswers: Record<SelectedQuestion, string> = {
-    profitRisk: topProfitLeak
-      ? `Your store is currently exposed to profitability risk because ${topProfitLeak.productTitle} has the strongest negative impact in the selected period. ${losingProducts.length} products are selling below cost, which means they generate revenue but reduce overall profit. MarginLab also detected approximately $${recoverableProfit.toFixed(
-        0,
-      )} in recoverable profit opportunities if pricing gaps are reviewed.`
-      : "MarginLab did not detect a single dominant product risk during this period. Based on available cost and order data, your current profitability risk appears more distributed across the catalog.",
-
-    marginPressure: `Your margin is being affected by a combination of discounts, refunds and product-level profitability. Discounts reduced revenue by $${summary.discounts.toFixed(
-      2,
-    )}, while refunds reduced net revenue by $${summary.refunds.toFixed(
-      2,
-    )}. ${lowMarginProducts.length
-      } products are operating below healthy margin levels, which can make revenue look acceptable while profit quality weakens.`,
-
-    priority:
-      missingCostProducts.length > 0
-        ? `Start by fixing missing cost data for ${missingCostProducts.length
-        } products. Without accurate costs, MarginLab cannot fully trust margin calculations or pricing recommendations. After that, review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
-        } and focus on recoverable profit opportunities.`
-        : `Cost data appears complete enough for the selected period. The next priority is to review ${topProfitLeak ? topProfitLeak.productTitle : "the highest-risk products"
-        } and focus on recoverable profit opportunities before making broader pricing changes.`,
-
-    fastestImprovement:
-      recoverableProfit > 0
-        ? `The fastest profit improvement would come from reviewing products with recoverable pricing opportunities. MarginLab estimates approximately $${recoverableProfit.toFixed(
-          0,
-        )} in potential recoverable profit. Start with products selling below cost, then complete missing cost data, and only after that review pricing gaps.`
-        : "The fastest improvement right now is improving data accuracy. Start with missing cost data and high-risk products before making pricing changes.",
-  };
 
   const aiPrompt = `
 You are MarginLab AI Advisor.
@@ -348,35 +294,47 @@ ${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
 
 TOP LOSING PRODUCTS
 
-${[...losingProducts]
-      .slice(0, 3)
-      .map(
-        (p) =>
-          `${p.productTitle} | Profit ${p.profit.toFixed(2)} | Margin ${p.marginPct.toFixed(1)}%`,
-      )
-      .join("\n") || "None"}
+${
+  [...losingProducts]
+    .slice(0, 3)
+    .map(
+      (p) =>
+        `${p.productTitle} | Profit ${p.profit.toFixed(
+          2,
+        )} | Margin ${p.marginPct.toFixed(1)}%`,
+    )
+    .join("\n") || "None"
+}
 
 TOP LOW-MARGIN PRODUCTS
 
-${[...lowMarginProducts]
-      .slice(0, 3)
-      .map(
-        (p) =>
-          `${p.productTitle} | Profit ${p.profit.toFixed(2)} | Margin ${p.marginPct.toFixed(1)}%`,
-      )
-      .join("\n") || "None"}
+${
+  [...lowMarginProducts]
+    .slice(0, 3)
+    .map(
+      (p) =>
+        `${p.productTitle} | Profit ${p.profit.toFixed(
+          2,
+        )} | Margin ${p.marginPct.toFixed(1)}%`,
+    )
+    .join("\n") || "None"
+}
 
 TOP RECOVERY OPPORTUNITIES
 
-${[...rows]
-      .filter((r) => r.targetDelta > 0)
-      .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
-      .slice(0, 3)
-      .map(
-        (p) =>
-          `${p.productTitle} | Potential Recovery ${(p.targetDelta * p.qty).toFixed(0)}`,
-      )
-      .join("\n") || "None"}
+${
+  [...rows]
+    .filter((r) => r.targetDelta > 0)
+    .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
+    .slice(0, 3)
+    .map(
+      (p) =>
+        `${p.productTitle} | Potential Recovery ${(
+          p.targetDelta * p.qty
+        ).toFixed(0)}`,
+    )
+    .join("\n") || "None"
+}
 
 TASK
 
@@ -585,8 +543,9 @@ Rules:
                     fontWeight: 700,
                   }}
                 >
-                  MarginLab analyzed your store and detected profitability risks related
-                  to product margins, missing costs and recoverable profit opportunities.
+                  MarginLab analyzed your store and detected profitability risks
+                  related to product margins, missing costs and recoverable
+                  profit opportunities.
                 </div>
               </div>
 
@@ -600,9 +559,9 @@ Rules:
                 {(aiFindings.length > 0
                   ? aiFindings
                   : [
-                    "No critical margin issues detected during the selected period.",
-                    "Product costs, discounts and refunds appear stable based on available data.",
-                  ]
+                      "No critical margin issues detected during the selected period.",
+                      "Product costs, discounts and refunds appear stable based on available data.",
+                    ]
                 ).map((text) => (
                   <div
                     key={text}
@@ -665,7 +624,8 @@ Rules:
 
                       <div
                         style={{
-                          color: label === "Opportunity" ? "#22c55e" : "#f8fafc",
+                          color:
+                            label === "Opportunity" ? "#22c55e" : "#f8fafc",
                           fontWeight: 900,
                           marginTop: 4,
                           lineHeight: 1.45,
@@ -827,162 +787,6 @@ Rules:
               <div
                 style={{
                   marginTop: 24,
-                  padding: 22,
-                  borderRadius: 22,
-                  background:
-                    "linear-gradient(180deg, rgba(255,115,60,0.08), rgba(8,13,22,0.92))",
-                  border: "1px solid rgba(255,115,60,0.22)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    letterSpacing: "0.14em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                  }}
-                >
-                  Ask MarginLab
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "grid",
-                    gap: 12,
-                  }}
-                >
-                  {[
-                    {
-                      id: "profitRisk",
-                      label: topProfitLeak
-                        ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
-                        : "Why is my profit at risk?",
-                    },
-                    {
-                      id: "marginPressure",
-                      label:
-                        summary.refunds > 0
-                          ? "Are refunds hurting profitability?"
-                          : "What is hurting my margin?",
-                    },
-                    {
-                      id: "priority",
-                      label:
-                        missingCostProducts.length > 0
-                          ? `Why should I fix ${missingCostProducts.length} missing costs first?`
-                          : "What should I check first?",
-                    },
-                    {
-                      id: "fastestImprovement",
-                      label:
-                        recoverableProfit > 0
-                          ? "How much profit can I recover?"
-                          : "What would improve profit fastest?",
-                    },
-                  ].map((question) => (
-                    <button
-                      key={question.id}
-                      onClick={() => {
-                        setSelectedQuestion(question.id as SelectedQuestion);
-                        setQuestion(question.label);
-
-                        const formData = new FormData();
-
-                        formData.append("intent", "ask");
-                        formData.append("question", question.label);
-                        formData.append("storeSummary", aiPrompt);
-
-                        askFetcher.submit(formData, {
-                          method: "post",
-                        });
-                      }}
-                      style={{
-                        padding: "14px 16px",
-                        borderRadius: 14,
-                        border:
-                          selectedQuestion === question.id
-                            ? "1px solid rgba(255,115,60,0.45)"
-                            : "1px solid rgba(255,115,60,0.14)",
-                        background:
-                          selectedQuestion === question.id
-                            ? "rgba(255,115,60,0.14)"
-                            : "rgba(255,115,60,0.08)",
-                        color: "#f8fafc",
-                        fontWeight: 850,
-                        textAlign: "left",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {question.label}
-                    </button>
-                  ))}
-                </div>
-
-                <askFetcher.Form method="post">
-                  <input type="hidden" name="intent" value="ask" />
-                  <input type="hidden" name="storeSummary" value={aiPrompt} />
-
-                  <input
-                    name="question"
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="Ask a profitability question..."
-                    style={{
-                      width: "100%",
-                      marginTop: 18,
-                      padding: "14px 16px",
-                      borderRadius: 14,
-                      border: "1px solid rgba(255,115,60,0.18)",
-                      background: "rgba(255,255,255,0.04)",
-                      color: "#fff",
-                      outline: "none",
-                    }}
-                  />
-
-                  <button
-                    type="submit"
-                    style={{
-                      marginTop: 14,
-                      width: "100%",
-                      padding: "14px",
-                      borderRadius: 14,
-                      border: "1px solid rgba(255,115,60,0.22)",
-                      background:
-                        "linear-gradient(135deg, rgba(255,115,60,0.22), rgba(255,115,60,0.10))",
-                      color: "#fff",
-                      fontWeight: 900,
-                      cursor: "pointer",
-                    }}
-                  >
-                    {askFetcher.state !== "idle" ? "Thinking..." : "Ask AI"}
-                  </button>
-                </askFetcher.Form>
-
-                {askFetcher.data?.text && (
-                  <div
-                    style={{
-                      marginTop: 20,
-                      padding: 20,
-                      borderRadius: 20,
-                      background:
-                        "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                      border: "1px solid rgba(34,197,94,0.22)",
-                      color: "rgba(255,255,255,0.82)",
-                      lineHeight: 1.7,
-                      whiteSpace: "pre-wrap",
-                      fontWeight: 750,
-                    }}
-                  >
-                    {askFetcher.data.text}
-                  </div>
-                )}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 24,
                   padding: 18,
                   borderRadius: 18,
                   background: "rgba(255,115,60,0.08)",
@@ -992,86 +796,172 @@ Rules:
                   fontWeight: 700,
                 }}
               >
-                🔒 Growth preview. This analysis is currently available in preview mode.
-                Advanced AI answers and full conversational analysis will be part of the
-                Growth plan.
+                🔒 Growth preview. This analysis is currently available in
+                preview mode. Advanced AI answers and full conversational
+                analysis will be part of the Growth plan.
               </div>
             </div>
-            <askFetcher.Form method="post">
-              <input
-                type="hidden"
-                name="intent"
-                value="ask"
-              />
+          </div>
 
-              <input
-                type="hidden"
-                name="storeSummary"
-                value={aiPrompt}
-              />
+          <div
+            style={{
+              marginTop: 28,
+              padding: 28,
+              borderRadius: 26,
+              background:
+                "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+              border: "1px solid rgba(255,115,60,0.22)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: "0.14em",
+                textTransform: "uppercase",
+                color: "#ff9a70",
+              }}
+            >
+              Ask MarginLab
+            </div>
 
-              <div
-                style={{
-                  marginTop: 24,
-                  padding: 20,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border:
-                    "1px solid rgba(255,115,60,0.22)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
+            <div
+              style={{
+                marginTop: 16,
+                color: "rgba(255,255,255,0.62)",
+                fontSize: 14,
+                fontWeight: 700,
+                lineHeight: 1.6,
+              }}
+            >
+              Ask a specific profitability question and MarginLab will answer
+              using your store data, product risks, recovery opportunities and
+              profit assumptions.
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                display: "grid",
+                gridTemplateColumns: "repeat(4,1fr)",
+                gap: 12,
+              }}
+            >
+              {[
+                {
+                  id: "profitRisk",
+                  label: topProfitLeak
+                    ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
+                    : "Why is my profit at risk?",
+                },
+                {
+                  id: "marginPressure",
+                  label:
+                    summary.refunds > 0
+                      ? "Are refunds hurting profitability?"
+                      : "What is hurting my margin?",
+                },
+                {
+                  id: "priority",
+                  label:
+                    missingCostProducts.length > 0
+                      ? `Why should I fix ${missingCostProducts.length} missing costs first?`
+                      : "What should I check first?",
+                },
+                {
+                  id: "fastestImprovement",
+                  label:
+                    recoverableProfit > 0
+                      ? "How much profit can I recover?"
+                      : "What would improve profit fastest?",
+                },
+              ].map((presetQuestion) => (
+                <button
+                  key={presetQuestion.id}
+                  onClick={() => {
+                    setSelectedQuestion(
+                      presetQuestion.id as SelectedQuestion,
+                    );
+                    setQuestion(presetQuestion.label);
+
+                    const formData = new FormData();
+
+                    formData.append("intent", "ask");
+                    formData.append("question", presetQuestion.label);
+                    formData.append("storeSummary", aiPrompt);
+
+                    askFetcher.submit(formData, {
+                      method: "post",
+                    });
                   }}
-                >
-                  Ask MarginLab
-                </div>
-
-                <input
-                  name="question"
-                  value={question}
-                  onChange={(e) =>
-                    setQuestion(e.target.value)
-                  }
-                  placeholder="Why did my profit drop?"
                   style={{
-                    width: "100%",
-                    marginTop: 14,
                     padding: "14px 16px",
                     borderRadius: 14,
                     border:
-                      "1px solid rgba(255,115,60,0.18)",
+                      selectedQuestion === presetQuestion.id
+                        ? "1px solid rgba(255,115,60,0.45)"
+                        : "1px solid rgba(255,115,60,0.14)",
+                    background:
+                      selectedQuestion === presetQuestion.id
+                        ? "rgba(255,115,60,0.14)"
+                        : "rgba(255,115,60,0.08)",
+                    color: "#f8fafc",
+                    fontWeight: 850,
+                    textAlign: "left",
+                    cursor: "pointer",
+                    minHeight: 68,
+                  }}
+                >
+                  {presetQuestion.label}
+                </button>
+              ))}
+            </div>
+
+            <askFetcher.Form method="post">
+              <input type="hidden" name="intent" value="ask" />
+              <input type="hidden" name="storeSummary" value={aiPrompt} />
+
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "grid",
+                  gridTemplateColumns: "1fr auto",
+                  gap: 12,
+                }}
+              >
+                <input
+                  name="question"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Ask a profitability question..."
+                  style={{
+                    width: "100%",
+                    padding: "15px 16px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,115,60,0.18)",
                     background: "rgba(255,255,255,0.04)",
                     color: "#fff",
                     outline: "none",
+                    fontWeight: 800,
                   }}
                 />
 
                 <button
                   type="submit"
                   style={{
-                    marginTop: 14,
-                    width: "100%",
-                    padding: "14px",
+                    padding: "0 28px",
                     borderRadius: 14,
-                    border:
-                      "1px solid rgba(255,115,60,0.22)",
+                    border: "1px solid rgba(255,115,60,0.22)",
                     background:
-                      "linear-gradient(135deg, rgba(255,115,60,0.22), rgba(255,115,60,0.10))",
+                      "linear-gradient(135deg, rgba(255,115,60,0.24), rgba(255,115,60,0.10))",
                     color: "#fff",
                     fontWeight: 900,
                     cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {askFetcher.state !== "idle"
-                    ? "Thinking..."
-                    : "Ask AI"}
+                  {askFetcher.state !== "idle" ? "Thinking..." : "Ask AI"}
                 </button>
               </div>
             </askFetcher.Form>
@@ -1080,15 +970,15 @@ Rules:
               <div
                 style={{
                   marginTop: 20,
-                  padding: 20,
+                  padding: 22,
                   borderRadius: 20,
                   background:
                     "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border:
-                    "1px solid rgba(34,197,94,0.22)",
-                  color: "rgba(255,255,255,0.82)",
-                  lineHeight: 1.7,
+                  border: "1px solid rgba(34,197,94,0.22)",
+                  color: "rgba(255,255,255,0.84)",
+                  lineHeight: 1.75,
                   whiteSpace: "pre-wrap",
+                  fontWeight: 750,
                 }}
               >
                 {askFetcher.data.text}
