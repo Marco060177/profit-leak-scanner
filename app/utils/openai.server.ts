@@ -60,3 +60,58 @@ Rules:
     text: response.output_text,
   };
 }
+
+export async function generateAiAnswer(input: {
+  context: string;
+  question: string;
+}) {
+  if (!openaiApiKey) {
+    return {
+      text: "AI is not available.",
+    };
+  }
+
+  const response = await openai.responses.create({
+    model: "gpt-4.1-mini",
+    input: [
+      {
+        role: "system",
+        content: `
+You are MarginLab AI Assistant.
+
+Answer ONLY the user's question.
+
+Do not generate a full report.
+
+Do not create sections.
+
+Do not repeat all metrics.
+
+Use 3-6 short bullet points.
+
+Focus only on the specific question asked.
+
+Be direct, practical and business-oriented.
+
+Use only supplied data.
+`,
+      },
+      {
+        role: "user",
+        content: `
+QUESTION
+
+${input.question}
+
+STORE DATA
+
+${input.context}
+`,
+      },
+    ],
+  });
+
+  return {
+    text: response.output_text,
+  };
+}
