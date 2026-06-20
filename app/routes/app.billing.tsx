@@ -270,7 +270,7 @@ export default function Billing() {
               <div style={styles.infoTitle}>Built for margin intelligence</div>
               <div style={styles.infoText}>
                 MarginLab is evolving beyond reporting into smarter
-                profitability insights for Shopify stores..
+                profitability insights for Shopify stores.
               </div>
             </div>
           </div>
