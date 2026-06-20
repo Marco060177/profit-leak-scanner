@@ -778,56 +778,71 @@ Rules:
                 {[
                   {
                     id: "profitRisk",
-                    label: "Why is my profit at risk?",
+                    label: topProfitLeak
+                      ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
+                      : "Why is my profit at risk?",
                   },
+
                   {
                     id: "marginPressure",
-                    label: "What is hurting my margin?",
+                    label:
+                      summary.refunds > 0
+                        ? "Are refunds hurting profitability?"
+                        : "What is hurting my margin?",
                   },
+
                   {
                     id: "priority",
-                    label: "What should I check first?",
+                    label:
+                      missingCostProducts.length > 0
+                        ? `Why should I fix ${missingCostProducts.length} missing costs first?`
+                        : "What should I check first?",
                   },
+
                   {
                     id: "fastestImprovement",
-                    label: "What would improve profit fastest?",
+                    label:
+                      recoverableProfit > 0
+                        ? "How much profit can I recover?"
+                        : "What would improve profit fastest?",
                   },
+                
                 ].map((question) => (
-                  <button
-                    key={question.id}
-                    onClick={() => {
-                      setSelectedQuestion(question.id as SelectedQuestion);
-                      setQuestion(question.label);
+                <button
+                  key={question.id}
+                  onClick={() => {
+                    setSelectedQuestion(question.id as SelectedQuestion);
+                    setQuestion(question.label);
 
-                      const formData = new FormData();
+                    const formData = new FormData();
 
-                      formData.append("intent", "ask");
-                      formData.append("question", question.label);
-                      formData.append("storeSummary", aiPrompt);
+                    formData.append("intent", "ask");
+                    formData.append("question", question.label);
+                    formData.append("storeSummary", aiPrompt);
 
-                      askFetcher.submit(formData, {
-                        method: "post",
-                      });
-                    }}
-                    style={{
-                      padding: "14px 16px",
-                      borderRadius: 14,
-                      border:
-                        selectedQuestion === question.id
-                          ? "1px solid rgba(255,115,60,0.45)"
-                          : "1px solid rgba(255,115,60,0.14)",
-                      background:
-                        selectedQuestion === question.id
-                          ? "rgba(255,115,60,0.14)"
-                          : "rgba(255,115,60,0.08)",
-                      color: "#f8fafc",
-                      fontWeight: 850,
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {question.label}
-                  </button>
+                    askFetcher.submit(formData, {
+                      method: "post",
+                    });
+                  }}
+                  style={{
+                    padding: "14px 16px",
+                    borderRadius: 14,
+                    border:
+                      selectedQuestion === question.id
+                        ? "1px solid rgba(255,115,60,0.45)"
+                        : "1px solid rgba(255,115,60,0.14)",
+                    background:
+                      selectedQuestion === question.id
+                        ? "rgba(255,115,60,0.14)"
+                        : "rgba(255,115,60,0.08)",
+                    color: "#f8fafc",
+                    fontWeight: 850,
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  {question.label}
+                </button>
                 ))}
               </div>
 
