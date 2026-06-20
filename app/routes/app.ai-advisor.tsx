@@ -8,7 +8,10 @@ import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import { generateAiMarginAnalysis } from "~/utils/openai.server";
+import {
+  generateAiMarginAnalysis,
+  generateAiAnswer,
+} from "~/utils/openai.server";
 import type { LoaderData } from "~/utils/margin";
 
 import "~/styles/dashboard.css";
@@ -62,22 +65,9 @@ export async function action({ request }: { request: Request }) {
       formData.get("question") || "",
     );
 
-    return generateAiMarginAnalysis({
-      storeSummary: `
-USER QUESTION
-
-${question}
-
-STORE DATA
-
-${storeSummary}
-
-Answer the question directly.
-
-Do not repeat all metrics.
-
-Use concise business language.
-`,
+    return generateAiAnswer({
+      question,
+      context: storeSummary,
     });
   }
 
@@ -85,7 +75,6 @@ Use concise business language.
     storeSummary,
   });
 }
-
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const aiFetcher = useFetcher<{ text: string }>();
