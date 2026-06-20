@@ -67,7 +67,14 @@ export async function action({ request }: { request: Request }) {
 
     return generateAiAnswer({
       question,
-      context: storeSummary,
+      context: `
+Current store profitability data:
+
+${storeSummary}
+
+The user is asking a specific question.
+Do not generate a complete analysis.
+`,
     });
   }
 

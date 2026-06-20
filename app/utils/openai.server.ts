@@ -87,11 +87,28 @@ Do not create sections.
 
 Do not repeat all metrics.
 
-Use 3-6 short bullet points.
+NEVER create sections.
 
-Focus only on the specific question asked.
+NEVER write:
+EXECUTIVE SUMMARY
+STORE HEALTH
+MAIN RISKS
+WHAT TO CHECK FIRST
+PROFIT OPPORTUNITY
 
-Be direct, practical and business-oriented.
+Answer in 2-5 bullet points only.
+
+Answer ONLY the user's question.
+
+If the user asks about refunds, discuss refunds only.
+
+If the user asks about margins, discuss margins only.
+
+If the user asks about products, discuss products only.
+
+Do not summarize the whole business.
+
+Be concise.
 
 Use only supplied data.
 `,
