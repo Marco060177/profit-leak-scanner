@@ -756,148 +756,17 @@ Rules:
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
               }}
             >
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 900,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.55)",
-                }}
-              >
-                Ask MarginLab
-              </div>
-
-              <div
-                style={{
-                  marginTop: 20,
-                  display: "grid",
-                  gap: 12,
-                }}
-              >
-                {[
-                  {
-                    id: "profitRisk",
-                    label: topProfitLeak
-                      ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
-                      : "Why is my profit at risk?",
-                  },
-
-                  {
-                    id: "marginPressure",
-                    label:
-                      summary.refunds > 0
-                        ? "Are refunds hurting profitability?"
-                        : "What is hurting my margin?",
-                  },
-
-                  {
-                    id: "priority",
-                    label:
-                      missingCostProducts.length > 0
-                        ? `Why should I fix ${missingCostProducts.length} missing costs first?`
-                        : "What should I check first?",
-                  },
-
-                  {
-                    id: "fastestImprovement",
-                    label:
-                      recoverableProfit > 0
-                        ? "How much profit can I recover?"
-                        : "What would improve profit fastest?",
-                  },
-                
-                ].map((question) => (
-                <button
-                  key={question.id}
-                  onClick={() => {
-                    setSelectedQuestion(question.id as SelectedQuestion);
-                    setQuestion(question.label);
-
-                    const formData = new FormData();
-
-                    formData.append("intent", "ask");
-                    formData.append("question", question.label);
-                    formData.append("storeSummary", aiPrompt);
-
-                    askFetcher.submit(formData, {
-                      method: "post",
-                    });
-                  }}
-                  style={{
-                    padding: "14px 16px",
-                    borderRadius: 14,
-                    border:
-                      selectedQuestion === question.id
-                        ? "1px solid rgba(255,115,60,0.45)"
-                        : "1px solid rgba(255,115,60,0.14)",
-                    background:
-                      selectedQuestion === question.id
-                        ? "rgba(255,115,60,0.14)"
-                        : "rgba(255,115,60,0.08)",
-                    color: "#f8fafc",
-                    fontWeight: 850,
-                    textAlign: "left",
-                    cursor: "pointer",
-                  }}
-                >
-                  {question.label}
-                </button>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 18,
-                  padding: 20,
-                  borderRadius: 18,
-                  background:
-                    "linear-gradient(180deg, rgba(255,115,60,0.10), rgba(8,13,22,0.86))",
-                  border: "1px solid rgba(255,115,60,0.22)",
-                  minHeight: 150,
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                    marginBottom: 14,
-                  }}
-                >
-                  MarginLab answer
-                </div>
-
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.78)",
-                    fontSize: 14,
-                    lineHeight: 1.65,
-                    fontWeight: 700,
-                  }}
-                >
-                  {aiAnswers[selectedQuestion]}
-                </div>
-              </div>
-
               <aiFetcher.Form
                 method="post"
                 onSubmit={() => {
                   setShowAiReport(false);
                 }}
               >
-                <input
-                  type="hidden"
-                  name="storeSummary"
-                  value={aiPrompt}
-                />
+                <input type="hidden" name="storeSummary" value={aiPrompt} />
 
                 <button
                   type="submit"
                   style={{
-                    marginTop: 18,
                     width: "100%",
                     padding: "15px 18px",
                     borderRadius: 16,
@@ -938,7 +807,7 @@ Rules:
                       marginBottom: 14,
                     }}
                   >
-                    AI BUSINESS ANALYSIS
+                    AI Business Analysis
                   </div>
 
                   <div
@@ -955,7 +824,161 @@ Rules:
                 </div>
               )}
 
+              <div
+                style={{
+                  marginTop: 24,
+                  padding: 22,
+                  borderRadius: 22,
+                  background:
+                    "linear-gradient(180deg, rgba(255,115,60,0.08), rgba(8,13,22,0.92))",
+                  border: "1px solid rgba(255,115,60,0.22)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "#ff9a70",
+                  }}
+                >
+                  Ask MarginLab
+                </div>
 
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: "grid",
+                    gap: 12,
+                  }}
+                >
+                  {[
+                    {
+                      id: "profitRisk",
+                      label: topProfitLeak
+                        ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
+                        : "Why is my profit at risk?",
+                    },
+                    {
+                      id: "marginPressure",
+                      label:
+                        summary.refunds > 0
+                          ? "Are refunds hurting profitability?"
+                          : "What is hurting my margin?",
+                    },
+                    {
+                      id: "priority",
+                      label:
+                        missingCostProducts.length > 0
+                          ? `Why should I fix ${missingCostProducts.length} missing costs first?`
+                          : "What should I check first?",
+                    },
+                    {
+                      id: "fastestImprovement",
+                      label:
+                        recoverableProfit > 0
+                          ? "How much profit can I recover?"
+                          : "What would improve profit fastest?",
+                    },
+                  ].map((question) => (
+                    <button
+                      key={question.id}
+                      onClick={() => {
+                        setSelectedQuestion(question.id as SelectedQuestion);
+                        setQuestion(question.label);
+
+                        const formData = new FormData();
+
+                        formData.append("intent", "ask");
+                        formData.append("question", question.label);
+                        formData.append("storeSummary", aiPrompt);
+
+                        askFetcher.submit(formData, {
+                          method: "post",
+                        });
+                      }}
+                      style={{
+                        padding: "14px 16px",
+                        borderRadius: 14,
+                        border:
+                          selectedQuestion === question.id
+                            ? "1px solid rgba(255,115,60,0.45)"
+                            : "1px solid rgba(255,115,60,0.14)",
+                        background:
+                          selectedQuestion === question.id
+                            ? "rgba(255,115,60,0.14)"
+                            : "rgba(255,115,60,0.08)",
+                        color: "#f8fafc",
+                        fontWeight: 850,
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {question.label}
+                    </button>
+                  ))}
+                </div>
+
+                <askFetcher.Form method="post">
+                  <input type="hidden" name="intent" value="ask" />
+                  <input type="hidden" name="storeSummary" value={aiPrompt} />
+
+                  <input
+                    name="question"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    placeholder="Ask a profitability question..."
+                    style={{
+                      width: "100%",
+                      marginTop: 18,
+                      padding: "14px 16px",
+                      borderRadius: 14,
+                      border: "1px solid rgba(255,115,60,0.18)",
+                      background: "rgba(255,255,255,0.04)",
+                      color: "#fff",
+                      outline: "none",
+                    }}
+                  />
+
+                  <button
+                    type="submit"
+                    style={{
+                      marginTop: 14,
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 14,
+                      border: "1px solid rgba(255,115,60,0.22)",
+                      background:
+                        "linear-gradient(135deg, rgba(255,115,60,0.22), rgba(255,115,60,0.10))",
+                      color: "#fff",
+                      fontWeight: 900,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {askFetcher.state !== "idle" ? "Thinking..." : "Ask AI"}
+                  </button>
+                </askFetcher.Form>
+
+                {askFetcher.data?.text && (
+                  <div
+                    style={{
+                      marginTop: 20,
+                      padding: 20,
+                      borderRadius: 20,
+                      background:
+                        "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                      border: "1px solid rgba(34,197,94,0.22)",
+                      color: "rgba(255,255,255,0.82)",
+                      lineHeight: 1.7,
+                      whiteSpace: "pre-wrap",
+                      fontWeight: 750,
+                    }}
+                  >
+                    {askFetcher.data.text}
+                  </div>
+                )}
+              </div>
 
               <div
                 style={{
@@ -969,9 +992,9 @@ Rules:
                   fontWeight: 700,
                 }}
               >
-                🔒 Growth preview. This analysis is currently available in
-                preview mode. Advanced AI answers and full conversational
-                analysis will be part of the Growth plan.
+                🔒 Growth preview. This analysis is currently available in preview mode.
+                Advanced AI answers and full conversational analysis will be part of the
+                Growth plan.
               </div>
             </div>
             <askFetcher.Form method="post">
