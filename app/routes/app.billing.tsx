@@ -67,7 +67,11 @@ export default function Billing() {
             MARGIN<span style={{ color: "#ff5a36" }}>LAB</span>
           </div>
 
-          <button type="button" style={styles.backTopBtn} onClick={() => navigate("/app")}>
+          <button
+            type="button"
+            style={styles.backTopBtn}
+            onClick={() => navigate("/app")}
+          >
             Back to dashboard
           </button>
         </div>
@@ -79,11 +83,14 @@ export default function Billing() {
               MARGIN INTELLIGENCE PLATFORM
             </div>
 
-            <h1 style={styles.title}>Choose the margin intelligence plan for your store.</h1>
+            <h1 style={styles.title}>
+              Choose the margin intelligence plan for your store.
+            </h1>
 
             <p style={styles.subtitle}>
-              Start with core profit leak detection today. Upgrade later as MarginLab evolves into
-              forecasting, benchmark insights and advanced AI margin intelligence.
+              Start with core profit leak detection today. Upgrade later as
+              MarginLab evolves into forecasting, benchmark insights and
+              advanced AI margin intelligence.
             </p>
 
             <div style={styles.heroStats}>
@@ -122,7 +129,9 @@ export default function Billing() {
                 <div style={styles.priceMeta}>/ month</div>
               </div>
 
-              <div style={styles.note}>14-day free trial. Cancel anytime through Shopify.</div>
+              <div style={styles.note}>
+                14-day free trial. Cancel anytime through Shopify.
+              </div>
 
               <div style={styles.divider} />
 
@@ -155,12 +164,22 @@ export default function Billing() {
               ) : null}
 
               <fetcher.Form method="post" style={styles.form}>
-                <button type="submit" style={styles.primaryBtn} disabled={isLoading}>
-                  {isLoading ? "Opening Shopify billing..." : "Activate Starter Plan"}
+                <button
+                  type="submit"
+                  style={styles.primaryBtn}
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? "Opening Shopify billing..."
+                    : "Activate Starter Plan"}
                 </button>
               </fetcher.Form>
 
-              <button type="button" style={styles.secondaryBtn} onClick={() => navigate("/app")}>
+              <button
+                type="button"
+                style={styles.secondaryBtn}
+                onClick={() => navigate("/app")}
+              >
                 Continue in preview mode
               </button>
             </div>
@@ -183,7 +202,8 @@ export default function Billing() {
               </div>
 
               <div style={styles.note}>
-                Built for growing Shopify stores that need deeper margin visibility.
+                Built for growing Shopify stores that need deeper margin
+                visibility.
               </div>
 
               <div style={styles.divider} />
@@ -227,8 +247,8 @@ export default function Billing() {
             <div>
               <div style={styles.infoTitle}>Detect hidden margin problems</div>
               <div style={styles.infoText}>
-                Find low-margin products, missing costs and pricing issues that quietly reduce
-                profitability.
+                Find low-margin products, missing costs and pricing issues that
+                quietly reduce profitability.
               </div>
             </div>
           </div>
@@ -238,8 +258,8 @@ export default function Billing() {
             <div>
               <div style={styles.infoTitle}>Turn product data into action</div>
               <div style={styles.infoText}>
-                Review target prices, estimated recovery opportunities and products requiring
-                attention.
+                Review target prices, estimated recovery opportunities and
+                products requiring attention.
               </div>
             </div>
           </div>
@@ -249,8 +269,8 @@ export default function Billing() {
             <div>
               <div style={styles.infoTitle}>Built for margin intelligence</div>
               <div style={styles.infoText}>
-                MarginLab is evolving beyond reporting into smarter profitability insights for
-                Shopify stores.
+                MarginLab is evolving beyond reporting into smarter
+                profitability insights for Shopify stores.
               </div>
             </div>
           </div>
@@ -264,7 +284,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top left, rgba(255,80,40,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(59,130,246,0.12), transparent 26%), linear-gradient(180deg, #071019 0%, #0b111b 100%)",
+      "radial-gradient(circle at top left, rgba(255,115,60,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(255,115,60,0.08), transparent 28%), linear-gradient(180deg, #03050a 0%, #070b12 100%)",
     color: "#f3f4f6",
     fontFamily: "Inter, system-ui, sans-serif",
     padding: 32,
@@ -278,7 +298,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 420,
     height: 420,
     borderRadius: "50%",
-    background: "rgba(255,90,54,0.10)",
+    background: "rgba(255,115,60,0.10)",
     filter: "blur(70px)",
   },
   backgroundGlowTwo: {
@@ -288,7 +308,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 460,
     height: 460,
     borderRadius: "50%",
-    background: "rgba(59,130,246,0.10)",
+    background: "rgba(255,115,60,0.07)",
     filter: "blur(80px)",
   },
   container: {
@@ -305,16 +325,16 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 36,
     padding: "14px 16px",
     borderRadius: 18,
-    background: "rgba(255,255,255,0.045)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(8,13,22,0.92)",
+    border: "1px solid rgba(255,115,60,0.18)",
   },
   logo: {
-    fontWeight: 900,
+    fontWeight: 950,
     letterSpacing: 0.5,
   },
   backTopBtn: {
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    background: "rgba(255,115,60,0.08)",
+    border: "1px solid rgba(255,115,60,0.18)",
     color: "#f3f4f6",
     padding: "10px 14px",
     borderRadius: 12,
@@ -330,9 +350,10 @@ const styles: Record<string, React.CSSProperties> = {
   heroLeft: {
     padding: 34,
     borderRadius: 30,
-    background: "linear-gradient(135deg, rgba(255,90,54,0.12), rgba(255,255,255,0.035))",
-    border: "1px solid rgba(255,255,255,0.08)",
-    boxShadow: "0 24px 80px rgba(0,0,0,0.28)",
+    background:
+      "radial-gradient(circle at top left, rgba(255,115,60,0.10), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+    border: "1px solid rgba(255,115,60,0.22)",
+    boxShadow: "0 24px 80px rgba(0,0,0,0.32)",
   },
   badge: {
     display: "inline-flex",
@@ -340,9 +361,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     padding: "9px 14px",
     borderRadius: 999,
-    background: "rgba(255,90,54,0.12)",
-    border: "1px solid rgba(255,90,54,0.20)",
-    color: "#ff9a7f",
+    background: "rgba(255,115,60,0.10)",
+    border: "1px solid rgba(255,115,60,0.22)",
+    color: "#ff9a70",
     fontSize: 12,
     fontWeight: 900,
     letterSpacing: 0.8,
@@ -378,13 +399,13 @@ const styles: Record<string, React.CSSProperties> = {
   statCard: {
     padding: 18,
     borderRadius: 18,
-    background: "rgba(0,0,0,0.20)",
-    border: "1px solid rgba(255,255,255,0.07)",
+    background: "rgba(255,255,255,0.035)",
+    border: "1px solid rgba(255,115,60,0.14)",
     minHeight: 120,
   },
   statLabel: {
     fontSize: 11,
-    opacity: 0.45,
+    opacity: 0.5,
     textTransform: "uppercase",
     letterSpacing: 0.9,
     fontWeight: 900,
@@ -404,17 +425,19 @@ const styles: Record<string, React.CSSProperties> = {
     overflow: "hidden",
     padding: 30,
     borderRadius: 30,
-    background: "linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035))",
-    border: "1px solid rgba(255,255,255,0.10)",
-    boxShadow: "0 28px 90px rgba(0,0,0,0.35)",
+    background:
+      "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 36%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(8,13,22,0.98))",
+    border: "1px solid rgba(255,115,60,0.28)",
+    boxShadow: "0 28px 90px rgba(0,0,0,0.38)",
   },
   growthCard: {
     position: "relative",
     overflow: "hidden",
     padding: 30,
     borderRadius: 30,
-    background: "linear-gradient(135deg, rgba(34,197,94,0.10), rgba(59,130,246,0.08), rgba(255,255,255,0.035))",
-    border: "1px solid rgba(255,255,255,0.10)",
+    background:
+      "radial-gradient(circle at top right, rgba(34,197,94,0.10), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+    border: "1px solid rgba(34,197,94,0.22)",
     boxShadow: "0 28px 90px rgba(0,0,0,0.35)",
   },
   cardGlow: {
@@ -424,7 +447,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 260,
     height: 260,
     borderRadius: "50%",
-    background: "rgba(34,197,94,0.10)",
+    background: "rgba(255,115,60,0.12)",
     filter: "blur(50px)",
   },
   growthGlow: {
@@ -434,7 +457,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: 280,
     height: 280,
     borderRadius: "50%",
-    background: "rgba(59,130,246,0.14)",
+    background: "rgba(34,197,94,0.10)",
     filter: "blur(60px)",
   },
   planHeader: {
@@ -447,7 +470,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   planEyebrow: {
     fontSize: 12,
-    color: "#93c5fd",
+    color: "#ff9a70",
     fontWeight: 900,
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -468,9 +491,9 @@ const styles: Record<string, React.CSSProperties> = {
   popularBadge: {
     padding: "8px 11px",
     borderRadius: 999,
-    background: "rgba(34,197,94,0.12)",
-    border: "1px solid rgba(34,197,94,0.18)",
-    color: "#4ade80",
+    background: "rgba(255,115,60,0.12)",
+    border: "1px solid rgba(255,115,60,0.24)",
+    color: "#ff9a70",
     fontSize: 11,
     fontWeight: 950,
     whiteSpace: "nowrap",
@@ -478,9 +501,9 @@ const styles: Record<string, React.CSSProperties> = {
   comingBadge: {
     padding: "8px 11px",
     borderRadius: 999,
-    background: "rgba(59,130,246,0.12)",
-    border: "1px solid rgba(59,130,246,0.22)",
-    color: "#93c5fd",
+    background: "rgba(34,197,94,0.10)",
+    border: "1px solid rgba(34,197,94,0.22)",
+    color: "#4ade80",
     fontSize: 11,
     fontWeight: 950,
     whiteSpace: "nowrap",
@@ -515,7 +538,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   divider: {
     height: 1,
-    background: "rgba(255,255,255,0.08)",
+    background: "rgba(255,115,60,0.14)",
     margin: "26px 0",
     position: "relative",
     zIndex: 2,
@@ -549,9 +572,9 @@ const styles: Record<string, React.CSSProperties> = {
     width: 22,
     height: 22,
     borderRadius: "50%",
-    background: "rgba(34,197,94,0.13)",
-    border: "1px solid rgba(34,197,94,0.22)",
-    color: "#4ade80",
+    background: "rgba(255,115,60,0.12)",
+    border: "1px solid rgba(255,115,60,0.24)",
+    color: "#ff9a70",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -562,9 +585,9 @@ const styles: Record<string, React.CSSProperties> = {
     width: 22,
     height: 22,
     borderRadius: "50%",
-    background: "rgba(59,130,246,0.13)",
-    border: "1px solid rgba(59,130,246,0.24)",
-    color: "#93c5fd",
+    background: "rgba(34,197,94,0.12)",
+    border: "1px solid rgba(34,197,94,0.24)",
+    color: "#4ade80",
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
@@ -598,21 +621,22 @@ const styles: Record<string, React.CSSProperties> = {
     width: "100%",
     padding: "15px 18px",
     borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.12)",
-    background: "linear-gradient(135deg,#ff5a36 0%,#ff7b59 100%)",
+    border: "1px solid rgba(255,115,60,0.34)",
+    background:
+      "linear-gradient(135deg, rgba(255,90,54,0.95), rgba(255,115,60,0.88))",
     color: "#fff",
     cursor: "pointer",
     fontWeight: 950,
     fontSize: 15,
-    boxShadow: "0 18px 46px rgba(255,90,54,0.28)",
+    boxShadow: "0 18px 46px rgba(255,90,54,0.25)",
   },
   secondaryBtn: {
     width: "100%",
     marginTop: 12,
     padding: "14px 18px",
     borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.055)",
+    border: "1px solid rgba(255,115,60,0.16)",
+    background: "rgba(255,115,60,0.06)",
     color: "#f3f4f6",
     cursor: "pointer",
     fontWeight: 850,
@@ -623,8 +647,8 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 26,
     padding: "15px 18px",
     borderRadius: 16,
-    border: "1px solid rgba(255,255,255,0.10)",
-    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(34,197,94,0.18)",
+    background: "rgba(34,197,94,0.06)",
     color: "rgba(255,255,255,0.62)",
     cursor: "not-allowed",
     fontWeight: 950,
@@ -654,15 +678,16 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: "flex-start",
     padding: 20,
     borderRadius: 22,
-    background: "rgba(255,255,255,0.045)",
-    border: "1px solid rgba(255,255,255,0.08)",
+    background: "rgba(8,13,22,0.86)",
+    border: "1px solid rgba(255,115,60,0.16)",
     boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
   },
   infoIcon: {
     width: 44,
     height: 44,
     borderRadius: 15,
-    background: "rgba(255,255,255,0.07)",
+    background: "rgba(255,115,60,0.10)",
+    border: "1px solid rgba(255,115,60,0.18)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
