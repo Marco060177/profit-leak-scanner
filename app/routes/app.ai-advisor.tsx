@@ -798,6 +798,16 @@ Rules:
                     onClick={() => {
                       setSelectedQuestion(question.id as SelectedQuestion);
                       setQuestion(question.label);
+
+                      const formData = new FormData();
+
+                      formData.append("intent", "ask");
+                      formData.append("question", question.label);
+                      formData.append("storeSummary", aiPrompt);
+
+                      askFetcher.submit(formData, {
+                        method: "post",
+                      });
                     }}
                     style={{
                       padding: "14px 16px",
