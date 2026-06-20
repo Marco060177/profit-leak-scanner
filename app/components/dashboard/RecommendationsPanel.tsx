@@ -29,7 +29,7 @@ function getRecommendationAction(title: string) {
   const lowerTitle = title.toLowerCase();
 
   if (lowerTitle.includes("below cost")) {
-    return "Review pricing and stop products from selling below cost.";
+    return "Review pricing and stop products from selling below cost..";
   }
 
   if (lowerTitle.includes("missing")) {
