@@ -146,6 +146,8 @@ export default function ProductsPage() {
     0,
   );
 
+  const biggestRiskProduct = revenueAtRisk[0] ?? null;
+
   const totalRevenueAtRiskOpportunity = revenueAtRisk.reduce(
     (sum, product) => sum + product.riskValue,
     0,
@@ -375,6 +377,108 @@ export default function ProductsPage() {
             </div>
           </div>
         </div>
+
+        {biggestRiskProduct && (
+          <div
+            className="panel"
+            style={{
+              marginBottom: 24,
+              border: "1px solid rgba(255,115,60,0.26)",
+              background:
+                "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+            }}
+          >
+            <div className="panel-eyebrow">BIGGEST PRODUCT RISK</div>
+
+            <h2
+              className="panel-title"
+              style={{
+                marginTop: 8,
+              }}
+            >
+              {biggestRiskProduct.productTitle}
+            </h2>
+
+            <div
+              style={{
+                marginTop: 10,
+                color: "rgba(255,255,255,0.62)",
+                lineHeight: 1.6,
+                fontWeight: 700,
+              }}
+            >
+              Highest revenue-at-risk product currently operating below the target
+              margin threshold.
+            </div>
+
+            <div
+              style={{
+                marginTop: 24,
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 18,
+              }}
+            >
+              {[
+                [
+                  "Revenue",
+                  `$${biggestRiskProduct.revenue.toFixed(0)}`,
+                  "#f3f4f6",
+                ],
+                [
+                  "Margin",
+                  `${biggestRiskProduct.marginPct.toFixed(1)}%`,
+                  "#ff6b4a",
+                ],
+                [
+                  "Opportunity",
+                  `$${biggestRiskProduct.riskValue.toFixed(0)}`,
+                  "#22c55e",
+                ],
+                [
+                  "Target Gap",
+                  `${biggestRiskProduct.marginGap.toFixed(1)}%`,
+                  "#f59e0b",
+                ],
+              ].map(([label, value, color]) => (
+                <div
+                  key={label}
+                  style={{
+                    padding: 18,
+                    borderRadius: 18,
+                    background:
+                      "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+                    border: "1px solid rgba(255,115,60,0.12)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.42)",
+                    }}
+                  >
+                    {label}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 10,
+                      fontSize: 30,
+                      fontWeight: 950,
+                      color: color as string,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="panel" style={{ marginBottom: 24 }}>
           <div className="panel-header">
