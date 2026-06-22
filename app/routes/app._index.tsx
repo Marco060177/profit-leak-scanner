@@ -675,9 +675,9 @@ export default function DashboardV2() {
   };
 
   const [language] = React.useState(getStoredLanguage());
-  const t = translations[language];
+  const t = translations[language] ?? translations.en;
 
-  const td = t.dashboard;
+  const td = t?.dashboard ?? translations.en.dashboard;
 
   function tr(text: string, values: Record<string, string | number>) {
     return Object.entries(values).reduce(
@@ -804,7 +804,7 @@ export default function DashboardV2() {
                 {td.recommendedAction}
               </div>
 
-              <div className="ai-recvommendation-text">
+              <div className="ai-recommendation-text">
                 {td.completeMissingCosts}
               </div>
             </div>
