@@ -681,11 +681,14 @@ export default function DashboardV2() {
     ...(translations[language]?.dashboard ?? {}),
   };
 
-  function tr(text: string, values: Record<string, string | number>) {
+  function tr(
+    text: string | undefined,
+    values: Record<string, string | number>,
+  ) {
     return Object.entries(values).reduce(
       (result, [key, value]) =>
         result.replace(`{{${key}}}`, String(value)),
-      text,
+      text ?? "",
     );
   }
 
