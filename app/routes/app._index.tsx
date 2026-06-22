@@ -804,7 +804,7 @@ export default function DashboardV2() {
                 {td.recommendedAction}
               </div>
 
-              <div className="ai-reccommendation-text">
+              <div className="ai-recvommendation-text">
                 {td.completeMissingCosts}
               </div>
             </div>
