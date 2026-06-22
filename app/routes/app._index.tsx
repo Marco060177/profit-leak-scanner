@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
-
+import { translations, getStoredLanguage } from "~/utils/i18n";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import ScoreCard from "~/components/dashboard/ScoreCard";
@@ -674,6 +674,19 @@ export default function DashboardV2() {
     return "1px solid rgba(156,163,175,0.18)";
   };
 
+  const [language] = React.useState(getStoredLanguage());
+  const t = translations[language];
+
+  const td = t.dashboard;
+
+  function tr(text: string, values: Record<string, string | number>) {
+    return Object.entries(values).reduce(
+      (result, [key, value]) =>
+        result.replace(`{{${key}}}`, String(value)),
+      text,
+    );
+  }
+
   if (dashboardLoading) {
     return (
       <div className="dashboard-shell loading-shell">
@@ -736,41 +749,35 @@ export default function DashboardV2() {
 
       <section className="ai-insights-center">
         <div className="ai-insights-header">
-          <span>PROFIT INTELLIGENCE BRIEF</span>
+          <span>{td.profitIntelligenceBrief}</span>
 
-          <h2>Operational Profit Insights</h2>
+          <h2>{td.operationalProfitInsights}</h2>
 
-          <p>
-            MarginLab analyzed your Shopify store and detected operational
-            risks affecting profitability and pricing efficiency.
-          </p>
+          <p>{td.operationalProfitDescription}</p>
         </div>
 
         <div className="ai-insights-grid">
           <article className="ai-insight-card danger">
             <div className="ai-card-top">
-              <span>Profitability Risk</span>
-              <strong>Critical</strong>
+              <span>{td.profitabilityRisk}</span>
+              <strong>{td.critical}</strong>
             </div>
 
             <h3>
-              Low-margin products are reducing store profitability
+              <h3>{td.lowMarginReducingProfit}</h3>
             </h3>
 
             <p>
-              Several products are currently operating below target margin
-              thresholds, reducing overall contribution profit across the
-              store.
+              <p>{td.lowMarginReducingProfitDescription}</p>
             </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {td.recommendedAction}
               </div>
 
               <div className="ai-recommendation-text">
-                Review pricing structure, discounts and product costs for
-                underperforming products.
+                {td.reviewPricingStructure}
               </div>
             </div>
 
@@ -778,33 +785,27 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Analyze affected products
+              {td.analyzeAffectedProducts}
             </button>
           </article>
 
           <article className="ai-insight-card warning">
             <div className="ai-card-top">
-              <span>Data Integrity</span>
-              <strong>Warning</strong>
+              <span>{td.dataIntegrity}</span>
+              <strong>{td.warning}</strong>
             </div>
 
-            <h3>
-              Missing product costs are affecting profit accuracy
-            </h3>
+            <h3>{td.missingCostsAffectAccuracy}</h3>
 
-            <p>
-              Margin calculations may be incomplete because some Shopify
-              products still have missing cost information.
-            </p>
+            <p>{td.missingCostsAffectAccuracyDescription}</p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {td.recommendedAction}
               </div>
 
               <div className="ai-recommendation-text">
-                Complete missing cost fields to improve margin tracking
-                and AI analysis reliability.
+                {td.completeMissingCosts}
               </div>
             </div>
 
@@ -812,33 +813,27 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Fix missing costs
+              {td.fixMissingCosts}
             </button>
           </article>
 
           <article className="ai-insight-card recovery">
             <div className="ai-card-top">
-              <span>Recovery Opportunity</span>
-              <strong>Detected</strong>
+              <span>{td.recoveryOpportunity}</span>
+              <strong>{td.detected}</strong>
             </div>
 
-            <h3>
-              Pricing optimization opportunities identified
-            </h3>
+            <h3>{td.pricingOptimizationIdentified}</h3>
 
-            <p>
-              MarginLab detected products with potential pricing
-              improvements capable of increasing monthly profitability.
-            </p>
+            <p>{td.pricingOptimizationIdentifiedDescription}</p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {td.recommendedAction}
               </div>
 
               <div className="ai-recommendation-text">
-                Review optimization suggestions and compare target pricing
-                scenarios.
+                {td.reviewOptimizationSuggestions}
               </div>
             </div>
 
@@ -846,7 +841,7 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Review recommendations
+              {td.reviewRecommendations}
             </button>
           </article>
         </div>
@@ -855,45 +850,46 @@ export default function DashboardV2() {
       <KpiGrid
         items={[
           {
-            label: "Revenue scanned",
+            label: td.revenueScanned,
             value: money(
               sourceRows.reduce(
                 (acc, row) => acc + row.revenue,
                 0,
               ),
             ),
-            note: `Last ${period} days`,
+            note: tr(td.lastDays, { period }),
             icon: "$",
             tone: "positive",
           },
           {
-            label: "Products analyzed",
+            label: td.productsAnalyzed,
             value: String(sourceRows.length),
-            note: `${sourceRows.filter(
-              (row) =>
-                row.losing ||
-                row.lowMargin ||
-                row.missingCost,
-            ).length
-              } at risk`,
+            note: tr(td.atRisk, {
+              count: sourceRows.filter(
+                (row) =>
+                  row.losing ||
+                  row.lowMargin ||
+                  row.missingCost,
+              ).length,
+            }),
             icon: "◈",
             tone: "warning",
           },
           {
-            label: "Low margin products",
+            label: td.lowMarginProducts,
             value: String(
               sourceRows.filter((row) => row.lowMargin).length,
             ),
-            note: "Below 10%",
+            note: td.belowTen,
             icon: "↓",
             tone: "warning",
           },
           {
-            label: "Missing costs",
+            label: td.missingCosts,
             value: String(
               sourceRows.filter((row) => row.missingCost).length,
             ),
-            note: "Fix required",
+            note: td.fixRequired,
             icon: "⚠",
             tone: "danger",
           },
@@ -904,40 +900,42 @@ export default function DashboardV2() {
         marginBottom={24}
         items={[
           {
-            label: "Biggest Profit Leak",
+            label: td.biggestProfitLeak,
             value: worstProduct
               ? worstProduct.productTitle
-              : "No data",
+              : td.noData,
             note: worstProduct
-              ? `${money(
-                Math.abs(worstProduct.profit),
-              )} estimated loss`
-              : "No issues detected",
+              ? tr(td.estimatedLoss, {
+                amount: money(Math.abs(worstProduct.profit)),
+              })
+              : td.noIssuesDetected,
             icon: "↓",
             tone: "danger",
           },
           {
-            label: "Best Margin Product",
+            label: td.bestMarginProduct,
             value: bestProduct
               ? bestProduct.productTitle
-              : "No data",
+              : td.noData,
             note: bestProduct
               ? bestProduct.missingCost
-                ? "Missing cost data"
-                : `${pct(bestProduct.marginPct)} margin`
-              : "No products available",
+                ? td.missingCostData
+                : tr(td.margin, {
+                  value: pct(bestProduct.marginPct),
+                })
+              : td.noProductsAvailable,
             icon: "↑",
             tone: "positive",
           },
           {
-            label: "Recoverable Profit",
+            label: td.recoverableProfit,
             value: money(recoverableProfit),
-            note: "Potential margin recovery",
+            note: td.potentialMarginRecovery,
             icon: "+",
             tone: "warning",
           },
           {
-            label: "AVERAGE PRODUCT MARGIN",
+            label: td.averageProductMargin,
             value: pct(
               sourceRows.length > 0
                 ? sourceRows.reduce(
@@ -946,7 +944,7 @@ export default function DashboardV2() {
                 ) / sourceRows.length
                 : 0,
             ),
-            note: "Across analyzed products",
+            note: td.acrossAnalyzedProducts,
             icon: "%",
             tone: "positive",
           },
