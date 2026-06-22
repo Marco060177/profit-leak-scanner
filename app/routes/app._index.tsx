@@ -677,7 +677,7 @@ export default function DashboardV2() {
   const [language] = React.useState(getStoredLanguage());
   const t = translations[language] ?? translations.en;
 
-  const td = t?.dashboard ?? translations.en.dashboard;
+  const td = translations[language]?.dashboard || translations.en.dashboard;
 
   function tr(text: string, values: Record<string, string | number>) {
     return Object.entries(values).reduce(
