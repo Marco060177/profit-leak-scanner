@@ -855,46 +855,45 @@ export default function DashboardV2() {
       <KpiGrid
         items={[
           {
-            label: td.revenueScanned,
+            label: "Revenue scanned",
             value: money(
               sourceRows.reduce(
                 (acc, row) => acc + row.revenue,
                 0,
               ),
             ),
-            note: tr(td.lastDays, { period }),
+            note: `Last ${period} days`,
             icon: "$",
             tone: "positive",
           },
           {
-            label: td.productsAnalyzed,
+            label: "Products analyzed",
             value: String(sourceRows.length),
-            note: tr(td.atRisk, {
-              count: sourceRows.filter(
-                (row) =>
-                  row.losing ||
-                  row.lowMargin ||
-                  row.missingCost,
-              ).length,
-            }),
+            note: `${sourceRows.filter(
+              (row) =>
+                row.losing ||
+                row.lowMargin ||
+                row.missingCost,
+            ).length
+              } at risk`,
             icon: "◈",
             tone: "warning",
           },
           {
-            label: td.lowMarginProducts,
+            label: "Low margin products",
             value: String(
               sourceRows.filter((row) => row.lowMargin).length,
             ),
-            note: td.belowTen,
+            note: "Below 10%",
             icon: "↓",
             tone: "warning",
           },
           {
-            label: td.missingCosts,
+            label: "Missing costs",
             value: String(
               sourceRows.filter((row) => row.missingCost).length,
             ),
-            note: td.fixRequired,
+            note: "Fix required",
             icon: "⚠",
             tone: "danger",
           },
@@ -905,42 +904,40 @@ export default function DashboardV2() {
         marginBottom={24}
         items={[
           {
-            label: td.biggestProfitLeak,
+            label: "Biggest Profit Leak",
             value: worstProduct
               ? worstProduct.productTitle
-              : td.noData,
+              : "No data",
             note: worstProduct
-              ? tr(td.estimatedLoss, {
-                amount: money(Math.abs(worstProduct.profit)),
-              })
-              : td.noIssuesDetected,
+              ? `${money(
+                Math.abs(worstProduct.profit),
+              )} estimated loss`
+              : "No issues detected",
             icon: "↓",
             tone: "danger",
           },
           {
-            label: td.bestMarginProduct,
+            label: "Best Margin Product",
             value: bestProduct
               ? bestProduct.productTitle
-              : td.noData,
+              : "No data",
             note: bestProduct
               ? bestProduct.missingCost
-                ? td.missingCostData
-                : tr(td.margin, {
-                  value: pct(bestProduct.marginPct),
-                })
-              : td.noProductsAvailable,
+                ? "Missing cost data"
+                : `${pct(bestProduct.marginPct)} margin`
+              : "No products available",
             icon: "↑",
             tone: "positive",
           },
           {
-            label: td.recoverableProfit,
+            label: "Recoverable Profit",
             value: money(recoverableProfit),
-            note: td.potentialMarginRecovery,
+            note: "Potential margin recovery",
             icon: "+",
             tone: "warning",
           },
           {
-            label: td.averageProductMargin,
+            label: "AVERAGE PRODUCT MARGIN",
             value: pct(
               sourceRows.length > 0
                 ? sourceRows.reduce(
@@ -949,7 +946,7 @@ export default function DashboardV2() {
                 ) / sourceRows.length
                 : 0,
             ),
-            note: td.acrossAnalyzedProducts,
+            note: "Across analyzed products",
             icon: "%",
             tone: "positive",
           },
