@@ -754,35 +754,39 @@ export default function DashboardV2() {
 
       <section className="ai-insights-center">
         <div className="ai-insights-header">
-          <span>{td.profitIntelligenceBrief}</span>
+          <span>PROFIT INTELLIGENCE BRIEF</span>
 
-          <h2>{td.operationalProfitInsights}</h2>
+          <h2>Operational Profit Insights</h2>
 
-          <p>{td.operationalProfitDescription}</p>
+          <p>
+            MarginLab analyzed your Shopify store and detected operational
+            risks affecting profitability and pricing efficiency.
+          </p>
         </div>
 
         <div className="ai-insights-grid">
           <article className="ai-insight-card danger">
             <div className="ai-card-top">
-              <span>{td.profitabilityRisk}</span>
-              <strong>{td.critical}</strong>
+              <span>Profitability Risk</span>
+              <strong>Critical</strong>
             </div>
 
-            <h3>
-              <h3>{td.lowMarginReducingProfit}</h3>
-            </h3>
+            <h3>Low-margin products are reducing store profitability</h3>
 
             <p>
-              <p>{td.lowMarginReducingProfitDescription}</p>
+              Several products are currently operating below target margin
+              thresholds, reducing overall contribution profit across the
+              store.
             </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                {td.recommendedAction}
+                Recommended action
               </div>
 
               <div className="ai-recommendation-text">
-                {td.reviewPricingStructure}
+                Review pricing structure, discounts and product costs for
+                underperforming products.
               </div>
             </div>
 
@@ -790,27 +794,31 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              {td.analyzeAffectedProducts}
+              Analyze affected products
             </button>
           </article>
 
           <article className="ai-insight-card warning">
             <div className="ai-card-top">
-              <span>{td.dataIntegrity}</span>
-              <strong>{td.warning}</strong>
+              <span>Data Integrity</span>
+              <strong>Warning</strong>
             </div>
 
-            <h3>{td.missingCostsAffectAccuracy}</h3>
+            <h3>Missing product costs are affecting profit accuracy</h3>
 
-            <p>{td.missingCostsAffectAccuracyDescription}</p>
+            <p>
+              Margin calculations may be incomplete because some Shopify
+              products still have missing cost information.
+            </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                {td.recommendedAction}
+                Recommended action
               </div>
 
               <div className="ai-recommendation-text">
-                {td.completeMissingCosts}
+                Complete missing cost fields to improve margin tracking
+                and AI analysis reliability.
               </div>
             </div>
 
@@ -818,27 +826,31 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              {td.fixMissingCosts}
+              Fix missing costs
             </button>
           </article>
 
           <article className="ai-insight-card recovery">
             <div className="ai-card-top">
-              <span>{td.recoveryOpportunity}</span>
-              <strong>{td.detected}</strong>
+              <span>Recovery Opportunity</span>
+              <strong>Detected</strong>
             </div>
 
-            <h3>{td.pricingOptimizationIdentified}</h3>
+            <h3>Pricing optimization opportunities identified</h3>
 
-            <p>{td.pricingOptimizationIdentifiedDescription}</p>
+            <p>
+              MarginLab detected products with potential pricing
+              improvements capable of increasing monthly profitability.
+            </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                {td.recommendedAction}
+                Recommended action
               </div>
 
               <div className="ai-recommendation-text">
-                {td.reviewOptimizationSuggestions}
+                Review optimization suggestions and compare target pricing
+                scenarios.
               </div>
             </div>
 
@@ -846,7 +858,7 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              {td.reviewRecommendations}
+              Review recommendations
             </button>
           </article>
         </div>
