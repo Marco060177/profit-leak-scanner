@@ -34,6 +34,8 @@ export default function DashboardNav({ active, navigate }: Props) {
   const changeLanguage = (nextLanguage: Language) => {
     setLanguage(nextLanguage);
     setStoredLanguage(nextLanguage);
+
+    window.location.reload();
   };
 
   const mainItems = [
