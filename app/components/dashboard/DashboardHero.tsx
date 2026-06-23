@@ -1,4 +1,5 @@
 import DashboardNav from "./DashboardNav";
+import { getStoredLanguage } from "~/utils/i18n";
 
 type Props = {
   period: string;
@@ -25,6 +26,7 @@ export default function DashboardHero({
   setAnalysisLoading,
   setAnalysisText,
 }: Props) {
+  const language = getStoredLanguage();
   return (
     <>
       <DashboardNav
@@ -35,18 +37,21 @@ export default function DashboardHero({
       <div className="hero-header">
         <div>
           <div className="eyebrow">
-            Profit Leak Scanner
+            {language === "it"
+              ? "Analizzatore Perdite di Margine"
+              : "Profit Leak Scanner"}
           </div>
 
           <div className="hero-title">
-            Profit Leak Dashboard
+            {language === "it"
+              ? "Dashboard Perdite di Profitto"
+              : "Profit Leak Dashboard"}
           </div>
 
           <div className="hero-description">
-            Track hidden margin leaks,
-            underpriced products and pricing
-            issues affecting your Shopify
-            store profitability.
+            {language === "it"
+              ? "Monitora margini nascosti, prodotti sottoprezzati e problemi di prezzo che influenzano la redditività del tuo negozio Shopify."
+              : "Track hidden margin leaks, underpriced products and pricing issues affecting your Shopify store profitability."}
           </div>
 
           <div className="period-tabs">
@@ -113,7 +118,9 @@ export default function DashboardHero({
           <span>
             {analysisLoading
               ? analysisText
-              : "Run analysis"}
+              : language === "it"
+                ? "Avvia analisi"
+                : "Run analysis"}
           </span>
         </button>
       </div>
