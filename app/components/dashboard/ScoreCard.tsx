@@ -1,4 +1,5 @@
 import { money, pct } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 type Props = {
   score: number;
@@ -15,13 +16,18 @@ export default function ScoreCard({
   visualProductsAtRisk,
   visualMarginPct,
 }: Props) {
+  const language = getStoredLanguage();
   return (
     <div className="score-card">
       <div className="score-glow-one" />
       <div className="score-glow-two" />
 
       <div className="score-content">
-        <div className="section-eyebrow">PROFIT LEAK SCORE</div>
+        <div className="section-eyebrow">
+          {language === "it"
+            ? "PUNTEGGIO PERDITE DI PROFITTO"
+            : "PROFIT LEAK SCORE"}
+        </div>
 
         <div className="score-number">
           {score}
@@ -32,17 +38,43 @@ export default function ScoreCard({
 
         <div className="score-copy">
           {visualLeak > 0
-            ? `Your store is leaking an estimated ${money(
+            ? language === "it"
+              ? `Il tuo negozio sta perdendo circa ${money(
+                visualLeak,
+              )} a causa di prodotti venduti sotto costo.`
+              : `Your store is leaking an estimated ${money(
                 visualLeak,
               )} from products selling below cost.`
-            : "Your store currently has no products selling below cost in the selected period."}
+            : language === "it"
+              ? "Non risultano prodotti venduti sotto costo nel periodo selezionato."
+              : "Your store currently has no products selling below cost in the selected period."}
         </div>
 
         <div className="score-mini-grid">
           {[
-            ["Estimated leak", money(visualLeak), "#ff5a36"],
-            ["Products at risk", `${visualProductsAtRisk} detected`, "#f59e0b"],
-            ["Margin", pct(visualMarginPct), "#22c55e"],
+            [
+              language === "it"
+                ? "Perdita stimata"
+                : "Estimated leak",
+              money(visualLeak),
+              "#ff5a36",
+            ],
+            [
+              language === "it"
+                ? "Prodotti a rischio"
+                : "Products at risk",
+              language === "it"
+                ? `${visualProductsAtRisk} rilevati`
+                : `${visualProductsAtRisk} detected`,
+              "#f59e0b",
+            ],
+            [
+              language === "it"
+                ? "Margine"
+                : "Margin",
+              pct(visualMarginPct),
+              "#22c55e",
+            ],
           ].map(([label, value, color]) => (
             <div key={label} className="score-mini-card">
               <div>{label}</div>
@@ -93,8 +125,9 @@ export default function ScoreCard({
         </div>
 
         <div className="gauge-copy">
-          Margin health score based on profit leaks, missing costs,
-          low margins and store profitability.
+          {language === "it"
+            ? "Punteggio di salute del margine basato su perdite di profitto, costi mancanti, margini bassi e redditività del negozio."
+            : "Margin health score based on profit leaks, missing costs, low margins and store profitability."}
         </div>
       </div>
     </div>
