@@ -25,7 +25,7 @@ export default function ScoreCard({
       <div className="score-content">
         <div className="section-eyebrow">
           {language === "it"
-            ? "PUNTEGGIO PERDITE DI PROFITTO"
+            ? "PUNTEGGIO SALUTE MARGINE"
             : "PROFIT LEAK SCORE"}
         </div>
 

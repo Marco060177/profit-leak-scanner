@@ -754,13 +754,22 @@ export default function DashboardV2() {
 
       <section className="ai-insights-center">
         <div className="ai-insights-header">
-          <span>PROFIT INTELLIGENCE BRIEF</span>
+          <span>
+            {getStoredLanguage() === "it"
+              ? "BRIEF REDDITIVITÀ"
+              : "PROFIT INTELLIGENCE BRIEF"}
+          </span>
 
-          <h2>Operational Profit Insights</h2>
+          <h2>
+            {getStoredLanguage() === "it"
+              ? "Insight Operativi sui Profitti"
+              : "Operational Profit Insights"}
+          </h2>
 
           <p>
-            MarginLab analyzed your Shopify store and detected operational
-            risks affecting profitability and pricing efficiency.
+            {getStoredLanguage() === "it"
+              ? "MarginLab ha analizzato il tuo negozio Shopify e rilevato rischi operativi che influenzano la redditività e l'efficienza dei prezzi."
+              : "MarginLab analyzed your Shopify store and detected operational risks affecting profitability and pricing efficiency."}
           </p>
         </div>
 
