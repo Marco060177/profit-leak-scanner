@@ -15,7 +15,9 @@ export default function InsightsPanel({ insights }: Props) {
   return (
     <div style={{ display: "grid", gap: 22, marginBottom: 24 }}>
       {insights.map((insight) => {
-        const isRecovery = insight.eyebrow === "RECOVERY OPPORTUNITY";
+        const isRecovery =
+          insight.eyebrow === "RECOVERY OPPORTUNITY" ||
+          insight.eyebrow === "OPPORTUNITÀ DI RECUPERO";
 
         if (isRecovery) {
           return (
@@ -145,7 +147,9 @@ export default function InsightsPanel({ insights }: Props) {
                     textTransform: "uppercase",
                   }}
                 >
-                  Potential Recovery
+                  {insight.eyebrow === "OPPORTUNITÀ DI RECUPERO"
+                    ? "Recupero Potenziale"
+                    : "Potential Recovery"}
                 </div>
 
                 <div
