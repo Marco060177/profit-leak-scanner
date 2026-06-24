@@ -505,69 +505,123 @@ export default function DashboardV2() {
   const insights = [
     hasWeakBestSeller
       ? {
-        eyebrow: "CRITICAL INSIGHT",
-        title: "Your best-selling product may be reducing profitability",
-        badge: "Low margin",
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "INSIGHT CRITICO"
+            : "CRITICAL INSIGHT",
+        title:
+          getStoredLanguage() === "it"
+            ? "Il tuo prodotto più venduto potrebbe ridurre la redditività"
+            : "Your best-selling product may be reducing profitability",
+        badge:
+          getStoredLanguage() === "it"
+            ? "Margine basso"
+            : "Low margin",
         description: (
           <>
-            <strong>{weakBestSeller.productTitle}</strong> generated{" "}
-            <strong>{money(weakBestSeller.revenue)}</strong> revenue with only{" "}
-            <strong>{pct(weakBestSellerMargin)}</strong> margin. This product
-            may be reducing your overall store profitability.
+            <strong>{weakBestSeller.productTitle}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "ha generato"
+              : "generated"}{" "}
+            <strong>{money(weakBestSeller.revenue)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di ricavi con solo"
+              : "revenue with only"}{" "}
+            <strong>{pct(weakBestSellerMargin)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di margine. Questo prodotto potrebbe ridurre la redditività complessiva del negozio."
+              : "margin. This product may be reducing your overall store profitability."}
           </>
         ),
       }
       : null,
+
     marginDelta < -3
       ? {
-        eyebrow: "MARGIN DETERIORATION",
-        title: "Store profitability is decreasing",
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "PEGGIORAMENTO MARGINE"
+            : "MARGIN DETERIORATION",
+        title:
+          getStoredLanguage() === "it"
+            ? "La redditività del negozio sta diminuendo"
+            : "Store profitability is decreasing",
         badge: `${marginDelta.toFixed(1)}%`,
         description: (
           <>
-            Your store margin dropped from{" "}
-            <strong>{pct(summary.previousMarginPct)}</strong> to{" "}
-            <strong>{pct(summary.marginPct)}</strong> compared to the previous
-            period. Review pricing, discounts and product costs to avoid
-            further margin erosion.
+            {getStoredLanguage() === "it"
+              ? "Il margine del negozio è sceso da"
+              : "Your store margin dropped from"}{" "}
+            <strong>{pct(summary.previousMarginPct)}</strong>{" "}
+            {getStoredLanguage() === "it" ? "a" : "to"}{" "}
+            <strong>{pct(summary.marginPct)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "rispetto al periodo precedente. Controlla prezzi, sconti e costi prodotto per evitare ulteriore erosione dei margini."
+              : "compared to the previous period. Review pricing, discounts and product costs to avoid further margin erosion."}
           </>
         ),
       }
       : null,
+
     hasRecoveryOpportunity
       ? {
-        eyebrow: "RECOVERY OPPORTUNITY",
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "OPPORTUNITÀ DI RECUPERO"
+            : "RECOVERY OPPORTUNITY",
         title:
-          "MarginLab detected recoverable profit opportunities",
+          getStoredLanguage() === "it"
+            ? "MarginLab ha rilevato opportunità di profitto recuperabile"
+            : "MarginLab detected recoverable profit opportunities",
         badge: money(recoverableProfit),
         description: (
           <>
-            Profit Leak Scanner detected{" "}
-            <strong>{recoveryProducts.length} products</strong> with pricing
-            gaps. Adjusting prices toward target margins could recover
-            approximately{" "}
-            <strong>{money(recoverableProfit)}</strong> in additional profit.
+            {getStoredLanguage() === "it"
+              ? "Profit Leak Scanner ha rilevato"
+              : "Profit Leak Scanner detected"}{" "}
+            <strong>
+              {recoveryProducts.length}{" "}
+              {getStoredLanguage() === "it" ? "prodotti" : "products"}
+            </strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "con gap di prezzo. Adeguare i prezzi verso i margini target potrebbe recuperare circa"
+              : "with pricing gaps. Adjusting prices toward target margins could recover approximately"}{" "}
+            <strong>{money(recoverableProfit)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di profitto aggiuntivo."
+              : "in additional profit."}
           </>
         ),
       }
       : null,
+
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
-        eyebrow: "GROWTH WARNING",
-        title: "Revenue growth is outpacing margin growth",
-        badge: `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "AVVISO CRESCITA"
+            : "GROWTH WARNING",
+        title:
+          getStoredLanguage() === "it"
+            ? "La crescita dei ricavi sta superando la crescita dei margini"
+            : "Revenue growth is outpacing margin growth",
+        badge:
+          getStoredLanguage() === "it"
+            ? `${summary.revenueDeltaPct.toFixed(1)}% ricavi`
+            : `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
         description: (
           <>
-            Store revenue increased by{" "}
-            <strong>
-              {summary.revenueDeltaPct.toFixed(1)}%
-            </strong>
-            , but margin dropped by{" "}
-            <strong>
-              {Math.abs(summary.marginDelta).toFixed(1)}%
-            </strong>
-            . Rapid growth combined with weakening margins may indicate
-            aggressive discounts, rising costs or underpriced best sellers.
+            {getStoredLanguage() === "it"
+              ? "I ricavi del negozio sono aumentati del"
+              : "Store revenue increased by"}{" "}
+            <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>
+            {getStoredLanguage() === "it"
+              ? ", ma il margine è sceso del"
+              : ", but margin dropped by"}{" "}
+            <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>
+            {getStoredLanguage() === "it"
+              ? ". Una crescita rapida con margini in calo può indicare sconti aggressivi, costi in aumento o bestseller sottoprezzati."
+              : ". Rapid growth combined with weakening margins may indicate aggressive discounts, rising costs or underpriced best sellers."}
           </>
         ),
       }
