@@ -826,25 +826,41 @@ export default function DashboardV2() {
 
           <article className="ai-insight-card warning">
             <div className="ai-card-top">
-              <span>Data Integrity</span>
-              <strong>Warning</strong>
+              <span>
+                {getStoredLanguage() === "it"
+                  ? "Integrità Dati"
+                  : "Data Integrity"}
+              </span>
+              <strong>
+                {getStoredLanguage() === "it"
+                  ? "Avviso"
+                  : "Warning"}
+              </strong>
             </div>
 
-            <h3>Missing product costs are affecting profit accuracy</h3>
+            <h3>
+              {getStoredLanguage() === "it"
+                ? "I costi prodotto mancanti riducono l'accuratezza del profitto"
+                : "Missing product costs are affecting profit accuracy"}
+            </h3>
 
             <p>
-              Margin calculations may be incomplete because some Shopify
-              products still have missing cost information.
+              {getStoredLanguage() === "it"
+                ? "Il calcolo dei margini può essere incompleto perché alcuni prodotti Shopify non hanno ancora il costo inserito."
+                : "Margin calculations may be incomplete because some Shopify products still have missing cost information."}
             </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {getStoredLanguage() === "it"
+                  ? "Azione consigliata"
+                  : "Recommended action"}
               </div>
 
               <div className="ai-recommendation-text">
-                Complete missing cost fields to improve margin tracking
-                and AI analysis reliability.
+                {getStoredLanguage() === "it"
+                  ? "Completa i costi mancanti per migliorare il monitoraggio dei margini e l'affidabilità dell'analisi AI."
+                  : "Complete missing cost fields to improve margin tracking and AI analysis reliability."}
               </div>
             </div>
 
@@ -852,7 +868,9 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Fix missing costs
+              {getStoredLanguage() === "it"
+                ? "Correggi costi mancanti"
+                : "Fix missing costs"}
             </button>
           </article>
 
