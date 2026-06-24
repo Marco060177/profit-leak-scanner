@@ -776,26 +776,41 @@ export default function DashboardV2() {
         <div className="ai-insights-grid">
           <article className="ai-insight-card danger">
             <div className="ai-card-top">
-              <span>Profitability Risk</span>
-              <strong>Critical</strong>
+              <span>
+                {getStoredLanguage() === "it"
+                  ? "Rischio Redditività"
+                  : "Profitability Risk"}
+              </span>
+              <strong>
+                {getStoredLanguage() === "it"
+                  ? "Critico"
+                  : "Critical"}
+              </strong>
             </div>
 
-            <h3>Low-margin products are reducing store profitability</h3>
+            <h3>
+              {getStoredLanguage() === "it"
+                ? "I prodotti a basso margine stanno riducendo la redditività del negozio"
+                : "Low-margin products are reducing store profitability"}
+            </h3>
 
             <p>
-              Several products are currently operating below target margin
-              thresholds, reducing overall contribution profit across the
-              store.
+              {getStoredLanguage() === "it"
+                ? "Alcuni prodotti stanno lavorando sotto le soglie di margine target, riducendo il profitto complessivo del negozio."
+                : "Several products are currently operating below target margin thresholds, reducing overall contribution profit across the store."}
             </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {getStoredLanguage() === "it"
+                  ? "Azione consigliata"
+                  : "Recommended action"}
               </div>
 
               <div className="ai-recommendation-text">
-                Review pricing structure, discounts and product costs for
-                underperforming products.
+                {getStoredLanguage() === "it"
+                  ? "Controlla struttura prezzi, sconti e costi prodotto per gli articoli meno performanti."
+                  : "Review pricing structure, discounts and product costs for underperforming products."}
               </div>
             </div>
 
@@ -803,7 +818,9 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Analyze affected products
+              {getStoredLanguage() === "it"
+                ? "Analizza prodotti coinvolti"
+                : "Analyze affected products"}
             </button>
           </article>
 
