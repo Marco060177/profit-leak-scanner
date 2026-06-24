@@ -1006,40 +1006,71 @@ export default function DashboardV2() {
         marginBottom={24}
         items={[
           {
-            label: "Biggest Profit Leak",
+            label:
+              getStoredLanguage() === "it"
+                ? "Perdita Principale"
+                : "Biggest Profit Leak",
             value: worstProduct
               ? worstProduct.productTitle
-              : "No data",
+              : getStoredLanguage() === "it"
+                ? "Nessun dato"
+                : "No data",
             note: worstProduct
-              ? `${money(
-                Math.abs(worstProduct.profit),
-              )} estimated loss`
-              : "No issues detected",
+              ? getStoredLanguage() === "it"
+                ? `${money(
+                  Math.abs(worstProduct.profit),
+                )} perdita stimata`
+                : `${money(
+                  Math.abs(worstProduct.profit),
+                )} estimated loss`
+              : getStoredLanguage() === "it"
+                ? "Nessun problema rilevato"
+                : "No issues detected",
             icon: "↓",
             tone: "danger",
           },
           {
-            label: "Best Margin Product",
+            label:
+              getStoredLanguage() === "it"
+                ? "Miglior Margine"
+                : "Best Margin Product",
             value: bestProduct
               ? bestProduct.productTitle
-              : "No data",
+              : getStoredLanguage() === "it"
+                ? "Nessun dato"
+                : "No data",
             note: bestProduct
               ? bestProduct.missingCost
-                ? "Missing cost data"
-                : `${pct(bestProduct.marginPct)} margin`
-              : "No products available",
+                ? getStoredLanguage() === "it"
+                  ? "Costo mancante"
+                  : "Missing cost data"
+                : getStoredLanguage() === "it"
+                  ? `${pct(bestProduct.marginPct)} margine`
+                  : `${pct(bestProduct.marginPct)} margin`
+              : getStoredLanguage() === "it"
+                ? "Nessun prodotto disponibile"
+                : "No products available",
             icon: "↑",
             tone: "positive",
           },
           {
-            label: "Recoverable Profit",
+            label:
+              getStoredLanguage() === "it"
+                ? "Profitto Recuperabile"
+                : "Recoverable Profit",
             value: money(recoverableProfit),
-            note: "Potential margin recovery",
+            note:
+              getStoredLanguage() === "it"
+                ? "Potenziale recupero margine"
+                : "Potential margin recovery",
             icon: "+",
             tone: "warning",
           },
           {
-            label: "AVERAGE PRODUCT MARGIN",
+            label:
+              getStoredLanguage() === "it"
+                ? "MARGINE MEDIO PRODOTTO"
+                : "AVERAGE PRODUCT MARGIN",
             value: pct(
               sourceRows.length > 0
                 ? sourceRows.reduce(
@@ -1048,7 +1079,10 @@ export default function DashboardV2() {
                 ) / sourceRows.length
                 : 0,
             ),
-            note: "Across analyzed products",
+            note:
+              getStoredLanguage() === "it"
+                ? "Su tutti i prodotti analizzati"
+                : "Across analyzed products",
             icon: "%",
             tone: "positive",
           },
