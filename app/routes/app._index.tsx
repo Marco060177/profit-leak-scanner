@@ -876,25 +876,41 @@ export default function DashboardV2() {
 
           <article className="ai-insight-card recovery">
             <div className="ai-card-top">
-              <span>Recovery Opportunity</span>
-              <strong>Detected</strong>
+              <span>
+                {getStoredLanguage() === "it"
+                  ? "Opportunità di Recupero"
+                  : "Recovery Opportunity"}
+              </span>
+              <strong>
+                {getStoredLanguage() === "it"
+                  ? "Rilevata"
+                  : "Detected"}
+              </strong>
             </div>
 
-            <h3>Pricing optimization opportunities identified</h3>
+            <h3>
+              {getStoredLanguage() === "it"
+                ? "Identificate opportunità di ottimizzazione prezzi"
+                : "Pricing optimization opportunities identified"}
+            </h3>
 
             <p>
-              MarginLab detected products with potential pricing
-              improvements capable of increasing monthly profitability.
+              {getStoredLanguage() === "it"
+                ? "MarginLab ha rilevato prodotti con possibili miglioramenti di prezzo in grado di aumentare la redditività mensile."
+                : "MarginLab detected products with potential pricing improvements capable of increasing monthly profitability."}
             </p>
 
             <div className="ai-recommendation-box">
               <div className="ai-recommendation-label">
-                Recommended action
+                {getStoredLanguage() === "it"
+                  ? "Azione consigliata"
+                  : "Recommended action"}
               </div>
 
               <div className="ai-recommendation-text">
-                Review optimization suggestions and compare target pricing
-                scenarios.
+                {getStoredLanguage() === "it"
+                  ? "Controlla i suggerimenti di ottimizzazione e confronta gli scenari di prezzo target."
+                  : "Review optimization suggestions and compare target pricing scenarios."}
               </div>
             </div>
 
@@ -902,7 +918,9 @@ export default function DashboardV2() {
               type="button"
               onClick={() => navigate("/app/products")}
             >
-              Review recommendations
+              {getStoredLanguage() === "it"
+                ? "Controlla raccomandazioni"
+                : "Review recommendations"}
             </button>
           </article>
         </div>
