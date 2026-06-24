@@ -916,7 +916,7 @@ export default function DashboardV2() {
 
             <button
               type="button"
-              onClick={() => navigate("/app/products")}
+              onClick={() => navigate("/app/recommendations")}
             >
               {getStoredLanguage() === "it"
                 ? "Controlla raccomandazioni"
@@ -929,45 +929,73 @@ export default function DashboardV2() {
       <KpiGrid
         items={[
           {
-            label: "Revenue scanned",
+            label:
+              getStoredLanguage() === "it"
+                ? "Ricavi analizzati"
+                : "Revenue scanned",
             value: money(
               sourceRows.reduce(
                 (acc, row) => acc + row.revenue,
                 0,
               ),
             ),
-            note: `Last ${period} days`,
+            note:
+              getStoredLanguage() === "it"
+                ? `Ultimi ${period} giorni`
+                : `Last ${period} days`,
             icon: "$",
             tone: "positive",
           },
           {
-            label: "Products analyzed",
+            label:
+              getStoredLanguage() === "it"
+                ? "Prodotti analizzati"
+                : "Products analyzed",
             value: String(sourceRows.length),
-            note: `${sourceRows.filter(
-              (row) =>
-                row.losing ||
-                row.lowMargin ||
-                row.missingCost,
-            ).length
-              } at risk`,
+            note:
+              getStoredLanguage() === "it"
+                ? `${sourceRows.filter(
+                  (row) =>
+                    row.losing ||
+                    row.lowMargin ||
+                    row.missingCost,
+                ).length} a rischio`
+                : `${sourceRows.filter(
+                  (row) =>
+                    row.losing ||
+                    row.lowMargin ||
+                    row.missingCost,
+                ).length} at risk`,
             icon: "◈",
             tone: "warning",
           },
           {
-            label: "Low margin products",
+            label:
+              getStoredLanguage() === "it"
+                ? "Prodotti a basso margine"
+                : "Low margin products",
             value: String(
               sourceRows.filter((row) => row.lowMargin).length,
             ),
-            note: "Below 10%",
+            note:
+              getStoredLanguage() === "it"
+                ? "Sotto il 10%"
+                : "Below 10%",
             icon: "↓",
             tone: "warning",
           },
           {
-            label: "Missing costs",
+            label:
+              getStoredLanguage() === "it"
+                ? "Costi mancanti"
+                : "Missing costs",
             value: String(
               sourceRows.filter((row) => row.missingCost).length,
             ),
-            note: "Fix required",
+            note:
+              getStoredLanguage() === "it"
+                ? "Da correggere"
+                : "Fix required",
             icon: "⚠",
             tone: "danger",
           },
