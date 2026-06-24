@@ -1,4 +1,5 @@
 import { money, pct } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 type ChartPoint = {
   date: string;
@@ -55,6 +56,7 @@ export default function TrendChart({
   maxChartValue,
   visualMarginPct,
 }: Props) {
+  const language = getStoredLanguage();
   const chartWidth = 1000;
   const chartHeight = 360;
 
@@ -119,10 +121,16 @@ export default function TrendChart({
     <div className="panel">
       <div className="section-header">
         <div>
-          <div className="section-title">Profit Trend</div>
+          <div className="section-title">
+            {language === "it"
+              ? "Andamento Profitti"
+              : "Profit Trend"}
+          </div>
 
           <div className="section-subtitle">
-            Current profit performance based on Shopify orders.
+            {language === "it"
+              ? "Prestazioni attuali basate sugli ordini Shopify."
+              : "Current profit performance based on Shopify orders."}
           </div>
         </div>
 
@@ -151,9 +159,13 @@ export default function TrendChart({
               lineHeight: 1.25,
             }}
           >
-            Profit Margin
+            {language === "it"
+              ? "Margine Profitto"
+              : "Profit Margin"}
             <br />
-            Current Period
+            {language === "it"
+              ? "Periodo Attuale"
+              : "Current Period"}
           </div>
         </div>
       </div>
@@ -194,10 +206,14 @@ export default function TrendChart({
               />
               <div>
                 <div style={{ color: "#f3f4f6", fontWeight: 900 }}>
-                  Revenue
+                  {language === "it"
+                    ? "Ricavi"
+                    : "Revenue"}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                  Total revenue
+                  {language === "it"
+                    ? "Ricavi totali"
+                    : "Total revenue"}
                 </div>
               </div>
             </div>
@@ -216,7 +232,9 @@ export default function TrendChart({
               <div>
                 <div style={{ color: "#f3f4f6", fontWeight: 900 }}>Profit</div>
                 <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                  Total profit
+                  {language === "it"
+                    ? "Profitto totale"
+                    : "Total profit"}
                 </div>
               </div>
             </div>
@@ -233,7 +251,9 @@ export default function TrendChart({
               fontWeight: 850,
             }}
           >
-            Daily
+            {language === "it"
+              ? "Giornaliero"
+              : "Daily"}
           </div>
         </div>
 
@@ -361,9 +381,29 @@ export default function TrendChart({
           }}
         >
           {[
-            ["Total Revenue", money(totalRevenue), "#60a5fa"],
-            ["Total Profit", money(totalProfit), "#22c55e"],
-            ["Profit Margin", pct(visualMarginPct), "#a855f7"],
+            [
+              language === "it"
+                ? "Ricavi Totali"
+                : "Total Revenue",
+              money(totalRevenue),
+              "#60a5fa",
+            ],
+
+            [
+              language === "it"
+                ? "Profitto Totale"
+                : "Total Profit",
+              money(totalProfit),
+              "#22c55e",
+            ],
+
+            [
+              language === "it"
+                ? "Margine Profitto"
+                : "Profit Margin",
+              pct(visualMarginPct),
+              "#a855f7",
+            ],
           ].map(([label, value, color]) => (
             <div
               key={label}
