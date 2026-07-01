@@ -17,6 +17,16 @@ export default function ScoreCard({
   visualMarginPct,
 }: Props) {
   const language = getStoredLanguage();
+  const translatedScoreLabel =
+    language === "it"
+      ? scoreLabel === "Needs attention"
+        ? "Richiede attenzione"
+        : scoreLabel === "Healthy"
+          ? "Sano"
+          : scoreLabel === "Critical"
+            ? "Critico"
+            : scoreLabel
+      : scoreLabel;
   return (
     <div className="score-card">
       <div className="score-glow-one" />
@@ -34,7 +44,7 @@ export default function ScoreCard({
           <span>/100</span>
         </div>
 
-        <div className="score-risk">{scoreLabel}</div>
+        <div className="score-risk">{translatedScoreLabel}</div>
 
         <div className="score-copy">
           {visualLeak > 0
@@ -120,7 +130,7 @@ export default function ScoreCard({
           <div className="gauge-center">
             <div>{score}</div>
 
-            <span>{scoreLabel.toUpperCase()}</span>
+            <span>{translatedScoreLabel.toUpperCase()}</span>
           </div>
         </div>
 
