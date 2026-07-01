@@ -314,37 +314,75 @@ export default function DashboardV2() {
     weakBestSeller.revenue > 1000 &&
     weakBestSellerMargin < 30;
 
+  const language = getStoredLanguage();
+
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
         icon: "⚠️",
-        issue: "Products selling below cost",
-        severity: "High",
+        issue:
+          language === "it"
+            ? "Prodotti venduti sotto costo"
+            : "Products selling below cost",
+        severity:
+          language === "it"
+            ? "Alta"
+            : "High",
         loss: money(visualLeak),
       }
       : null,
+
     visualMissingCostCount > 0
       ? {
         icon: "📦",
-        issue: "Products missing cost data",
-        severity: "Medium",
-        loss: `${visualMissingCostCount} products`,
+        issue:
+          language === "it"
+            ? "Prodotti senza costo"
+            : "Products missing cost data",
+        severity:
+          language === "it"
+            ? "Moderata"
+            : "Moderate",
+        loss:
+          language === "it"
+            ? `${visualMissingCostCount} prodotti`
+            : `${visualMissingCostCount} products`,
       }
       : null,
+
     lowMarginCount > 0
       ? {
         icon: "🏷️",
-        issue: "Low-margin products detected",
-        severity: "Medium",
-        loss: `${lowMarginCount} products`,
+        issue:
+          language === "it"
+            ? "Prodotti a basso margine rilevati"
+            : "Low-margin products detected",
+        severity:
+          language === "it"
+            ? "Moderata"
+            : "Moderate",
+        loss:
+          language === "it"
+            ? `${lowMarginCount} prodotti`
+            : `${lowMarginCount} products`,
       }
       : null,
+
     productsAtRisk > 0
       ? {
         icon: "🔥",
-        issue: "Products requiring margin review",
-        severity: "Low",
-        loss: `${productsAtRisk} at risk`,
+        issue:
+          language === "it"
+            ? "Prodotti da controllare"
+            : "Products requiring margin review",
+        severity:
+          language === "it"
+            ? "minore"
+            : "Low",
+        loss:
+          language === "it"
+            ? `${productsAtRisk} a rischio`
+            : `${productsAtRisk} at risk`,
       }
       : null,
   ].filter(Boolean) as {
@@ -728,7 +766,7 @@ export default function DashboardV2() {
     return "1px solid rgba(156,163,175,0.18)";
   };
 
-  const [language] = React.useState(getStoredLanguage());
+  
 
   const td = {
     ...translations.en.dashboard,
