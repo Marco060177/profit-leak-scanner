@@ -191,7 +191,11 @@ export default function ProductsPage() {
             }}
           >
             <div>
-              <div className="eyebrow">PRODUCT INTELLIGENCE SCORE</div>
+              <div className="eyebrow">
+                {language === "it"
+                  ? "PUNTEGGIO INTELLIGENZA PRODOTTI"
+                  : "PRODUCT INTELLIGENCE SCORE"}
+              </div>
 
               <div
                 style={{
@@ -227,10 +231,16 @@ export default function ProductsPage() {
                 }}
               >
                 {criticalProducts > 0
-                  ? "Critical product risk detected"
+                  ? language === "it"
+                    ? "Rischio prodotti critico"
+                    : "Critical Product Risk"
                   : highProducts > 0
-                    ? "Moderate catalog risk"
-                    : "Healthy catalog"}
+                    ? language === "it"
+                      ? "Rischio catalogo moderato"
+                      : "Moderate Catalog Risk"
+                    : language === "it"
+                      ? "Catalogo in ottimo stato"
+                      : "Healthy Catalog"}
               </div>
 
               <p
@@ -242,8 +252,9 @@ export default function ProductsPage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab ranks products by real margin risk, missing cost data
-                and recoverable pricing opportunities.
+                {language === "it"
+                  ? "MarginLab classifica i prodotti in base al rischio reale di margine, ai costi mancanti e alle opportunità di recupero tramite ottimizzazione dei prezzi."
+                  : "MarginLab ranks products by real margin risk, missing cost data and recoverable pricing opportunities."}
               </p>
 
               <div
@@ -257,10 +268,33 @@ export default function ProductsPage() {
                 }}
               >
                 {[
-                  ["Products at risk", `${criticalProducts + highProducts}`],
-                  ["Critical products", `${criticalProducts}`],
-                  ["Recoverable profit", `$${summary.totalLeak.toFixed(0)}`],
-                  ["Healthy products", `${healthyProducts}`],
+                  [
+                    language === "it"
+                      ? "Prodotti a rischio"
+                      : "Products at risk",
+                    `${criticalProducts + highProducts}`,
+                  ],
+
+                  [
+                    language === "it"
+                      ? "Prodotti critici"
+                      : "Critical products",
+                    `${criticalProducts}`,
+                  ],
+
+                  [
+                    language === "it"
+                      ? "Profitto recuperabile"
+                      : "Recoverable profit",
+                    `$${summary.totalLeak.toFixed(0)}`,
+                  ],
+
+                  [
+                    language === "it"
+                      ? "Prodotti in ottimo stato"
+                      : "Healthy products",
+                    `${healthyProducts}`,
+                  ],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <div
