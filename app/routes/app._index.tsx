@@ -67,12 +67,22 @@ export default function DashboardV2() {
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
-  const analysisSteps = [
-    "Scanning Shopify orders...",
-    "Checking product costs...",
-    "Detecting pricing leaks...",
-    "Analysis complete...",
-  ];
+  const language = getStoredLanguage();
+
+  const analysisSteps =
+    language === "it"
+      ? [
+        "Analisi ordini Shopify...",
+        "Controllo costi prodotto...",
+        "Ricerca perdite di margine...",
+        "Analisi completata...",
+      ]
+      : [
+        "Scanning Shopify orders...",
+        "Checking product costs...",
+        "Detecting pricing leaks...",
+        "Analysis complete...",
+      ];
 
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
 
@@ -314,7 +324,7 @@ export default function DashboardV2() {
     weakBestSeller.revenue > 1000 &&
     weakBestSellerMargin < 30;
 
-  const language = getStoredLanguage();
+  
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
@@ -377,7 +387,7 @@ export default function DashboardV2() {
             : "Products requiring margin review",
         severity:
           language === "it"
-            ? "minore"
+            ? "Minore"
             : "Low",
         loss:
           language === "it"
@@ -766,7 +776,7 @@ export default function DashboardV2() {
     return "1px solid rgba(156,163,175,0.18)";
   };
 
-  
+
 
   const td = {
     ...translations.en.dashboard,
