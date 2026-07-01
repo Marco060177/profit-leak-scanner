@@ -68,7 +68,8 @@ export default function DashboardHero({
                     setPeriod(item)
                   }
                 >
-                  {item}d
+                  {item}
+                  {language === "it" ? "g" : "d"}
                 </button>
               ),
             )}

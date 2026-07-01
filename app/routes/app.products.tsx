@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
-
+import { getStoredLanguage } from "~/utils/i18n";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 
@@ -50,6 +50,7 @@ export default function ProductsPage() {
     useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
+  const language = getStoredLanguage();
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
@@ -160,13 +161,22 @@ export default function ProductsPage() {
 
         <div className="hero-header">
           <div>
-            <div className="eyebrow">PRODUCTS INTELLIGENCE</div>
+            <div className="eyebrow">
+              {language === "it"
+                ? "INTELLIGENZA PRODOTTI"
+                : "PRODUCTS INTELLIGENCE"}
+            </div>
 
-            <div className="hero-title">Product Risk Analysis</div>
+            <div className="hero-title">
+              {language === "it"
+                ? "Analisi Rischio Prodotti"
+                : "Product Risk Analysis"}
+            </div>
 
             <div className="hero-description">
-              Analyze low-margin products, missing costs, pricing risks and
-              recoverable profit opportunities across your Shopify catalog.
+              {language === "it"
+                ? "Analizza prodotti a basso margine, costi mancanti, rischi di prezzo e opportunità di profitto recuperabile nel tuo catalogo Shopify."
+                : "Analyze low-margin products, missing costs, pricing risks and recoverable profit opportunities across your Shopify catalog."}
             </div>
           </div>
         </div>
