@@ -69,7 +69,7 @@ export default function ProductRiskTable({
 }: Props) {
 
   const language = getStoredLanguage();
-  
+
   return (
     <div className="panel" id="products-section">
       <div className="section-header">
@@ -169,15 +169,15 @@ export default function ProductRiskTable({
           <thead>
             <tr>
               {[
-                "Product",
+                language === "it" ? "Prodotto" : "Product",
                 "Revenue",
                 "COGS",
-                "Profit",
-                "Target Price",
+                language === "it" ? "Profitto" : "Profit",
+                language === "it" ? "Prezzo target" : "Target Price",
                 "Delta",
-                "Margin",
-                "Risk Score",
-                "Risk",
+                language === "it" ? "Margine" : "Margin",
+                language === "it" ? "Punteggio" : "Risk Score",
+                language === "it" ? "Rischio" : "Risk",
               ].map((h) => (
                 <th
                   key={h}
@@ -234,8 +234,9 @@ export default function ProductRiskTable({
                           <div className="product-name">{row.productTitle}</div>
 
                           <div className="product-subtitle">
-                            Avg price {money(row.avgPrice)} • Avg cost{" "}
-                            {money(row.avgCost)}
+                            {language === "it" ? "Prezzo medio" : "Avg price"} {money(row.avgPrice)}
+                            {" • "}
+                            {language === "it" ? "Costo medio" : "Avg cost"} {money(row.avgCost)}
 
                             {row.missingCost && row.productId ? (
                               <>
@@ -247,7 +248,7 @@ export default function ProductRiskTable({
                                   rel="noreferrer"
                                   className="shopify-link"
                                 >
-                                  Set cost
+                                  {language === "it" ? "Imposta costo" : "Set cost"}
                                 </a>
                               </>
                             ) : null}
@@ -302,7 +303,11 @@ export default function ProductRiskTable({
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {row.missingCost ? "Missing" : pct(row.marginPct)}
+                        {row.missingCost
+                          ? language === "it"
+                            ? "Mancante"
+                            : "Missing"
+                          : pct(row.marginPct)}
                       </div>
                     </td>
 
@@ -377,7 +382,9 @@ export default function ProductRiskTable({
                           }}
                         >
                           <div className="suggestion-title">
-                            AI Recommended Action
+                            {language === "it"
+                              ? "AZIONE CONSIGLIATA DALL'AI"
+                              : "AI Recommended Action"}
                           </div>
 
                           <div
@@ -390,7 +397,9 @@ export default function ProductRiskTable({
                             }}
                           >
                             {row.missingCost
-                              ? "Cost data is missing for this product. Add product cost in Shopify to unlock accurate margin tracking and risk analysis."
+                              ? language === "it"
+                                ? "Manca il costo di questo prodotto. Inserisci il costo in Shopify per ottenere un monitoraggio accurato dei margini e un'analisi del rischio affidabile."
+                                : "Cost data is missing for this product. Add product cost in Shopify to unlock accurate margin tracking and risk analysis."
                               : row.suggestion}
                           </div>
 
@@ -408,7 +417,13 @@ export default function ProductRiskTable({
                                   gap: 8,
                                 }}
                               >
-                                {row.missingCost ? "Update cost" : "Review pricing"}
+                                {row.missingCost
+                                  ? language === "it"
+                                    ? "Aggiorna costo"
+                                    : "Update cost"
+                                  : language === "it"
+                                    ? "Controlla prezzo"
+                                    : "Review pricing"}
                                 <span style={{ fontSize: 18 }}>→</span>
                               </a>
                             </div>
