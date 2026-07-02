@@ -1,5 +1,6 @@
 import * as React from "react";
 import { money, pct, type Row } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 type Props = {
   sortedRiskRows: Row[];
@@ -66,19 +67,29 @@ export default function ProductRiskTable({
   riskBackground,
   shopHandle,
 }: Props) {
+
+  const language = getStoredLanguage();
+  
   return (
     <div className="panel" id="products-section">
       <div className="section-header">
         <div>
-          <div className="panel-eyebrow">PRODUCT RISK RANKING</div>
+          <div className="panel-eyebrow">
+            {language === "it"
+              ? "CLASSIFICA RISCHIO PRODOTTI"
+              : "PRODUCT RISK RANKING"}
+          </div>
 
           <div className="section-title" style={{ marginTop: 8 }}>
-            Prioritized product review
+            {language === "it"
+              ? "Revisione prioritaria prodotti"
+              : "Prioritized product review"}
           </div>
 
           <div className="section-subtitle">
-            Products ranked by margin risk, missing cost data and potential
-            profit leakage.
+            {language === "it"
+              ? "Prodotti ordinati per rischio di margine, costi mancanti e potenziali perdite di profitto."
+              : "Products ranked by margin risk, missing cost data and potential profit leakage."}
           </div>
 
           <div className="table-filters">
@@ -87,7 +98,7 @@ export default function ProductRiskTable({
               className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
               onClick={() => setOnlyLosing(false)}
             >
-              All products
+              {language === "it" ? "Tutti i prodotti" : "All products"}
             </button>
 
             <button
@@ -95,7 +106,7 @@ export default function ProductRiskTable({
               className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
               onClick={() => setOnlyLosing(true)}
             >
-              Losing only
+              {language === "it" ? "Solo in perdita" : "Losing only"}
             </button>
           </div>
         </div>
@@ -149,7 +160,7 @@ export default function ProductRiskTable({
             URL.revokeObjectURL(url);
           }}
         >
-          Export CSV
+          {language === "it" ? "Esporta CSV" : "Export CSV"}
         </button>
       </div>
 
