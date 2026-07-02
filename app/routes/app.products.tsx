@@ -693,13 +693,28 @@ export default function ProductsPage() {
         <div className="panel" style={{ marginBottom: 24 }}>
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">REVENUE AT RISK</div>
-              <h2 className="panel-title">High revenue, low margin products</h2>
+              <div className="panel-eyebrow">
+                {language === "it" ? "RICAVI A RISCHIO" : "REVENUE AT RISK"}
+              </div>
+
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Prodotti ad alto ricavo e basso margine"
+                  : "High revenue, low margin products"}
+              </h2>
 
               <p className="panel-subtitle">
-                ${totalRevenueAtRisk.toFixed(0)} in revenue is currently
-                operating below the 20% target margin, with an estimated $
-                {totalRevenueAtRiskOpportunity.toFixed(0)} margin opportunity.
+                {language === "it"
+                  ? `$${totalRevenueAtRisk.toFixed(
+                    0,
+                  )} di ricavi stanno attualmente lavorando sotto il margine target del 20%, con un'opportunità stimata di margine pari a $${totalRevenueAtRiskOpportunity.toFixed(
+                    0,
+                  )}.`
+                  : `$${totalRevenueAtRisk.toFixed(
+                    0,
+                  )} in revenue is currently operating below the 20% target margin, with an estimated $${totalRevenueAtRiskOpportunity.toFixed(
+                    0,
+                  )} margin opportunity.`}
               </p>
             </div>
           </div>
@@ -713,127 +728,143 @@ export default function ProductsPage() {
             }}
           >
             {revenueAtRisk.length > 0 ? (
-              revenueAtRisk.map((product) => (
-                <div
-                  key={product.productId}
-                  style={{
-                    borderRadius: 20,
-                    padding: 22,
-                    background:
-                      "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 35%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
+              revenueAtRisk.map((product) => {
+                const translatedRiskLevel =
+                  language === "it"
+                    ? product.riskLevel === "Critical"
+                      ? "Critico"
+                      : product.riskLevel === "High"
+                        ? "Alto"
+                        : product.riskLevel === "Moderate"
+                          ? "Moderato"
+                          : product.riskLevel
+                    : product.riskLevel;
 
-                    border: "1px solid rgba(255,115,60,0.18)",
-                  }}
-                >
+                return (
                   <div
+                    key={product.productId}
                     style={{
-                      fontSize: 13,
-                      fontWeight: 900,
-                      color: "#f3f4f6",
-                      lineHeight: 1.35,
-                      minHeight: 34,
-                    }}
-                  >
-                    {product.productTitle}
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 12,
-                      display: "inline-flex",
-                      padding: "6px 10px",
-                      borderRadius: 999,
+                      borderRadius: 20,
+                      padding: 22,
                       background:
-                        product.riskLevel === "Critical"
-                          ? "rgba(239,68,68,0.14)"
-                          : product.riskLevel === "High"
-                            ? "rgba(249,115,22,0.14)"
-                            : "rgba(234,179,8,0.14)",
-                      color:
-                        product.riskLevel === "Critical"
-                          ? "#ff6b6b"
-                          : product.riskLevel === "High"
-                            ? "#ff8a4c"
-                            : "#facc15",
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
+                        "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 35%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
+                      border: "1px solid rgba(255,115,60,0.18)",
                     }}
                   >
-                    {product.riskLevel}
-                  </div>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 900,
+                        color: "#f3f4f6",
+                        lineHeight: 1.35,
+                        minHeight: 34,
+                      }}
+                    >
+                      {product.productTitle}
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 16,
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      color: "rgba(255,255,255,0.42)",
-                    }}
-                  >
-                    Revenue
-                  </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        display: "inline-flex",
+                        padding: "6px 10px",
+                        borderRadius: 999,
+                        background:
+                          product.riskLevel === "Critical"
+                            ? "rgba(239,68,68,0.14)"
+                            : product.riskLevel === "High"
+                              ? "rgba(249,115,22,0.14)"
+                              : "rgba(234,179,8,0.14)",
+                        color:
+                          product.riskLevel === "Critical"
+                            ? "#ff6b6b"
+                            : product.riskLevel === "High"
+                              ? "#ff8a4c"
+                              : "#facc15",
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {translatedRiskLevel}
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 6,
-                      fontSize: 24,
-                      fontWeight: 950,
-                      color: "#f3f4f6",
-                    }}
-                  >
-                    ${product.revenue.toFixed(0)}
-                  </div>
+                    <div
+                      style={{
+                        marginTop: 16,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "rgba(255,255,255,0.42)",
+                      }}
+                    >
+                      {language === "it" ? "Ricavi" : "Revenue"}
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 14,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      color: "rgba(255,255,255,0.62)",
-                      fontSize: 13,
-                      fontWeight: 800,
-                    }}
-                  >
-                    <span>Margin</span>
-                    <span style={{ color: "#ff6b4a" }}>
-                      {product.marginPct.toFixed(1)}%
-                    </span>
-                  </div>
+                    <div
+                      style={{
+                        marginTop: 6,
+                        fontSize: 24,
+                        fontWeight: 950,
+                        color: "#f3f4f6",
+                      }}
+                    >
+                      ${product.revenue.toFixed(0)}
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 8,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      color: "rgba(255,255,255,0.62)",
-                      fontSize: 13,
-                      fontWeight: 800,
-                    }}
-                  >
-                    <span>Opportunity</span>
-                    <span>${product.riskValue.toFixed(0)}</span>
-                  </div>
+                    <div
+                      style={{
+                        marginTop: 14,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        color: "rgba(255,255,255,0.62)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                      }}
+                    >
+                      <span>{language === "it" ? "Margine" : "Margin"}</span>
+                      <span style={{ color: "#ff6b4a" }}>
+                        {product.marginPct.toFixed(1)}%
+                      </span>
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 14,
-                      paddingTop: 14,
-                      borderTop: "1px solid rgba(255,255,255,0.07)",
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 12,
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    High revenue product operating below the 20% target margin.
+                    <div
+                      style={{
+                        marginTop: 8,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        color: "rgba(255,255,255,0.62)",
+                        fontSize: 13,
+                        fontWeight: 800,
+                      }}
+                    >
+                      <span>
+                        {language === "it" ? "Opportunità" : "Opportunity"}
+                      </span>
+                      <span>${product.riskValue.toFixed(0)}</span>
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 14,
+                        paddingTop: 14,
+                        borderTop: "1px solid rgba(255,255,255,0.07)",
+                        color: "rgba(255,255,255,0.52)",
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Prodotto ad alto ricavo che lavora sotto il margine target del 20%."
+                        : "High revenue product operating below the 20% target margin."}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div
                 style={{
@@ -846,7 +877,9 @@ export default function ProductsPage() {
                   fontWeight: 800,
                 }}
               >
-                No high-revenue products are currently below the target margin.
+                {language === "it"
+                  ? "Nessun prodotto ad alto ricavo è attualmente sotto il margine target."
+                  : "No high-revenue products are currently below the target margin."}
               </div>
             )}
           </div>
@@ -871,7 +904,7 @@ export default function ProductsPage() {
               }
               onClick={() => setVisibleLimit(limit as 10 | 20 | 50)}
             >
-              Show {limit}
+              {language === "it" ? `Mostra ${limit}` : `Show ${limit}`}
             </button>
           ))}
         </div>
