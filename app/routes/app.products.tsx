@@ -532,8 +532,17 @@ export default function ProductsPage() {
         <div className="panel" style={{ marginBottom: 24 }}>
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">PRODUCT RISK DISTRIBUTION</div>
-              <h2 className="panel-title">Catalog risk overview</h2>
+              <div className="panel-eyebrow">
+                {language === "it"
+                  ? "DISTRIBUZIONE RISCHIO PRODOTTI"
+                  : "PRODUCT RISK DISTRIBUTION"}
+              </div>
+
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Panoramica rischio catalogo"
+                  : "Catalog risk overview"}
+              </h2>
             </div>
           </div>
 
@@ -547,25 +556,34 @@ export default function ProductsPage() {
           >
             {[
               {
-                label: "Critical",
+                label: language === "it" ? "Critico" : "Critical",
                 count: criticalProducts,
                 pct: criticalPct,
                 color: "#ff6b4a",
-                description: "Products with negative or severely weak margins.",
+                description:
+                  language === "it"
+                    ? "Prodotti con margini negativi o molto deboli."
+                    : "Products with negative or severely weak margins.",
               },
               {
-                label: "High",
+                label: language === "it" ? "Alta" : "High",
                 count: highProducts,
                 pct: highPct,
                 color: "#f59e0b",
-                description: "Products requiring pricing or cost review.",
+                description:
+                  language === "it"
+                    ? "Prodotti che richiedono una revisione di prezzo o costo."
+                    : "Products requiring pricing or cost review.",
               },
               {
-                label: "Healthy",
+                label: language === "it" ? "Ottimo" : "Healthy",
                 count: healthyProducts,
                 pct: healthyPct,
                 color: "#22c55e",
-                description: "Products currently operating within healthy margins.",
+                description:
+                  language === "it"
+                    ? "Prodotti attualmente entro margini sani."
+                    : "Products currently operating within healthy margins.",
               },
             ].map((item) => (
               <div
@@ -631,7 +649,9 @@ export default function ProductsPage() {
                     fontWeight: 850,
                   }}
                 >
-                  {item.pct.toFixed(1)}% of catalog
+                  {language === "it"
+                    ? `${item.pct.toFixed(1)}% del catalogo`
+                    : `${item.pct.toFixed(1)}% of catalog`}
                 </div>
 
                 <div
