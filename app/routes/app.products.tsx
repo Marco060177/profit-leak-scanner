@@ -87,18 +87,20 @@ export default function ProductsPage() {
     .slice(0, visibleLimit);
 
   const riskLabel = (row: Row) => {
+    if (language === "it") {
+      if (row.losing) return "Critico";
+      if (row.missingCost) return "Costo mancante";
+      if (row.lowMargin) return "Alto";
+      return "Ottimo";
+    }
+
     if (row.losing) return "Critical";
     if (row.missingCost) return "Missing cost";
     if (row.lowMargin) return "High";
     return "Healthy";
   };
 
-  const riskColor = (row: Row) => {
-    if (row.losing) return "#ef4444";
-    if (row.missingCost) return "#f59e0b";
-    if (row.lowMargin) return "#ff6b4a";
-    return "#22c55e";
-  };
+  const riskColor = (row: Row) => { if (row.losing) return "#ef4444"; if (row.missingCost) return "#f59e0b"; if (row.lowMargin) return "#ff6b4a"; return "#22c55e"; };
 
   const riskBackground = (row: Row) => {
     if (row.losing) return "rgba(239,68,68,0.16)";
@@ -356,11 +358,17 @@ export default function ProductsPage() {
                       : "#22c55e";
 
                 const productScoreLabel =
-                  productScore < 40
-                    ? "High risk"
-                    : productScore < 70
-                      ? "Moderate risk"
-                      : "Healthy";
+                  language === "it"
+                    ? productScore < 40
+                      ? "Rischio alto"
+                      : productScore < 70
+                        ? "Rischio moderato"
+                        : "Ottimo"
+                    : productScore < 40
+                      ? "High risk"
+                      : productScore < 70
+                        ? "Moderate risk"
+                        : "Healthy";
 
                 return (
                   <div
