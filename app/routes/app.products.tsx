@@ -432,7 +432,11 @@ export default function ProductsPage() {
                 "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
             }}
           >
-            <div className="panel-eyebrow">BIGGEST PRODUCT RISK</div>
+            <div className="panel-eyebrow">
+              {language === "it"
+                ? "PRODOTTO A MAGGIOR RISCHIO"
+                : "BIGGEST PRODUCT RISK"}
+            </div>
 
             <h2
               className="panel-title"
@@ -451,8 +455,9 @@ export default function ProductsPage() {
                 fontWeight: 700,
               }}
             >
-              Highest revenue-at-risk product currently operating below the target
-              margin threshold.
+              {language === "it"
+                ? "Prodotto con il maggior rischio di ricavi, attualmente al di sotto della soglia di margine target."
+                : "Highest revenue-at-risk product currently operating below the target margin threshold."}
             </div>
 
             <div
@@ -465,22 +470,22 @@ export default function ProductsPage() {
             >
               {[
                 [
-                  "Revenue",
+                  language === "it" ? "Ricavi" : "Revenue",
                   `$${biggestRiskProduct.revenue.toFixed(0)}`,
                   "#f3f4f6",
                 ],
                 [
-                  "Margin",
+                  language === "it" ? "Margine" : "Margin",
                   `${biggestRiskProduct.marginPct.toFixed(1)}%`,
                   "#ff6b4a",
                 ],
                 [
-                  "Opportunity",
+                  language === "it" ? "Opportunità" : "Opportunity",
                   `$${biggestRiskProduct.riskValue.toFixed(0)}`,
                   "#22c55e",
                 ],
                 [
-                  "Target Gap",
+                  language === "it" ? "Gap Target" : "Target Gap",
                   `${biggestRiskProduct.marginGap.toFixed(1)}%`,
                   "#f59e0b",
                 ],
@@ -862,6 +867,6 @@ export default function ProductsPage() {
           shopHandle={shopHandle}
         />
       </div>
-    </div>
+    </div >
   );
 }
