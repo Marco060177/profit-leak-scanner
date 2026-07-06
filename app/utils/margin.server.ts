@@ -9,6 +9,8 @@ import {
   toYYYYMMDD,
 } from "~/utils/margin";
 
+
+
 export async function loadMarginDashboardData({
   admin,
   session,
@@ -503,14 +505,14 @@ export async function loadMarginDashboardData({
           ? aggressiveIncrease
             ? "Current margins are critically below target. Review product costs, pricing structure and discounts."
             : `Increase price to ${moneyServer(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${moneyServer(
-                targetDelta,
-              )} per unit) to reach a healthier margin.`
+              targetDelta,
+            )} per unit) to reach a healthier margin.`
           : targetDelta > 0
             ? aggressiveIncrease
-              ? "Margin improvement opportunity detected. Review pricing and fulfillment costs."
+              ? "Margin improvement opportunity detected. Review pricing and operational costs."
               : `Consider increasing price to ${moneyServer(
-                  targetPrice,
-                )} to improve product margins.`
+                targetPrice,
+              )} to improve product margins.`
             : "Current pricing and margins appear stable based on available cost data.";
 
       return {

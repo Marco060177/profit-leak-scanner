@@ -400,7 +400,15 @@ export default function ProductRiskTable({
                               ? language === "it"
                                 ? "Manca il costo di questo prodotto. Inserisci il costo in Shopify per ottenere un monitoraggio accurato dei margini e un'analisi del rischio affidabile."
                                 : "Cost data is missing for this product. Add product cost in Shopify to unlock accurate margin tracking and risk analysis."
-                              : row.suggestion}
+                              : language === "it"
+                                ? row.profit < 0
+                                  ? row.targetDelta > 0
+                                    ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
+                                    : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti."
+                                  : row.targetDelta > 0
+                                    ? `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`
+                                    : "Prezzi e margini risultano stabili sulla base dei dati disponibili."
+                                : row.suggestion}
                           </div>
 
                           {row.productId ? (
