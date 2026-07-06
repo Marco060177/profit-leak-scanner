@@ -70,6 +70,28 @@ export default function ProductRiskTable({
 
   const language = getStoredLanguage();
 
+  function translatedSuggestion(row: Row) {
+    if (language !== "it") {
+      return row.suggestion;
+    }
+
+    if (row.missingCost) {
+      return "Manca il costo di questo prodotto. Inserisci il costo in Shopify per ottenere un monitoraggio accurato dei margini e un'analisi del rischio affidabile.";
+    }
+
+    if (row.profit < 0) {
+      return row.targetDelta > 0
+        ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
+        : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti.";
+    }
+
+    if (row.targetDelta > 0) {
+      return `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`;
+    }
+
+    return "Prezzi e margini risultano stabili sulla base dei dati disponibili.";
+  }
+
   return (
     <div className="panel" id="products-section">
       <div className="section-header">
@@ -408,7 +430,7 @@ export default function ProductRiskTable({
                                   : row.targetDelta > 0
                                     ? `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`
                                     : "Prezzi e margini risultano stabili sulla base dei dati disponibili."
-                                : row.suggestion}
+                                : translatedSuggestion(row)}
                           </div>
 
                           {row.productId ? (
