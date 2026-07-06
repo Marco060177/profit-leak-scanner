@@ -203,19 +203,19 @@ export default function ProfitIntelligencePage() {
           <div>
             <div className="eyebrow">
               {language === "it"
-                ? "INTELLIGENZA PROFITTI"
+                ? "ANALISI PROFITTI"
                 : "PROFIT INTELLIGENCE"}
             </div>
 
             <div className="hero-title">
               {language === "it"
-                ? "Intelligenza Profitti"
+                ? "Analisi Profitti"
                 : "Profit Intelligence"}
             </div>
 
             <div className="hero-description">
               {language === "it"
-                ? "Analizza concentrazione dei ricavi, dipendenza dai profitti e qualità dei margini nel tuo business Shopify."
+                ? "MarginLab analizza come vengono generati ricavi e profitti e valuta la qualità dei margini del tuo business Shopify."
                 : "Understand revenue concentration, profit dependency and margin quality across your Shopify business."}
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function ProfitIntelligencePage() {
             <div>
               <div className="eyebrow">
                 {language === "it"
-                  ? "PUNTEGGIO INTELLIGENZA PROFITTI"
+                  ? "INDICE DI REDDITIVITA'"
                   : "PROFIT INTELLIGENCE SCORE"}
               </div>
 
@@ -260,7 +260,7 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {language === "it"
-                  ? `${dependencyLevel} rischio di concentrazione`
+                  ? `${dependencyLevel} elevata dipendenza da pochi prodotti`
                   : `${dependencyLevel} concentration risk`}
               </div>
 
@@ -289,9 +289,24 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {[
-                  ["Revenue dependency", `${top3RevenueShare.toFixed(1)}%`],
-                  ["Profit dependency", `${top3ProfitShare.toFixed(1)}%`],
-                  ["Weak products", `${weakProfitProducts}`],
+                  [
+                    language === "it"
+                      ? "Dipendenza dai ricavi"
+                      : "Revenue dependency",
+                    `${top3RevenueShare.toFixed(1)}%`,
+                  ],
+                  [
+                    language === "it"
+                      ? "Dipendenza dai profitti"
+                      : "Profit dependency",
+                    `${top3ProfitShare.toFixed(1)}%`,
+                  ],
+                  [
+                    language === "it"
+                      ? "Prodotti poco redditizi"
+                      : "Weak products",
+                    `${weakProfitProducts}`,
+                  ],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <div
