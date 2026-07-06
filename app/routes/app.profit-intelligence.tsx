@@ -9,6 +9,8 @@ import { type LoaderData, money } from "~/utils/margin";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
+import { getStoredLanguage } from "~/utils/i18n";
+
 export const links = () => [{ rel: "stylesheet", href: dashboardStylesUrl }];
 
 export const loader = async ({
@@ -38,6 +40,8 @@ export default function ProfitIntelligencePage() {
 
   const navigate = useNavigate();
 
+  const language = getStoredLanguage();
+
   const topDiscountProducts = [...rows]
     .filter((row) => row.discounts > 0)
     .sort((a, b) => b.discounts - a.discounts)
@@ -66,15 +70,15 @@ export default function ProfitIntelligencePage() {
   const revenueTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.revenue > 0
       ? ((lastTrendPoint.revenue - firstTrendPoint.revenue) /
-          firstTrendPoint.revenue) *
-        100
+        firstTrendPoint.revenue) *
+      100
       : 0;
 
   const profitTrendPct =
     firstTrendPoint && lastTrendPoint && firstTrendPoint.profit > 0
       ? ((lastTrendPoint.profit - firstTrendPoint.profit) /
-          firstTrendPoint.profit) *
-        100
+        firstTrendPoint.profit) *
+      100
       : 0;
 
   const marginDeteriorating = summary.marginDelta < -3;
@@ -169,9 +173,9 @@ export default function ProfitIntelligencePage() {
       100,
       Math.round(
         100 -
-          top3RevenueShare * 0.35 -
-          Math.max(0, top3ProfitShare - 60) * 0.4 -
-          weakProfitProducts * 5,
+        top3RevenueShare * 0.35 -
+        Math.max(0, top3ProfitShare - 60) * 0.4 -
+        weakProfitProducts * 5,
       ),
     ),
   );
@@ -197,11 +201,22 @@ export default function ProfitIntelligencePage() {
 
         <div className="hero-header">
           <div>
-            <div className="eyebrow">PROFIT INTELLIGENCE</div>
-            <div className="hero-title">Profit Intelligence</div>
+            <div className="eyebrow">
+              {language === "it"
+                ? "INTELLIGENZA PROFITTI"
+                : "PROFIT INTELLIGENCE"}
+            </div>
+
+            <div className="hero-title">
+              {language === "it"
+                ? "Intelligenza Profitti"
+                : "Profit Intelligence"}
+            </div>
+
             <div className="hero-description">
-              Understand revenue concentration, profit dependency and margin
-              quality across your Shopify business.
+              {language === "it"
+                ? "Analizza concentrazione dei ricavi, dipendenza dai profitti e qualità dei margini nel tuo business Shopify."
+                : "Understand revenue concentration, profit dependency and margin quality across your Shopify business."}
             </div>
           </div>
         </div>
@@ -216,7 +231,11 @@ export default function ProfitIntelligencePage() {
             }}
           >
             <div>
-              <div className="eyebrow">PROFIT INTELLIGENCE SCORE</div>
+              <div className="eyebrow">
+                {language === "it"
+                  ? "PUNTEGGIO INTELLIGENZA PROFITTI"
+                  : "PROFIT INTELLIGENCE SCORE"}
+              </div>
 
               <div
                 style={{
@@ -240,7 +259,9 @@ export default function ProfitIntelligencePage() {
                   color: statusColor,
                 }}
               >
-                {dependencyLevel} concentration risk
+                {language === "it"
+                  ? `${dependencyLevel} rischio di concentrazione`
+                  : `${dependencyLevel} concentration risk`}
               </div>
 
               <p
@@ -252,8 +273,9 @@ export default function ProfitIntelligencePage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab evaluates revenue concentration, profit dependency and
-                weak profit drivers to estimate business stability.
+                {language === "it"
+                  ? "MarginLab analizza la concentrazione dei ricavi, la dipendenza dai profitti e i punti deboli della redditività per valutare la stabilità complessiva del business."
+                  : "MarginLab evaluates revenue concentration, profit dependency and weak profit drivers to estimate business stability."}
               </p>
 
               <div
@@ -332,9 +354,8 @@ export default function ProfitIntelligencePage() {
                     position: "absolute",
                     inset: -16,
                     borderRadius: "50%",
-                    background: `conic-gradient(${statusColor} ${
-                      intelligenceScore * 3.6
-                    }deg, transparent 0deg)`,
+                    background: `conic-gradient(${statusColor} ${intelligenceScore * 3.6
+                      }deg, transparent 0deg)`,
                     mask: "radial-gradient(circle, transparent 58%, black 59%)",
                     WebkitMask:
                       "radial-gradient(circle, transparent 58%, black 59%)",
@@ -628,8 +649,8 @@ export default function ProfitIntelligencePage() {
                 value: marginDeteriorating ? "Deteriorating" : "Stable",
                 text: marginDeteriorating
                   ? `Margin dropped by ${Math.abs(
-                      summary.marginDelta,
-                    ).toFixed(1)}% compared to the previous period.`
+                    summary.marginDelta,
+                  ).toFixed(1)}% compared to the previous period.`
                   : "Margin is stable compared to the previous period.",
                 color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
               },
@@ -638,11 +659,11 @@ export default function ProfitIntelligencePage() {
                 value: profitDeteriorating ? "Declining" : "Stable",
                 text: profitDeteriorating
                   ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                      1,
-                    )}% across the selected trend window.`
+                    1,
+                  )}% across the selected trend window.`
                   : `Profit changed by ${profitTrendPct.toFixed(
-                      1,
-                    )}% across the selected trend window.`,
+                    1,
+                  )}% across the selected trend window.`,
                 color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
@@ -746,13 +767,12 @@ export default function ProfitIntelligencePage() {
           <ConcentrationCard
             eyebrow="PROFIT CONCENTRATION"
             title="Profit dependency"
-            status={`${
-              top3ProfitShare > 60
-                ? "High"
-                : top3ProfitShare > 35
-                  ? "Moderate"
-                  : "Low"
-            } profit dependency`}
+            status={`${top3ProfitShare > 60
+              ? "High"
+              : top3ProfitShare > 35
+                ? "Moderate"
+                : "Low"
+              } profit dependency`}
             statusColor={
               top3ProfitShare > 60
                 ? "#ff6b4a"
