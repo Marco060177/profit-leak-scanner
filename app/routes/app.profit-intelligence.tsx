@@ -696,33 +696,75 @@ export default function ProfitIntelligencePage() {
           >
             {[
               {
-                label: "Margin direction",
-                value: marginDeteriorating ? "Deteriorating" : "Stable",
-                text: marginDeteriorating
-                  ? `Margin dropped by ${Math.abs(
-                    summary.marginDelta,
-                  ).toFixed(1)}% compared to the previous period.`
-                  : "Margin is stable compared to the previous period.",
+                label: language === "it" ? "Andamento dei margini" : "Margin direction",
+                value:
+                  language === "it"
+                    ? marginDeteriorating
+                      ? "In calo"
+                      : "Stabile"
+                    : marginDeteriorating
+                      ? "Deteriorating"
+                      : "Stable",
+                text:
+                  language === "it"
+                    ? marginDeteriorating
+                      ? `Il margine è diminuito del ${Math.abs(
+                        summary.marginDelta,
+                      ).toFixed(1)}% rispetto al periodo precedente.`
+                      : "Il margine è stabile rispetto al periodo precedente."
+                    : marginDeteriorating
+                      ? `Margin dropped by ${Math.abs(
+                        summary.marginDelta,
+                      ).toFixed(1)}% compared to the previous period.`
+                      : "Margin is stable compared to the previous period.",
                 color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
-                label: "Profit movement",
-                value: profitDeteriorating ? "Declining" : "Stable",
-                text: profitDeteriorating
-                  ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                    1,
-                  )}% across the selected trend window.`
-                  : `Profit changed by ${profitTrendPct.toFixed(
-                    1,
-                  )}% across the selected trend window.`,
+                label: language === "it" ? "Andamento dei profitti" : "Profit movement",
+                value:
+                  language === "it"
+                    ? profitDeteriorating
+                      ? "In calo"
+                      : "Stabile"
+                    : profitDeteriorating
+                      ? "Declining"
+                      : "Stable",
+                text:
+                  language === "it"
+                    ? profitDeteriorating
+                      ? `I profitti sono diminuiti del ${Math.abs(
+                        profitTrendPct,
+                      ).toFixed(1)}% nel periodo analizzato.`
+                      : `I profitti sono variati del ${profitTrendPct.toFixed(
+                        1,
+                      )}% nel periodo analizzato.`
+                    : profitDeteriorating
+                      ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
+                        1,
+                      )}% across the selected trend window.`
+                      : `Profit changed by ${profitTrendPct.toFixed(
+                        1,
+                      )}% across the selected trend window.`,
                 color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
-                label: "Growth quality",
-                value: revenueGrowingWhileProfitFalls ? "Weakening" : "Aligned",
-                text: revenueGrowingWhileProfitFalls
-                  ? "Revenue is growing while profit is falling. Growth quality may be weakening."
-                  : "Revenue and profit movement do not currently show a major divergence.",
+                label: language === "it" ? "Qualità della crescita" : "Growth quality",
+                value:
+                  language === "it"
+                    ? revenueGrowingWhileProfitFalls
+                      ? "In peggioramento"
+                      : "Coerente"
+                    : revenueGrowingWhileProfitFalls
+                      ? "Weakening"
+                      : "Aligned",
+                text:
+                  language === "it"
+                    ? revenueGrowingWhileProfitFalls
+                      ? "I ricavi stanno aumentando mentre i profitti diminuiscono. La qualità della crescita potrebbe essere in peggioramento."
+                      : "Ricavi e profitti stanno seguendo un andamento coerente."
+                    : revenueGrowingWhileProfitFalls
+                      ? "Revenue is growing while profit is falling. Growth quality may be weakening."
+                      : "Revenue and profit movement do not currently show a major divergence.",
                 color: revenueGrowingWhileProfitFalls ? "#f59e0b" : "#22c55e",
               },
             ].map((item) => (
