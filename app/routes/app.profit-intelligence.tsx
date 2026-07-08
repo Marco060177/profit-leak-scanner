@@ -136,6 +136,15 @@ export default function ProfitIntelligencePage() {
         ? "Moderate"
         : "Low";
 
+  const dependencyLevelLabel =
+  language === "it"
+    ? dependencyLevel === "High"
+      ? "Elevata"
+      : dependencyLevel === "Moderate"
+        ? "Moderata"
+        : "Bassa"
+    : dependencyLevel;      
+
   const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
 
   const totalProfitBase = Math.max(summary.profit, 1);
@@ -260,7 +269,7 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {language === "it"
-                  ? `${dependencyLevel} elevata dipendenza da pochi prodotti`
+                  ? `${dependencyLevel} dipendenza da pochi prodotti`
                   : `${dependencyLevel} concentration risk`}
               </div>
 
