@@ -840,9 +840,25 @@ export default function ProfitIntelligencePage() {
           }}
         >
           <ConcentrationCard
-            eyebrow="REVENUE DEPENDENCY"
-            title="Revenue concentration"
-            status={`${dependencyLevel} dependency`}
+            eyebrow={
+              language === "it"
+                ? "DIPENDENZA DAI RICAVI"
+                : "REVENUE DEPENDENCY"
+            }
+            title={
+              language === "it"
+                ? "Distribuzione dei ricavi"
+                : "Revenue concentration"
+            }
+            status={
+              language === "it"
+                ? dependencyLevel === "High"
+                  ? "Elevata dipendenza"
+                  : dependencyLevel === "Moderate"
+                    ? "Dipendenza moderata"
+                    : "Bassa dipendenza"
+                : `${dependencyLevel} dependency`
+            }
             statusColor={
               dependencyLevel === "High"
                 ? "#ff6b4a"
@@ -851,21 +867,45 @@ export default function ProfitIntelligencePage() {
                   : "#22c55e"
             }
             rows={[
-              ["Top product", topProductRevenueShare],
-              ["Top 3 products", top3RevenueShare],
-              ["Top 5 products", top5RevenueShare],
+              [
+                language === "it" ? "Prodotto principale" : "Top product",
+                topProductRevenueShare,
+              ],
+              [
+                language === "it" ? "Primi 3 prodotti" : "Top 3 products",
+                top3RevenueShare,
+              ],
+              [
+                language === "it" ? "Primi 5 prodotti" : "Top 5 products",
+                top5RevenueShare,
+              ],
             ]}
           />
 
           <ConcentrationCard
-            eyebrow="PROFIT CONCENTRATION"
-            title="Profit dependency"
-            status={`${top3ProfitShare > 60
-              ? "High"
-              : top3ProfitShare > 35
-                ? "Moderate"
-                : "Low"
-              } profit dependency`}
+            eyebrow={
+              language === "it"
+                ? "DIPENDENZA DAI PROFITTI"
+                : "PROFIT CONCENTRATION"
+            }
+            title={
+              language === "it"
+                ? "Distribuzione dei profitti"
+                : "Profit dependency"
+            }
+            status={
+              language === "it"
+                ? top3ProfitShare > 60
+                  ? "Elevata dipendenza"
+                  : top3ProfitShare > 35
+                    ? "Dipendenza moderata"
+                    : "Bassa dipendenza"
+                : `${top3ProfitShare > 60
+                  ? "High"
+                  : top3ProfitShare > 35
+                    ? "Moderate"
+                    : "Low"} profit dependency`
+            }
             statusColor={
               top3ProfitShare > 60
                 ? "#ff6b4a"
@@ -874,8 +914,18 @@ export default function ProfitIntelligencePage() {
                   : "#22c55e"
             }
             rows={[
-              ["Top product", topProductProfitShare],
-              ["Top 3 products", top3ProfitShare],
+              [
+                language === "it"
+                  ? "Prodotto principale"
+                  : "Top product",
+                topProductProfitShare,
+              ],
+              [
+                language === "it"
+                  ? "Primi 3 prodotti"
+                  : "Top 3 products",
+                top3ProfitShare,
+              ],
             ]}
           />
         </div>
@@ -897,10 +947,16 @@ export default function ProfitIntelligencePage() {
                 "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
             }}
           >
-            <div className="panel-eyebrow">TOP PROFIT LEAKS</div>
+            <div className="panel-eyebrow">
+              {language === "it"
+                ? "PRINCIPALI PERDITE DI MARGINE"
+                : "TOP PROFIT LEAKS"}
+            </div>
 
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              Products creating margin pressure
+              {language === "it"
+                ? "Prodotti che stanno riducendo i margini"
+                : "Products creating margin pressure"}
             </h2>
 
             <div
