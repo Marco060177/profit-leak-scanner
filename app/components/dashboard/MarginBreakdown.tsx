@@ -1,3 +1,5 @@
+import { getStoredLanguage } from "~/utils/i18n";
+
 type Props = {
   cogsPercentage: number;
   profitPercentage: number;
@@ -9,24 +11,35 @@ export default function MarginBreakdown({
   profitPercentage,
   leakPercentage,
 }: Props) {
+  const language = getStoredLanguage();
+
   const items = [
     {
       label: "COGS",
       value: cogsPercentage,
       color: "#3b82f6",
-      description: "Revenue absorbed by product costs.",
+      description:
+        language === "it"
+          ? "Quota dei ricavi assorbita dai costi dei prodotti."
+          : "Revenue absorbed by product costs.",
     },
     {
-      label: "Profit",
+      label: language === "it" ? "Profitto" : "Profit",
       value: profitPercentage,
       color: "#22c55e",
-      description: "Revenue retained as gross profit.",
+      description:
+        language === "it"
+          ? "Quota dei ricavi che genera profitto."
+          : "Revenue retained as gross profit.",
     },
     {
-      label: "Leak",
+      label: language === "it" ? "Perdite di margine" : "Margin Loss",
       value: leakPercentage,
       color: "#ef4444",
-      description: "Detected margin leakage across products.",
+      description:
+        language === "it"
+          ? "Margini persi a causa delle inefficienze rilevate."
+          : "Detected margin leakage across products.",
     },
   ];
 
@@ -34,10 +47,16 @@ export default function MarginBreakdown({
     <div className="panel">
       <div className="section-header">
         <div>
-          <div className="section-title">Margin Breakdown</div>
+          <div className="section-title">
+            {language === "it"
+              ? "Composizione dei margini"
+              : "Margin Breakdown"}
+          </div>
 
           <div className="section-subtitle">
-            Revenue allocation across costs, profit and detected leaks.
+            {language === "it"
+              ? "Distribuzione dei ricavi tra costi, profitti e perdite di margine rilevate."
+              : "Revenue allocation across costs, profit and detected leaks."}
           </div>
         </div>
       </div>
