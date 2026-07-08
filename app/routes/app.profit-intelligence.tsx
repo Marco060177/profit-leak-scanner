@@ -137,13 +137,13 @@ export default function ProfitIntelligencePage() {
         : "Low";
 
   const dependencyLevelLabel =
-  language === "it"
-    ? dependencyLevel === "High"
-      ? "Elevata"
-      : dependencyLevel === "Moderate"
-        ? "Moderata"
-        : "Bassa"
-    : dependencyLevel;      
+    language === "it"
+      ? dependencyLevel === "High"
+        ? "Elevata"
+        : dependencyLevel === "Moderate"
+          ? "Moderata"
+          : "Bassa"
+      : dependencyLevel;
 
   const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
 
@@ -425,8 +425,17 @@ export default function ProfitIntelligencePage() {
         <div className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">BUSINESS IMPACT ANALYSIS</div>
-              <h2 className="panel-title">Where is profit being eroded?</h2>
+              <div className="panel-eyebrow">
+                {language === "it"
+                  ? "ANALISI DELLA REDDITIVITA'"
+                  : "BUSINESS IMPACT ANALYSIS"}
+              </div>
+
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Cosa sta riducendo i tuoi profitti?"
+                  : "Where is profit being eroded?"}
+              </h2>
             </div>
           </div>
 
@@ -499,9 +508,9 @@ export default function ProfitIntelligencePage() {
                 lineHeight: 1.6,
               }}
             >
-              No discounts, refunds or shipping impact were detected in the
-              selected period. Contribution profit currently matches
-              product-level gross profit.
+              {language === "it"
+                ? "Nel periodo selezionato non sono stati rilevati sconti, rimborsi o costi di spedizione che abbiano inciso sui margini. Il profitto calcolato corrisponde attualmente al margine lordo dei prodotti."
+                : "No discounts, refunds or shipping impact were detected in the selected period. Contribution profit currently matches product-level gross profit."}
             </div>
           )}
         </div>
