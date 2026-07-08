@@ -551,8 +551,9 @@ export default function ProfitIntelligencePage() {
                         lineHeight: 1.5,
                       }}
                     >
-                      Product margin declined compared to the previous selected
-                      period.
+                      {language === "it"
+                        ? "Il margine di questo prodotto è diminuito rispetto al periodo precedente."
+                        : "Product margin declined compared to the previous selected period."}
                     </div>
                   </div>
 
