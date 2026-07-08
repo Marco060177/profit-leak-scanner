@@ -968,8 +968,9 @@ export default function ProfitIntelligencePage() {
                 fontWeight: 700,
               }}
             >
-              High-revenue products with weak margins can make sales look strong
-              while reducing profit quality.
+              {language === "it"
+                ? "Prodotti con ricavi elevati ma margini bassi possono aumentare le vendite senza generare profitti proporzionati."
+                : "High-revenue products with weak margins can make sales look strong while reducing profit quality."}
             </div>
 
             <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
@@ -1065,7 +1066,7 @@ export default function ProfitIntelligencePage() {
                           color: "rgba(255,255,255,0.44)",
                         }}
                       >
-                        Margin
+                        {language === "it" ? "Margine" : "Margin"}
                       </div>
                     </div>
                   </div>
@@ -1082,7 +1083,9 @@ export default function ProfitIntelligencePage() {
                     fontWeight: 700,
                   }}
                 >
-                  No major weak profit drivers detected in the current period.
+                  {language === "it"
+                    ? "Non sono stati rilevati prodotti che stanno riducendo in modo significativo i profitti nel periodo corrente."
+                    : "No major weak profit drivers detected in the current period."}
                 </div>
               )}
             </div>
@@ -1096,10 +1099,16 @@ export default function ProfitIntelligencePage() {
               background: `radial-gradient(circle at top right, ${profitQualityColor}18, transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))`,
             }}
           >
-            <div className="panel-eyebrow">PROFIT QUALITY</div>
+            <div className="panel-eyebrow">
+              {language === "it"
+                ? "QUALITÀ DEI MARGINI"
+                : "PROFIT QUALITY"}
+            </div>
 
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              Margin health signal
+              {language === "it"
+                ? "Stato di salute dei margini"
+                : "Margin health signal"}
             </h2>
 
             <div
@@ -1143,7 +1152,9 @@ export default function ProfitIntelligencePage() {
                 color: "rgba(255,255,255,0.42)",
               }}
             >
-              Healthy margin products
+              {language === "it"
+                ? "Prodotti con margini ottimali"
+                : "Healthy margin products"}
             </div>
 
             <p
@@ -1154,8 +1165,9 @@ export default function ProfitIntelligencePage() {
                 fontWeight: 700,
               }}
             >
-              {healthyProfitProducts} products show healthy margins, while{" "}
-              {weakProfitProducts} products show weak profit quality.
+              {language === "it"
+                ? `${healthyProfitProducts} prodotti hanno margini soddisfacenti, mentre ${weakProfitProducts} richiedono attenzione per migliorare la redditività.`
+                : `${healthyProfitProducts} products show healthy margins, while ${weakProfitProducts} products show weak profit quality.`}
             </p>
 
             <div
