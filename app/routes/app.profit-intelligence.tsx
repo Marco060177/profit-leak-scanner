@@ -590,9 +590,16 @@ export default function ProfitIntelligencePage() {
           <div className="panel">
             <div className="panel-header">
               <div>
-                <div className="panel-eyebrow">DISCOUNT EXPOSURE</div>
+                <div className="panel-eyebrow">
+                  {language === "it"
+                    ? "IMPATTO DEGLI SCONTI"
+                    : "DISCOUNT EXPOSURE"}
+                </div>
+
                 <h2 className="panel-title">
-                  Products most affected by discounts
+                  {language === "it"
+                    ? "Prodotti maggiormente penalizzati dagli sconti"
+                    : "Products most affected by discounts"}
                 </h2>
               </div>
             </div>
@@ -628,8 +635,9 @@ export default function ProfitIntelligencePage() {
                           lineHeight: 1.5,
                         }}
                       >
-                        Discount absorbed by this product during the selected
-                        period.
+                        {language === "it"
+                          ? "Totale degli sconti applicati a questo prodotto nel periodo selezionato."
+                          : "Discount absorbed by this product during the selected period."}
                       </div>
 
                       <div
@@ -664,8 +672,17 @@ export default function ProfitIntelligencePage() {
         <div className="panel">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">TIMELINE INTELLIGENCE</div>
-              <h2 className="panel-title">Profit trend signals</h2>
+              <div className="panel-eyebrow">
+                {language === "it"
+                  ? "ANALISI TEMPORALE"
+                  : "TIMELINE INTELLIGENCE"}
+              </div>
+
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Andamento della redditività"
+                  : "Profit trend signals"}
+              </h2>
             </div>
           </div>
 
