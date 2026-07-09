@@ -1038,9 +1038,15 @@ export default function ProfitIntelligencePage() {
                           fontWeight: 800,
                         }}
                       >
-                        <span>Revenue {money(row.revenue)}</span>
+                        <span>
+                          {language === "it" ? "Ricavi" : "Revenue"} {money(row.revenue)}
+                        </span>
+
                         <span>•</span>
-                        <span>Profit {money(row.profit)}</span>
+
+                        <span>
+                          {language === "it" ? "Profitto" : "Profit"} {money(row.profit)}
+                        </span>
                       </div>
                     </div>
 
