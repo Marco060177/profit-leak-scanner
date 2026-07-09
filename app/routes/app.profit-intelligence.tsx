@@ -176,6 +176,15 @@ export default function ProfitIntelligencePage() {
         ? "Mixed"
         : "Healthy";
 
+  const profitQualityLevelLabel =
+    language === "it"
+      ? profitQualityLevel === "Weak"
+        ? "Debole"
+        : profitQualityLevel === "Mixed"
+          ? "Mista"
+          : "Sana"
+      : profitQualityLevel;
+
   const intelligenceScore = Math.max(
     0,
     Math.min(
@@ -1132,7 +1141,7 @@ export default function ProfitIntelligencePage() {
                 textTransform: "uppercase",
               }}
             >
-              {profitQualityLevel}
+              {profitQualityLevelLabel}
             </div>
 
             <div
