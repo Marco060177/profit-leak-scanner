@@ -862,10 +862,10 @@ export default function ProfitIntelligencePage() {
             status={
               language === "it"
                 ? dependencyLevel === "High"
-                  ? "Elevata dipendenza"
+                  ? "Ricavi molto concentrati"
                   : dependencyLevel === "Moderate"
-                    ? "Dipendenza moderata"
-                    : "Bassa dipendenza"
+                    ? "Ricavi moderatamente concentrati"
+                    : "Ricavi ben distribuiti"
                 : `${dependencyLevel} dependency`
             }
             statusColor={
@@ -905,15 +905,16 @@ export default function ProfitIntelligencePage() {
             status={
               language === "it"
                 ? top3ProfitShare > 60
-                  ? "Elevata dipendenza"
+                  ? "Profitti molto concentrati"
                   : top3ProfitShare > 35
-                    ? "Dipendenza moderata"
-                    : "Bassa dipendenza"
+                    ? "Profitti moderatamente concentrati"
+                    : "Profitti ben distribuiti"
                 : `${top3ProfitShare > 60
                   ? "High"
                   : top3ProfitShare > 35
                     ? "Moderate"
-                    : "Low"} profit dependency`
+                    : "Low"
+                } profit dependency`
             }
             statusColor={
               top3ProfitShare > 60
