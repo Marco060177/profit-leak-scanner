@@ -421,11 +421,12 @@ Rules:
         <div className="panel">
           <div className="section-header">
             <div>
-              <div className="section-title">AI Advisor Preview</div>
+              {language === "it" ? "Anteprima Consulente AI" : "AI Advisor Preview"}
 
               <div className="section-subtitle">
-                Growth feature preview. Built to turn margin data into clear
-                business decisions.
+                {language === "it"
+                  ? "L'anteprima Growth trasforma i dati sui margini in decisioni operative chiare."
+                  : "Growth feature preview. Built to turn margin data into clear business decisions."}
               </div>
             </div>
           </div>
@@ -458,7 +459,7 @@ Rules:
                   color: "#ff9a70",
                 }}
               >
-                Store Health Assessment
+                {language === "it" ? "Valutazione salute store" : "Store Health Assessment"}
               </div>
 
               <div
@@ -472,9 +473,13 @@ Rules:
                   letterSpacing: "-0.04em",
                 }}
               >
-                {topProfitLeak
-                  ? `${topProfitLeak.productTitle} is currently the biggest profitability risk.`
-                  : "MarginLab did not detect a critical product risk during this period."}
+                {language === "it"
+                  ? topProfitLeak
+                    ? `${topProfitLeak.productTitle} rappresenta attualmente il principale rischio per la redditività dello store.`
+                    : "MarginLab non ha rilevato prodotti che rappresentino un rischio significativo per la redditività nel periodo analizzato."
+                  : topProfitLeak
+                    ? `${topProfitLeak.productTitle} is currently the biggest profitability risk.`
+                    : "MarginLab did not detect a critical product risk during this period."}
               </div>
 
               <div
@@ -496,7 +501,7 @@ Rules:
                     color: "#ff9a70",
                   }}
                 >
-                  AI Executive Summary
+                  {language === "it" ? "Sintesi AI" : "AI Executive Summary"}
                 </div>
 
                 <div
@@ -537,7 +542,9 @@ Rules:
                         fontWeight: 700,
                       }}
                     >
-                      MarginLab store health assessment
+                      {language === "it"
+                        ? "Analisi dello stato di salute dello store"
+                        : "MarginLab store health assessment"}
                     </div>
                   </div>
                 </div>
@@ -551,9 +558,9 @@ Rules:
                     fontWeight: 700,
                   }}
                 >
-                  MarginLab analyzed your store and detected profitability risks
-                  related to product margins, missing costs and recoverable
-                  profit opportunities.
+                  {language === "it"
+                    ? "MarginLab ha analizzato lo store e rilevato rischi di redditività legati a margini prodotto, costi mancanti e opportunità di profitto recuperabile."
+                    : "MarginLab analyzed your store and detected profitability risks related to product margins, missing costs and recoverable profit opportunities."}
                 </div>
               </div>
 
@@ -567,8 +574,13 @@ Rules:
                 {(aiFindings.length > 0
                   ? aiFindings
                   : [
-                    "No critical margin issues detected during the selected period.",
-                    "Product costs, discounts and refunds appear stable based on available data.",
+                    language === "it"
+                      ? "Non sono stati rilevati problemi critici di margine nel periodo selezionato."
+                      : "No critical margin issues detected during the selected period.",
+
+                    language === "it"
+                      ? "Costi prodotto, sconti e rimborsi risultano stabili sulla base dei dati disponibili."
+                      : "Product costs, discounts and refunds appear stable based on available data.",
                   ]
                 ).map((text) => (
                   <div
@@ -608,15 +620,31 @@ Rules:
                     marginBottom: 14,
                   }}
                 >
-                  Weekly AI Report Preview
+                  {language === "it"
+                    ? "Anteprima del Report AI Settimanale"
+                    : "Weekly AI Report Preview"}
                 </div>
 
                 <div style={{ display: "grid", gap: 12 }}>
                   {[
-                    ["Store Health", weeklyReport.health],
-                    ["Main Risk", weeklyReport.mainRisk],
-                    ["Opportunity", weeklyReport.opportunity],
-                    ["Recommended Action", weeklyReport.recommendation],
+                    
+                      [
+                        language === "it" ? "Stato dello store" : "Store Health",
+                        weeklyReport.health,
+                      ],
+                      [
+                        language === "it" ? "Rischio principale" : "Main Risk",
+                        weeklyReport.mainRisk,
+                      ],
+                      [
+                        language === "it" ? "Opportunità" : "Opportunity",
+                        weeklyReport.opportunity,
+                      ],
+                      [
+                        language === "it" ? "Azione consigliata" : "Recommended Action",
+                        weeklyReport.recommendation,
+                      ],
+                    
                   ].map(([label, value]) => (
                     <div key={label}>
                       <div
