@@ -9,7 +9,7 @@ import {
   generateAiAnswer,
 } from "~/utils/openai.server";
 import type { LoaderData } from "~/utils/margin";
-
+import { getStoredLanguage } from "~/utils/i18n";
 import "~/styles/dashboard.css";
 
 type SelectedQuestion =
@@ -74,6 +74,7 @@ Do not generate a complete analysis.
 
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
+  const language = getStoredLanguage();
   const aiFetcher = useFetcher<{ text: string }>();
   const askFetcher = useFetcher<{ text: string }>();
 
@@ -142,19 +143,25 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-          losingProducts.length * 15 -
-          missingCostProducts.length * 10 -
-          lowMarginProducts.length * 4,
+        losingProducts.length * 15 -
+        missingCostProducts.length * 10 -
+        lowMarginProducts.length * 4,
       ),
     ),
   );
 
   const healthLabel =
-    healthScore < 40
-      ? "High Risk"
-      : healthScore < 70
-        ? "Moderate Risk"
-        : "Healthy";
+    language === "it"
+      ? healthScore < 40
+        ? "Rischio elevato"
+        : healthScore < 70
+          ? "Rischio moderato"
+          : "Sano"
+      : healthScore < 40
+        ? "High Risk"
+        : healthScore < 70
+          ? "Moderate Risk"
+          : "Healthy";
 
   const weeklyReport = {
     health: healthLabel,
@@ -179,32 +186,32 @@ export default function AiAdvisorPage() {
   const marginAlerts = [
     losingProducts.length > 0
       ? {
-          level: "Critical",
-          message: `${losingProducts.length} products are currently selling below cost.`,
-        }
+        level: "Critical",
+        message: `${losingProducts.length} products are currently selling below cost.`,
+      }
       : null,
 
     missingCostProducts.length > 0
       ? {
-          level: "Warning",
-          message: `${missingCostProducts.length} products are missing cost data.`,
-        }
+        level: "Warning",
+        message: `${missingCostProducts.length} products are missing cost data.`,
+      }
       : null,
 
     summary.refunds > 0
       ? {
-          level: "Notice",
-          message: `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
-        }
+        level: "Notice",
+        message: `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
+      }
       : null,
 
     recoverableProfit > 0
       ? {
-          level: "Opportunity",
-          message: `$${recoverableProfit.toFixed(
-            0,
-          )} recoverable profit opportunity detected.`,
-        }
+        level: "Opportunity",
+        message: `$${recoverableProfit.toFixed(
+          0,
+        )} recoverable profit opportunity detected.`,
+      }
       : null,
   ].filter(
     (alert): alert is { level: string; message: string } => alert !== null,
@@ -225,18 +232,18 @@ export default function AiAdvisorPage() {
       : null,
     summary.discounts > 0
       ? `Discounts reduced revenue by $${summary.discounts.toFixed(
-          2,
-        )} during this period.`
+        2,
+      )} during this period.`
       : null,
     summary.refunds > 0
       ? `Refunds reduced net revenue by $${summary.refunds.toFixed(
-          2,
-        )} during this period.`
+        2,
+      )} during this period.`
       : null,
     recoverableProfit > 0
       ? `MarginLab detected approximately $${recoverableProfit.toFixed(
-          0,
-        )} in recoverable profit opportunities.`
+        0,
+      )} in recoverable profit opportunities.`
       : null,
   ]
     .filter(Boolean)
@@ -294,47 +301,44 @@ ${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
 
 TOP LOSING PRODUCTS
 
-${
-  [...losingProducts]
-    .slice(0, 3)
-    .map(
-      (p) =>
-        `${p.productTitle} | Profit ${p.profit.toFixed(
-          2,
-        )} | Margin ${p.marginPct.toFixed(1)}%`,
-    )
-    .join("\n") || "None"
-}
+${[...losingProducts]
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Profit ${p.profit.toFixed(
+            2,
+          )} | Margin ${p.marginPct.toFixed(1)}%`,
+      )
+      .join("\n") || "None"
+    }
 
 TOP LOW-MARGIN PRODUCTS
 
-${
-  [...lowMarginProducts]
-    .slice(0, 3)
-    .map(
-      (p) =>
-        `${p.productTitle} | Profit ${p.profit.toFixed(
-          2,
-        )} | Margin ${p.marginPct.toFixed(1)}%`,
-    )
-    .join("\n") || "None"
-}
+${[...lowMarginProducts]
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Profit ${p.profit.toFixed(
+            2,
+          )} | Margin ${p.marginPct.toFixed(1)}%`,
+      )
+      .join("\n") || "None"
+    }
 
 TOP RECOVERY OPPORTUNITIES
 
-${
-  [...rows]
-    .filter((r) => r.targetDelta > 0)
-    .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
-    .slice(0, 3)
-    .map(
-      (p) =>
-        `${p.productTitle} | Potential Recovery ${(
-          p.targetDelta * p.qty
-        ).toFixed(0)}`,
-    )
-    .join("\n") || "None"
-}
+${[...rows]
+      .filter((r) => r.targetDelta > 0)
+      .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
+      .slice(0, 3)
+      .map(
+        (p) =>
+          `${p.productTitle} | Potential Recovery ${(
+            p.targetDelta * p.qty
+          ).toFixed(0)}`,
+      )
+      .join("\n") || "None"
+    }
 
 TASK
 
@@ -386,19 +390,23 @@ Rules:
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              Growth Plan Preview
+              {language === "it" ? "Anteprima Piano Growth" : "Growth Plan Preview"}
             </div>
 
-            <div className="eyebrow">AI MARGIN ADVISOR</div>
+            <div className="eyebrow">
+              {language === "it" ? "CONSULENTE AI MARGINI" : "AI MARGIN ADVISOR"}
+            </div>
 
             <div className="hero-title">
-              Ask MarginLab what is hurting your profit
+              {language === "it"
+                ? "Chiedi a MarginLab cosa sta riducendo i tuoi profitti"
+                : "Ask MarginLab what is hurting your profit"}
             </div>
 
             <div className="hero-description">
-              AI Advisor analyzes your Shopify profitability data, explains
-              margin issues, identifies hidden profit leaks and recommends what
-              to fix first.
+              {language === "it"
+                ? "Il consulente AI analizza i dati di redditività del tuo store Shopify, spiega i problemi di margine, individua perdite nascoste e consiglia cosa correggere per primo."
+                : "AI Advisor analyzes your Shopify profitability data, explains margin issues, identifies hidden profit leaks and recommends what to fix first."}
             </div>
           </div>
 
@@ -406,7 +414,7 @@ Rules:
             className="primary-button"
             onClick={() => navigate("/app/billing")}
           >
-            Upgrade to Growth →
+            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
           </button>
         </div>
 
@@ -559,9 +567,9 @@ Rules:
                 {(aiFindings.length > 0
                   ? aiFindings
                   : [
-                      "No critical margin issues detected during the selected period.",
-                      "Product costs, discounts and refunds appear stable based on available data.",
-                    ]
+                    "No critical margin issues detected during the selected period.",
+                    "Product costs, discounts and refunds appear stable based on available data.",
+                  ]
                 ).map((text) => (
                   <div
                     key={text}
