@@ -5,6 +5,7 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import type { LoaderData } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
 
@@ -50,6 +51,7 @@ function money(n: number) {
 
 export default function ForecastingPage() {
   const navigate = useNavigate();
+  const language = getStoredLanguage();
 
   const { summary, rows, assumptions } =
     useLoaderData() as LoaderData & {
@@ -106,19 +108,31 @@ export default function ForecastingPage() {
 
   const scenarios = [
     {
-      label: "Conservative",
+      key: "conservative",
+      label: language === "it" ? "Prudente" : "Conservative",
       recoveryPct: 25,
-      description: "Recover 25% of identified opportunities",
+      description:
+        language === "it"
+          ? "Recupero del 25% delle opportunità individuate"
+          : "Recover 25% of identified opportunities",
     },
     {
-      label: "Balanced",
+      key: "balanced",
+      label: language === "it" ? "Bilanciato" : "Balanced",
       recoveryPct: 50,
-      description: "Recover 50% of identified opportunities",
+      description:
+        language === "it"
+          ? "Recupero del 50% delle opportunità individuate"
+          : "Recover 50% of identified opportunities",
     },
     {
-      label: "Aggressive",
+      key: "aggressive",
+      label: language === "it" ? "Massimo" : "Aggressive",
       recoveryPct: 100,
-      description: "Recover all identified opportunities",
+      description:
+        language === "it"
+          ? "Recupero di tutte le opportunità individuate"
+          : "Recover all identified opportunities",
     },
   ].map((scenario) => {
     const recoveredProfit = recoverableProfit * (scenario.recoveryPct / 100);
@@ -146,12 +160,71 @@ export default function ForecastingPage() {
   });
 
   const kpis = [
-    ["Current Gross Profit", money(summary.profit), `${summary.marginPct.toFixed(1)}% gross margin`],
-    ["Estimated Net Profit", money(currentNetProfit), `${currentNetMargin.toFixed(1)}% estimated net margin`],
-    ["Recovery Opportunity", money(recoverableProfit), `${impactedProducts} products impacted`],
-    ["Projected Gross Profit", money(projectedGrossProfit), `+${grossMarginGain.toFixed(1)}% margin gain`],
-    ["Projected Net Profit", money(projectedNetProfit), `+${netMarginGain.toFixed(1)}% net margin gain`],
-    ["Estimated Costs", money(totalEstimatedCosts), "Manual assumptions included"],
+    {
+      key: "currentGrossProfit",
+      label:
+        language === "it" ? "Profitto lordo attuale" : "Current Gross Profit",
+      value: money(summary.profit),
+      note:
+        language === "it"
+          ? `${summary.marginPct.toFixed(1)}% di margine lordo`
+          : `${summary.marginPct.toFixed(1)}% gross margin`,
+    },
+    {
+      key: "estimatedNetProfit",
+      label:
+        language === "it" ? "Profitto netto stimato" : "Estimated Net Profit",
+      value: money(currentNetProfit),
+      note:
+        language === "it"
+          ? `${currentNetMargin.toFixed(1)}% di margine netto stimato`
+          : `${currentNetMargin.toFixed(1)}% estimated net margin`,
+    },
+    {
+      key: "recoveryOpportunity",
+      label:
+        language === "it"
+          ? "Opportunità di recupero"
+          : "Recovery Opportunity",
+      value: money(recoverableProfit),
+      note:
+        language === "it"
+          ? `${impactedProducts} prodotti interessati`
+          : `${impactedProducts} products impacted`,
+    },
+    {
+      key: "projectedGrossProfit",
+      label:
+        language === "it"
+          ? "Profitto lordo previsto"
+          : "Projected Gross Profit",
+      value: money(projectedGrossProfit),
+      note:
+        language === "it"
+          ? `+${grossMarginGain.toFixed(1)}% di aumento del margine`
+          : `+${grossMarginGain.toFixed(1)}% margin gain`,
+    },
+    {
+      key: "projectedNetProfit",
+      label:
+        language === "it"
+          ? "Profitto netto previsto"
+          : "Projected Net Profit",
+      value: money(projectedNetProfit),
+      note:
+        language === "it"
+          ? `+${netMarginGain.toFixed(1)}% di aumento del margine netto`
+          : `+${netMarginGain.toFixed(1)}% net margin gain`,
+    },
+    {
+      key: "estimatedCosts",
+      label: language === "it" ? "Costi stimati" : "Estimated Costs",
+      value: money(totalEstimatedCosts),
+      note:
+        language === "it"
+          ? "Incluse le ipotesi inserite manualmente"
+          : "Manual assumptions included",
+    },
   ];
 
   return (
@@ -163,18 +236,25 @@ export default function ForecastingPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              Growth Plan Preview
+              {language === "it"
+                ? "Anteprima del piano Growth"
+                : "Growth Plan Preview"}
             </div>
 
-            <div className="eyebrow">FORECASTING</div>
+            <div className="eyebrow">
+              {language === "it" ? "PREVISIONI" : "FORECASTING"}
+            </div>
 
             <div className="hero-title">
-              Forecast future profitability improvements
+              {language === "it"
+                ? "Prevedi come può migliorare la redditività"
+                : "Forecast future profitability improvements"}
             </div>
 
             <div className="hero-description">
-              Estimate gross profit, net profit and recovery scenarios using
-              current store data and saved monthly cost assumptions.
+              {language === "it"
+                ? "Stima profitto lordo, profitto netto e possibili scenari di recupero utilizzando i dati attuali del negozio e i costi mensili salvati."
+                : "Estimate gross profit, net profit and recovery scenarios using current store data and saved monthly cost assumptions."}
             </div>
           </div>
 
@@ -182,7 +262,7 @@ export default function ForecastingPage() {
             className="primary-button"
             onClick={() => navigate("/app/billing")}
           >
-            Upgrade to Growth →
+            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
           </button>
         </div>
 
@@ -194,18 +274,18 @@ export default function ForecastingPage() {
               gap: 20,
             }}
           >
-            {kpis.map(([label, value, note]) => (
+            {kpis.map((item) => (
               <div
-                key={label}
+                key={item.key}
                 style={{
                   borderRadius: 24,
                   padding: 24,
                   background:
-                    label === "Projected Net Profit"
+                    item.key === "projectedNetProfit"
                       ? "radial-gradient(circle at top left, rgba(34,197,94,0.16), transparent 35%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))"
                       : "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
                   border:
-                    label === "Projected Net Profit"
+                    item.key === "projectedNetProfit"
                       ? "1px solid rgba(34,197,94,0.28)"
                       : "1px solid rgba(255,115,60,0.18)",
                 }}
@@ -216,13 +296,13 @@ export default function ForecastingPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.12em",
                     color:
-                      label === "Projected Net Profit"
+                      item.key === "projectedNetProfit"
                         ? "#4ade80"
                         : "rgba(255,255,255,0.55)",
                     fontWeight: 900,
                   }}
                 >
-                  {label}
+                  {item.label}
                 </div>
 
                 <div
@@ -231,13 +311,13 @@ export default function ForecastingPage() {
                     fontSize: 34,
                     fontWeight: 950,
                     color:
-                      label === "Projected Net Profit"
+                      item.key === "projectedNetProfit"
                         ? "#22c55e"
                         : "#f8fafc",
                     letterSpacing: "-0.04em",
                   }}
                 >
-                  {value}
+                  {item.value}
                 </div>
 
                 <div
@@ -247,7 +327,7 @@ export default function ForecastingPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {note}
+                  {item.note}
                 </div>
               </div>
             ))}
@@ -272,7 +352,7 @@ export default function ForecastingPage() {
                 color: "#ff9a70",
               }}
             >
-              Forecast Scenarios
+              {language === "it" ? "Scenari previsionali" : "Forecast Scenarios"}
             </div>
 
             <div
@@ -285,16 +365,16 @@ export default function ForecastingPage() {
             >
               {scenarios.map((scenario) => (
                 <div
-                  key={scenario.label}
+                  key={scenario.key}
                   style={{
                     borderRadius: 22,
                     padding: 22,
                     background:
-                      scenario.label === "Balanced"
+                      scenario.key === "balanced"
                         ? "radial-gradient(circle at top left, rgba(34,197,94,0.14), transparent 36%), rgba(255,255,255,0.045)"
                         : "rgba(255,255,255,0.04)",
                     border:
-                      scenario.label === "Balanced"
+                      scenario.key === "balanced"
                         ? "1px solid rgba(34,197,94,0.24)"
                         : "1px solid rgba(255,115,60,0.12)",
                   }}
@@ -302,7 +382,7 @@ export default function ForecastingPage() {
                   <div
                     style={{
                       color:
-                        scenario.label === "Balanced"
+                        scenario.key === "balanced"
                           ? "#4ade80"
                           : "#ff9a70",
                       fontSize: 11,
@@ -334,7 +414,7 @@ export default function ForecastingPage() {
                   >
                     <div>
                       <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 900 }}>
-                        RECOVERED PROFIT
+                        {language === "it" ? "PROFITTO RECUPERATO" : "RECOVERED PROFIT"}
                       </div>
                       <div style={{ color: "#22c55e", fontWeight: 950, fontSize: 24 }}>
                         +{money(scenario.recoveredProfit)}
@@ -343,7 +423,9 @@ export default function ForecastingPage() {
 
                     <div>
                       <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 900 }}>
-                        PROJECTED NET PROFIT
+                        {language === "it"
+                          ? "PROFITTO NETTO PREVISTO"
+                          : "PROJECTED NET PROFIT"}
                       </div>
                       <div style={{ color: "#f8fafc", fontWeight: 900 }}>
                         {money(scenario.scenarioNetProfit)}
@@ -352,7 +434,9 @@ export default function ForecastingPage() {
 
                     <div>
                       <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 900 }}>
-                        PROJECTED NET MARGIN
+                        {language === "it"
+                          ? "MARGINE NETTO PREVISTO"
+                          : "PROJECTED NET MARGIN"}
                       </div>
                       <div style={{ color: "#f8fafc", fontWeight: 900 }}>
                         {scenario.scenarioNetMargin.toFixed(1)}%
@@ -383,7 +467,9 @@ export default function ForecastingPage() {
                 color: "#ff9a70",
               }}
             >
-              AI Forecast Summary
+              {language === "it"
+                ? "Riepilogo previsionale AI"
+                : "AI Forecast Summary"}
             </div>
 
             <div
@@ -395,22 +481,49 @@ export default function ForecastingPage() {
                 fontWeight: 750,
               }}
             >
-              Current estimated net profit is{" "}
-              <strong style={{ color: "#f8fafc" }}>
-                {money(currentNetProfit)}
-              </strong>
-              . If all recoverable margin opportunities are addressed, projected
-              net profit could reach{" "}
-              <strong style={{ color: "#22c55e" }}>
-                {money(projectedNetProfit)}
-              </strong>
-              . MarginLab identified{" "}
-              <strong style={{ color: "#f8fafc" }}>{impactedProducts}</strong>{" "}
-              products with recovery potential and{" "}
-              <strong style={{ color: "#f8fafc" }}>
-                {money(totalEstimatedCosts)}
-              </strong>{" "}
-              in estimated monthly costs outside product costs.
+              {language === "it" ? (
+                <>
+                  Il profitto netto stimato attuale è{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {money(currentNetProfit)}
+                  </strong>
+                  . Se tutte le opportunità di recupero individuate venissero
+                  sfruttate, il profitto netto potrebbe raggiungere{" "}
+                  <strong style={{ color: "#22c55e" }}>
+                    {money(projectedNetProfit)}
+                  </strong>
+                  . MarginLab ha individuato{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {impactedProducts}
+                  </strong>{" "}
+                  prodotti con potenziale di recupero e{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {money(totalEstimatedCosts)}
+                  </strong>{" "}
+                  di costi mensili stimati oltre ai costi dei prodotti.
+                </>
+              ) : (
+                <>
+                  Current estimated net profit is{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {money(currentNetProfit)}
+                  </strong>
+                  . If all recoverable margin opportunities are addressed,
+                  projected net profit could reach{" "}
+                  <strong style={{ color: "#22c55e" }}>
+                    {money(projectedNetProfit)}
+                  </strong>
+                  . MarginLab identified{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {impactedProducts}
+                  </strong>{" "}
+                  products with recovery potential and{" "}
+                  <strong style={{ color: "#f8fafc" }}>
+                    {money(totalEstimatedCosts)}
+                  </strong>{" "}
+                  in estimated monthly costs outside product costs.
+                </>
+              )}
             </div>
           </div>
 
@@ -426,9 +539,9 @@ export default function ForecastingPage() {
               fontWeight: 700,
             }}
           >
-            Forecasting preview. Estimates use current product costs, sales
-            volume, recoverable pricing opportunities and saved Profit
-            Assumptions. They are projections, not guaranteed results.
+            {language === "it"
+              ? "Anteprima delle previsioni. Le stime utilizzano i costi attuali dei prodotti, i volumi di vendita, le opportunità di recupero individuate e i costi salvati nella simulazione. Si tratta di proiezioni e non di risultati garantiti."
+              : "Forecasting preview. Estimates use current product costs, sales volume, recoverable pricing opportunities and saved Profit Assumptions. They are projections, not guaranteed results."}
           </div>
         </div>
       </div>
