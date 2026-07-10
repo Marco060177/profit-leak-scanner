@@ -5,6 +5,7 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import type { LoaderData } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
 
@@ -23,6 +24,7 @@ export async function loader({ request }: { request: Request }) {
 
 export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
+  const language = getStoredLanguage();
   const { rows } = useLoaderData() as LoaderData;
 
   const [targetMargin, setTargetMargin] = React.useState(20);
@@ -76,22 +78,102 @@ export default function RecoverySimulatorPage() {
 
   const recoverySummary =
     totalPotentialProfit > 0
-      ? `MarginLab identified approximately $${totalPotentialProfit.toFixed(
-        0,
-      )} in recoverable profit opportunities across ${impactedProducts} products.`
-      : "No significant recovery opportunities were detected for the selected target margin.";
+      ? language === "it"
+        ? `MarginLab ha individuato circa $${totalPotentialProfit.toFixed(
+            0,
+          )} di profitto recuperabile su ${impactedProducts} prodotti.`
+        : `MarginLab identified approximately $${totalPotentialProfit.toFixed(
+            0,
+          )} in recoverable profit opportunities across ${impactedProducts} products.`
+      : language === "it"
+        ? "Non sono state rilevate opportunità di recupero significative per il margine obiettivo selezionato."
+        : "No significant recovery opportunities were detected for the selected target margin.";
 
-  
 
   const averagePriceIncrease =
     simulatorRows.length > 0
       ? simulatorRows.reduce(
-        (sum, row) => sum + row.simulatorPriceDelta,
-        0,
-      ) / simulatorRows.length
+          (sum, row) => sum + row.simulatorPriceDelta,
+          0,
+        ) / simulatorRows.length
       : 0;
 
-  return (
+  const recoveryKpis = [
+    {
+      key: "totalRecoverableProfit",
+      label:
+        language === "it"
+          ? "Profitto totale recuperabile"
+          : "Total Recoverable Profit",
+      value: `$${totalPotentialProfit.toFixed(0)}`,
+      note:
+        language === "it"
+          ? "Opportunità stimata"
+          : "Estimated opportunity",
+    },
+    {
+      key: "productsImpacted",
+      label:
+        language === "it" ? "Prodotti interessati" : "Products Impacted",
+      value: impactedProducts.toString(),
+      note:
+        language === "it"
+          ? "Differenze di prezzo rilevate"
+          : "Pricing gaps detected",
+    },
+    {
+      key: "averagePriceIncrease",
+      label:
+        language === "it"
+          ? "Aumento medio del prezzo"
+          : "Average Price Increase",
+      value: `$${averagePriceIncrease.toFixed(2)}`,
+      note: language === "it" ? "Per prodotto" : "Per product",
+    },
+    {
+      key: "highestRecoveryProduct",
+      label:
+        language === "it"
+          ? "Migliore opportunità di recupero"
+          : "Highest Recovery Product",
+      value:
+        highestOpportunity?.productTitle ??
+        (language === "it" ? "Nessuna" : "None"),
+      note: highestOpportunity
+        ? `+$${highestOpportunity.simulatorPotentialProfit.toFixed(0)}`
+        : language === "it"
+          ? "Nessuna opportunità"
+          : "No opportunity",
+    },
+  ];
+
+  const recoveryScenarios = [
+    {
+      label: language === "it" ? "Prudente" : "Conservative",
+      margin: 20,
+      description:
+        language === "it"
+          ? "Piccoli adeguamenti di prezzo"
+          : "Low pricing adjustments",
+    },
+    {
+      label: language === "it" ? "Bilanciato" : "Balanced",
+      margin: 25,
+      description:
+        language === "it"
+          ? "Scenario consigliato"
+          : "Recommended scenario",
+    },
+    {
+      label: language === "it" ? "Massimo" : "Aggressive",
+      margin: 30,
+      description:
+        language === "it"
+          ? "Massimo recupero possibile"
+          : "Maximum recovery focus",
+    },
+  ];
+    return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav
@@ -103,18 +185,27 @@ export default function RecoverySimulatorPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              Growth Plan Preview
+              {language === "it"
+                ? "Anteprima del piano Growth"
+                : "Growth Plan Preview"}
             </div>
 
-            <div className="eyebrow">RECOVERY SIMULATOR</div>
+            <div className="eyebrow">
+              {language === "it"
+                ? "SIMULATORE DI RECUPERO"
+                : "RECOVERY SIMULATOR"}
+            </div>
 
             <div className="hero-title">
-              Simulate how pricing changes could recover profit
+              {language === "it"
+                ? "Simula quanto profitto puoi recuperare modificando i prezzi"
+                : "Simulate how pricing changes could recover profit"}
             </div>
 
             <div className="hero-description">
-              Test target margin scenarios and estimate how much additional
-              profit MarginLab could help recover from pricing gaps.
+              {language === "it"
+                ? "Prova diversi margini obiettivo e stima quanto profitto aggiuntivo potresti recuperare correggendo i prezzi."
+                : "Test target margin scenarios and estimate how much additional profit MarginLab could help recover from pricing gaps."}
             </div>
           </div>
 
@@ -122,7 +213,7 @@ export default function RecoverySimulatorPage() {
             className="primary-button"
             onClick={() => navigate("/app/billing")}
           >
-            Upgrade to Growth →
+            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
           </button>
         </div>
 
@@ -135,44 +226,18 @@ export default function RecoverySimulatorPage() {
               marginBottom: 24,
             }}
           >
-            {[
-              [
-                "Total Recoverable Profit",
-                `$${totalPotentialProfit.toFixed(0)}`,
-                "Estimated opportunity",
-              ],
-
-              [
-                "Products Impacted",
-                impactedProducts.toString(),
-                "Pricing gaps detected",
-              ],
-
-              [
-                "Average Price Increase",
-                `$${averagePriceIncrease.toFixed(2)}`,
-                "Per product",
-              ],
-
-              [
-                "Highest Recovery Product",
-                highestOpportunity?.productTitle ?? "None",
-                highestOpportunity
-                  ? `+$${highestOpportunity.simulatorPotentialProfit.toFixed(0)}`
-                  : "No opportunity",
-              ],
-            ].map(([label, value, note]) => (
+            {recoveryKpis.map((item) => (
               <div
-                key={label}
+                key={item.key}
                 style={{
                   borderRadius: 24,
                   padding: 24,
                   background:
-                    label === "Total Recoverable Profit"
+                    item.key === "totalRecoverableProfit"
                       ? "radial-gradient(circle at top left, rgba(34,197,94,0.16), transparent 35%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))"
                       : "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
                   border:
-                    label === "Total Recoverable Profit"
+                    item.key === "totalRecoverableProfit"
                       ? "1px solid rgba(34,197,94,0.28)"
                       : "1px solid rgba(255,115,60,0.18)",
                 }}
@@ -183,13 +248,13 @@ export default function RecoverySimulatorPage() {
                     textTransform: "uppercase",
                     letterSpacing: "0.12em",
                     color:
-                      label === "Total Recoverable Profit"
+                      item.key === "totalRecoverableProfit"
                         ? "#4ade80"
                         : "rgba(255,255,255,0.55)",
                     fontWeight: 900,
                   }}
                 >
-                  {label}
+                  {item.label}
                 </div>
 
                 <div
@@ -198,13 +263,13 @@ export default function RecoverySimulatorPage() {
                     fontSize: 28,
                     fontWeight: 950,
                     color:
-                      label === "Total Recoverable Profit"
+                      item.key === "totalRecoverableProfit"
                         ? "#22c55e"
                         : "#f8fafc",
                     lineHeight: 1.1,
                   }}
                 >
-                  {value}
+                  {item.value}
                 </div>
 
                 <div
@@ -214,7 +279,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {note}
+                  {item.note}
                 </div>
               </div>
             ))}
@@ -223,12 +288,15 @@ export default function RecoverySimulatorPage() {
             <div>
               <div className="section-title">
 
-                Profit Recovery Scenario
+                {language === "it"
+                  ? "Scenario di recupero del profitto"
+                  : "Profit Recovery Scenario"}
               </div>
 
               <div className="section-subtitle">
-                Choose a target margin and see estimated recoverable profit
-                based on current product costs, prices and quantities sold.
+                {language === "it"
+                  ? "Scegli un margine obiettivo e visualizza il profitto recuperabile stimato in base a costi, prezzi e quantità vendute."
+                  : "Choose a target margin and see estimated recoverable profit based on current product costs, prices and quantities sold."}
               </div>
             </div>
           </div>
@@ -259,7 +327,7 @@ export default function RecoverySimulatorPage() {
                   color: "#4ade80",
                 }}
               >
-                Estimated Recovery
+                {language === "it" ? "Recupero stimato" : "Estimated Recovery"}
               </div>
 
               <div
@@ -283,8 +351,18 @@ export default function RecoverySimulatorPage() {
                   lineHeight: 1.6,
                 }}
               >
-                Estimated additional profit if selected products move toward a{" "}
-                <strong>{targetMargin}%</strong> target margin.
+                {language === "it" ? (
+                  <>
+                    Profitto aggiuntivo stimato se i prodotti selezionati
+                    raggiungono un margine obiettivo del{" "}
+                    <strong>{targetMargin}%</strong>.
+                  </>
+                ) : (
+                  <>
+                    Estimated additional profit if selected products move
+                    toward a <strong>{targetMargin}%</strong> target margin.
+                  </>
+                )}
               </div>
 
               <div
@@ -295,25 +373,31 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
-                  Products impacted:{" "}
+                  {language === "it" ? "Prodotti interessati" : "Products impacted"}:{" "}
                   <strong style={{ color: "#f8fafc" }}>
                     {simulatorRows.length}
                   </strong>
                 </div>
 
                 <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
-                  Average increase required:{" "}
+                  {language === "it"
+                    ? "Aumento medio necessario"
+                    : "Average increase required"}:{" "}
                   <strong style={{ color: "#f8fafc" }}>
                     +{averageIncrease.toFixed(1)}%
                   </strong>
                 </div>
 
                 <div style={{ color: "rgba(255,255,255,0.62)", fontWeight: 800 }}>
-                  Highest opportunity:{" "}
+                  {language === "it"
+                    ? "Migliore opportunità"
+                    : "Highest opportunity"}:{" "}
                   <strong style={{ color: "#22c55e" }}>
                     {highestOpportunity
                       ? `${highestOpportunity.productTitle} (+$${highestOpportunity.simulatorPotentialProfit.toFixed(0)})`
-                      : "No opportunity detected"}
+                      : language === "it"
+                        ? "Nessuna opportunità rilevata"
+                        : "No opportunity detected"}
                   </strong>
                 </div>
               </div>
@@ -328,7 +412,7 @@ export default function RecoverySimulatorPage() {
                   color: "rgba(255,255,255,0.52)",
                 }}
               >
-                Recovery Scenario
+                {language === "it" ? "Scenario di recupero" : "Recovery Scenario"}
               </div>
 
               <div
@@ -338,23 +422,7 @@ export default function RecoverySimulatorPage() {
                   marginTop: 14,
                 }}
               >
-                {[
-                  {
-                    label: "Conservative",
-                    margin: 20,
-                    description: "Low pricing adjustments",
-                  },
-                  {
-                    label: "Balanced",
-                    margin: 25,
-                    description: "Recommended scenario",
-                  },
-                  {
-                    label: "Aggressive",
-                    margin: 30,
-                    description: "Maximum recovery focus",
-                  },
-                ].map((scenario) => (
+                {recoveryScenarios.map((scenario) => (
                   <button
                     key={scenario.margin}
                     onClick={() => setTargetMargin(scenario.margin)}
@@ -402,7 +470,8 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 900,
                       }}
                     >
-                      Target margin {scenario.margin}%
+                      {language === "it" ? "Margine obiettivo" : "Target margin"}{" "}
+                      {scenario.margin}%
                     </div>
                   </button>
                 ))}
@@ -427,7 +496,7 @@ export default function RecoverySimulatorPage() {
                   color: "rgba(255,255,255,0.55)",
                 }}
               >
-                Products Impacted
+                {language === "it" ? "Prodotti interessati" : "Products Impacted"}
               </div>
 
               <div
@@ -470,8 +539,10 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          Current margin {row.marginPct.toFixed(1)}% · Target
-                          price ${row.simulatorTargetPrice.toFixed(2)}
+                          {language === "it" ? "Margine attuale" : "Current margin"}{" "}
+                          {row.marginPct.toFixed(1)}% ·{" "}
+                          {language === "it" ? "Prezzo obiettivo" : "Target price"}{" "}
+                          ${row.simulatorTargetPrice.toFixed(2)}
                         </div>
 
                         <div
@@ -482,8 +553,11 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 900,
                           }}
                         >
-                          Increase needed +{row.simulatorIncreasePct.toFixed(1)}%
-                          {" "}(${row.simulatorPriceDelta.toFixed(2)})
+                          {language === "it"
+                            ? "Aumento necessario"
+                            : "Increase needed"}{" "}
+                          +{row.simulatorIncreasePct.toFixed(1)}%{" "}
+                          (${row.simulatorPriceDelta.toFixed(2)})
                         </div>
                       </div>
 
@@ -506,7 +580,7 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 800,
                           }}
                         >
-                          estimated profit
+                          {language === "it" ? "profitto stimato" : "estimated profit"}
                         </div>
                       </div>
                     </div>
@@ -522,8 +596,9 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 800,
                     }}
                   >
-                    No pricing recovery opportunities detected for this target
-                    margin.
+                    {language === "it"
+                      ? "Nessuna opportunità di recupero rilevata per questo margine obiettivo."
+                      : "No pricing recovery opportunities detected for this target margin."}
                   </div>
                 )}
               </div>
@@ -549,7 +624,9 @@ export default function RecoverySimulatorPage() {
                 color: "#ff9a70",
               }}
             >
-              AI Recovery Summary
+              {language === "it"
+                ? "Riepilogo AI del recupero"
+                : "AI Recovery Summary"}
             </div>
 
             <div
@@ -598,8 +675,10 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 800,
                       }}
                     >
-                      Potential Recovery $
-                      {product.simulatorPotentialProfit.toFixed(0)}
+                      {language === "it"
+                        ? "Recupero potenziale"
+                        : "Potential Recovery"}{" "}
+                      ${product.simulatorPotentialProfit.toFixed(0)}
                     </div>
                   </div>
                 ))}
@@ -619,9 +698,9 @@ export default function RecoverySimulatorPage() {
               fontWeight: 700,
             }}
           >
-            Growth preview. Estimates are based on Shopify order data, product
-            costs and selected target margin. This simulator does not change
-            prices automatically.
+            {language === "it"
+              ? "Anteprima Growth. Le stime si basano sugli ordini Shopify, sui costi dei prodotti e sul margine obiettivo selezionato. Il simulatore non modifica automaticamente i prezzi."
+              : "Growth preview. Estimates are based on Shopify order data, product costs and selected target margin. This simulator does not change prices automatically."}
           </div>
         </div>
       </div>
