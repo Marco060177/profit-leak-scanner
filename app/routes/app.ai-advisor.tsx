@@ -62,6 +62,7 @@ Current store profitability data:
 ${storeSummary}
 
 The user is asking a specific question.
+Respond in the same language used in the question.
 Do not generate a complete analysis.
 `,
     });
@@ -168,53 +169,86 @@ export default function AiAdvisorPage() {
 
     mainRisk: topProfitLeak
       ? topProfitLeak.productTitle
-      : "No critical product risk detected",
+      : language === "it"
+        ? "Nessun rischio critico rilevato"
+        : "No critical product risk detected",
 
     opportunity:
       recoverableProfit > 0
-        ? `$${recoverableProfit.toFixed(0)} recoverable profit identified`
-        : "No significant recovery opportunity detected",
+        ? language === "it"
+          ? `$${recoverableProfit.toFixed(0)} di profitto recuperabile individuato`
+          : `$${recoverableProfit.toFixed(0)} recoverable profit identified`
+        : language === "it"
+          ? "Nessuna opportunità di recupero significativa rilevata"
+          : "No significant recovery opportunity detected",
 
     recommendation:
       missingCostProducts.length > 0
-        ? `Complete cost data for ${missingCostProducts.length} products`
+        ? language === "it"
+          ? `Completa i costi mancanti di ${missingCostProducts.length} prodotti`
+          : `Complete cost data for ${missingCostProducts.length} products`
         : topProfitLeak
-          ? `Review pricing and costs for ${topProfitLeak.productTitle}`
-          : "Continue monitoring profitability trends",
+          ? language === "it"
+            ? `Controlla prezzi e costi di ${topProfitLeak.productTitle}`
+            : `Review pricing and costs for ${topProfitLeak.productTitle}`
+          : language === "it"
+            ? "Continua a monitorare l'andamento della redditività"
+            : "Continue monitoring profitability trends",
   };
 
   const marginAlerts = [
     losingProducts.length > 0
       ? {
         level: "Critical",
-        message: `${losingProducts.length} products are currently selling below cost.`,
+        levelLabel: language === "it" ? "Critico" : "Critical",
+        message:
+          language === "it"
+            ? `${losingProducts.length} prodotti sono attualmente venduti sotto costo.`
+            : `${losingProducts.length} products are currently selling below cost.`,
       }
       : null,
 
     missingCostProducts.length > 0
       ? {
         level: "Warning",
-        message: `${missingCostProducts.length} products are missing cost data.`,
+        levelLabel: language === "it" ? "Avviso" : "Warning",
+        message:
+          language === "it"
+            ? `${missingCostProducts.length} prodotti non hanno un costo registrato.`
+            : `${missingCostProducts.length} products are missing cost data.`,
       }
       : null,
 
     summary.refunds > 0
       ? {
         level: "Notice",
-        message: `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
+        levelLabel: language === "it" ? "Segnalazione" : "Notice",
+        message:
+          language === "it"
+            ? `I rimborsi hanno ridotto i ricavi di $${summary.refunds.toFixed(2)}.`
+            : `Refunds reduced revenue by $${summary.refunds.toFixed(2)}.`,
       }
       : null,
 
     recoverableProfit > 0
       ? {
         level: "Opportunity",
-        message: `$${recoverableProfit.toFixed(
-          0,
-        )} recoverable profit opportunity detected.`,
+        levelLabel: language === "it" ? "Opportunità" : "Opportunity",
+        message:
+          language === "it"
+            ? `Rilevata un'opportunità di recupero pari a $${recoverableProfit.toFixed(
+              0,
+            )}.`
+            : `$${recoverableProfit.toFixed(
+              0,
+            )} recoverable profit opportunity detected.`,
       }
       : null,
   ].filter(
-    (alert): alert is { level: string; message: string } => alert !== null,
+    (
+      alert,
+    ): alert is { level: string; levelLabel: string; message: string } =>
+      alert !== null,
   );
 
   const healthColor =
@@ -222,37 +256,53 @@ export default function AiAdvisorPage() {
 
   const aiFindings = [
     losingProducts.length > 0
-      ? `${losingProducts.length} products are currently selling below cost.`
+      ? language === "it"
+        ? `${losingProducts.length} prodotti sono attualmente venduti sotto costo.`
+        : `${losingProducts.length} products are currently selling below cost.`
       : null,
     missingCostProducts.length > 0
-      ? `${missingCostProducts.length} products are missing cost data.`
+      ? language === "it"
+        ? `${missingCostProducts.length} prodotti non hanno un costo registrato.`
+        : `${missingCostProducts.length} products are missing cost data.`
       : null,
     lowMarginProducts.length > 0
-      ? `${lowMarginProducts.length} products are operating below healthy margin.`
+      ? language === "it"
+        ? `${lowMarginProducts.length} prodotti lavorano con un margine troppo basso.`
+        : `${lowMarginProducts.length} products are operating below healthy margin.`
       : null,
     summary.discounts > 0
-      ? `Discounts reduced revenue by $${summary.discounts.toFixed(
-        2,
-      )} during this period.`
+      ? language === "it"
+        ? `Nel periodo selezionato gli sconti hanno ridotto i ricavi di $${summary.discounts.toFixed(
+          2,
+        )}.`
+        : `Discounts reduced revenue by $${summary.discounts.toFixed(
+          2,
+        )} during this period.`
       : null,
     summary.refunds > 0
-      ? `Refunds reduced net revenue by $${summary.refunds.toFixed(
-        2,
-      )} during this period.`
+      ? language === "it"
+        ? `Nel periodo selezionato i rimborsi hanno ridotto i ricavi netti di $${summary.refunds.toFixed(
+          2,
+        )}.`
+        : `Refunds reduced net revenue by $${summary.refunds.toFixed(
+          2,
+        )} during this period.`
       : null,
     recoverableProfit > 0
-      ? `MarginLab detected approximately $${recoverableProfit.toFixed(
-        0,
-      )} in recoverable profit opportunities.`
+      ? language === "it"
+        ? `MarginLab ha individuato circa $${recoverableProfit.toFixed(
+          0,
+        )} di profitto potenzialmente recuperabile.`
+        : `MarginLab detected approximately $${recoverableProfit.toFixed(
+          0,
+        )} in recoverable profit opportunities.`
       : null,
   ]
     .filter(Boolean)
     .slice(0, 3) as string[];
 
   const aiPrompt = `
-You are MarginLab AI Advisor.
-
-Analyze this Shopify store profitability data.
+You are MarginLab AI Advisor.\n\nRespond in ${language === "it" ? "Italian" : "English"}.\nAnalyze this Shopify store profitability data.
 
 STORE SUMMARY
 
@@ -394,13 +444,13 @@ Rules:
             </div>
 
             <div className="eyebrow">
-              {language === "it" ? "CONSULENTE AI MARGINI" : "AI MARGIN ADVISOR"}
+              {language === "it" ? "CONSULENTE AI PER I MARGINI" : "AI MARGIN ADVISOR"}
             </div>
 
             <div className="hero-title">
               {language === "it"
                 ? "Chiedi a MarginLab cosa sta riducendo i tuoi profitti"
-                : "Ask MarginLab what is hurting your profit"}
+                : "Ask MarginLab what is hurting your profits"}
             </div>
 
             <div className="hero-description">
@@ -627,26 +677,38 @@ Rules:
 
                 <div style={{ display: "grid", gap: 12 }}>
                   {[
-                    
-                      [
-                        language === "it" ? "Stato dello store" : "Store Health",
-                        weeklyReport.health,
-                      ],
-                      [
-                        language === "it" ? "Rischio principale" : "Main Risk",
-                        weeklyReport.mainRisk,
-                      ],
-                      [
+                    {
+                      key: "health",
+                      label:
+                        language === "it"
+                          ? "Stato dello store"
+                          : "Store Health",
+                      value: weeklyReport.health,
+                    },
+                    {
+                      key: "mainRisk",
+                      label:
+                        language === "it"
+                          ? "Rischio principale"
+                          : "Main Risk",
+                      value: weeklyReport.mainRisk,
+                    },
+                    {
+                      key: "opportunity",
+                      label:
                         language === "it" ? "Opportunità" : "Opportunity",
-                        weeklyReport.opportunity,
-                      ],
-                      [
-                        language === "it" ? "Azione consigliata" : "Recommended Action",
-                        weeklyReport.recommendation,
-                      ],
-                    
-                  ].map(([label, value]) => (
-                    <div key={label}>
+                      value: weeklyReport.opportunity,
+                    },
+                    {
+                      key: "recommendation",
+                      label:
+                        language === "it"
+                          ? "Azione consigliata"
+                          : "Recommended Action",
+                      value: weeklyReport.recommendation,
+                    },
+                  ].map((item) => (
+                    <div key={item.key}>
                       <div
                         style={{
                           color: "rgba(255,255,255,0.45)",
@@ -655,19 +717,19 @@ Rules:
                           textTransform: "uppercase",
                         }}
                       >
-                        {label}
+                        {item.label}
                       </div>
 
                       <div
                         style={{
                           color:
-                            label === "Opportunity" ? "#22c55e" : "#f8fafc",
+                            item.key === "opportunity" ? "#22c55e" : "#f8fafc",
                           fontWeight: 900,
                           marginTop: 4,
                           lineHeight: 1.45,
                         }}
                       >
-                        {value}
+                        {item.value}
                       </div>
                     </div>
                   ))}
@@ -694,7 +756,7 @@ Rules:
                     marginBottom: 14,
                   }}
                 >
-                  Margin Alerts Preview
+                  {language === "it" ? "Anteprima avvisi sui margini" : "Margin Alerts Preview"}
                 </div>
 
                 <div style={{ display: "grid", gap: 10 }}>
@@ -724,7 +786,7 @@ Rules:
                           marginBottom: 5,
                         }}
                       >
-                        {alert.level}
+                        {alert.levelLabel}
                       </div>
 
                       <div
@@ -776,8 +838,12 @@ Rules:
                   }}
                 >
                   {aiFetcher.state !== "idle"
-                    ? "Generating AI Analysis..."
-                    : "Generate AI Analysis"}
+                    ? language === "it"
+                      ? "Generazione analisi AI..."
+                      : "Generating AI Analysis..."
+                    : language === "it"
+                      ? "Genera analisi AI"
+                      : "Generate AI Analysis"}
                 </button>
               </aiFetcher.Form>
 
@@ -803,7 +869,7 @@ Rules:
                       marginBottom: 14,
                     }}
                   >
-                    AI Business Analysis
+                    {language === "it" ? "Analisi AI del business" : "AI Business Analysis"}
                   </div>
 
                   <div
@@ -832,9 +898,9 @@ Rules:
                   fontWeight: 700,
                 }}
               >
-                🔒 Growth preview. This analysis is currently available in
-                preview mode. Advanced AI answers and full conversational
-                analysis will be part of the Growth plan.
+                {language === "it"
+                  ? "🔒 Anteprima Growth. Questa analisi è attualmente disponibile in modalità anteprima. Le risposte AI avanzate e l'analisi conversazionale completa faranno parte del piano Growth."
+                  : "🔒 Growth preview. This analysis is currently available in preview mode. Advanced AI answers and full conversational analysis will be part of the Growth plan."}
               </div>
             </div>
           </div>
@@ -859,7 +925,7 @@ Rules:
                 color: "#ff9a70",
               }}
             >
-              Ask MarginLab
+              {language === "it" ? "Chiedi a MarginLab" : "Ask MarginLab"}
             </div>
 
             <div
@@ -871,9 +937,9 @@ Rules:
                 lineHeight: 1.6,
               }}
             >
-              Ask a specific profitability question and MarginLab will answer
-              using your store data, product risks, recovery opportunities and
-              profit assumptions.
+              {language === "it"
+                ? "Fai una domanda specifica sulla redditività e MarginLab risponderà utilizzando i dati del negozio, i rischi dei prodotti, le opportunità di recupero e le ipotesi di costo."
+                : "Ask a specific profitability question and MarginLab will answer using your store data, product risks, recovery opportunities and profit assumptions."}
             </div>
 
             <div
@@ -888,29 +954,45 @@ Rules:
                 {
                   id: "profitRisk",
                   label: topProfitLeak
-                    ? `Why is ${topProfitLeak.productTitle} my biggest risk?`
-                    : "Why is my profit at risk?",
+                    ? language === "it"
+                      ? `Perché ${topProfitLeak.productTitle} è il rischio principale?`
+                      : `Why is ${topProfitLeak.productTitle} my biggest risk?`
+                    : language === "it"
+                      ? "Perché i miei profitti sono a rischio?"
+                      : "Why is my profit at risk?",
                 },
                 {
                   id: "marginPressure",
                   label:
                     summary.refunds > 0
-                      ? "Are refunds hurting profitability?"
-                      : "What is hurting my margin?",
+                      ? language === "it"
+                        ? "I rimborsi stanno riducendo la redditività?"
+                        : "Are refunds hurting profitability?"
+                      : language === "it"
+                        ? "Cosa sta riducendo i miei margini?"
+                        : "What is hurting my margin?",
                 },
                 {
                   id: "priority",
                   label:
                     missingCostProducts.length > 0
-                      ? `Why should I fix ${missingCostProducts.length} missing costs first?`
-                      : "What should I check first?",
+                      ? language === "it"
+                        ? `Perché devo completare prima i ${missingCostProducts.length} costi mancanti?`
+                        : `Why should I fix ${missingCostProducts.length} missing costs first?`
+                      : language === "it"
+                        ? "Cosa dovrei controllare per prima cosa?"
+                        : "What should I check first?",
                 },
                 {
                   id: "fastestImprovement",
                   label:
                     recoverableProfit > 0
-                      ? "How much profit can I recover?"
-                      : "What would improve profit fastest?",
+                      ? language === "it"
+                        ? "Quanto profitto posso recuperare?"
+                        : "How much profit can I recover?"
+                      : language === "it"
+                        ? "Qual è il modo più rapido per migliorare i profitti?"
+                        : "What would improve profit fastest?",
                 },
               ].map((presetQuestion) => (
                 <button
@@ -970,7 +1052,11 @@ Rules:
                   name="question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask a profitability question..."
+                  placeholder={
+                    language === "it"
+                      ? "Fai una domanda sulla redditività..."
+                      : "Ask a profitability question..."
+                  }
                   style={{
                     width: "100%",
                     padding: "15px 16px",
@@ -997,7 +1083,13 @@ Rules:
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {askFetcher.state !== "idle" ? "Thinking..." : "Ask AI"}
+                  {askFetcher.state !== "idle"
+                    ? language === "it"
+                      ? "Elaborazione..."
+                      : "Thinking..."
+                    : language === "it"
+                      ? "Chiedi all'AI"
+                      : "Ask AI"}
                 </button>
               </div>
             </askFetcher.Form>
