@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useFetcher, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
+import { getStoredLanguage } from "~/utils/i18n";
 
 export async function action({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
@@ -43,6 +44,7 @@ export async function action({ request }: { request: Request }) {
 export default function Billing() {
   const fetcher = useFetcher();
   const navigate = useNavigate();
+  const language = getStoredLanguage();
 
   React.useEffect(() => {
     const data = fetcher.data as any;
@@ -72,7 +74,7 @@ export default function Billing() {
             style={styles.backTopBtn}
             onClick={() => navigate("/app")}
           >
-            Back to dashboard
+            {language === "it" ? "Torna alla dashboard" : "Back to dashboard"}
           </button>
         </div>
 
@@ -80,32 +82,44 @@ export default function Billing() {
           <div style={styles.heroLeft}>
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
-              MARGIN INTELLIGENCE PLATFORM
+              {language === "it"
+                ? "PIATTAFORMA PER L'ANALISI DEI MARGINI"
+                : "MARGIN INTELLIGENCE PLATFORM"}
             </div>
 
             <h1 style={styles.title}>
-              Choose the margin intelligence plan for your store.
+              {language === "it"
+                ? "Scegli il piano più adatto per analizzare e migliorare la redditività del tuo negozio."
+                : "Choose the margin intelligence plan for your store."}
             </h1>
 
             <p style={styles.subtitle}>
-              Start with core profit leak detection today. Upgrade later as
-              MarginLab evolves into forecasting, benchmark insights and
-              advanced AI margin intelligence.
+              {language === "it"
+                ? "Inizia subito a individuare le principali perdite di margine. In futuro potrai passare a strumenti avanzati di previsione, confronto delle performance e analisi assistita dall'AI."
+                : "Start with core profit leak detection today. Upgrade later as MarginLab evolves into forecasting, benchmark insights and advanced AI margin intelligence."}
             </p>
 
             <div style={styles.heroStats}>
               <div style={styles.statCard}>
-                <div style={styles.statLabel}>Live plan</div>
+                <div style={styles.statLabel}>
+                  {language === "it" ? "Piano disponibile" : "Live plan"}
+                </div>
                 <div style={styles.statValue}>Starter</div>
               </div>
 
               <div style={styles.statCard}>
-                <div style={styles.statLabel}>Trial</div>
-                <div style={styles.statValue}>14 days</div>
+                <div style={styles.statLabel}>
+                  {language === "it" ? "Prova gratuita" : "Trial"}
+                </div>
+                <div style={styles.statValue}>
+                  {language === "it" ? "14 giorni" : "14 days"}
+                </div>
               </div>
 
               <div style={styles.statCard}>
-                <div style={styles.statLabel}>Next tier</div>
+                <div style={styles.statLabel}>
+                  {language === "it" ? "Prossimo piano" : "Next tier"}
+                </div>
                 <div style={styles.statValue}>Growth</div>
               </div>
             </div>
@@ -118,37 +132,60 @@ export default function Billing() {
               <div style={styles.planHeader}>
                 <div>
                   <div style={styles.planEyebrow}>Starter</div>
-                  <div style={styles.planTitle}>Margin Intelligence</div>
+                  <div style={styles.planTitle}>
+                    {language === "it" ? "Analisi della redditività" : "Margin Intelligence"}
+                  </div>
                 </div>
 
-                <div style={styles.popularBadge}>LIVE</div>
+                <div style={styles.popularBadge}>
+                  {language === "it" ? "DISPONIBILE" : "LIVE"}
+                </div>
               </div>
 
               <div style={styles.priceRow}>
                 <div style={styles.price}>$39</div>
-                <div style={styles.priceMeta}>/ month</div>
+                <div style={styles.priceMeta}>
+                  {language === "it" ? "/ mese" : "/ month"}
+                </div>
               </div>
 
               <div style={styles.note}>
-                14-day free trial. Cancel anytime through Shopify.
+                {language === "it"
+                  ? "Prova gratuita di 14 giorni. Puoi annullare in qualsiasi momento tramite Shopify."
+                  : "14-day free trial. Cancel anytime through Shopify."}
               </div>
 
               <div style={styles.divider} />
 
-              <div style={styles.featureTitle}>What’s included</div>
+              <div style={styles.featureTitle}>
+                {language === "it" ? "Cosa include" : "What’s included"}
+              </div>
 
               <div style={styles.featuresGrid}>
-                {[
-                  "Profit Leak Score",
-                  "Product risk table",
-                  "Margin and COGS analysis",
-                  "Target price suggestions",
-                  "Low-margin product detection",
-                  "Missing cost alerts",
-                  "Action Center recommendations",
-                  "CSV export",
-                  "Shopify product deep links",
-                ].map((feature) => (
+                {(language === "it"
+                  ? [
+                      "Punteggio perdite di margine",
+                      "Tabella rischio prodotti",
+                      "Analisi di margini e costi",
+                      "Suggerimenti sul prezzo obiettivo",
+                      "Individuazione dei prodotti a basso margine",
+                      "Avvisi sui costi mancanti",
+                      "Raccomandazioni operative",
+                      "Esportazione CSV",
+                      "Collegamenti diretti ai prodotti Shopify",
+                    ]
+                  : [
+                      "Profit Leak Score",
+                      "Product risk table",
+                      "Margin and COGS analysis",
+                      "Target price suggestions",
+                      "Low-margin product detection",
+                      "Missing cost alerts",
+                      "Action Center recommendations",
+                      "CSV export",
+                      "Shopify product deep links",
+                    ]
+                ).map((feature) => (
                   <div key={feature} style={styles.featureItem}>
                     <span style={styles.check}>✓</span>
                     <span>{feature}</span>
@@ -158,7 +195,9 @@ export default function Billing() {
 
               {error ? (
                 <div style={styles.errorBox}>
-                  <div style={styles.errorTitle}>Billing error</div>
+                  <div style={styles.errorTitle}>
+                  {language === "it" ? "Errore di fatturazione" : "Billing error"}
+                </div>
                   <div style={styles.errorText}>{String(error)}</div>
                 </div>
               ) : null}
@@ -170,8 +209,12 @@ export default function Billing() {
                   disabled={isLoading}
                 >
                   {isLoading
-                    ? "Opening Shopify billing..."
-                    : "Activate Starter Plan"}
+                    ? language === "it"
+                      ? "Apertura della pagina di pagamento Shopify..."
+                      : "Opening Shopify billing..."
+                    : language === "it"
+                      ? "Attiva il piano Starter"
+                      : "Activate Starter Plan"}
                 </button>
               </fetcher.Form>
 
@@ -180,7 +223,9 @@ export default function Billing() {
                 style={styles.secondaryBtn}
                 onClick={() => navigate("/app")}
               >
-                Continue in preview mode
+                {language === "it"
+                  ? "Continua in modalità anteprima"
+                  : "Continue in preview mode"}
               </button>
             </div>
 
@@ -190,39 +235,62 @@ export default function Billing() {
               <div style={styles.planHeader}>
                 <div>
                   <div style={styles.growthEyebrow}>Growth</div>
-                  <div style={styles.planTitle}>Advanced Intelligence</div>
+                  <div style={styles.planTitle}>
+                    {language === "it" ? "Analisi avanzata" : "Advanced Intelligence"}
+                  </div>
                 </div>
 
-                <div style={styles.comingBadge}>COMING SOON</div>
+                <div style={styles.comingBadge}>
+                  {language === "it" ? "IN ARRIVO" : "COMING SOON"}
+                </div>
               </div>
 
               <div style={styles.priceRow}>
                 <div style={styles.price}>$99</div>
-                <div style={styles.priceMeta}>/ month</div>
+                <div style={styles.priceMeta}>
+                  {language === "it" ? "/ mese" : "/ month"}
+                </div>
               </div>
 
               <div style={styles.note}>
-                Built for growing Shopify stores that need deeper margin
-                visibility.
+                {language === "it"
+                  ? "Pensato per i negozi Shopify in crescita che vogliono comprendere meglio margini, rischi e opportunità."
+                  : "Built for growing Shopify stores that need deeper margin visibility."}
               </div>
 
               <div style={styles.divider} />
 
-              <div style={styles.featureTitle}>Planned features</div>
+              <div style={styles.featureTitle}>
+                {language === "it" ? "Funzionalità previste" : "Planned features"}
+              </div>
 
               <div style={styles.featuresGrid}>
-                {[
-                  "Weekly AI margin reports",
-                  "6–12 month historical analysis",
-                  "Forecasted profit trends",
-                  "Advanced recovery opportunities",
-                  "Benchmark margin insights",
-                  "Multi-store support",
-                  "Priority WhatsApp support",
-                  "Advanced AI recommendations",
-                  "AI Margin Assistant",
-                  "Chat with your profitability data",
-                ].map((feature) => (
+                {(language === "it"
+                  ? [
+                      "Report settimanali sui margini con AI",
+                      "Analisi storica da 6 a 12 mesi",
+                      "Previsioni sull'andamento dei profitti",
+                      "Opportunità avanzate di recupero",
+                      "Confronto delle performance dei margini",
+                      "Supporto multi-negozio",
+                      "Assistenza prioritaria via WhatsApp",
+                      "Raccomandazioni avanzate con AI",
+                      "Assistente AI per i margini",
+                      "Analisi conversazionale dei dati di redditività",
+                    ]
+                  : [
+                      "Weekly AI margin reports",
+                      "6–12 month historical analysis",
+                      "Forecasted profit trends",
+                      "Advanced recovery opportunities",
+                      "Benchmark margin insights",
+                      "Multi-store support",
+                      "Priority WhatsApp support",
+                      "Advanced AI recommendations",
+                      "AI Margin Assistant",
+                      "Chat with your profitability data",
+                    ]
+                ).map((feature) => (
                   <div key={feature} style={styles.featureItem}>
                     <span style={styles.futureCheck}>↗</span>
                     <span>{feature}</span>
@@ -231,11 +299,15 @@ export default function Billing() {
               </div>
 
               <button type="button" style={styles.disabledBtn} disabled>
-                Growth coming soon
+                {language === "it"
+                  ? "Growth disponibile a breve"
+                  : "Growth coming soon"}
               </button>
 
               <div style={styles.earlyAccessText}>
-                Early access will be offered first to active Starter users.
+                {language === "it"
+                  ? "L'accesso anticipato sarà riservato inizialmente agli utenti Starter attivi."
+                  : "Early access will be offered first to active Starter users."}
               </div>
             </div>
           </div>
@@ -245,10 +317,15 @@ export default function Billing() {
           <div style={styles.infoPanel}>
             <div style={styles.infoIcon}>⚠️</div>
             <div>
-              <div style={styles.infoTitle}>Detect hidden margin problems</div>
+              <div style={styles.infoTitle}>
+                {language === "it"
+                  ? "Individua i problemi nascosti che riducono i margini"
+                  : "Detect hidden margin problems"}
+              </div>
               <div style={styles.infoText}>
-                Find low-margin products, missing costs and pricing issues that
-                quietly reduce profitability.
+                {language === "it"
+                  ? "Trova prodotti con margini bassi, costi mancanti e problemi di prezzo che riducono la redditività senza essere subito evidenti."
+                  : "Find low-margin products, missing costs and pricing issues that quietly reduce profitability."}
               </div>
             </div>
           </div>
@@ -256,10 +333,15 @@ export default function Billing() {
           <div style={styles.infoPanel}>
             <div style={styles.infoIcon}>📈</div>
             <div>
-              <div style={styles.infoTitle}>Turn product data into action</div>
+              <div style={styles.infoTitle}>
+                {language === "it"
+                  ? "Trasforma i dati dei prodotti in azioni concrete"
+                  : "Turn product data into action"}
+              </div>
               <div style={styles.infoText}>
-                Review target prices, estimated recovery opportunities and
-                products requiring attention.
+                {language === "it"
+                  ? "Controlla prezzi obiettivo, opportunità di recupero stimate e prodotti che richiedono attenzione."
+                  : "Review target prices, estimated recovery opportunities and products requiring attention."}
               </div>
             </div>
           </div>
@@ -267,10 +349,15 @@ export default function Billing() {
           <div style={styles.infoPanel}>
             <div style={styles.infoIcon}>🧠</div>
             <div>
-              <div style={styles.infoTitle}>Built for margin intelligence</div>
+              <div style={styles.infoTitle}>
+                {language === "it"
+                  ? "Progettato per migliorare la redditività"
+                  : "Built for margin intelligence"}
+              </div>
               <div style={styles.infoText}>
-                MarginLab is evolving beyond reporting into smarter
-                profitability insights for Shopify stores.
+                {language === "it"
+                  ? "MarginLab va oltre i semplici report e offre analisi sempre più evolute per aiutare i negozi Shopify a migliorare i profitti."
+                  : "MarginLab is evolving beyond reporting into smarter profitability insights for Shopify stores."}
               </div>
             </div>
           </div>
