@@ -145,6 +145,15 @@ export default function ProfitIntelligencePage() {
           : "Bassa"
       : dependencyLevel;
 
+  const dependencyRiskLabel =
+    language === "it"
+      ? dependencyLevel === "High"
+        ? "RISCHIO ELEVATO"
+        : dependencyLevel === "Moderate"
+          ? "RISCHIO MODERATO"
+          : "RISCHIO BASSO"
+      : `${dependencyLevel.toUpperCase()} RISK`;
+
   const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
 
   const totalProfitBase = Math.max(summary.profit, 1);
@@ -278,7 +287,7 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {language === "it"
-                  ? `${dependencyLevel} dipendenza da pochi prodotti`
+                  ? `${dependencyLevelLabel} dipendenza da pochi prodotti`
                   : `${dependencyLevel} concentration risk`}
               </div>
 
@@ -417,9 +426,7 @@ export default function ProfitIntelligencePage() {
                       color: statusColor,
                     }}
                   >
-                    {language === "it"
-                      ? `${dependencyLevelLabel} rischio`
-                      : `${dependencyLevel} risk`}
+                    {dependencyRiskLabel}
                   </div>
                 </div>
               </div>
