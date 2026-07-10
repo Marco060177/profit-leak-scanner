@@ -165,7 +165,7 @@ export default function ProductsPage() {
           <div>
             <div className="eyebrow">
               {language === "it"
-                ? "INTELLIGENZA PRODOTTI"
+                ? "VALUTAZIONE PRODOTTI"
                 : "PRODUCTS INTELLIGENCE"}
             </div>
 
@@ -195,7 +195,7 @@ export default function ProductsPage() {
             <div>
               <div className="eyebrow">
                 {language === "it"
-                  ? "PUNTEGGIO INTELLIGENZA PRODOTTI"
+                  ? "PUNTEGGIO ANALISI PRODOTTI"
                   : "PRODUCT INTELLIGENCE SCORE"}
               </div>
 
