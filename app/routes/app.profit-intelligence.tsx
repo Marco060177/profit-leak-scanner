@@ -417,7 +417,9 @@ export default function ProfitIntelligencePage() {
                       color: statusColor,
                     }}
                   >
-                    {dependencyLevel} risk
+                    {language === "it"
+                      ? `${dependencyLevelLabel} rischio`
+                      : `${dependencyLevel} risk`}
                   </div>
                 </div>
               </div>
@@ -528,8 +530,17 @@ export default function ProfitIntelligencePage() {
           <div className="panel">
             <div className="panel-header">
               <div>
-                <div className="panel-eyebrow">MARGIN DETERIORATION</div>
-                <h2 className="panel-title">Products losing profitability</h2>
+                <div className="panel-eyebrow">
+                  {language === "it"
+                    ? "PEGGIORAMENTO DEI MARGINI"
+                    : "MARGIN DETERIORATION"}
+                </div>
+
+                <h2 className="panel-title">
+                  {language === "it"
+                    ? "Prodotti che stanno perdendo redditività"
+                    : "Products losing profitability"}
+                </h2>
               </div>
             </div>
 
@@ -657,7 +668,9 @@ export default function ProfitIntelligencePage() {
                           fontWeight: 800,
                         }}
                       >
-                        {discountPct.toFixed(1)}% of product revenue
+                        {language === "it"
+                          ? `${discountPct.toFixed(1)}% dei ricavi del prodotto`
+                          : `${discountPct.toFixed(1)}% of product revenue`}
                       </div>
                     </div>
 
