@@ -9,6 +9,7 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import type { LoaderData } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
 
@@ -95,6 +96,7 @@ function money(n: number) {
 
 export default function ProfitAssumptionsPage() {
   const navigate = useNavigate();
+  const language = getStoredLanguage();
   const saveFetcher = useFetcher<{ ok: boolean }>();
   const { summary, assumptions } =
     useLoaderData() as LoaderData & {
@@ -145,37 +147,55 @@ export default function ProfitAssumptionsPage() {
 
   const fields = [
     {
-      label: "Monthly Advertising Spend",
+      label:
+        language === "it"
+          ? "Spesa pubblicitaria mensile"
+          : "Monthly Advertising Spend",
       value: monthlyAds,
       setter: setMonthlyAds,
       prefix: "$",
     },
     {
-      label: "Monthly Shipping Costs",
+      label:
+        language === "it"
+          ? "Costi di spedizione mensili"
+          : "Monthly Shipping Costs",
       value: monthlyShipping,
       setter: setMonthlyShipping,
       prefix: "$",
     },
     {
-      label: "Monthly Operating Costs",
+      label:
+        language === "it"
+          ? "Costi operativi mensili"
+          : "Monthly Operating Costs",
       value: monthlyOperating,
       setter: setMonthlyOperating,
       prefix: "$",
     },
     {
-      label: "Payment Processing Fee",
+      label:
+        language === "it"
+          ? "Commissioni di pagamento"
+          : "Payment Processing Fee",
       value: paymentFeePct,
       setter: setPaymentFeePct,
       suffix: "%",
     },
     {
-      label: "Transaction Fee",
+      label:
+        language === "it"
+          ? "Commissioni sulle transazioni"
+          : "Transaction Fee",
       value: transactionFeePct,
       setter: setTransactionFeePct,
       suffix: "%",
     },
     {
-      label: "Tax Reserve",
+      label:
+        language === "it"
+          ? "Accantonamento fiscale"
+          : "Tax Reserve",
       value: taxReservePct,
       setter: setTaxReservePct,
       suffix: "%",
@@ -194,18 +214,27 @@ export default function ProfitAssumptionsPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              Growth Plan Preview
+              {language === "it"
+                ? "Anteprima del piano Growth"
+                : "Growth Plan Preview"}
             </div>
 
-            <div className="eyebrow">PROFIT ASSUMPTIONS</div>
+            <div className="eyebrow">
+              {language === "it"
+                ? "SIMULAZIONE DEI COSTI"
+                : "PROFIT ASSUMPTIONS"}
+            </div>
 
             <div className="hero-title">
-              Estimate net profit with monthly cost assumptions
+              {language === "it"
+                ? "Stima il profitto netto includendo i costi mensili"
+                : "Estimate net profit with monthly cost assumptions"}
             </div>
 
             <div className="hero-description">
-              Add estimated monthly ads, shipping, fees and operating costs to
-              turn gross margin into a more realistic net profit view.
+              {language === "it"
+                ? "Aggiungi una stima dei costi mensili per pubblicità, spedizioni, commissioni e gestione per ottenere una visione più realistica del profitto netto."
+                : "Add estimated monthly ads, shipping, fees and operating costs to turn gross margin into a more realistic net profit view."}
             </div>
           </div>
 
@@ -213,7 +242,7 @@ export default function ProfitAssumptionsPage() {
             className="primary-button"
             onClick={() => navigate("/app/billing")}
           >
-            Upgrade to Growth →
+            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
           </button>
         </div>
 
@@ -243,7 +272,9 @@ export default function ProfitAssumptionsPage() {
                   color: "#ff9a70",
                 }}
               >
-                Monthly Cost Assumptions
+                {language === "it"
+                  ? "Costi mensili stimati"
+                  : "Monthly Cost Assumptions"}
               </div>
 
               <saveFetcher.Form method="post">
@@ -357,10 +388,16 @@ export default function ProfitAssumptionsPage() {
                   }}
                 >
                   {saveFetcher.state !== "idle"
-                    ? "Saving Assumptions..."
+                    ? language === "it"
+                      ? "Salvataggio in corso..."
+                      : "Saving Assumptions..."
                     : saveFetcher.data?.ok
-                      ? "Assumptions Saved"
-                      : "Save Assumptions"}
+                      ? language === "it"
+                        ? "Impostazioni salvate"
+                        : "Assumptions Saved"
+                      : language === "it"
+                        ? "Salva le impostazioni"
+                        : "Save Assumptions"}
                 </button>
               </saveFetcher.Form>
             </div>
@@ -383,7 +420,9 @@ export default function ProfitAssumptionsPage() {
                   color: "#4ade80",
                 }}
               >
-                Estimated Net Profit
+                {language === "it"
+                  ? "Profitto netto stimato"
+                  : "Estimated Net Profit"}
               </div>
 
               <div
@@ -406,7 +445,10 @@ export default function ProfitAssumptionsPage() {
                   fontWeight: 800,
                 }}
               >
-                Estimated net margin: {estimatedNetMargin.toFixed(1)}%
+                {language === "it"
+                  ? "Margine netto stimato"
+                  : "Estimated net margin"}
+                : {estimatedNetMargin.toFixed(1)}%
               </div>
 
               <div
@@ -417,26 +459,74 @@ export default function ProfitAssumptionsPage() {
                 }}
               >
                 {[
-                  ["Gross Profit", money(summary.profit)],
-                  ["Advertising", `-${money(monthlyAds)}`],
-                  ["Shipping", `-${money(monthlyShipping)}`],
-                  ["Operating Costs", `-${money(monthlyOperating)}`],
-                  ["Payment Fees", `-${money(estimatedPaymentFees)}`],
-                  ["Transaction Fees", `-${money(estimatedTransactionFees)}`],
-                  ["Tax Reserve", `-${money(estimatedTaxReserve)}`],
-                  ["Total Estimated Costs", `-${money(totalEstimatedCosts)}`],
-                ].map(([label, value]) => (
+                  {
+                    key: "grossProfit",
+                    label:
+                      language === "it" ? "Profitto lordo" : "Gross Profit",
+                    value: money(summary.profit),
+                  },
+                  {
+                    key: "advertising",
+                    label: language === "it" ? "Pubblicità" : "Advertising",
+                    value: `-${money(monthlyAds)}`,
+                  },
+                  {
+                    key: "shipping",
+                    label: language === "it" ? "Spedizioni" : "Shipping",
+                    value: `-${money(monthlyShipping)}`,
+                  },
+                  {
+                    key: "operatingCosts",
+                    label:
+                      language === "it"
+                        ? "Costi operativi"
+                        : "Operating Costs",
+                    value: `-${money(monthlyOperating)}`,
+                  },
+                  {
+                    key: "paymentFees",
+                    label:
+                      language === "it"
+                        ? "Commissioni di pagamento"
+                        : "Payment Fees",
+                    value: `-${money(estimatedPaymentFees)}`,
+                  },
+                  {
+                    key: "transactionFees",
+                    label:
+                      language === "it"
+                        ? "Commissioni sulle transazioni"
+                        : "Transaction Fees",
+                    value: `-${money(estimatedTransactionFees)}`,
+                  },
+                  {
+                    key: "taxReserve",
+                    label:
+                      language === "it"
+                        ? "Accantonamento fiscale"
+                        : "Tax Reserve",
+                    value: `-${money(estimatedTaxReserve)}`,
+                  },
+                  {
+                    key: "totalEstimatedCosts",
+                    label:
+                      language === "it"
+                        ? "Totale costi stimati"
+                        : "Total Estimated Costs",
+                    value: `-${money(totalEstimatedCosts)}`,
+                  },
+                ].map((item) => (
                   <div
-                    key={label}
+                    key={item.key}
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
                       gap: 16,
                       paddingTop:
-                        label === "Total Estimated Costs" ? 8 : 0,
+                        item.key === "totalEstimatedCosts" ? 8 : 0,
                       paddingBottom: 10,
                       borderTop:
-                        label === "Total Estimated Costs"
+                        item.key === "totalEstimatedCosts"
                           ? "1px solid rgba(255,115,60,0.18)"
                           : "none",
                       borderBottom: "1px solid rgba(255,255,255,0.07)",
@@ -444,19 +534,19 @@ export default function ProfitAssumptionsPage() {
                       fontWeight: 800,
                     }}
                   >
-                    <span>{label}</span>
+                    <span>{item.label}</span>
 
                     <span
                       style={{
                         color:
-                          label === "Gross Profit"
+                          item.key === "grossProfit"
                             ? "#22c55e"
-                            : label === "Total Estimated Costs"
+                            : item.key === "totalEstimatedCosts"
                               ? "#ff9a70"
                               : "rgba(255,255,255,0.86)",
                       }}
                     >
-                      {value}
+                      {item.value}
                     </span>
                   </div>
                 ))}
@@ -476,9 +566,9 @@ export default function ProfitAssumptionsPage() {
               fontWeight: 700,
             }}
           >
-            Growth preview. These values are manual assumptions and are not imported
-            automatically. Use them to estimate a more realistic net profit view before
-            connecting advanced integrations.
+            {language === "it"
+              ? "Anteprima Growth. Questi valori vengono inseriti manualmente e non sono importati automaticamente. Utilizzali per ottenere una stima più realistica del profitto netto prima di collegare integrazioni avanzate."
+              : "Growth preview. These values are manual assumptions and are not imported automatically. Use them to estimate a more realistic net profit view before connecting advanced integrations."}
           </div>
         </div>
       </div>
