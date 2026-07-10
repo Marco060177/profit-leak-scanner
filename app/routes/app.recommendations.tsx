@@ -8,6 +8,7 @@ import { loadMarginDashboardData } from "~/utils/margin.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
 import { type LoaderData, money } from "~/utils/margin";
+import { getStoredLanguage } from "~/utils/i18n";
 
 export const links = () => [
   {
@@ -44,6 +45,7 @@ export const loader = async ({
 export default function RecommendationsPage() {
   const { summary, rows } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
+  const language = getStoredLanguage();
 
   const losingProducts = rows.filter((row) => row.losing);
   const lowMarginProducts = rows.filter((row) => row.lowMargin);
@@ -57,83 +59,144 @@ export default function RecommendationsPage() {
   const priorityActions = [
     losingProducts.length > 0
       ? {
-        priority: "Critical",
-        title: `Fix ${losingProducts.length} products selling below cost`,
-        impact: `${money(visualLeak)} potential recovery`,
-        description:
-          "These products are generating negative contribution margin and should be reviewed before any growth or pricing optimization work.",
-        actionLabel: "Review pricing",
-        actionLink: "/app/products",
-        color: "#ff6b4a",
-      }
+          priority: "Critical",
+          priorityLabel: language === "it" ? "Critica" : "Critical",
+          title:
+            language === "it"
+              ? `Correggi ${losingProducts.length} prodotti venduti sotto costo`
+              : `Fix ${losingProducts.length} products selling below cost`,
+          impact:
+            language === "it"
+              ? `${money(visualLeak)} di recupero potenziale`
+              : `${money(visualLeak)} potential recovery`,
+          description:
+            language === "it"
+              ? "Questi prodotti generano un margine negativo e dovrebbero essere corretti prima di intervenire su crescita o ottimizzazione dei prezzi."
+              : "These products are generating negative contribution margin and should be reviewed before any growth or pricing optimization work.",
+          actionLabel:
+            language === "it" ? "Controlla i prezzi" : "Review pricing",
+          actionLink: "/app/products",
+          color: "#ff6b4a",
+        }
       : null,
 
     missingCostProducts.length > 0
       ? {
-        priority: "High",
-        title: "Complete missing product cost data",
-        impact: `${missingCostProducts.length} products affected`,
-        description:
-          "Missing costs reduce margin accuracy and can hide real product-level risk. Add cost data before trusting profitability signals.",
-        actionLabel: "Update costs",
-        actionLink: "/app/products",
-        color: "#f59e0b",
-      }
+          priority: "High",
+          priorityLabel: language === "it" ? "Alta" : "High",
+          title:
+            language === "it"
+              ? "Completa i costi mancanti dei prodotti"
+              : "Complete missing product cost data",
+          impact:
+            language === "it"
+              ? `${missingCostProducts.length} prodotti interessati`
+              : `${missingCostProducts.length} products affected`,
+          description:
+            language === "it"
+              ? "I costi mancanti riducono l'affidabilità dei margini e possono nascondere rischi reali. Inserisci i costi prima di valutare la redditività."
+              : "Missing costs reduce margin accuracy and can hide real product-level risk. Add cost data before trusting profitability signals.",
+          actionLabel:
+            language === "it" ? "Aggiorna i costi" : "Update costs",
+          actionLink: "/app/products",
+          color: "#f59e0b",
+        }
       : null,
 
     totalDiscounts > 0
       ? {
-        priority: "High",
-        title: "Review discount impact on profitability",
-        impact: `${money(totalDiscounts)} discounted revenue`,
-        description:
-          "Discount activity is reducing realized margin. Verify that promotional campaigns are generating enough incremental revenue to justify margin erosion.",
-        actionLabel: "Review discounts",
-        actionLink: "/app/profit-intelligence",
-        color: "#f59e0b",
-      }
+          priority: "High",
+          priorityLabel: language === "it" ? "Alta" : "High",
+          title:
+            language === "it"
+              ? "Controlla l'impatto degli sconti sui profitti"
+              : "Review discount impact on profitability",
+          impact:
+            language === "it"
+              ? `${money(totalDiscounts)} di sconti applicati`
+              : `${money(totalDiscounts)} discounted revenue`,
+          description:
+            language === "it"
+              ? "Gli sconti stanno riducendo il margine effettivo. Verifica che le promozioni generino vendite aggiuntive sufficienti a compensare la perdita di margine."
+              : "Discount activity is reducing realized margin. Verify that promotional campaigns are generating enough incremental revenue to justify margin erosion.",
+          actionLabel:
+            language === "it" ? "Analizza gli sconti" : "Review discounts",
+          actionLink: "/app/profit-intelligence",
+          color: "#f59e0b",
+        }
       : null,
 
     totalRefunds > 0
       ? {
-        priority: "High",
-        title: "Investigate refunded revenue",
-        impact: `${money(totalRefunds)} refunded revenue`,
-        description:
-          "Refunds directly reduce profitability and may indicate product quality, fulfillment or customer satisfaction issues.",
-        actionLabel: "Review refunds",
-        actionLink: "/app/profit-intelligence",
-        color: "#ff6b4a",
-      }
+          priority: "High",
+          priorityLabel: language === "it" ? "Alta" : "High",
+          title:
+            language === "it"
+              ? "Analizza i ricavi rimborsati"
+              : "Investigate refunded revenue",
+          impact:
+            language === "it"
+              ? `${money(totalRefunds)} di rimborsi`
+              : `${money(totalRefunds)} refunded revenue`,
+          description:
+            language === "it"
+              ? "I rimborsi riducono direttamente i profitti e possono indicare problemi di qualità, evasione degli ordini o soddisfazione dei clienti."
+              : "Refunds directly reduce profitability and may indicate product quality, fulfillment or customer satisfaction issues.",
+          actionLabel:
+            language === "it" ? "Analizza i rimborsi" : "Review refunds",
+          actionLink: "/app/profit-intelligence",
+          color: "#ff6b4a",
+        }
       : null,
 
     lowMarginProducts.length > 0
       ? {
-        priority: "Medium",
-        title: "Review low-margin product group",
-        impact: `${lowMarginProducts.length} products need attention`,
-        description:
-          "Low-margin products may be acceptable strategically, but they should be monitored because they can weaken profit quality at scale.",
-        actionLabel: "Analyze products",
-        actionLink: "/app/products",
-        color: "#f59e0b",
-      }
+          priority: "Medium",
+          priorityLabel: language === "it" ? "Media" : "Medium",
+          title:
+            language === "it"
+              ? "Controlla i prodotti con margini bassi"
+              : "Review low-margin product group",
+          impact:
+            language === "it"
+              ? `${lowMarginProducts.length} prodotti da controllare`
+              : `${lowMarginProducts.length} products need attention`,
+          description:
+            language === "it"
+              ? "I prodotti a basso margine possono avere un ruolo strategico, ma devono essere monitorati perché su volumi elevati possono ridurre la qualità complessiva dei profitti."
+              : "Low-margin products may be acceptable strategically, but they should be monitored because they can weaken profit quality at scale.",
+          actionLabel:
+            language === "it" ? "Analizza i prodotti" : "Analyze products",
+          actionLink: "/app/products",
+          color: "#f59e0b",
+        }
       : null,
 
     rows.length > 0
       ? {
-        priority: "Low",
-        title: "Review target prices for weak products",
-        impact: "20% margin target available",
-        description:
-          "Compare current prices against target margin recommendations to identify realistic recovery opportunities.",
-        actionLabel: "Review targets",
-        actionLink: "/app/products",
-        color: "#22c55e",
-      }
+          priority: "Low",
+          priorityLabel: language === "it" ? "Bassa" : "Low",
+          title:
+            language === "it"
+              ? "Controlla i prezzi obiettivo dei prodotti più deboli"
+              : "Review target prices for weak products",
+          impact:
+            language === "it"
+              ? "Margine obiettivo del 20% disponibile"
+              : "20% margin target available",
+          description:
+            language === "it"
+              ? "Confronta i prezzi attuali con quelli consigliati per individuare opportunità realistiche di recupero del margine."
+              : "Compare current prices against target margin recommendations to identify realistic recovery opportunities.",
+          actionLabel:
+            language === "it" ? "Controlla gli obiettivi" : "Review targets",
+          actionLink: "/app/products",
+          color: "#22c55e",
+        }
       : null,
   ].filter(Boolean) as {
     priority: string;
+    priorityLabel: string;
     title: string;
     impact: string;
     description: string;
@@ -163,20 +226,107 @@ export default function RecommendationsPage() {
 
 
 
-  return (
+  const heroMetrics = [
+    {
+      key: "totalActions",
+      label: language === "it" ? "Azioni totali" : "Total actions",
+      value: `${priorityActions.length}`,
+    },
+    {
+      key: "criticalActions",
+      label: language === "it" ? "Azioni critiche" : "Critical actions",
+      value: `${criticalActions}`,
+    },
+    {
+      key: "potentialRecovery",
+      label: language === "it" ? "Recupero potenziale" : "Potential recovery",
+      value: money(visualLeak),
+    },
+  ];
+
+  const insights = [
+    {
+      key: "pricingRisk",
+      title:
+        language === "it"
+          ? "Il rischio di prezzo è concentrato"
+          : "Pricing risk is concentrated",
+      value:
+        language === "it"
+          ? `${losingProducts.length} prodotti in perdita`
+          : `${losingProducts.length} losing products`,
+      text:
+        losingProducts.length > 0
+          ? language === "it"
+            ? "Un numero limitato di prodotti venduti a un prezzo troppo basso potrebbe generare gran parte delle perdite di margine rilevate."
+            : "A small number of underpriced products may be responsible for most detected profit leakage."
+          : language === "it"
+            ? "Nessun prodotto viene attualmente venduto sotto costo."
+            : "No products are currently selling below cost.",
+      color: "#ff6b4a",
+    },
+    {
+      key: "costQuality",
+      title:
+        language === "it"
+          ? "La qualità dei costi incide sull'analisi"
+          : "Cost data quality affects accuracy",
+      value:
+        language === "it"
+          ? `${missingCostProducts.length} costi mancanti`
+          : `${missingCostProducts.length} missing costs`,
+      text:
+        missingCostProducts.length > 0
+          ? language === "it"
+            ? "I costi mancanti riducono l'affidabilità dell'analisi per prodotto e dovrebbero essere completati prima di procedere con valutazioni più approfondite."
+            : "Missing cost data reduces confidence in product-level profitability and should be fixed before deeper analysis."
+          : language === "it"
+            ? "La copertura dei costi risulta completa nel periodo selezionato."
+            : "Cost data coverage looks healthy for the current period.",
+      color: "#f59e0b",
+    },
+    {
+      key: "marginQuality",
+      title:
+        language === "it"
+          ? "La qualità dei margini va monitorata"
+          : "Margin quality needs monitoring",
+      value:
+        language === "it"
+          ? `${lowMarginProducts.length} prodotti a basso margine`
+          : `${lowMarginProducts.length} low-margin products`,
+      text:
+        lowMarginProducts.length > 0
+          ? language === "it"
+            ? "I prodotti a basso margine possono essere strategici, ma su volumi elevati rischiano di indebolire la redditività complessiva del negozio."
+            : "Low-margin products may be strategic, but they can weaken store profit quality when they scale."
+          : language === "it"
+            ? "Non sono stati rilevati gruppi rilevanti di prodotti a basso margine."
+            : "No major low-margin product group detected.",
+      color: "#22c55e",
+    },
+  ];
+    return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="recommendations" navigate={navigate} />
 
         <div className="hero-header">
           <div>
-            <div className="eyebrow">AI RECOMMENDATIONS</div>
+            <div className="eyebrow">
+              {language === "it" ? "RACCOMANDAZIONI AI" : "AI RECOMMENDATIONS"}
+            </div>
 
-            <div className="hero-title">Optimization Action Center</div>
+            <div className="hero-title">
+              {language === "it"
+                ? "Centro operativo per migliorare i margini"
+                : "Optimization Action Center"}
+            </div>
 
             <div className="hero-description">
-              Review prioritized margin actions, missing cost fixes and pricing
-              opportunities detected across your Shopify store.
+              {language === "it"
+                ? "Consulta le azioni prioritarie sui margini, i costi mancanti da completare e le opportunità di prezzo individuate nel tuo negozio Shopify."
+                : "Review prioritized margin actions, missing cost fixes and pricing opportunities detected across your Shopify store."}
             </div>
           </div>
         </div>
@@ -191,7 +341,11 @@ export default function RecommendationsPage() {
             }}
           >
             <div>
-              <div className="eyebrow">ACTION PRIORITY SCORE</div>
+              <div className="eyebrow">
+                {language === "it"
+                  ? "INDICE DI PRIORITÀ DELLE AZIONI"
+                  : "ACTION PRIORITY SCORE"}
+              </div>
 
               <div
                 style={{
@@ -216,10 +370,16 @@ export default function RecommendationsPage() {
                 }}
               >
                 {criticalActions > 0
-                  ? "Critical actions required"
+                  ? language === "it"
+                    ? "Sono richieste azioni urgenti"
+                    : "Critical actions required"
                   : highActions > 0
-                    ? "High-priority actions detected"
-                    : "Action queue stable"}
+                    ? language === "it"
+                      ? "Rilevate azioni ad alta priorità"
+                      : "High-priority actions detected"
+                    : language === "it"
+                      ? "Situazione sotto controllo"
+                      : "Action queue stable"}
               </div>
 
               <p
@@ -231,8 +391,9 @@ export default function RecommendationsPage() {
                   fontSize: 15,
                 }}
               >
-                MarginLab converts product risk, missing cost data and weak
-                margin signals into a prioritized action queue.
+                {language === "it"
+                  ? "MarginLab trasforma i rischi dei prodotti, i costi mancanti e i segnali di margine debole in una sequenza di interventi ordinata per priorità."
+                  : "MarginLab converts product risk, missing cost data and weak margin signals into a prioritized action queue."}
               </p>
 
               <div
@@ -245,12 +406,8 @@ export default function RecommendationsPage() {
                   gap: 18,
                 }}
               >
-                {[
-                  ["Total actions", `${priorityActions.length}`],
-                  ["Critical actions", `${criticalActions}`],
-                  ["Potential recovery", money(visualLeak)],
-                ].map(([label, value]) => (
-                  <div key={label}>
+                {heroMetrics.map((item) => (
+                  <div key={item.key}>
                     <div
                       style={{
                         fontSize: 34,
@@ -259,7 +416,7 @@ export default function RecommendationsPage() {
                         lineHeight: 1,
                       }}
                     >
-                      {value}
+                      {item.value}
                     </div>
 
                     <div
@@ -272,7 +429,7 @@ export default function RecommendationsPage() {
                         color: "rgba(255,255,255,0.42)",
                       }}
                     >
-                      {label}
+                      {item.label}
                     </div>
                   </div>
                 ))}
@@ -342,7 +499,7 @@ export default function RecommendationsPage() {
                       color: actionScoreColor,
                     }}
                   >
-                    Action score
+                    {language === "it" ? "Indice azioni" : "Action score"}
                   </div>
                 </div>
               </div>
@@ -353,8 +510,14 @@ export default function RecommendationsPage() {
         <div className="panel" style={{ marginBottom: 28 }}>
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">PRIORITY QUEUE</div>
-              <h2 className="panel-title">Recommended action sequence</h2>
+              <div className="panel-eyebrow">
+                {language === "it" ? "AZIONI PRIORITARIE" : "PRIORITY QUEUE"}
+              </div>
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Sequenza di interventi consigliata"
+                  : "Recommended action sequence"}
+              </h2>
             </div>
           </div>
 
@@ -402,7 +565,9 @@ export default function RecommendationsPage() {
                       color: action.color,
                     }}
                   >
-                    {action.priority} priority
+                    {language === "it"
+                      ? `Priorità ${action.priorityLabel.toLowerCase()}`
+                      : `${action.priorityLabel} priority`}
                   </div>
 
                   <div
@@ -457,8 +622,14 @@ export default function RecommendationsPage() {
         <div className="panel" style={{ marginBottom: 28 }}>
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">AI INSIGHTS</div>
-              <h2 className="panel-title">Why these actions matter</h2>
+              <div className="panel-eyebrow">
+                {language === "it" ? "ANALISI AI" : "AI INSIGHTS"}
+              </div>
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Perché queste azioni sono importanti"
+                  : "Why these actions matter"}
+              </h2>
             </div>
           </div>
 
@@ -470,37 +641,9 @@ export default function RecommendationsPage() {
               marginTop: 24,
             }}
           >
-            {[
-              {
-                title: "Pricing risk is concentrated",
-                value: `${losingProducts.length} losing products`,
-                text:
-                  losingProducts.length > 0
-                    ? "A small number of underpriced products may be responsible for most detected profit leakage."
-                    : "No products are currently selling below cost.",
-                color: "#ff6b4a",
-              },
-              {
-                title: "Cost data quality affects accuracy",
-                value: `${missingCostProducts.length} missing costs`,
-                text:
-                  missingCostProducts.length > 0
-                    ? "Missing cost data reduces confidence in product-level profitability and should be fixed before deeper analysis."
-                    : "Cost data coverage looks healthy for the current period.",
-                color: "#f59e0b",
-              },
-              {
-                title: "Margin quality needs monitoring",
-                value: `${lowMarginProducts.length} low-margin products`,
-                text:
-                  lowMarginProducts.length > 0
-                    ? "Low-margin products may be strategic, but they can weaken store profit quality when they scale."
-                    : "No major low-margin product group detected.",
-                color: "#22c55e",
-              },
-            ].map((insight) => (
+            {insights.map((insight) => (
               <div
-                key={insight.title}
+                key={insight.key}
                 style={{
                   position: "relative",
                   overflow: "hidden",
