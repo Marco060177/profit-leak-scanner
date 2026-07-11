@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
+
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
@@ -9,7 +10,11 @@ import {
   generateAiAnswer,
 } from "~/utils/openai.server";
 import type { LoaderData } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import {
+  getStoredLanguage,
+  type Language,
+} from "~/utils/i18n";
+
 import "~/styles/dashboard.css";
 
 type SelectedQuestion =
@@ -51,35 +56,49 @@ export async function action({ request }: { request: Request }) {
   const intent = String(formData.get("intent") || "analysis");
   const storeSummary = String(formData.get("storeSummary") || "");
 
+  const submittedLanguage = String(formData.get("language") || "en");
+
+  const language: Language =
+    submittedLanguage === "it" ? "it" : "en";
+
   if (intent === "ask") {
     const question = String(formData.get("question") || "");
 
-    return generateAiAnswer({
-      question,
-      context: `
+    const context = `
 Current store profitability data:
 
 ${storeSummary}
 
 The user is asking a specific question.
-Respond in the same language used in the question.
-Do not generate a complete analysis.
-`,
+Use only the supplied store data.
+Do not generate a complete business analysis.
+`;
+
+    return generateAiAnswer({
+      question,
+      context,
+      language,
     });
   }
 
   return generateAiMarginAnalysis({
     storeSummary,
+    language,
   });
 }
 
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
+
   const aiFetcher = useFetcher<{ text: string }>();
   const askFetcher = useFetcher<{ text: string }>();
 
   const [question, setQuestion] = React.useState("");
+  const [selectedQuestion, setSelectedQuestion] =
+    React.useState<SelectedQuestion>("profitRisk");
+  const [showAiReport, setShowAiReport] = React.useState(false);
+
   const { summary, rows, assumptions } = useLoaderData() as LoaderData & {
     assumptions: {
       monthlyAds: number;
@@ -91,11 +110,6 @@ export default function AiAdvisorPage() {
     } | null;
   };
 
-  const [selectedQuestion, setSelectedQuestion] =
-    React.useState<SelectedQuestion>("profitRisk");
-
-  const [showAiReport, setShowAiReport] = React.useState(false);
-
   React.useEffect(() => {
     if (aiFetcher.data?.text) {
       setShowAiReport(true);
@@ -106,7 +120,10 @@ export default function AiAdvisorPage() {
   const missingCostProducts = rows.filter((row) => row.missingCost);
   const lowMarginProducts = rows.filter((row) => row.lowMargin);
 
-  const topProfitLeak = [...rows].sort((a, b) => a.profit - b.profit)[0];
+  const topProfitLeak =
+    rows.length > 0
+      ? [...rows].sort((a, b) => a.profit - b.profit)[0]
+      : undefined;
 
   const recoverableProfit = rows.reduce(
     (sum, row) => sum + Math.max(0, row.targetDelta) * row.qty,
@@ -121,9 +138,14 @@ export default function AiAdvisorPage() {
   const transactionFeePct = assumptions?.transactionFeePct ?? 0;
   const taxReservePct = assumptions?.taxReservePct ?? 0;
 
-  const estimatedPaymentFees = summary.revenue * (paymentFeePct / 100);
-  const estimatedTransactionFees = summary.revenue * (transactionFeePct / 100);
-  const estimatedTaxReserve = summary.revenue * (taxReservePct / 100);
+  const estimatedPaymentFees =
+    summary.revenue * (paymentFeePct / 100);
+
+  const estimatedTransactionFees =
+    summary.revenue * (transactionFeePct / 100);
+
+  const estimatedTaxReserve =
+    summary.revenue * (taxReservePct / 100);
 
   const totalEstimatedCosts =
     monthlyAds +
@@ -133,10 +155,13 @@ export default function AiAdvisorPage() {
     estimatedTransactionFees +
     estimatedTaxReserve;
 
-  const estimatedNetProfit = summary.profit - totalEstimatedCosts;
+  const estimatedNetProfit =
+    summary.profit - totalEstimatedCosts;
 
   const estimatedNetMargin =
-    summary.revenue > 0 ? (estimatedNetProfit / summary.revenue) * 100 : 0;
+    summary.revenue > 0
+      ? (estimatedNetProfit / summary.revenue) * 100
+      : 0;
 
   const healthScore = Math.max(
     0,
@@ -821,6 +846,11 @@ Rules:
                 }}
               >
                 <input type="hidden" name="storeSummary" value={aiPrompt} />
+                <input
+                  type="hidden"
+                  name="language"
+                  value={language}
+                />
 
                 <button
                   type="submit"
@@ -1008,6 +1038,7 @@ Rules:
                     formData.append("intent", "ask");
                     formData.append("question", presetQuestion.label);
                     formData.append("storeSummary", aiPrompt);
+                    formData.append("language", language);
 
                     askFetcher.submit(formData, {
                       method: "post",
@@ -1039,6 +1070,7 @@ Rules:
             <askFetcher.Form method="post">
               <input type="hidden" name="intent" value="ask" />
               <input type="hidden" name="storeSummary" value={aiPrompt} />
+              <input type="hidden" name="language" value={language} />
 
               <div
                 style={{

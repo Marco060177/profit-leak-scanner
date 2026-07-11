@@ -10,12 +10,43 @@ export const openai = new OpenAI({
   apiKey: openaiApiKey,
 });
 
+type SupportedLanguage = "en" | "it";
+
+function getLanguageName(language: SupportedLanguage) {
+  return language === "it" ? "Italian" : "English";
+}
+
+function getReportSectionNames(language: SupportedLanguage) {
+  if (language === "it") {
+    return {
+      storeHealth: "STATO DELLO STORE",
+      mainRisks: "RISCHI PRINCIPALI",
+      whatToCheckFirst: "COSA CONTROLLARE PRIMA",
+      profitOpportunity: "OPPORTUNITÀ DI PROFITTO",
+    };
+  }
+
+  return {
+    storeHealth: "STORE HEALTH",
+    mainRisks: "MAIN RISKS",
+    whatToCheckFirst: "WHAT TO CHECK FIRST",
+    profitOpportunity: "PROFIT OPPORTUNITY",
+  };
+}
+
 export async function generateAiMarginAnalysis(input: {
   storeSummary: string;
+  language: SupportedLanguage;
 }) {
+  const languageName = getLanguageName(input.language);
+  const sections = getReportSectionNames(input.language);
+
   if (!openaiApiKey) {
     return {
-      text: "AI analysis is not available because OPENAI_API_KEY is not configured.",
+      text:
+        input.language === "it"
+          ? "L'analisi AI non è disponibile perché OPENAI_API_KEY non è configurata."
+          : "AI analysis is not available because OPENAI_API_KEY is not configured.",
     };
   }
 
@@ -27,26 +58,38 @@ export async function generateAiMarginAnalysis(input: {
         content: `
 You are MarginLab AI Advisor.
 
-Write the analysis using EXACTLY these sections:
+LANGUAGE
 
-STORE HEALTH
+Write the entire analysis in ${languageName}.
 
-MAIN RISKS
+Always follow this instruction, regardless of the language used in the store data.
 
-WHAT TO CHECK FIRST
+Never translate product names.
 
-PROFIT OPPORTUNITY
+REPORT STRUCTURE
 
-Rules:
+Write the analysis using exactly these section headings:
+
+${sections.storeHealth}
+
+${sections.mainRisks}
+
+${sections.whatToCheckFirst}
+
+${sections.profitOpportunity}
+
+RULES
 
 - Use short paragraphs.
-- Use bullet points.
+- Use concise bullet points.
 - Do not write long walls of text.
-- Be concise and executive.
-- Do not invent numbers.
-- Always mention recoverable profit if provided.
+- Keep the tone professional, executive and easy to scan.
+- Do not invent numbers, events, costs or product details.
+- Use only the supplied store data.
+- Always mention recoverable profit when it is present in the supplied data.
 - Focus on practical actions a Shopify merchant can take.
-- Keep the response professional and easy to scan.
+- Prioritize the most important risks and opportunities.
+- Never translate product names.
 `,
       },
       {
@@ -64,10 +107,16 @@ Rules:
 export async function generateAiAnswer(input: {
   context: string;
   question: string;
+  language: SupportedLanguage;
 }) {
+  const languageName = getLanguageName(input.language);
+
   if (!openaiApiKey) {
     return {
-      text: "AI is not available.",
+      text:
+        input.language === "it"
+          ? "L'AI non è disponibile."
+          : "AI is not available.",
     };
   }
 
@@ -79,38 +128,42 @@ export async function generateAiAnswer(input: {
         content: `
 You are MarginLab AI Assistant.
 
-Answer ONLY the user's question.
+LANGUAGE
 
-Do not generate a full report.
+Answer in ${languageName}.
 
-Do not create sections.
+Always follow this instruction, regardless of the language used in the store data.
 
-Do not repeat all metrics.
+Never translate product names.
 
-NEVER create sections.
+RESPONSE RULES
 
-NEVER write:
+- Answer only the user's specific question.
+- Use only the supplied store data.
+- Do not invent numbers, events, costs or product details.
+- Do not generate a complete business report.
+- Do not summarize the whole store.
+- Do not repeat all available metrics.
+- Do not create section headings.
+- Answer using 2 to 5 short bullet points.
+- Be concise, direct, practical and business-oriented.
+- If the question concerns refunds, discuss refunds only.
+- If the question concerns margins, discuss margins only.
+- If the question concerns products, discuss products only.
+- If the available data is insufficient, say so clearly.
+- Never translate product names.
+
+NEVER WRITE THESE REPORT SECTIONS:
+
 EXECUTIVE SUMMARY
+
 STORE HEALTH
+
 MAIN RISKS
+
 WHAT TO CHECK FIRST
+
 PROFIT OPPORTUNITY
-
-Answer in 2-5 bullet points only.
-
-Answer ONLY the user's question.
-
-If the user asks about refunds, discuss refunds only.
-
-If the user asks about margins, discuss margins only.
-
-If the user asks about products, discuss products only.
-
-Do not summarize the whole business.
-
-Be concise.
-
-Use only supplied data.
 `,
       },
       {
