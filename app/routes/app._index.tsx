@@ -16,8 +16,13 @@ import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
 import ContributionInsightsPanel from "~/components/dashboard/ContributionInsightsPanel";
+import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import {
+  generateProfitAlerts,
+  type ProfitAlert,
+} from "~/utils/profit-monitor.server";
 
 import {
   type LoaderData,
@@ -33,11 +38,15 @@ export const links = () => [
   },
 ];
 
+type DashboardLoaderData = LoaderData & {
+  alerts: ProfitAlert[];
+};
+
 export const loader = async ({
   request,
 }: {
   request: Request;
-}): Promise<LoaderData> => {
+}): Promise<DashboardLoaderData> => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
@@ -51,16 +60,37 @@ export const loader = async ({
     });
   }
 
-  return loadMarginDashboardData({
+  const dashboardData = await loadMarginDashboardData({
     admin,
     session,
     period,
   });
+
+  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const alerts = generateProfitAlerts({
+    summary: dashboardData.summary,
+    rows: dashboardData.rows,
+    language,
+    period,
+  });
+
+  return {
+    ...dashboardData,
+    alerts,
+  };
 };
 
 export default function DashboardV2() {
-  const { summary, rows, trend, billingActive, period, shopHandle } =
-    useLoaderData() as LoaderData;
+  const {
+    summary,
+    rows,
+    trend,
+    billingActive,
+    period,
+    shopHandle,
+    alerts,
+  } = useLoaderData() as DashboardLoaderData;
 
 
   const navigate = useNavigate();
@@ -827,6 +857,11 @@ export default function DashboardV2() {
         analysisSteps={analysisSteps}
         setAnalysisLoading={setAnalysisLoading}
         setAnalysisText={setAnalysisText}
+      />
+
+      <AIProfitMonitor
+        alerts={alerts}
+        navigate={navigate}
       />
 
       {/* {!billingActive ? (
