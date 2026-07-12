@@ -22,7 +22,10 @@ type SelectedQuestion =
   | "marginPressure"
   | "priority"
   | "fastestImprovement"
-  | "productPriorities";
+  | "productPriorities"
+  | "pricingOpportunity"
+  | "hiddenCosts"
+  | "growthOpportunity";
 
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
@@ -1101,6 +1104,27 @@ Rules:
                     language === "it"
                       ? "Quali prodotti dovrei sistemare per primi?"
                       : "Which products should I fix first?",
+                },
+                {
+                  id: "pricingOpportunity",
+                  label:
+                    language === "it"
+                      ? "Quale prodotto offre la migliore opportunità di aumento prezzo?"
+                      : "Which product has the best pricing opportunity?",
+                },
+                {
+                  id: "hiddenCosts",
+                  label:
+                    language === "it"
+                      ? "Qual è il costo nascosto più importante?"
+                      : "What is my biggest hidden cost?",
+                },
+                {
+                  id: "growthOpportunity",
+                  label:
+                    language === "it"
+                      ? "Dove posso aumentare i profitti più rapidamente?"
+                      : "Where can I increase profit the fastest?",
                 },
               ].map((presetQuestion) => (
                 <button
