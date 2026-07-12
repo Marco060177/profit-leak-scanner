@@ -62,9 +62,8 @@ export default function RecoverySimulatorPage() {
   const { rows } = loaderData;
 
   const periodValue = Number(loaderData.period ?? 30);
-  const periodDays = Number.isFinite(periodValue) && periodValue > 0
-    ? periodValue
-    : 30;
+  const periodDays =
+    Number.isFinite(periodValue) && periodValue > 0 ? periodValue : 30;
   const monthlyMultiplier = 30 / periodDays;
 
   const availableProducts = React.useMemo(
@@ -95,9 +94,8 @@ export default function RecoverySimulatorPage() {
 
   const selectedProduct = React.useMemo(
     () =>
-      availableProducts.find(
-        (row) => row.productId === selectedProductId,
-      ) ?? availableProducts[0],
+      availableProducts.find((row) => row.productId === selectedProductId) ??
+      availableProducts[0],
     [availableProducts, selectedProductId],
   );
 
@@ -159,9 +157,7 @@ export default function RecoverySimulatorPage() {
     if (!normalizedQuery) return availableProducts.slice(0, 8);
 
     return availableProducts
-      .filter((row) =>
-        row.productTitle.toLowerCase().includes(normalizedQuery),
-      )
+      .filter((row) => row.productTitle.toLowerCase().includes(normalizedQuery))
       .slice(0, 8);
   }, [availableProducts, searchQuery]);
 
@@ -169,10 +165,7 @@ export default function RecoverySimulatorPage() {
     return (
       <div className="dashboard-shell">
         <div className="dashboard-container">
-          <DashboardNav
-            active="recovery-simulator"
-            navigate={navigate}
-          />
+          <DashboardNav active="recovery-simulator" navigate={navigate} />
 
           <div className="hero-header">
             <div>
@@ -208,23 +201,17 @@ export default function RecoverySimulatorPage() {
   const currentMonthlyRevenue = currentPrice * currentMonthlyQty;
   const currentMonthlyProfit = currentUnitProfit * currentMonthlyQty;
 
-  const simulatedCost = Math.max(
-    0,
-    currentCost * (1 - costReductionPct / 100),
-  );
+  const simulatedCost = Math.max(0, currentCost * (1 - costReductionPct / 100));
   const simulatedMonthlyQty = Math.max(
     0,
     currentMonthlyQty * (1 + salesChangePct / 100),
   );
   const simulatedUnitProfit = simulatedPrice - simulatedCost;
   const simulatedMarginPct =
-    simulatedPrice > 0
-      ? (simulatedUnitProfit / simulatedPrice) * 100
-      : 0;
+    simulatedPrice > 0 ? (simulatedUnitProfit / simulatedPrice) * 100 : 0;
   const simulatedMonthlyRevenue = simulatedPrice * simulatedMonthlyQty;
   const simulatedMonthlyProfit = simulatedUnitProfit * simulatedMonthlyQty;
-  const recoveredMonthlyProfit =
-    simulatedMonthlyProfit - currentMonthlyProfit;
+  const recoveredMonthlyProfit = simulatedMonthlyProfit - currentMonthlyProfit;
   const recoveredAnnualProfit = recoveredMonthlyProfit * 12;
   const marginDelta = simulatedMarginPct - currentMarginPct;
   const profitDeltaPct =
@@ -285,10 +272,13 @@ export default function RecoverySimulatorPage() {
               : "Strong";
 
   const formatMoney = (value: number, digits = 0) =>
-    `$${safeNumber(value).toLocaleString(language === "it" ? "it-IT" : "en-US", {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    })}`;
+    `$${safeNumber(value).toLocaleString(
+      language === "it" ? "it-IT" : "en-US",
+      {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      },
+    )}`;
 
   const formatSignedMoney = (value: number, digits = 0) => {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
@@ -429,11 +419,100 @@ export default function RecoverySimulatorPage() {
 
   return (
     <div className="dashboard-shell">
+      <style>{`
+        @keyframes recoveryMetricIn {
+          0% { opacity: 0.55; transform: translateY(5px) scale(0.985); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes recoveryUnlockIn {
+          0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+          55% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .recovery-growth-button {
+          min-height: 48px;
+          padding-inline: 22px !important;
+          font-weight: 950 !important;
+          box-shadow: 0 0 0 1px rgba(255,115,60,0.18), 0 12px 34px rgba(255,115,60,0.28) !important;
+          transition: transform 180ms ease, box-shadow 180ms ease !important;
+        }
+
+        .recovery-growth-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 0 0 1px rgba(255,115,60,0.3), 0 16px 42px rgba(255,115,60,0.38) !important;
+        }
+
+        .recovery-range {
+          appearance: none;
+          -webkit-appearance: none;
+          height: 26px;
+          background: transparent;
+          cursor: pointer;
+        }
+
+        .recovery-range::-webkit-slider-runnable-track {
+          height: 7px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, rgba(255,115,60,0.95), rgba(255,154,112,0.72));
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(255,115,60,0.12);
+        }
+
+        .recovery-range::-webkit-slider-thumb {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 22px;
+          height: 22px;
+          margin-top: -7.5px;
+          border-radius: 999px;
+          background: #ff8a5c;
+          border: 3px solid #121826;
+          box-shadow: 0 0 0 2px rgba(255,138,92,0.32), 0 5px 16px rgba(255,115,60,0.42);
+        }
+
+        .recovery-range::-moz-range-track {
+          height: 7px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, rgba(255,115,60,0.95), rgba(255,154,112,0.72));
+        }
+
+        .recovery-range::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: #ff8a5c;
+          border: 3px solid #121826;
+          box-shadow: 0 0 0 2px rgba(255,138,92,0.32), 0 5px 16px rgba(255,115,60,0.42);
+        }
+
+        .recovery-metric-card,
+        .recovery-annual-value {
+          animation: recoveryMetricIn 260ms ease-out;
+        }
+
+        .recovery-unlocked-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 9px;
+          margin-top: 16px;
+          padding: 10px 13px;
+          border-radius: 14px;
+          color: #86efac;
+          background: rgba(34,197,94,0.09);
+          border: 1px solid rgba(34,197,94,0.19);
+          font-size: 12px;
+          line-height: 1.4;
+          font-weight: 900;
+          animation: recoveryUnlockIn 380ms ease-out;
+        }
+
+        @media (max-width: 980px) {
+          .recovery-growth-button { width: 100%; }
+        }
+      `}</style>
       <div className="dashboard-container">
-        <DashboardNav
-          active="recovery-simulator"
-          navigate={navigate}
-        />
+        <DashboardNav active="recovery-simulator" navigate={navigate} />
 
         <div className="hero-header">
           <div>
@@ -452,22 +531,22 @@ export default function RecoverySimulatorPage() {
 
             <div className="hero-title">
               {language === "it"
-                ? "Simula una decisione prima di applicarla"
-                : "Simulate a decision before applying it"}
+                ? "Simula una decisione prima di applicarla al tuo store"
+                : "See the profit impact before changing your store"}
             </div>
 
             <div className="hero-description">
               {language === "it"
-                ? "Modifica prezzo, costo e volume di vendita. MarginLab calcola in tempo reale il nuovo margine e il profitto recuperabile."
-                : "Adjust price, cost and sales volume. MarginLab calculates the new margin and recoverable profit in real time."}
+                ? "Modifica prezzo, costo e volume di vendita. MarginLab mostra subito l’impatto sul margine, sul profitto mensile e sul risultato annuale."
+                : "Adjust price, cost and sales volume. MarginLab instantly shows the impact on margin, monthly profit and annual results."}
             </div>
           </div>
 
           <button
-            className="primary-button"
+            className="primary-button recovery-growth-button"
             onClick={() => navigate("/app/billing")}
           >
-            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
+            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
           </button>
         </div>
 
@@ -483,7 +562,9 @@ export default function RecoverySimulatorPage() {
             >
               <div>
                 <div style={mutedLabelStyle}>
-                  {language === "it" ? "Selezione prodotto" : "Product selection"}
+                  {language === "it"
+                    ? "Selezione prodotto"
+                    : "Product selection"}
                 </div>
                 <div
                   style={{
@@ -532,7 +613,8 @@ export default function RecoverySimulatorPage() {
               }}
             >
               {filteredProducts.map((product) => {
-                const isActive = product.productId === selectedProduct.productId;
+                const isActive =
+                  product.productId === selectedProduct.productId;
 
                 return (
                   <button
@@ -617,11 +699,26 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 {[
-                  [language === "it" ? "Prezzo" : "Selling price", formatMoney(currentPrice, 2)],
-                  [language === "it" ? "Costo" : "Cost", formatMoney(currentCost, 2)],
-                  [language === "it" ? "Vendite mensili" : "Monthly sales", currentMonthlyQty.toFixed(0)],
-                  [language === "it" ? "Margine" : "Margin", `${currentMarginPct.toFixed(1)}%`],
-                  [language === "it" ? "Profitto mensile" : "Monthly profit", formatMoney(currentMonthlyProfit, 0)],
+                  [
+                    language === "it" ? "Prezzo" : "Selling price",
+                    formatMoney(currentPrice, 2),
+                  ],
+                  [
+                    language === "it" ? "Costo" : "Cost",
+                    formatMoney(currentCost, 2),
+                  ],
+                  [
+                    language === "it" ? "Vendite mensili" : "Monthly sales",
+                    currentMonthlyQty.toFixed(0),
+                  ],
+                  [
+                    language === "it" ? "Margine" : "Margin",
+                    `${currentMarginPct.toFixed(1)}%`,
+                  ],
+                  [
+                    language === "it" ? "Profitto mensile" : "Monthly profit",
+                    formatMoney(currentMonthlyProfit, 0),
+                  ],
                 ].map(([label, value]) => (
                   <div
                     key={label}
@@ -666,7 +763,9 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 <div style={mutedLabelStyle}>
-                  {language === "it" ? "Prezzo di pareggio" : "Break-even price"}
+                  {language === "it"
+                    ? "Prezzo di pareggio"
+                    : "Break-even price"}
                 </div>
                 <div
                   style={{
@@ -771,7 +870,9 @@ export default function RecoverySimulatorPage() {
                   >
                     <div>
                       <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it" ? "Prezzo di vendita" : "Selling price"}
+                        {language === "it"
+                          ? "Prezzo di vendita"
+                          : "Selling price"}
                       </div>
                       <div
                         style={{
@@ -788,7 +889,10 @@ export default function RecoverySimulatorPage() {
                     </div>
                     <div
                       style={{
-                        color: simulatedPrice >= currentPrice ? "#4ade80" : "#f59e0b",
+                        color:
+                          simulatedPrice >= currentPrice
+                            ? "#4ade80"
+                            : "#f59e0b",
                         fontSize: 24,
                         fontWeight: 950,
                       }}
@@ -797,6 +901,7 @@ export default function RecoverySimulatorPage() {
                     </div>
                   </div>
                   <input
+                    className="recovery-range"
                     type="range"
                     min={priceMin}
                     max={priceMax}
@@ -805,7 +910,11 @@ export default function RecoverySimulatorPage() {
                     onChange={(event) =>
                       handleManualPriceChange(Number(event.target.value))
                     }
-                    style={{ width: "100%", marginTop: 16, accentColor: "#ff733c" }}
+                    style={{
+                      width: "100%",
+                      marginTop: 16,
+                      accentColor: "#ff733c",
+                    }}
                   />
                   <div
                     style={{
@@ -833,7 +942,9 @@ export default function RecoverySimulatorPage() {
                   >
                     <div>
                       <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it" ? "Riduzione del costo" : "Cost reduction"}
+                        {language === "it"
+                          ? "Riduzione del costo"
+                          : "Cost reduction"}
                       </div>
                       <div
                         style={{
@@ -848,11 +959,18 @@ export default function RecoverySimulatorPage() {
                           : `New cost ${formatMoney(simulatedCost, 2)}`}
                       </div>
                     </div>
-                    <div style={{ color: "#4ade80", fontSize: 24, fontWeight: 950 }}>
+                    <div
+                      style={{
+                        color: "#4ade80",
+                        fontSize: 24,
+                        fontWeight: 950,
+                      }}
+                    >
                       {costReductionPct.toFixed(1)}%
                     </div>
                   </div>
                   <input
+                    className="recovery-range"
                     type="range"
                     min={0}
                     max={20}
@@ -861,7 +979,11 @@ export default function RecoverySimulatorPage() {
                     onChange={(event) =>
                       handleManualCostChange(Number(event.target.value))
                     }
-                    style={{ width: "100%", marginTop: 16, accentColor: "#ff733c" }}
+                    style={{
+                      width: "100%",
+                      marginTop: 16,
+                      accentColor: "#ff733c",
+                    }}
                   />
                   <div
                     style={{
@@ -889,7 +1011,9 @@ export default function RecoverySimulatorPage() {
                   >
                     <div>
                       <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it" ? "Variazione delle vendite" : "Sales change"}
+                        {language === "it"
+                          ? "Variazione delle vendite"
+                          : "Sales change"}
                       </div>
                       <div
                         style={{
@@ -915,6 +1039,7 @@ export default function RecoverySimulatorPage() {
                     </div>
                   </div>
                   <input
+                    className="recovery-range"
                     type="range"
                     min={-30}
                     max={30}
@@ -923,7 +1048,11 @@ export default function RecoverySimulatorPage() {
                     onChange={(event) =>
                       handleManualSalesChange(Number(event.target.value))
                     }
-                    style={{ width: "100%", marginTop: 16, accentColor: "#ff733c" }}
+                    style={{
+                      width: "100%",
+                      marginTop: 16,
+                      accentColor: "#ff733c",
+                    }}
                   />
                   <div
                     style={{
@@ -999,7 +1128,9 @@ export default function RecoverySimulatorPage() {
                         width: 9,
                         height: 9,
                         borderRadius: 999,
-                        background: active ? "#ff733c" : "rgba(255,255,255,0.2)",
+                        background: active
+                          ? "#ff733c"
+                          : "rgba(255,255,255,0.2)",
                       }}
                     />
                     {label}
@@ -1026,7 +1157,9 @@ export default function RecoverySimulatorPage() {
             <div className="section-header">
               <div>
                 <div className="section-title">
-                  {language === "it" ? "Risultato in tempo reale" : "Live result"}
+                  {language === "it"
+                    ? "Risultato in tempo reale"
+                    : "Live result"}
                 </div>
                 <div className="section-subtitle">
                   {language === "it"
@@ -1052,26 +1185,36 @@ export default function RecoverySimulatorPage() {
                   positive: marginDelta >= 0,
                 },
                 {
-                  label: language === "it" ? "Nuovo profitto mensile" : "New monthly profit",
+                  label:
+                    language === "it"
+                      ? "Nuovo profitto mensile"
+                      : "New monthly profit",
                   value: formatMoney(simulatedMonthlyProfit, 0),
                   note: formatSignedPct(profitDeltaPct, 1),
                   positive: recoveredMonthlyProfit >= 0,
                 },
                 {
-                  label: language === "it" ? "Recupero mensile" : "Monthly recovery",
+                  label:
+                    language === "it" ? "Recupero mensile" : "Monthly recovery",
                   value: formatSignedMoney(recoveredMonthlyProfit, 0),
-                  note: language === "it" ? "Impatto stimato" : "Estimated impact",
+                  note:
+                    language === "it" ? "Impatto stimato" : "Estimated impact",
                   positive: recoveredMonthlyProfit >= 0,
                 },
                 {
-                  label: language === "it" ? "Recupero annuale" : "Annual recovery",
+                  label:
+                    language === "it" ? "Recupero annuale" : "Annual recovery",
                   value: formatSignedMoney(recoveredAnnualProfit, 0),
-                  note: language === "it" ? "Proiezione 12 mesi" : "12-month projection",
+                  note:
+                    language === "it"
+                      ? "Proiezione 12 mesi"
+                      : "12-month projection",
                   positive: recoveredAnnualProfit >= 0,
                 },
               ].map((item) => (
                 <div
-                  key={item.label}
+                  key={`${item.label}-${item.value}`}
+                  className="recovery-metric-card"
                   style={{
                     borderRadius: 23,
                     padding: 22,
@@ -1145,20 +1288,30 @@ export default function RecoverySimulatorPage() {
                     max: 60,
                   },
                   {
-                    label: language === "it" ? "Profitto mensile" : "Monthly profit",
+                    label:
+                      language === "it" ? "Profitto mensile" : "Monthly profit",
                     current: formatMoney(currentMonthlyProfit, 0),
                     next: formatMoney(simulatedMonthlyProfit, 0),
                     currentBar: Math.max(0, currentMonthlyProfit),
                     nextBar: Math.max(0, simulatedMonthlyProfit),
-                    max: Math.max(1, currentMonthlyProfit, simulatedMonthlyProfit),
+                    max: Math.max(
+                      1,
+                      currentMonthlyProfit,
+                      simulatedMonthlyProfit,
+                    ),
                   },
                   {
-                    label: language === "it" ? "Ricavi mensili" : "Monthly revenue",
+                    label:
+                      language === "it" ? "Ricavi mensili" : "Monthly revenue",
                     current: formatMoney(currentMonthlyRevenue, 0),
                     next: formatMoney(simulatedMonthlyRevenue, 0),
                     currentBar: Math.max(0, currentMonthlyRevenue),
                     nextBar: Math.max(0, simulatedMonthlyRevenue),
-                    max: Math.max(1, currentMonthlyRevenue, simulatedMonthlyRevenue),
+                    max: Math.max(
+                      1,
+                      currentMonthlyRevenue,
+                      simulatedMonthlyRevenue,
+                    ),
                   },
                 ].map((item) => (
                   <div key={item.label}>
@@ -1170,11 +1323,59 @@ export default function RecoverySimulatorPage() {
                         alignItems: "center",
                       }}
                     >
-                      <span style={{ color: "rgba(255,255,255,0.58)", fontWeight: 850 }}>
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.58)",
+                          fontWeight: 850,
+                        }}
+                      >
                         {item.label}
                       </span>
-                      <span style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {item.current} → {item.next}
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 9,
+                          color: "#f8fafc",
+                          fontWeight: 900,
+                        }}
+                      >
+                        <span style={{ color: "rgba(255,255,255,0.58)" }}>
+                          {item.current}
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-grid",
+                            placeItems: "center",
+                            width: 24,
+                            height: 24,
+                            borderRadius: 999,
+                            color:
+                              recoveredMonthlyProfit >= 0
+                                ? "#4ade80"
+                                : "#f87171",
+                            background:
+                              recoveredMonthlyProfit >= 0
+                                ? "rgba(34,197,94,0.11)"
+                                : "rgba(239,68,68,0.11)",
+                            border:
+                              recoveredMonthlyProfit >= 0
+                                ? "1px solid rgba(34,197,94,0.2)"
+                                : "1px solid rgba(239,68,68,0.2)",
+                          }}
+                        >
+                          →
+                        </span>
+                        <span
+                          style={{
+                            color:
+                              recoveredMonthlyProfit >= 0
+                                ? "#4ade80"
+                                : "#f87171",
+                          }}
+                        >
+                          {item.next}
+                        </span>
                       </span>
                     </div>
                     <div
@@ -1214,7 +1415,10 @@ export default function RecoverySimulatorPage() {
                             width: `${clamp((item.nextBar / item.max) * 100, 0, 100)}%`,
                             height: "100%",
                             borderRadius: 999,
-                            background: recoveredMonthlyProfit >= 0 ? "#22c55e" : "#ef4444",
+                            background:
+                              recoveredMonthlyProfit >= 0
+                                ? "#22c55e"
+                                : "#ef4444",
                           }}
                         />
                       </div>
@@ -1236,6 +1440,8 @@ export default function RecoverySimulatorPage() {
                 {language === "it" ? "Impatto annuale" : "Annual impact"}
               </div>
               <div
+                key={`annual-${recoveredAnnualProfit.toFixed(0)}`}
+                className="recovery-annual-value"
                 style={{
                   marginTop: 15,
                   color: recoveredAnnualProfit >= 0 ? "#22c55e" : "#f87171",
@@ -1260,6 +1466,20 @@ export default function RecoverySimulatorPage() {
                   : "Estimated profit recovered every year if this scenario is maintained."}
               </div>
 
+              {recoveredAnnualProfit > 0 && (
+                <div
+                  key={`unlock-${recoveredAnnualProfit.toFixed(0)}`}
+                  className="recovery-unlocked-badge"
+                >
+                  <span>↗</span>
+                  <span>
+                    {language === "it"
+                      ? `${formatSignedMoney(recoveredAnnualProfit, 0)} di profitto annuale sbloccato`
+                      : `${formatSignedMoney(recoveredAnnualProfit, 0)} annual profit unlocked`}
+                  </span>
+                </div>
+              )}
+
               <div
                 style={{
                   marginTop: 24,
@@ -1277,7 +1497,9 @@ export default function RecoverySimulatorPage() {
                 >
                   <div>
                     <div style={mutedLabelStyle}>
-                      {language === "it" ? "Salute del profitto" : "Profit health"}
+                      {language === "it"
+                        ? "Salute del profitto"
+                        : "Profit health"}
                     </div>
                     <div
                       style={{
@@ -1314,7 +1536,8 @@ export default function RecoverySimulatorPage() {
                       width: `${clamp((simulatedMarginPct / 50) * 100, 0, 100)}%`,
                       height: "100%",
                       borderRadius: 999,
-                      background: simulatedMarginPct >= 20 ? "#22c55e" : "#f59e0b",
+                      background:
+                        simulatedMarginPct >= 20 ? "#22c55e" : "#f59e0b",
                     }}
                   />
                 </div>
@@ -1342,7 +1565,9 @@ export default function RecoverySimulatorPage() {
             >
               <div>
                 <div style={{ ...mutedLabelStyle, color: "#ff9a70" }}>
-                  {language === "it" ? "Raccomandazione AI" : "AI recommendation"}
+                  {language === "it"
+                    ? "Raccomandazione AI"
+                    : "AI recommendation"}
                 </div>
                 <div
                   style={{
@@ -1369,8 +1594,8 @@ export default function RecoverySimulatorPage() {
                   fontWeight: 900,
                 }}
               >
-                {language === "it" ? "Affidabilità" : "Confidence"}: {confidenceLabel}{" "}
-                · {dataConfidenceScore}%
+                {language === "it" ? "Affidabilità" : "Confidence"}:{" "}
+                {confidenceLabel} · {dataConfidenceScore}%
               </div>
             </div>
 
