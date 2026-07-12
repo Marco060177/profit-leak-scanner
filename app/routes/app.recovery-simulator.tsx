@@ -525,8 +525,8 @@ export default function RecoverySimulatorPage() {
 
             <div className="eyebrow">
               {language === "it"
-                ? "SIMULATORE DI RECUPERO V2"
-                : "RECOVERY SIMULATOR V2"}
+                ? "SIMULATORE DI RECUPERO"
+                : "RECOVERY SIMULATOR"}
             </div>
 
             <div className="hero-title">
