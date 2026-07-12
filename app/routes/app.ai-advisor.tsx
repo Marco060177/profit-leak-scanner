@@ -3,6 +3,8 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
+import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import {
@@ -103,22 +105,34 @@ export default function AiAdvisorPage() {
     React.useState<SelectedQuestion>("profitRisk");
   const [showAiReport, setShowAiReport] = React.useState(false);
 
-  const { summary, rows, assumptions } = useLoaderData() as LoaderData & {
-    assumptions: {
-      monthlyAds: number;
-      monthlyShipping: number;
-      monthlyOperating: number;
-      paymentFeePct: number;
-      transactionFeePct: number;
-      taxReservePct: number;
-    } | null;
-  };
+  const { summary, rows, assumptions, period } =
+    useLoaderData() as LoaderData & {
+      assumptions: {
+        monthlyAds: number;
+        monthlyShipping: number;
+        monthlyOperating: number;
+        paymentFeePct: number;
+        transactionFeePct: number;
+        taxReservePct: number;
+      } | null;
+    };
 
   React.useEffect(() => {
     if (aiFetcher.data?.text) {
       setShowAiReport(true);
     }
   }, [aiFetcher.data]);
+
+  const profitAlerts = React.useMemo(
+    () =>
+      generateProfitAlerts({
+        summary,
+        rows,
+        language,
+        period,
+      }),
+    [summary, rows, language, period],
+  );
 
   const losingProducts = rows.filter((row) => row.losing);
   const missingCostProducts = rows.filter((row) => row.missingCost);
@@ -536,8 +550,8 @@ Rules:
       100,
       Math.round(
         100 -
-          losingProducts.length * 18 -
-          lowMarginProducts.length * 5,
+        losingProducts.length * 18 -
+        lowMarginProducts.length * 5,
       ),
     ),
   );
@@ -556,10 +570,10 @@ Rules:
       100,
       Math.round(
         100 -
-          losingProducts.length * 16 -
-          lowMarginProducts.length * 4 -
-          (summary.refunds > 0 ? 6 : 0) -
-          (summary.discounts > 0 ? 4 : 0),
+        losingProducts.length * 16 -
+        lowMarginProducts.length * 4 -
+        (summary.refunds > 0 ? 6 : 0) -
+        (summary.discounts > 0 ? 4 : 0),
       ),
     ),
   );
@@ -570,8 +584,8 @@ Rules:
       100,
       Math.round(
         100 -
-          marginAlerts.length * 8 -
-          (recoverableProfit > 0 ? 10 : 0),
+        marginAlerts.length * 8 -
+        (recoverableProfit > 0 ? 10 : 0),
       ),
     ),
   );
@@ -598,8 +612,8 @@ Rules:
     Math.min(
       3,
       losingProducts.length +
-        (missingCostProducts.length > 0 ? 1 : 0) +
-        (lowMarginProducts.length > 0 ? 1 : 0),
+      (missingCostProducts.length > 0 ? 1 : 0) +
+      (lowMarginProducts.length > 0 ? 1 : 0),
     ),
   );
 
@@ -624,19 +638,19 @@ Rules:
     language === "it"
       ? recoverableProfit > 0
         ? `${priorityConcentration.toFixed(
-            0,
-          )}% del profitto recuperabile è concentrato nei primi ${Math.max(
-            1,
-            topPriorityProducts.length,
-          )} prodotti. Per questo conviene intervenire prima sulle opportunità ad alto impatto, completare i costi mancanti e solo dopo valutare azioni più ampie su sconti o crescita.`
+          0,
+        )}% del profitto recuperabile è concentrato nei primi ${Math.max(
+          1,
+          topPriorityProducts.length,
+        )} prodotti. Per questo conviene intervenire prima sulle opportunità ad alto impatto, completare i costi mancanti e solo dopo valutare azioni più ampie su sconti o crescita.`
         : "Non emerge una singola perdita dominante. La strategia migliore è mantenere dati completi, controllare i prodotti a margine debole e verificare periodicamente sconti e rimborsi."
       : recoverableProfit > 0
         ? `${priorityConcentration.toFixed(
-            0,
-          )}% of recoverable profit is concentrated in the first ${Math.max(
-            1,
-            topPriorityProducts.length,
-          )} products. Prioritize high-impact opportunities, complete missing costs, and only then consider broader discount or growth actions.`
+          0,
+        )}% of recoverable profit is concentrated in the first ${Math.max(
+          1,
+          topPriorityProducts.length,
+        )} products. Prioritize high-impact opportunities, complete missing costs, and only then consider broader discount or growth actions.`
         : "No single dominant leak is visible. The best strategy is to maintain complete data, monitor weak-margin products, and review discounts and refunds regularly.";
 
   const scorecards = [
@@ -699,73 +713,73 @@ Rules:
   const decisionFeed = [
     losingProducts.length > 0
       ? {
-          when: language === "it" ? "Oggi" : "Today",
-          title:
-            language === "it"
-              ? "Rilevati prodotti venduti sotto costo"
-              : "Products selling below cost detected",
-          detail:
-            language === "it"
-              ? `${losingProducts.length} prodotti richiedono una revisione immediata.`
-              : `${losingProducts.length} products require immediate review.`,
-          color: "#ff6b4a",
-        }
+        when: language === "it" ? "Oggi" : "Today",
+        title:
+          language === "it"
+            ? "Rilevati prodotti venduti sotto costo"
+            : "Products selling below cost detected",
+        detail:
+          language === "it"
+            ? `${losingProducts.length} prodotti richiedono una revisione immediata.`
+            : `${losingProducts.length} products require immediate review.`,
+        color: "#ff6b4a",
+      }
       : null,
     missingCostProducts.length > 0
       ? {
-          when: language === "it" ? "Oggi" : "Today",
-          title:
-            language === "it"
-              ? "Affidabilità ridotta dai costi mancanti"
-              : "Missing costs reduce confidence",
-          detail:
-            language === "it"
-              ? `${missingCostProducts.length} prodotti non hanno dati di costo completi.`
-              : `${missingCostProducts.length} products have incomplete cost data.`,
-          color: "#f59e0b",
-        }
+        when: language === "it" ? "Oggi" : "Today",
+        title:
+          language === "it"
+            ? "Affidabilità ridotta dai costi mancanti"
+            : "Missing costs reduce confidence",
+        detail:
+          language === "it"
+            ? `${missingCostProducts.length} prodotti non hanno dati di costo completi.`
+            : `${missingCostProducts.length} products have incomplete cost data.`,
+        color: "#f59e0b",
+      }
       : null,
     recoverableProfit > 0
       ? {
-          when: language === "it" ? "Nuova opportunità" : "New opportunity",
-          title:
-            language === "it"
-              ? "Profitto recuperabile individuato"
-              : "Recoverable profit identified",
-          detail:
-            language === "it"
-              ? `Possibile recupero stimato: $${recoverableProfit.toFixed(0)}.`
-              : `Estimated recovery opportunity: $${recoverableProfit.toFixed(0)}.`,
-          color: "#22c55e",
-        }
+        when: language === "it" ? "Nuova opportunità" : "New opportunity",
+        title:
+          language === "it"
+            ? "Profitto recuperabile individuato"
+            : "Recoverable profit identified",
+        detail:
+          language === "it"
+            ? `Possibile recupero stimato: $${recoverableProfit.toFixed(0)}.`
+            : `Estimated recovery opportunity: $${recoverableProfit.toFixed(0)}.`,
+        color: "#22c55e",
+      }
       : null,
     summary.refunds > 0
       ? {
-          when: language === "it" ? "Periodo attuale" : "Current period",
-          title:
-            language === "it"
-              ? "I rimborsi stanno riducendo i ricavi"
-              : "Refunds are reducing revenue",
-          detail:
-            language === "it"
-              ? `$${summary.refunds.toFixed(2)} di ricavi rimborsati.`
-              : `$${summary.refunds.toFixed(2)} in refunded revenue.`,
-          color: "#fb7185",
-        }
+        when: language === "it" ? "Periodo attuale" : "Current period",
+        title:
+          language === "it"
+            ? "I rimborsi stanno riducendo i ricavi"
+            : "Refunds are reducing revenue",
+        detail:
+          language === "it"
+            ? `$${summary.refunds.toFixed(2)} di ricavi rimborsati.`
+            : `$${summary.refunds.toFixed(2)} in refunded revenue.`,
+        color: "#fb7185",
+      }
       : null,
     summary.discounts > 0
       ? {
-          when: language === "it" ? "Periodo attuale" : "Current period",
-          title:
-            language === "it"
-              ? "Pressione promozionale rilevata"
-              : "Promotional pressure detected",
-          detail:
-            language === "it"
-              ? `$${summary.discounts.toFixed(2)} di sconti applicati.`
-              : `$${summary.discounts.toFixed(2)} in discounts applied.`,
-          color: "#38bdf8",
-        }
+        when: language === "it" ? "Periodo attuale" : "Current period",
+        title:
+          language === "it"
+            ? "Pressione promozionale rilevata"
+            : "Promotional pressure detected",
+        detail:
+          language === "it"
+            ? `$${summary.discounts.toFixed(2)} di sconti applicati.`
+            : `$${summary.discounts.toFixed(2)} in discounts applied.`,
+        color: "#38bdf8",
+      }
       : null,
   ].filter(
     (
@@ -1107,9 +1121,8 @@ Rules:
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    background: `conic-gradient(${healthColor} ${
-                      healthScore * 3.6
-                    }deg, rgba(255,255,255,0.08) 0deg)`,
+                    background: `conic-gradient(${healthColor} ${healthScore * 3.6
+                      }deg, rgba(255,255,255,0.08) 0deg)`,
                     boxShadow: `0 0 54px ${healthColor}22`,
                   }}
                 >
@@ -1182,6 +1195,12 @@ Rules:
             </div>
           </div>
         </div>
+
+        <BusinessPriorities
+          alerts={profitAlerts}
+          navigate={navigate}
+          maxItems={3}
+        />
 
         <div
           style={{
