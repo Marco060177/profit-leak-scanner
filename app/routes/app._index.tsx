@@ -859,10 +859,7 @@ export default function DashboardV2() {
         setAnalysisText={setAnalysisText}
       />
 
-      <AIProfitMonitor
-        alerts={alerts}
-        navigate={navigate}
-      />
+      
 
       {/* {!billingActive ? (
               <div className="billing-banner">
@@ -887,6 +884,11 @@ export default function DashboardV2() {
         visualLeak={visualLeak}
         visualProductsAtRisk={visualProductsAtRisk}
         visualMarginPct={visualMarginPct}
+      />
+
+      <AIProfitMonitor
+        alerts={alerts}
+        navigate={navigate}
       />
 
       <section className="ai-insights-center">
