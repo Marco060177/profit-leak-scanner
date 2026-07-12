@@ -626,6 +626,7 @@ export async function loadMarginDashboardData({
     billingActive,
     period: String(safeDays),
     shopHandle,
+    
   };
 }
 

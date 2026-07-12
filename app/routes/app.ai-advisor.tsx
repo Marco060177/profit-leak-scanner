@@ -21,7 +21,8 @@ type SelectedQuestion =
   | "profitRisk"
   | "marginPressure"
   | "priority"
-  | "fastestImprovement";
+  | "fastestImprovement"
+  | "productPriorities";
 
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
@@ -326,8 +327,40 @@ export default function AiAdvisorPage() {
     .filter(Boolean)
     .slice(0, 3) as string[];
 
+  const prioritizedProducts = [...rows]
+    .filter((row) => row.revenue > 0)
+    .map((row) => {
+      const recoverableOpportunity =
+        Math.max(0, row.targetDelta) * row.qty;
+
+      const priorityScore =
+        recoverableOpportunity +
+        Math.max(0, -row.profit) +
+        (row.revenue * Math.max(0, 20 - row.marginPct)) / 100;
+
+      return {
+        ...row,
+        recoverableOpportunity,
+        priorityScore,
+      };
+    })
+    .sort((a, b) => b.priorityScore - a.priorityScore)
+    .slice(0, 5);
+
   const aiPrompt = `
-You are MarginLab AI Advisor.\n\nRespond in ${language === "it" ? "Italian" : "English"}.\nAnalyze this Shopify store profitability data.
+You are MarginLab AI Advisor.
+
+Respond in ${language === "it" ? "Italian" : "English"}.
+
+Analyze this Shopify store profitability data.
+
+Use only the supplied data.
+
+Do not invent numbers.
+
+Do not invent products.
+
+Never translate product names.
 
 STORE SUMMARY
 
@@ -379,10 +412,12 @@ TOP LOSING PRODUCTS
 ${[...losingProducts]
       .slice(0, 3)
       .map(
-        (p) =>
-          `${p.productTitle} | Profit ${p.profit.toFixed(
+        (product) =>
+          `${product.productTitle} | Revenue ${product.revenue.toFixed(
             2,
-          )} | Margin ${p.marginPct.toFixed(1)}%`,
+          )} | Profit ${product.profit.toFixed(
+            2,
+          )} | Margin ${product.marginPct.toFixed(1)}%`,
       )
       .join("\n") || "None"
     }
@@ -392,10 +427,12 @@ TOP LOW-MARGIN PRODUCTS
 ${[...lowMarginProducts]
       .slice(0, 3)
       .map(
-        (p) =>
-          `${p.productTitle} | Profit ${p.profit.toFixed(
+        (product) =>
+          `${product.productTitle} | Revenue ${product.revenue.toFixed(
             2,
-          )} | Margin ${p.marginPct.toFixed(1)}%`,
+          )} | Profit ${product.profit.toFixed(
+            2,
+          )} | Margin ${product.marginPct.toFixed(1)}%`,
       )
       .join("\n") || "None"
     }
@@ -403,16 +440,51 @@ ${[...lowMarginProducts]
 TOP RECOVERY OPPORTUNITIES
 
 ${[...rows]
-      .filter((r) => r.targetDelta > 0)
-      .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
+      .filter((row) => row.targetDelta > 0)
+      .sort(
+        (a, b) =>
+          b.targetDelta * b.qty -
+          a.targetDelta * a.qty,
+      )
       .slice(0, 3)
       .map(
-        (p) =>
-          `${p.productTitle} | Potential Recovery ${(
-            p.targetDelta * p.qty
+        (product) =>
+          `${product.productTitle} | Revenue ${product.revenue.toFixed(
+            2,
+          )} | Margin ${product.marginPct.toFixed(
+            1,
+          )}% | Potential Recovery ${(
+            product.targetDelta * product.qty
           ).toFixed(0)}`,
       )
       .join("\n") || "None"
+    }
+
+PRIORITIZED PRODUCTS
+
+${prioritizedProducts.length > 0
+      ? prioritizedProducts
+        .map(
+          (product, index) => `
+PRIORITY ${index + 1}
+
+Product: ${product.productTitle}
+Revenue: ${product.revenue}
+Quantity sold: ${product.qty}
+Profit: ${product.profit}
+Margin: ${product.marginPct}%
+Average price: ${product.avgPrice}
+Average cost: ${product.avgCost}
+Target price: ${product.targetPrice}
+Price adjustment needed: ${product.targetDelta}
+Recoverable opportunity: ${product.recoverableOpportunity}
+Selling below cost: ${product.losing ? "Yes" : "No"}
+Missing cost: ${product.missingCost ? "Yes" : "No"}
+Low margin: ${product.lowMargin ? "Yes" : "No"}
+`,
+        )
+        .join("\n")
+      : "No product data available."
     }
 
 TASK
@@ -429,17 +501,17 @@ Your objective is to explain:
 - What should be reviewed first.
 - Where the biggest recovery opportunity exists.
 
-Use EXACTLY these sections:
+When the merchant asks which products should be reviewed first:
 
-EXECUTIVE SUMMARY
-
-GROSS VS NET PROFIT
-
-MAIN RISKS
-
-WHAT TO CHECK FIRST
-
-PROFIT OPPORTUNITY
+- Use the prioritized product list.
+- Rank products by business impact.
+- Explain why each product is a priority.
+- Mention revenue, margin and recoverable opportunity when available.
+- Recommend one clear action for each product.
+- Give greater priority to high-revenue products with weak margins.
+- Give greater priority to products selling below cost.
+- Clearly identify missing product costs.
+- Do not recommend a large price increase without also suggesting a cost review.
 
 Rules:
 
@@ -448,10 +520,9 @@ Rules:
 - Use only supplied data.
 - Be concise.
 - Use short bullet points.
-- Maximum 3 bullet points per section.
 - Prioritize actions by business impact.
-- Mention estimated net profit if assumptions are provided.
-- Mention estimated net margin if assumptions are provided.
+- Mention estimated net profit when assumptions are provided.
+- Mention estimated net margin when assumptions are provided.
 - Mention the most important product risks.
 - Mention recoverable profit opportunities.
 `;
@@ -1023,6 +1094,13 @@ Rules:
                       : language === "it"
                         ? "Qual è il modo più rapido per migliorare i profitti?"
                         : "What would improve profit fastest?",
+                },
+                {
+                  id: "productPriorities",
+                  label:
+                    language === "it"
+                      ? "Quali prodotti dovrei sistemare per primi?"
+                      : "Which products should I fix first?",
                 },
               ].map((presetQuestion) => (
                 <button

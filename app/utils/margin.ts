@@ -60,13 +60,25 @@ export type LoaderData = {
   billingActive: boolean;
   period: string;
   shopHandle: string;
+  
 };
 
-export function money(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
+export function money(
+  n: number,
+  currencyCode = "USD",
+  locale = "en-US",
+) {
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyCode,
+    }).format(n);
+  } catch {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(n);
+  }
 }
 
 export function pct(n: number) {
@@ -77,6 +89,7 @@ export function toYYYYMMDD(d: Date) {
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
+
   return `${yyyy}-${mm}-${dd}`;
 }
 
