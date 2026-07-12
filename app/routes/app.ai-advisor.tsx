@@ -530,6 +530,328 @@ Rules:
 - Mention recoverable profit opportunities.
 `;
 
+  const pricingScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        100 -
+          losingProducts.length * 18 -
+          lowMarginProducts.length * 5,
+      ),
+    ),
+  );
+
+  const dataQualityScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(100 - missingCostProducts.length * 12),
+    ),
+  );
+
+  const profitQualityScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        100 -
+          losingProducts.length * 16 -
+          lowMarginProducts.length * 4 -
+          (summary.refunds > 0 ? 6 : 0) -
+          (summary.discounts > 0 ? 4 : 0),
+      ),
+    ),
+  );
+
+  const executionScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(
+        100 -
+          marginAlerts.length * 8 -
+          (recoverableProfit > 0 ? 10 : 0),
+      ),
+    ),
+  );
+
+  const topPriorityProducts = prioritizedProducts.slice(0, 3);
+
+  const priorityImpact = topPriorityProducts.reduce(
+    (sum, product) => sum + product.recoverableOpportunity,
+    0,
+  );
+
+  const priorityConcentration =
+    recoverableProfit > 0
+      ? Math.min(100, (priorityImpact / recoverableProfit) * 100)
+      : 0;
+
+  const missionMinutes =
+    5 +
+    Math.min(20, missingCostProducts.length * 2) +
+    Math.min(20, losingProducts.length * 4);
+
+  const missionActions = Math.max(
+    1,
+    Math.min(
+      3,
+      losingProducts.length +
+        (missingCostProducts.length > 0 ? 1 : 0) +
+        (lowMarginProducts.length > 0 ? 1 : 0),
+    ),
+  );
+
+  const executiveBrief =
+    language === "it"
+      ? losingProducts.length > 0
+        ? `Lo store genera profitto, ma ${losingProducts.length} prodotti venduti sotto costo richiedono un intervento immediato. La priorità è correggere prezzi e costi prima di aumentare i volumi.`
+        : missingCostProducts.length > 0
+          ? `La redditività appare stabile, ma ${missingCostProducts.length} costi mancanti riducono l'affidabilità dell'analisi. Completa prima i dati, poi intervieni sulle opportunità di margine.`
+          : lowMarginProducts.length > 0
+            ? `Lo store è profittevole, ma ${lowMarginProducts.length} prodotti a margine basso limitano la qualità del profitto. Le opportunità principali sono concentrate su pochi prodotti.`
+            : "Lo store mostra una struttura di profitto stabile. Mantieni il monitoraggio attivo e usa le simulazioni prima di modificare prezzi o costi."
+      : losingProducts.length > 0
+        ? `The store is profitable, but ${losingProducts.length} products selling below cost require immediate attention. Fix pricing and costs before increasing volume.`
+        : missingCostProducts.length > 0
+          ? `Profitability looks stable, but ${missingCostProducts.length} missing costs reduce analytical confidence. Complete the data before acting on margin opportunities.`
+          : lowMarginProducts.length > 0
+            ? `The store is profitable, but ${lowMarginProducts.length} low-margin products are limiting profit quality. The main opportunities are concentrated in a small group of products.`
+            : "The store shows a stable profit structure. Keep monitoring performance and simulate decisions before changing prices or costs.";
+
+  const reasoningText =
+    language === "it"
+      ? recoverableProfit > 0
+        ? `${priorityConcentration.toFixed(
+            0,
+          )}% del profitto recuperabile è concentrato nei primi ${Math.max(
+            1,
+            topPriorityProducts.length,
+          )} prodotti. Per questo conviene intervenire prima sulle opportunità ad alto impatto, completare i costi mancanti e solo dopo valutare azioni più ampie su sconti o crescita.`
+        : "Non emerge una singola perdita dominante. La strategia migliore è mantenere dati completi, controllare i prodotti a margine debole e verificare periodicamente sconti e rimborsi."
+      : recoverableProfit > 0
+        ? `${priorityConcentration.toFixed(
+            0,
+          )}% of recoverable profit is concentrated in the first ${Math.max(
+            1,
+            topPriorityProducts.length,
+          )} products. Prioritize high-impact opportunities, complete missing costs, and only then consider broader discount or growth actions.`
+        : "No single dominant leak is visible. The best strategy is to maintain complete data, monitor weak-margin products, and review discounts and refunds regularly.";
+
+  const scorecards = [
+    {
+      key: "health",
+      label: language === "it" ? "Salute store" : "Store Health",
+      value: healthScore,
+      color: healthColor,
+    },
+    {
+      key: "profit",
+      label:
+        language === "it" ? "Qualità profitto" : "Profit Quality",
+      value: profitQualityScore,
+      color:
+        profitQualityScore < 40
+          ? "#ff6b4a"
+          : profitQualityScore < 70
+            ? "#f59e0b"
+            : "#22c55e",
+    },
+    {
+      key: "pricing",
+      label:
+        language === "it" ? "Efficienza prezzi" : "Pricing Efficiency",
+      value: pricingScore,
+      color:
+        pricingScore < 40
+          ? "#ff6b4a"
+          : pricingScore < 70
+            ? "#f59e0b"
+            : "#22c55e",
+    },
+    {
+      key: "data",
+      label:
+        language === "it" ? "Qualità dei dati" : "Data Quality",
+      value: dataQualityScore,
+      color:
+        dataQualityScore < 40
+          ? "#ff6b4a"
+          : dataQualityScore < 70
+            ? "#f59e0b"
+            : "#22c55e",
+    },
+    {
+      key: "execution",
+      label:
+        language === "it" ? "Prontezza operativa" : "Execution Readiness",
+      value: executionScore,
+      color:
+        executionScore < 40
+          ? "#ff6b4a"
+          : executionScore < 70
+            ? "#f59e0b"
+            : "#22c55e",
+    },
+  ];
+
+  const decisionFeed = [
+    losingProducts.length > 0
+      ? {
+          when: language === "it" ? "Oggi" : "Today",
+          title:
+            language === "it"
+              ? "Rilevati prodotti venduti sotto costo"
+              : "Products selling below cost detected",
+          detail:
+            language === "it"
+              ? `${losingProducts.length} prodotti richiedono una revisione immediata.`
+              : `${losingProducts.length} products require immediate review.`,
+          color: "#ff6b4a",
+        }
+      : null,
+    missingCostProducts.length > 0
+      ? {
+          when: language === "it" ? "Oggi" : "Today",
+          title:
+            language === "it"
+              ? "Affidabilità ridotta dai costi mancanti"
+              : "Missing costs reduce confidence",
+          detail:
+            language === "it"
+              ? `${missingCostProducts.length} prodotti non hanno dati di costo completi.`
+              : `${missingCostProducts.length} products have incomplete cost data.`,
+          color: "#f59e0b",
+        }
+      : null,
+    recoverableProfit > 0
+      ? {
+          when: language === "it" ? "Nuova opportunità" : "New opportunity",
+          title:
+            language === "it"
+              ? "Profitto recuperabile individuato"
+              : "Recoverable profit identified",
+          detail:
+            language === "it"
+              ? `Possibile recupero stimato: $${recoverableProfit.toFixed(0)}.`
+              : `Estimated recovery opportunity: $${recoverableProfit.toFixed(0)}.`,
+          color: "#22c55e",
+        }
+      : null,
+    summary.refunds > 0
+      ? {
+          when: language === "it" ? "Periodo attuale" : "Current period",
+          title:
+            language === "it"
+              ? "I rimborsi stanno riducendo i ricavi"
+              : "Refunds are reducing revenue",
+          detail:
+            language === "it"
+              ? `$${summary.refunds.toFixed(2)} di ricavi rimborsati.`
+              : `$${summary.refunds.toFixed(2)} in refunded revenue.`,
+          color: "#fb7185",
+        }
+      : null,
+    summary.discounts > 0
+      ? {
+          when: language === "it" ? "Periodo attuale" : "Current period",
+          title:
+            language === "it"
+              ? "Pressione promozionale rilevata"
+              : "Promotional pressure detected",
+          detail:
+            language === "it"
+              ? `$${summary.discounts.toFixed(2)} di sconti applicati.`
+              : `$${summary.discounts.toFixed(2)} in discounts applied.`,
+          color: "#38bdf8",
+        }
+      : null,
+  ].filter(
+    (
+      item,
+    ): item is {
+      when: string;
+      title: string;
+      detail: string;
+      color: string;
+    } => item !== null,
+  );
+
+  const dynamicQuestions = [
+    {
+      id: "profitRisk",
+      label: topProfitLeak
+        ? language === "it"
+          ? `Perché ${topProfitLeak.productTitle} è il rischio principale?`
+          : `Why is ${topProfitLeak.productTitle} my biggest risk?`
+        : language === "it"
+          ? "Perché i miei profitti sono a rischio?"
+          : "Why is my profit at risk?",
+    },
+    {
+      id: "marginPressure",
+      label:
+        summary.refunds > 0
+          ? language === "it"
+            ? "Quanto stanno incidendo i rimborsi?"
+            : "How much are refunds affecting profit?"
+          : language === "it"
+            ? "Cosa sta riducendo i miei margini?"
+            : "What is hurting my margin?",
+    },
+    {
+      id: "priority",
+      label:
+        missingCostProducts.length > 0
+          ? language === "it"
+            ? `Perché devo completare prima ${missingCostProducts.length} costi mancanti?`
+            : `Why should I fix ${missingCostProducts.length} missing costs first?`
+          : language === "it"
+            ? "Cosa dovrei controllare per prima cosa?"
+            : "What should I check first?",
+    },
+    {
+      id: "fastestImprovement",
+      label:
+        recoverableProfit > 0
+          ? language === "it"
+            ? "Come posso recuperare questo profitto?"
+            : "How can I recover this profit?"
+          : language === "it"
+            ? "Qual è il modo più rapido per migliorare?"
+            : "What would improve profit fastest?",
+    },
+    {
+      id: "productPriorities",
+      label:
+        language === "it"
+          ? "Quali prodotti devo sistemare per primi?"
+          : "Which products should I fix first?",
+    },
+    {
+      id: "pricingOpportunity",
+      label:
+        language === "it"
+          ? "Qual è la migliore opportunità di prezzo?"
+          : "What is the best pricing opportunity?",
+    },
+    {
+      id: "hiddenCosts",
+      label:
+        language === "it"
+          ? "Qual è il costo nascosto più importante?"
+          : "What is my biggest hidden cost?",
+    },
+    {
+      id: "growthOpportunity",
+      label:
+        language === "it"
+          ? "Dove posso aumentare il profitto più rapidamente?"
+          : "Where can I increase profit the fastest?",
+    },
+  ];
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -539,715 +861,1210 @@ Rules:
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it" ? "Anteprima Piano Growth" : "Growth Plan Preview"}
+              {language === "it" ? "Funzione Growth" : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
-              {language === "it" ? "CONSULENTE AI PER I MARGINI" : "AI MARGIN ADVISOR"}
+              {language === "it" ? "PROFIT COPILOT" : "PROFIT COPILOT"}
             </div>
 
             <div className="hero-title">
               {language === "it"
-                ? "Chiedi a MarginLab cosa sta riducendo i tuoi profitti"
-                : "Ask MarginLab what is hurting your profits"}
+                ? "Il briefing operativo del tuo store, già pronto"
+                : "Your store briefing, already prepared"}
             </div>
 
             <div className="hero-description">
               {language === "it"
-                ? "Il consulente AI analizza i dati di redditività del tuo store Shopify, spiega i problemi di margine, individua perdite nascoste e consiglia cosa correggere per primo."
-                : "AI Advisor analyzes your Shopify profitability data, explains margin issues, identifies hidden profit leaks and recommends what to fix first."}
+                ? "MarginLab analizza automaticamente redditività, rischi, opportunità e priorità. Prima ti dice cosa conta, poi risponde alle tue domande."
+                : "MarginLab automatically analyzes profitability, risk, opportunities and priorities. It tells you what matters first, then answers your questions."}
             </div>
           </div>
 
           <button
             className="primary-button"
             onClick={() => navigate("/app/billing")}
+            style={{
+              boxShadow:
+                "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
+            }}
           >
-            {language === "it" ? "Passa a Growth →" : "Upgrade to Growth →"}
+            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
           </button>
         </div>
 
-        <div className="panel">
-          <div className="section-header">
-            <div>
-              {language === "it" ? "Anteprima Consulente AI" : "AI Advisor Preview"}
-
-              <div className="section-subtitle">
-                {language === "it"
-                  ? "L'anteprima Growth trasforma i dati sui margini in decisioni operative chiare."
-                  : "Growth feature preview. Built to turn margin data into clear business decisions."}
-              </div>
-            </div>
-          </div>
-
+        <div
+          style={{
+            borderRadius: 30,
+            padding: 28,
+            background:
+              "radial-gradient(circle at 12% 14%, rgba(255,115,80,0.14), transparent 30%), radial-gradient(circle at 88% 18%, rgba(34,197,94,0.13), transparent 32%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
+            border: "1px solid rgba(255,115,60,0.22)",
+            boxShadow:
+              "0 28px 90px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03)",
+          }}
+        >
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1.05fr 0.95fr",
-              gap: 24,
-              marginTop: 24,
+              gridTemplateColumns: "1.2fr 0.8fr",
+              gap: 28,
+              alignItems: "stretch",
             }}
           >
-            <div
-              style={{
-                borderRadius: 28,
-                padding: 28,
-                background:
-                  "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 36%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
-                border: "1px solid rgba(255,115,60,0.22)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.035), 0 24px 70px rgba(0,0,0,0.32)",
-              }}
-            >
+            <div>
               <div
                 style={{
-                  fontSize: 12,
-                  fontWeight: 900,
+                  fontSize: 11,
+                  fontWeight: 950,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   color: "#ff9a70",
                 }}
               >
-                {language === "it" ? "Valutazione salute store" : "Store Health Assessment"}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 18,
-                  fontSize: 28,
-                  maxWidth: 700,
-                  fontWeight: 950,
-                  lineHeight: 1.08,
-                  color: "#ffffff",
-                  letterSpacing: "-0.04em",
-                }}
-              >
                 {language === "it"
-                  ? topProfitLeak
-                    ? `${topProfitLeak.productTitle} rappresenta attualmente il principale rischio per la redditività dello store.`
-                    : "MarginLab non ha rilevato prodotti che rappresentino un rischio significativo per la redditività nel periodo analizzato."
-                  : topProfitLeak
-                    ? `${topProfitLeak.productTitle} is currently the biggest profitability risk.`
-                    : "MarginLab did not detect a critical product risk during this period."}
+                  ? "BRIEFING ESECUTIVO"
+                  : "EXECUTIVE BRIEF"}
               </div>
 
               <div
                 style={{
-                  marginTop: 24,
-                  padding: 22,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(135deg, rgba(255,115,60,0.12), rgba(8,13,22,0.92))",
-                  border: "1px solid rgba(255,115,60,0.20)",
+                  marginTop: 14,
+                  color: "#f8fafc",
+                  fontSize: 32,
+                  fontWeight: 950,
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.04em",
+                  maxWidth: 850,
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                  }}
-                >
-                  {language === "it" ? "Sintesi AI" : "AI Executive Summary"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 14,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 46,
-                      fontWeight: 950,
-                      lineHeight: 1,
-                      color: healthColor,
-                    }}
-                  >
-                    {healthScore}
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 950,
-                        color: "#f3f4f6",
-                        fontSize: 18,
-                      }}
-                    >
-                      {healthLabel}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 5,
-                        color: "rgba(255,255,255,0.62)",
-                        fontSize: 13,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {language === "it"
-                        ? "Analisi dello stato di salute dello store"
-                        : "MarginLab store health assessment"}
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 16,
-                    color: "rgba(255,255,255,0.75)",
-                    lineHeight: 1.65,
-                    fontSize: 14,
-                    fontWeight: 700,
-                  }}
-                >
-                  {language === "it"
-                    ? "MarginLab ha analizzato lo store e rilevato rischi di redditività legati a margini prodotto, costi mancanti e opportunità di profitto recuperabile."
-                    : "MarginLab analyzed your store and detected profitability risks related to product margins, missing costs and recoverable profit opportunities."}
-                </div>
+                {executiveBrief}
               </div>
 
               <div
                 style={{
                   marginTop: 22,
                   display: "grid",
+                  gridTemplateColumns: "repeat(4,minmax(0,1fr))",
                   gap: 12,
                 }}
               >
-                {(aiFindings.length > 0
-                  ? aiFindings
-                  : [
-                    language === "it"
-                      ? "Non sono stati rilevati problemi critici di margine nel periodo selezionato."
-                      : "No critical margin issues detected during the selected period.",
-
-                    language === "it"
-                      ? "Costi prodotto, sconti e rimborsi risultano stabili sulla base dei dati disponibili."
-                      : "Product costs, discounts and refunds appear stable based on available data.",
-                  ]
-                ).map((text) => (
+                {[
+                  {
+                    label:
+                      language === "it"
+                        ? "Profitto netto stimato"
+                        : "Estimated Net Profit",
+                    value: `$${estimatedNetProfit.toFixed(0)}`,
+                    note: `${estimatedNetMargin.toFixed(1)}%`,
+                    color:
+                      estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Profitto recuperabile"
+                        : "Recoverable Profit",
+                    value: `+$${recoverableProfit.toFixed(0)}`,
+                    note:
+                      language === "it"
+                        ? `${prioritizedProducts.length} priorità prodotto`
+                        : `${prioritizedProducts.length} product priorities`,
+                    color: "#22c55e",
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Rischi attivi"
+                        : "Active Risks",
+                    value: `${marginAlerts.length}`,
+                    note:
+                      language === "it"
+                        ? `${losingProducts.length} critici`
+                        : `${losingProducts.length} critical`,
+                    color:
+                      losingProducts.length > 0 ? "#ff6b4a" : "#f59e0b",
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Missione settimanale"
+                        : "Weekly Mission",
+                    value: `${missionActions}`,
+                    note:
+                      language === "it"
+                        ? `${missionMinutes} minuti stimati`
+                        : `${missionMinutes} estimated minutes`,
+                    color: "#38bdf8",
+                  },
+                ].map((item) => (
                   <div
-                    key={text}
+                    key={item.label}
                     style={{
-                      padding: 16,
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.045)",
-                      border: "1px solid rgba(255,115,60,0.14)",
-                      color: "rgba(255,255,255,0.76)",
-                      fontWeight: 750,
-                      lineHeight: 1.5,
+                      minWidth: 0,
+                      padding: 18,
+                      borderRadius: 18,
+                      background: "rgba(255,255,255,0.035)",
+                      border: "1px solid rgba(255,255,255,0.07)",
                     }}
                   >
-                    {text}
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.43)",
+                        fontSize: 9,
+                        fontWeight: 950,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.1em",
+                      }}
+                    >
+                      {item.label}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 9,
+                        color: item.color,
+                        fontSize: 25,
+                        fontWeight: 950,
+                        lineHeight: 1,
+                        letterSpacing: "-0.03em",
+                      }}
+                    >
+                      {item.value}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 7,
+                        color: "rgba(255,255,255,0.52)",
+                        fontSize: 11,
+                        fontWeight: 780,
+                      }}
+                    >
+                      {item.note}
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div
                 style={{
-                  marginTop: 22,
-                  padding: 20,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border: "1px solid rgba(255,115,60,0.22)",
+                  marginTop: 20,
+                  display: "flex",
+                  gap: 12,
+                  flexWrap: "wrap",
                 }}
               >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                    marginBottom: 14,
-                  }}
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate("/app/recommendations")}
                 >
                   {language === "it"
-                    ? "Anteprima del Report AI Settimanale"
-                    : "Weekly AI Report Preview"}
-                </div>
+                    ? "Apri il piano operativo →"
+                    : "Open Action Plan →"}
+                </button>
 
-                <div style={{ display: "grid", gap: 12 }}>
-                  {[
-                    {
-                      key: "health",
-                      label:
-                        language === "it"
-                          ? "Stato dello store"
-                          : "Store Health",
-                      value: weeklyReport.health,
-                    },
-                    {
-                      key: "mainRisk",
-                      label:
-                        language === "it"
-                          ? "Rischio principale"
-                          : "Main Risk",
-                      value: weeklyReport.mainRisk,
-                    },
-                    {
-                      key: "opportunity",
-                      label:
-                        language === "it" ? "Opportunità" : "Opportunity",
-                      value: weeklyReport.opportunity,
-                    },
-                    {
-                      key: "recommendation",
-                      label:
-                        language === "it"
-                          ? "Azione consigliata"
-                          : "Recommended Action",
-                      value: weeklyReport.recommendation,
-                    },
-                  ].map((item) => (
-                    <div key={item.key}>
-                      <div
-                        style={{
-                          color: "rgba(255,255,255,0.45)",
-                          fontSize: 11,
-                          fontWeight: 900,
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {item.label}
-                      </div>
-
-                      <div
-                        style={{
-                          color:
-                            item.key === "opportunity" ? "#22c55e" : "#f8fafc",
-                          fontWeight: 900,
-                          marginTop: 4,
-                          lineHeight: 1.45,
-                        }}
-                      >
-                        {item.value}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 18,
-                  padding: 20,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border: "1px solid rgba(255,115,60,0.18)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                    color: "#ff9a70",
-                    marginBottom: 14,
-                  }}
+                <button
+                  type="button"
+                  className="apply-button"
+                  onClick={() => navigate("/app/recovery-simulator")}
                 >
-                  {language === "it" ? "Anteprima avvisi sui margini" : "Margin Alerts Preview"}
-                </div>
+                  {language === "it"
+                    ? "Simula il recupero"
+                    : "Simulate Recovery"}
+                </button>
 
-                <div style={{ display: "grid", gap: 10 }}>
-                  {marginAlerts.map((alert) => (
-                    <div
-                      key={alert.message}
-                      style={{
-                        padding: 14,
-                        borderRadius: 14,
-                        background: "rgba(255,255,255,0.04)",
-                        border: "1px solid rgba(255,115,60,0.12)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 900,
-                          textTransform: "uppercase",
-                          color:
-                            alert.level === "Critical"
-                              ? "#ff6b4a"
-                              : alert.level === "Warning"
-                                ? "#f59e0b"
-                                : alert.level === "Opportunity"
-                                  ? "#22c55e"
-                                  : "#ff9a70",
-                          marginBottom: 5,
-                        }}
-                      >
-                        {alert.levelLabel}
-                      </div>
-
-                      <div
-                        style={{
-                          color: "#f8fafc",
-                          fontWeight: 800,
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {alert.message}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  className="apply-button"
+                  onClick={() => navigate("/app/forecasting")}
+                >
+                  {language === "it"
+                    ? "Verifica la previsione"
+                    : "Open Forecast"}
+                </button>
               </div>
             </div>
 
             <div
               style={{
-                borderRadius: 28,
-                padding: 28,
+                borderRadius: 26,
+                padding: 24,
                 background:
-                  "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                border: "1px solid rgba(255,115,60,0.18)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
+                  "radial-gradient(circle at center, rgba(34,197,94,0.13), transparent 42%), rgba(255,255,255,0.025)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                display: "grid",
+                placeItems: "center",
               }}
             >
-              <aiFetcher.Form
-                method="post"
-                onSubmit={() => {
-                  setShowAiReport(false);
-                }}
-              >
-                <input type="hidden" name="storeSummary" value={aiPrompt} />
-                <input
-                  type="hidden"
-                  name="language"
-                  value={language}
-                />
-
-                <button
-                  type="submit"
+              <div style={{ textAlign: "center" }}>
+                <div
                   style={{
-                    width: "100%",
-                    padding: "15px 18px",
-                    borderRadius: 16,
-                    border: "1px solid rgba(255,115,60,0.34)",
-                    background:
-                      "linear-gradient(135deg, rgba(255,90,54,0.30), rgba(255,115,60,0.14))",
-                    color: "#ffffff",
-                    fontWeight: 950,
-                    cursor: "pointer",
-                    boxShadow: "0 18px 42px rgba(255,90,54,0.10)",
+                    width: 188,
+                    height: 188,
+                    margin: "0 auto",
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    background: `conic-gradient(${healthColor} ${
+                      healthScore * 3.6
+                    }deg, rgba(255,255,255,0.08) 0deg)`,
+                    boxShadow: `0 0 54px ${healthColor}22`,
                   }}
                 >
-                  {aiFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Generazione analisi AI..."
-                      : "Generating AI Analysis..."
-                    : language === "it"
-                      ? "Genera analisi AI"
-                      : "Generate AI Analysis"}
-                </button>
-              </aiFetcher.Form>
+                  <div
+                    style={{
+                      width: 148,
+                      height: 148,
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      background:
+                        "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          color: "#f8fafc",
+                          fontSize: 52,
+                          fontWeight: 950,
+                          lineHeight: 1,
+                          letterSpacing: "-0.05em",
+                        }}
+                      >
+                        {healthScore}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 7,
+                          color: healthColor,
+                          fontSize: 10,
+                          fontWeight: 950,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        {language === "it"
+                          ? "Salute dello store"
+                          : "Store Health"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              {showAiReport && aiFetcher.data?.text && (
                 <div
                   style={{
                     marginTop: 18,
-                    padding: 24,
-                    borderRadius: 22,
-                    background:
-                      "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                    border: "1px solid rgba(255,115,60,0.28)",
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "#ff9a70",
-                      marginBottom: 14,
-                    }}
-                  >
-                    {language === "it" ? "Analisi AI del business" : "AI Business Analysis"}
-                  </div>
-
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,0.82)",
-                      fontSize: 15,
-                      lineHeight: 1.9,
-                      fontWeight: 700,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {aiFetcher.data.text}
-                  </div>
+                  {healthLabel}
                 </div>
-              )}
+
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: "rgba(255,255,255,0.52)",
+                    fontSize: 12,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Valutazione aggiornata sui dati attuali"
+                    : "Updated from current store data"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            display: "grid",
+            gridTemplateColumns: "repeat(5,minmax(0,1fr))",
+            gap: 14,
+          }}
+        >
+          {scorecards.map((card) => (
+            <div
+              key={card.key}
+              style={{
+                padding: 18,
+                borderRadius: 20,
+                background:
+                  "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+                border: "1px solid rgba(255,115,60,0.14)",
+              }}
+            >
+              <div
+                style={{
+                  color: "rgba(255,255,255,0.45)",
+                  fontSize: 9,
+                  fontWeight: 950,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                }}
+              >
+                {card.label}
+              </div>
 
               <div
                 style={{
-                  marginTop: 24,
-                  padding: 18,
-                  borderRadius: 18,
-                  background: "rgba(255,115,60,0.08)",
-                  border: "1px solid rgba(255,115,60,0.20)",
-                  color: "rgba(255,255,255,0.70)",
-                  lineHeight: 1.6,
-                  fontWeight: 700,
+                  marginTop: 11,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "end",
+                  gap: 10,
                 }}
               >
-                {language === "it"
-                  ? "🔒 Anteprima Growth. Questa analisi è attualmente disponibile in modalità anteprima. Le risposte AI avanzate e l'analisi conversazionale completa faranno parte del piano Growth."
-                  : "🔒 Growth preview. This analysis is currently available in preview mode. Advanced AI answers and full conversational analysis will be part of the Growth plan."}
+                <div
+                  style={{
+                    color: card.color,
+                    fontSize: 30,
+                    fontWeight: 950,
+                    lineHeight: 1,
+                  }}
+                >
+                  {card.value}
+                </div>
+
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.35)",
+                    fontSize: 10,
+                    fontWeight: 850,
+                  }}
+                >
+                  /100
+                </div>
               </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  height: 7,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.08)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${card.value}%`,
+                    height: "100%",
+                    borderRadius: 999,
+                    background: card.color,
+                    boxShadow: `0 0 14px ${card.color}55`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            display: "grid",
+            gridTemplateColumns: "1.1fr 0.9fr",
+            gap: 22,
+          }}
+        >
+          <div className="panel" style={{ margin: 0, padding: 24 }}>
+            <div className="panel-eyebrow">
+              {language === "it"
+                ? "PRIORITÀ DEL COPILOTA"
+                : "COPILOT PRIORITIES"}
+            </div>
+
+            <h2 className="panel-title" style={{ marginTop: 6 }}>
+              {language === "it"
+                ? "I prodotti da affrontare per primi"
+                : "The products to address first"}
+            </h2>
+
+            <div style={{ display: "grid", gap: 13, marginTop: 20 }}>
+              {topPriorityProducts.length > 0 ? (
+                topPriorityProducts.map((product, index) => (
+                  <div
+                    key={product.productId || product.productTitle}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "42px minmax(0,1fr) auto",
+                      gap: 14,
+                      alignItems: "center",
+                      padding: 16,
+                      borderRadius: 18,
+                      background: "rgba(255,255,255,0.035)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 13,
+                        display: "grid",
+                        placeItems: "center",
+                        color: "#ffffff",
+                        background:
+                          index === 0
+                            ? "rgba(255,107,74,0.18)"
+                            : "rgba(255,115,80,0.12)",
+                        border:
+                          index === 0
+                            ? "1px solid rgba(255,107,74,0.34)"
+                            : "1px solid rgba(255,115,80,0.22)",
+                        fontWeight: 950,
+                      }}
+                    >
+                      {index + 1}
+                    </div>
+
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          color: "#f8fafc",
+                          fontSize: 16,
+                          fontWeight: 950,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {product.productTitle}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 5,
+                          color: "rgba(255,255,255,0.52)",
+                          fontSize: 11,
+                          fontWeight: 760,
+                        }}
+                      >
+                        {language === "it" ? "Margine" : "Margin"}{" "}
+                        {product.marginPct.toFixed(1)}% ·{" "}
+                        {language === "it" ? "Ricavi" : "Revenue"} $
+                        {product.revenue.toFixed(0)}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 5,
+                          color:
+                            product.losing
+                              ? "#ff6b4a"
+                              : product.missingCost
+                                ? "#f59e0b"
+                                : "#38bdf8",
+                          fontSize: 11,
+                          fontWeight: 900,
+                        }}
+                      >
+                        {product.losing
+                          ? language === "it"
+                            ? "Venduto sotto costo"
+                            : "Selling below cost"
+                          : product.missingCost
+                            ? language === "it"
+                              ? "Costo mancante"
+                              : "Missing cost"
+                            : language === "it"
+                              ? "Margine da ottimizzare"
+                              : "Margin optimization"}
+                      </div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <div
+                        style={{
+                          color: "#22c55e",
+                          fontSize: 19,
+                          fontWeight: 950,
+                        }}
+                      >
+                        +${product.recoverableOpportunity.toFixed(0)}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="apply-button"
+                        style={{ marginTop: 8 }}
+                        onClick={() => navigate("/app/recovery-simulator")}
+                      >
+                        {language === "it" ? "Simula →" : "Simulate →"}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    padding: 20,
+                    borderRadius: 17,
+                    color: "#86efac",
+                    background: "rgba(34,197,94,0.08)",
+                    border: "1px solid rgba(34,197,94,0.20)",
+                    fontWeight: 800,
+                  }}
+                >
+                  {language === "it"
+                    ? "Nessuna priorità prodotto rilevata."
+                    : "No product priorities detected."}
+                </div>
+              )}
             </div>
           </div>
 
           <div
             style={{
-              marginTop: 28,
-              padding: 28,
               borderRadius: 26,
+              padding: 24,
               background:
-                "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
+                "radial-gradient(circle at top left, rgba(255,115,80,0.13), transparent 38%), linear-gradient(135deg, rgba(16,23,37,0.99), rgba(7,12,21,0.99))",
               border: "1px solid rgba(255,115,60,0.22)",
-              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.035)",
             }}
           >
             <div
               style={{
-                fontSize: 12,
-                fontWeight: 900,
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
                 color: "#ff9a70",
+                fontSize: 11,
+                fontWeight: 950,
+                letterSpacing: "0.13em",
+                textTransform: "uppercase",
               }}
             >
-              {language === "it" ? "Chiedi a MarginLab" : "Ask MarginLab"}
+              {language === "it"
+                ? "PERCHÉ QUESTE PRIORITÀ"
+                : "WHY THESE PRIORITIES"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 9,
+                color: "#f8fafc",
+                fontSize: 22,
+                fontWeight: 950,
+                lineHeight: 1.25,
+              }}
+            >
+              {language === "it"
+                ? "Il ragionamento dietro il piano"
+                : "The reasoning behind the plan"}
             </div>
 
             <div
               style={{
                 marginTop: 16,
-                color: "rgba(255,255,255,0.62)",
+                color: "rgba(255,255,255,0.76)",
                 fontSize: 14,
-                fontWeight: 700,
-                lineHeight: 1.6,
+                lineHeight: 1.75,
+                fontWeight: 730,
+              }}
+            >
+              {reasoningText}
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 11,
+              }}
+            >
+              <div
+                style={{
+                  padding: 15,
+                  borderRadius: 15,
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.42)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it"
+                    ? "Concentrazione"
+                    : "Concentration"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: "#22c55e",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {priorityConcentration.toFixed(0)}%
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 15,
+                  borderRadius: 15,
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.42)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it"
+                    ? "Prodotti prioritari"
+                    : "Priority Products"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: "#f8fafc",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {topPriorityProducts.length}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              style={{ width: "100%", marginTop: 18 }}
+              onClick={() => navigate("/app/recommendations")}
+            >
+              {language === "it"
+                ? "Vai al Profit Action Center →"
+                : "Open Profit Action Center →"}
+            </button>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            display: "grid",
+            gridTemplateColumns: "0.9fr 1.1fr",
+            gap: 22,
+          }}
+        >
+          <div
+            style={{
+              borderRadius: 26,
+              padding: 24,
+              background:
+                "radial-gradient(circle at top right, rgba(56,189,248,0.10), transparent 40%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+              border: "1px solid rgba(56,189,248,0.18)",
+            }}
+          >
+            <div
+              style={{
+                color: "#7dd3fc",
+                fontSize: 11,
+                fontWeight: 950,
+                letterSpacing: "0.13em",
+                textTransform: "uppercase",
               }}
             >
               {language === "it"
-                ? "Fai una domanda specifica sulla redditività e MarginLab risponderà utilizzando i dati del negozio, i rischi dei prodotti, le opportunità di recupero e le ipotesi di costo."
-                : "Ask a specific profitability question and MarginLab will answer using your store data, product risks, recovery opportunities and profit assumptions."}
+                ? "MISSIONE DELLA SETTIMANA"
+                : "WEEKLY MISSION"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 11,
+                color: "#f8fafc",
+                fontSize: 23,
+                fontWeight: 950,
+                lineHeight: 1.25,
+              }}
+            >
+              {weeklyReport.recommendation}
             </div>
 
             <div
               style={{
                 marginTop: 18,
                 display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 12,
+                gridTemplateColumns: "repeat(3,1fr)",
+                gap: 10,
               }}
             >
               {[
                 {
-                  id: "profitRisk",
-                  label: topProfitLeak
-                    ? language === "it"
-                      ? `Perché ${topProfitLeak.productTitle} è il rischio principale?`
-                      : `Why is ${topProfitLeak.productTitle} my biggest risk?`
-                    : language === "it"
-                      ? "Perché i miei profitti sono a rischio?"
-                      : "Why is my profit at risk?",
+                  label: language === "it" ? "Azioni" : "Actions",
+                  value: `${missionActions}`,
+                  color: "#f8fafc",
                 },
                 {
-                  id: "marginPressure",
                   label:
-                    summary.refunds > 0
-                      ? language === "it"
-                        ? "I rimborsi stanno riducendo la redditività?"
-                        : "Are refunds hurting profitability?"
-                      : language === "it"
-                        ? "Cosa sta riducendo i miei margini?"
-                        : "What is hurting my margin?",
+                    language === "it" ? "Tempo stimato" : "Estimated Time",
+                  value: `${missionMinutes}m`,
+                  color: "#38bdf8",
                 },
                 {
-                  id: "priority",
                   label:
-                    missingCostProducts.length > 0
-                      ? language === "it"
-                        ? `Perché devo completare prima i ${missingCostProducts.length} costi mancanti?`
-                        : `Why should I fix ${missingCostProducts.length} missing costs first?`
-                      : language === "it"
-                        ? "Cosa dovrei controllare per prima cosa?"
-                        : "What should I check first?",
+                    language === "it" ? "Potenziale" : "Potential",
+                  value: `+$${recoverableProfit.toFixed(0)}`,
+                  color: "#22c55e",
                 },
-                {
-                  id: "fastestImprovement",
-                  label:
-                    recoverableProfit > 0
-                      ? language === "it"
-                        ? "Quanto profitto posso recuperare?"
-                        : "How much profit can I recover?"
-                      : language === "it"
-                        ? "Qual è il modo più rapido per migliorare i profitti?"
-                        : "What would improve profit fastest?",
-                },
-                {
-                  id: "productPriorities",
-                  label:
-                    language === "it"
-                      ? "Quali prodotti dovrei sistemare per primi?"
-                      : "Which products should I fix first?",
-                },
-                {
-                  id: "pricingOpportunity",
-                  label:
-                    language === "it"
-                      ? "Quale prodotto offre la migliore opportunità di aumento prezzo?"
-                      : "Which product has the best pricing opportunity?",
-                },
-                {
-                  id: "hiddenCosts",
-                  label:
-                    language === "it"
-                      ? "Qual è il costo nascosto più importante?"
-                      : "What is my biggest hidden cost?",
-                },
-                {
-                  id: "growthOpportunity",
-                  label:
-                    language === "it"
-                      ? "Dove posso aumentare i profitti più rapidamente?"
-                      : "Where can I increase profit the fastest?",
-                },
-              ].map((presetQuestion) => (
-                <button
-                  key={presetQuestion.id}
-                  onClick={() => {
-                    setSelectedQuestion(
-                      presetQuestion.id as SelectedQuestion,
-                    );
-                    setQuestion(presetQuestion.label);
-
-                    const formData = new FormData();
-
-                    formData.append("intent", "ask");
-                    formData.append("question", presetQuestion.label);
-                    formData.append("storeSummary", aiPrompt);
-                    formData.append("language", language);
-
-                    askFetcher.submit(formData, {
-                      method: "post",
-                    });
-                  }}
+              ].map((item) => (
+                <div
+                  key={item.label}
                   style={{
-                    padding: "14px 16px",
-                    borderRadius: 14,
-                    border:
-                      selectedQuestion === presetQuestion.id
-                        ? "1px solid rgba(255,115,60,0.45)"
-                        : "1px solid rgba(255,115,60,0.14)",
-                    background:
-                      selectedQuestion === presetQuestion.id
-                        ? "rgba(255,115,60,0.14)"
-                        : "rgba(255,115,60,0.08)",
-                    color: "#f8fafc",
-                    fontWeight: 850,
-                    textAlign: "left",
-                    cursor: "pointer",
-                    minHeight: 76,
-                    height: "100%",
+                    padding: 14,
+                    borderRadius: 15,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
                   }}
                 >
-                  {presetQuestion.label}
-                </button>
+                  <div
+                    style={{
+                      color: "rgba(255,255,255,0.42)",
+                      fontSize: 9,
+                      fontWeight: 950,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 7,
+                      color: item.color,
+                      fontSize: 21,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {item.value}
+                  </div>
+                </div>
               ))}
             </div>
 
-            <askFetcher.Form method="post">
-              <input type="hidden" name="intent" value="ask" />
+            <button
+              type="button"
+              className="primary-button"
+              style={{ width: "100%", marginTop: 18 }}
+              onClick={() => navigate("/app/recommendations")}
+            >
+              {language === "it"
+                ? "Inizia la missione →"
+                : "Start Mission →"}
+            </button>
+          </div>
+
+          <div className="panel" style={{ margin: 0, padding: 24 }}>
+            <div className="panel-eyebrow">
+              {language === "it"
+                ? "FEED DELLE DECISIONI"
+                : "DECISION FEED"}
+            </div>
+
+            <h2 className="panel-title" style={{ marginTop: 6 }}>
+              {language === "it"
+                ? "I segnali che richiedono attenzione"
+                : "Signals that need attention"}
+            </h2>
+
+            <div style={{ display: "grid", gap: 11, marginTop: 19 }}>
+              {decisionFeed.length > 0 ? (
+                decisionFeed.map((item) => (
+                  <div
+                    key={`${item.when}-${item.title}`}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "10px minmax(0,1fr)",
+                      gap: 13,
+                      padding: 14,
+                      borderRadius: 16,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 9,
+                        height: 9,
+                        marginTop: 5,
+                        borderRadius: "50%",
+                        background: item.color,
+                        boxShadow: `0 0 14px ${item.color}88`,
+                      }}
+                    />
+
+                    <div>
+                      <div
+                        style={{
+                          color: item.color,
+                          fontSize: 9,
+                          fontWeight: 950,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.1em",
+                        }}
+                      >
+                        {item.when}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 5,
+                          color: "#f8fafc",
+                          fontSize: 14,
+                          fontWeight: 900,
+                        }}
+                      >
+                        {item.title}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 4,
+                          color: "rgba(255,255,255,0.52)",
+                          fontSize: 11,
+                          fontWeight: 730,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {item.detail}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div
+                  style={{
+                    padding: 20,
+                    borderRadius: 17,
+                    color: "#86efac",
+                    background: "rgba(34,197,94,0.08)",
+                    border: "1px solid rgba(34,197,94,0.20)",
+                    fontWeight: 800,
+                  }}
+                >
+                  {language === "it"
+                    ? "Nessun nuovo segnale critico."
+                    : "No new critical signals."}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 26,
+            padding: 24,
+            background:
+              "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+            border: "1px solid rgba(255,115,60,0.20)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: "#ff9a70",
+                  fontSize: 11,
+                  fontWeight: 950,
+                  letterSpacing: "0.13em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {language === "it"
+                  ? "ANALISI APPROFONDITA"
+                  : "DEEP ANALYSIS"}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 8,
+                  color: "#f8fafc",
+                  fontSize: 22,
+                  fontWeight: 950,
+                }}
+              >
+                {language === "it"
+                  ? "Genera il report completo del consulente"
+                  : "Generate the full advisor report"}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  color: "rgba(255,255,255,0.54)",
+                  fontSize: 12,
+                  fontWeight: 730,
+                }}
+              >
+                {language === "it"
+                  ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
+                  : "AI will use all real store data already loaded on this page."}
+              </div>
+            </div>
+
+            <aiFetcher.Form
+              method="post"
+              onSubmit={() => setShowAiReport(false)}
+            >
               <input type="hidden" name="storeSummary" value={aiPrompt} />
               <input type="hidden" name="language" value={language} />
 
-              <div
-                style={{
-                  marginTop: 18,
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 12,
-                }}
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={aiFetcher.state !== "idle"}
               >
-                <input
-                  name="question"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder={
-                    language === "it"
-                      ? "Fai una domanda sulla redditività..."
-                      : "Ask a profitability question..."
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "15px 16px",
-                    borderRadius: 14,
-                    border: "1px solid rgba(255,115,60,0.18)",
-                    background: "rgba(255,255,255,0.04)",
-                    color: "#fff",
-                    outline: "none",
-                    fontWeight: 800,
-                  }}
-                />
-
-                <button
-                  type="submit"
-                  style={{
-                    padding: "0 28px",
-                    borderRadius: 14,
-                    border: "1px solid rgba(255,115,60,0.22)",
-                    background:
-                      "linear-gradient(135deg, rgba(255,115,60,0.24), rgba(255,115,60,0.10))",
-                    color: "#fff",
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {askFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Elaborazione..."
-                      : "Thinking..."
-                    : language === "it"
-                      ? "Chiedi all'AI"
-                      : "Ask AI"}
-                </button>
-              </div>
-            </askFetcher.Form>
-
-            {askFetcher.data?.text && (
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: 22,
-                  borderRadius: 20,
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-                  border: "1px solid rgba(34,197,94,0.22)",
-                  color: "rgba(255,255,255,0.84)",
-                  lineHeight: 1.75,
-                  whiteSpace: "pre-wrap",
-                  fontWeight: 750,
-                }}
-              >
-                {askFetcher.data.text}
-              </div>
-            )}
+                {aiFetcher.state !== "idle"
+                  ? language === "it"
+                    ? "Analisi in corso..."
+                    : "Analyzing..."
+                  : language === "it"
+                    ? "Genera analisi AI →"
+                    : "Generate AI Analysis →"}
+              </button>
+            </aiFetcher.Form>
           </div>
+
+          {showAiReport && aiFetcher.data?.text && (
+            <div
+              style={{
+                marginTop: 20,
+                padding: 22,
+                borderRadius: 19,
+                background: "rgba(255,255,255,0.035)",
+                border: "1px solid rgba(34,197,94,0.20)",
+                color: "rgba(255,255,255,0.84)",
+                fontSize: 14,
+                lineHeight: 1.85,
+                fontWeight: 720,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {aiFetcher.data.text}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 26,
+            padding: 24,
+            background:
+              "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+            border: "1px solid rgba(255,115,60,0.20)",
+          }}
+        >
+          <div
+            style={{
+              color: "#ff9a70",
+              fontSize: 11,
+              fontWeight: 950,
+              letterSpacing: "0.13em",
+              textTransform: "uppercase",
+            }}
+          >
+            {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
+          </div>
+
+          <div
+            style={{
+              marginTop: 8,
+              color: "#f8fafc",
+              fontSize: 22,
+              fontWeight: 950,
+            }}
+          >
+            {language === "it"
+              ? "Approfondisci una decisione specifica"
+              : "Explore a specific decision"}
+          </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              color: "rgba(255,255,255,0.54)",
+              fontSize: 12,
+              fontWeight: 730,
+              lineHeight: 1.5,
+            }}
+          >
+            {language === "it"
+              ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
+              : "Questions adapt to the risks and opportunities detected in your store."}
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+              gap: 11,
+            }}
+          >
+            {dynamicQuestions.map((presetQuestion) => (
+              <button
+                key={presetQuestion.id}
+                type="button"
+                onClick={() => {
+                  setSelectedQuestion(
+                    presetQuestion.id as SelectedQuestion,
+                  );
+                  setQuestion(presetQuestion.label);
+
+                  const formData = new FormData();
+                  formData.append("intent", "ask");
+                  formData.append("question", presetQuestion.label);
+                  formData.append("storeSummary", aiPrompt);
+                  formData.append("language", language);
+
+                  askFetcher.submit(formData, {
+                    method: "post",
+                  });
+                }}
+                style={{
+                  padding: "14px 15px",
+                  minHeight: 76,
+                  borderRadius: 15,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  color: "#f8fafc",
+                  background:
+                    selectedQuestion === presetQuestion.id
+                      ? "rgba(255,115,80,0.14)"
+                      : "rgba(255,255,255,0.035)",
+                  border:
+                    selectedQuestion === presetQuestion.id
+                      ? "1px solid rgba(255,115,80,0.42)"
+                      : "1px solid rgba(255,255,255,0.07)",
+                  fontSize: 12,
+                  fontWeight: 850,
+                  lineHeight: 1.4,
+                }}
+              >
+                {presetQuestion.label}
+              </button>
+            ))}
+          </div>
+
+          <askFetcher.Form method="post">
+            <input type="hidden" name="intent" value="ask" />
+            <input type="hidden" name="storeSummary" value={aiPrompt} />
+            <input type="hidden" name="language" value={language} />
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "1fr auto",
+                gap: 11,
+              }}
+            >
+              <input
+                name="question"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                placeholder={
+                  language === "it"
+                    ? "Fai una domanda sulla redditività..."
+                    : "Ask a profitability question..."
+                }
+                style={{
+                  width: "100%",
+                  padding: "15px 16px",
+                  borderRadius: 14,
+                  color: "#ffffff",
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,115,60,0.18)",
+                  outline: "none",
+                  fontWeight: 800,
+                }}
+              />
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={askFetcher.state !== "idle" || !question.trim()}
+              >
+                {askFetcher.state !== "idle"
+                  ? language === "it"
+                    ? "Elaborazione..."
+                    : "Thinking..."
+                  : language === "it"
+                    ? "Chiedi all'AI →"
+                    : "Ask AI →"}
+              </button>
+            </div>
+          </askFetcher.Form>
+
+          {askFetcher.data?.text && (
+            <div
+              style={{
+                marginTop: 18,
+                padding: 21,
+                borderRadius: 18,
+                background: "rgba(34,197,94,0.055)",
+                border: "1px solid rgba(34,197,94,0.20)",
+                color: "rgba(255,255,255,0.84)",
+                lineHeight: 1.8,
+                fontSize: 14,
+                fontWeight: 730,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {askFetcher.data.text}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 22,
+            padding: 18,
+            borderRadius: 18,
+            background: "rgba(255,115,60,0.07)",
+            border: "1px solid rgba(255,115,60,0.18)",
+            color: "rgba(255,255,255,0.64)",
+            lineHeight: 1.6,
+            fontSize: 12,
+            fontWeight: 700,
+          }}
+        >
+          {language === "it"
+            ? "Profit Copilot utilizza esclusivamente i dati Shopify, le ipotesi di costo e i segnali di redditività disponibili. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
+            : "Profit Copilot uses only available Shopify data, saved cost assumptions and profitability signals. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
         </div>
       </div>
     </div>
