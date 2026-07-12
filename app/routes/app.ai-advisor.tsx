@@ -1048,9 +1048,9 @@ Rules:
 
             <div
               style={{
-                marginTop: 20,
+                marginTop: 18,
                 display: "grid",
-                gridTemplateColumns: "repeat(4,1fr)",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
                 gap: 12,
               }}
             >
@@ -1161,7 +1161,8 @@ Rules:
                     fontWeight: 850,
                     textAlign: "left",
                     cursor: "pointer",
-                    minHeight: 68,
+                    minHeight: 76,
+                    height: "100%",
                   }}
                 >
                   {presetQuestion.label}
