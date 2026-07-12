@@ -3,7 +3,7 @@ import * as React from "react";
 import type {
   ProfitAlert,
   ProfitAlertSeverity,
-} from "~/utils/profit-monitor.server";
+} from "~/utils/profit-monitor";
 
 import { getStoredLanguage } from "~/utils/i18n";
 import { money } from "~/utils/margin";

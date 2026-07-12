@@ -12,10 +12,7 @@ import DashboardHero from "~/components/dashboard/DashboardHero";
 import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import {
-  generateProfitAlerts,
-  type ProfitAlert,
-} from "~/utils/profit-monitor.server";
+import { generateProfitAlerts } from "~/utils/profit-monitor";
 
 import {
   type LoaderData,
@@ -31,15 +28,11 @@ export const links = () => [
   },
 ];
 
-type DashboardLoaderData = LoaderData & {
-  alerts: ProfitAlert[];
-};
-
 export const loader = async ({
   request,
 }: {
   request: Request;
-}): Promise<DashboardLoaderData> => {
+}): Promise<LoaderData> => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
@@ -53,30 +46,16 @@ export const loader = async ({
     });
   }
 
-  const dashboardData = await loadMarginDashboardData({
+  return loadMarginDashboardData({
     admin,
     session,
     period,
   });
-
-  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const alerts = generateProfitAlerts({
-    summary: dashboardData.summary,
-    rows: dashboardData.rows,
-    language,
-    period,
-  });
-
-  return {
-    ...dashboardData,
-    alerts,
-  };
 };
 
 export default function DashboardV2() {
-  const { summary, rows, trend, period, alerts } =
-    useLoaderData() as DashboardLoaderData;
+  const { summary, rows, trend, period } =
+    useLoaderData() as LoaderData;
 
 
   const navigate = useNavigate();
@@ -84,6 +63,17 @@ export default function DashboardV2() {
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
   const language = getStoredLanguage();
+
+  const alerts = React.useMemo(
+    () =>
+      generateProfitAlerts({
+        summary,
+        rows,
+        language,
+        period,
+      }),
+    [summary, rows, language, period],
+  );
 
   const alertCounts = React.useMemo(
     () => ({
@@ -707,7 +697,12 @@ export default function DashboardV2() {
   ].filter(Boolean);
 
   function setPeriod(next: "7" | "30" | "90") {
-    navigate(`/app?period=${next}`);
+    const params = new URLSearchParams(window.location.search);
+
+    params.set("period", next);
+    params.set("lang", language);
+
+    navigate(`/app?${params.toString()}`);
   }
 
   function scrollToSection(id: string) {
