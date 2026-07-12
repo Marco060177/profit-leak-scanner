@@ -1,21 +1,14 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
-import { translations, getStoredLanguage } from "~/utils/i18n";
+import { getStoredLanguage } from "~/utils/i18n";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import ScoreCard from "~/components/dashboard/ScoreCard";
 import TrendChart from "~/components/dashboard/TrendChart";
-import RiskDistribution from "~/components/dashboard/RiskDistribution";
-import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
-import RecommendationsPanel from "~/components/dashboard/RecommendationsPanel";
-import InsightsPanel from "~/components/dashboard/InsightsPanel";
 import KpiGrid from "~/components/dashboard/KpiGrid";
 import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
-import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import DashboardHero from "~/components/dashboard/DashboardHero";
-import AiInsightsCenter from "~/components/dashboard/AiInsightsCenter";
-import ContributionInsightsPanel from "~/components/dashboard/ContributionInsightsPanel";
 import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
@@ -82,15 +75,8 @@ export const loader = async ({
 };
 
 export default function DashboardV2() {
-  const {
-    summary,
-    rows,
-    trend,
-    billingActive,
-    period,
-    shopHandle,
-    alerts,
-  } = useLoaderData() as DashboardLoaderData;
+  const { summary, rows, trend, period, alerts } =
+    useLoaderData() as DashboardLoaderData;
 
 
   const navigate = useNavigate();
@@ -98,6 +84,20 @@ export default function DashboardV2() {
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
   const language = getStoredLanguage();
+
+  const alertCounts = React.useMemo(
+    () => ({
+      critical: alerts.filter((alert) => alert.severity === "critical").length,
+      warning: alerts.filter((alert) => alert.severity === "warning").length,
+      opportunity: alerts.filter(
+        (alert) => alert.severity === "opportunity",
+      ).length,
+      info: alerts.filter((alert) => alert.severity === "info").length,
+    }),
+    [alerts],
+  );
+
+  const primaryAlert = alerts[0] ?? null;
 
   const analysisSteps =
     language === "it"
@@ -808,21 +808,6 @@ export default function DashboardV2() {
 
 
 
-  const td = {
-    ...translations.en.dashboard,
-    ...(translations[language]?.dashboard ?? {}),
-  };
-
-  function tr(
-    text: string | undefined,
-    values: Record<string, string | number>,
-  ) {
-    return Object.entries(values).reduce(
-      (result, [key, value]) =>
-        result.replace(`{{${key}}}`, String(value)),
-      text ?? "",
-    );
-  }
 
   if (dashboardLoading) {
     return (
@@ -846,7 +831,7 @@ export default function DashboardV2() {
   return (
 
     <div className="dashboard-shell">
-      <div className="dashboard-container"></div>
+      <div className="dashboard-container">
       <DashboardHero
         period={period}
         setPeriod={setPeriod}
@@ -858,8 +843,6 @@ export default function DashboardV2() {
         setAnalysisLoading={setAnalysisLoading}
         setAnalysisText={setAnalysisText}
       />
-
-      
 
       {/* {!billingActive ? (
               <div className="billing-banner">
@@ -891,179 +874,6 @@ export default function DashboardV2() {
         navigate={navigate}
       />
 
-      <section className="ai-insights-center">
-        <div className="ai-insights-header">
-          <span>
-            {getStoredLanguage() === "it"
-              ? "BRIEF REDDITIVITÀ"
-              : "PROFIT INTELLIGENCE BRIEF"}
-          </span>
-
-          <h2>
-            {getStoredLanguage() === "it"
-              ? "Insight Operativi sui Profitti"
-              : "Operational Profit Insights"}
-          </h2>
-
-          <p>
-            {getStoredLanguage() === "it"
-              ? "MarginLab ha analizzato il tuo negozio Shopify e rilevato rischi operativi che influenzano la redditività e l'efficienza dei prezzi."
-              : "MarginLab analyzed your Shopify store and detected operational risks affecting profitability and pricing efficiency."}
-          </p>
-        </div>
-
-        <div className="ai-insights-grid">
-          <article className="ai-insight-card danger">
-            <div className="ai-card-top">
-              <span>
-                {getStoredLanguage() === "it"
-                  ? "Rischio Redditività"
-                  : "Profitability Risk"}
-              </span>
-              <strong>
-                {getStoredLanguage() === "it"
-                  ? "Critico"
-                  : "Critical"}
-              </strong>
-            </div>
-
-            <h3>
-              {getStoredLanguage() === "it"
-                ? "I prodotti a basso margine stanno riducendo la redditività del negozio"
-                : "Low-margin products are reducing store profitability"}
-            </h3>
-
-            <p>
-              {getStoredLanguage() === "it"
-                ? "Alcuni prodotti stanno lavorando sotto le soglie di margine target, riducendo il profitto complessivo del negozio."
-                : "Several products are currently operating below target margin thresholds, reducing overall contribution profit across the store."}
-            </p>
-
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">
-                {getStoredLanguage() === "it"
-                  ? "Azione consigliata"
-                  : "Recommended action"}
-              </div>
-
-              <div className="ai-recommendation-text">
-                {getStoredLanguage() === "it"
-                  ? "Controlla struttura prezzi, sconti e costi prodotto per gli articoli meno performanti."
-                  : "Review pricing structure, discounts and product costs for underperforming products."}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/app/products")}
-            >
-              {getStoredLanguage() === "it"
-                ? "Analizza prodotti coinvolti"
-                : "Analyze affected products"}
-            </button>
-          </article>
-
-          <article className="ai-insight-card warning">
-            <div className="ai-card-top">
-              <span>
-                {getStoredLanguage() === "it"
-                  ? "Integrità Dati"
-                  : "Data Integrity"}
-              </span>
-              <strong>
-                {getStoredLanguage() === "it"
-                  ? "Avviso"
-                  : "Warning"}
-              </strong>
-            </div>
-
-            <h3>
-              {getStoredLanguage() === "it"
-                ? "I costi prodotto mancanti riducono l'accuratezza del profitto"
-                : "Missing product costs are affecting profit accuracy"}
-            </h3>
-
-            <p>
-              {getStoredLanguage() === "it"
-                ? "Il calcolo dei margini può essere incompleto perché alcuni prodotti Shopify non hanno ancora il costo inserito."
-                : "Margin calculations may be incomplete because some Shopify products still have missing cost information."}
-            </p>
-
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">
-                {getStoredLanguage() === "it"
-                  ? "Azione consigliata"
-                  : "Recommended action"}
-              </div>
-
-              <div className="ai-recommendation-text">
-                {getStoredLanguage() === "it"
-                  ? "Completa i costi mancanti per migliorare il monitoraggio dei margini e l'affidabilità dell'analisi AI."
-                  : "Complete missing cost fields to improve margin tracking and AI analysis reliability."}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/app/products")}
-            >
-              {getStoredLanguage() === "it"
-                ? "Correggi costi mancanti"
-                : "Fix missing costs"}
-            </button>
-          </article>
-
-          <article className="ai-insight-card recovery">
-            <div className="ai-card-top">
-              <span>
-                {getStoredLanguage() === "it"
-                  ? "Opportunità di Recupero"
-                  : "Recovery Opportunity"}
-              </span>
-              <strong>
-                {getStoredLanguage() === "it"
-                  ? "Rilevata"
-                  : "Detected"}
-              </strong>
-            </div>
-
-            <h3>
-              {getStoredLanguage() === "it"
-                ? "Identificate opportunità di ottimizzazione prezzi"
-                : "Pricing optimization opportunities identified"}
-            </h3>
-
-            <p>
-              {getStoredLanguage() === "it"
-                ? "MarginLab ha rilevato prodotti con possibili miglioramenti di prezzo in grado di aumentare la redditività mensile."
-                : "MarginLab detected products with potential pricing improvements capable of increasing monthly profitability."}
-            </p>
-
-            <div className="ai-recommendation-box">
-              <div className="ai-recommendation-label">
-                {getStoredLanguage() === "it"
-                  ? "Azione consigliata"
-                  : "Recommended action"}
-              </div>
-
-              <div className="ai-recommendation-text">
-                {getStoredLanguage() === "it"
-                  ? "Controlla i suggerimenti di ottimizzazione e confronta gli scenari di prezzo target."
-                  : "Review optimization suggestions and compare target pricing scenarios."}
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => navigate("/app/recommendations")}
-            >
-              {getStoredLanguage() === "it"
-                ? "Controlla raccomandazioni"
-                : "Review recommendations"}
-            </button>
-          </article>
-        </div>
-      </section>
 
       <KpiGrid
         items={[
@@ -1236,9 +1046,184 @@ export default function DashboardV2() {
         visualMarginPct={visualMarginPct}
       />
 
+      <section
+        className="panel"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,0.75fr)",
+          gap: 22,
+          alignItems: "stretch",
+        }}
+      >
+        <div>
+          <div className="section-eyebrow">
+            {language === "it"
+              ? "RIEPILOGO ESECUTIVO"
+              : "EXECUTIVE SUMMARY"}
+          </div>
+
+          <div
+            className="section-title"
+            style={{ marginTop: 8, fontSize: 28 }}
+          >
+            {language === "it"
+              ? "Le informazioni che contano oggi"
+              : "What matters today"}
+          </div>
+
+          <div
+            style={{
+              marginTop: 11,
+              maxWidth: 760,
+              color: "rgba(226,232,240,0.72)",
+              fontSize: 14,
+              lineHeight: 1.7,
+              fontWeight: 720,
+            }}
+          >
+            {language === "it"
+              ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il profitto recuperabile stimato nel periodo è ${money(recoverableProfit)}.`
+              : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated recoverable profit for the period is ${money(recoverableProfit)}.`}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+              gap: 11,
+              marginTop: 20,
+            }}
+          >
+            {[
+              {
+                label: language === "it" ? "Critici" : "Critical",
+                value: alertCounts.critical,
+                color: "#ff6b4a",
+              },
+              {
+                label: language === "it" ? "Avvisi" : "Warnings",
+                value: alertCounts.warning,
+                color: "#f59e0b",
+              },
+              {
+                label: language === "it" ? "Opportunità" : "Opportunities",
+                value: alertCounts.opportunity,
+                color: "#22c55e",
+              },
+              {
+                label: language === "it" ? "A rischio" : "At risk",
+                value: visualProductsAtRisk,
+                color: "#38bdf8",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                style={{
+                  padding: 15,
+                  borderRadius: 16,
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.48)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  {item.label}
+                </div>
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: item.color,
+                    fontSize: 24,
+                    lineHeight: 1,
+                    fontWeight: 950,
+                  }}
+                >
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div
+          style={{
+            padding: 20,
+            borderRadius: 20,
+            background:
+              "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 42%), rgba(5,10,18,0.55)",
+            border: "1px solid rgba(255,115,60,0.20)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                color: "#ff9a70",
+                fontSize: 10,
+                fontWeight: 950,
+                textTransform: "uppercase",
+                letterSpacing: "0.11em",
+              }}
+            >
+              {language === "it" ? "PROSSIMA DECISIONE" : "NEXT DECISION"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 10,
+                color: "#f8fafc",
+                fontSize: 19,
+                lineHeight: 1.35,
+                fontWeight: 950,
+              }}
+            >
+              {primaryAlert?.title ??
+                (language === "it"
+                  ? "Nessuna azione urgente rilevata"
+                  : "No urgent action detected")}
+            </div>
+
+            <div
+              style={{
+                marginTop: 8,
+                color: "rgba(226,232,240,0.56)",
+                fontSize: 12,
+                lineHeight: 1.55,
+                fontWeight: 720,
+              }}
+            >
+              {primaryAlert?.description ??
+                (language === "it"
+                  ? "Continua a monitorare margini, costi e opportunità."
+                  : "Continue monitoring margins, costs and opportunities.")}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="primary-button"
+            style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
+            onClick={() =>
+              navigate(primaryAlert?.route ?? "/app/ai-advisor")
+            }
+          >
+            {primaryAlert?.actionLabel ??
+              (language === "it" ? "Apri Profit Copilot" : "Open Profit Copilot")}
+            {" →"}
+          </button>
+        </div>
+      </section>
 
 
-      <InsightsPanel insights={insights as any[]} />
 
       <TopLeaksPanel
         topLeaks={topLeaks}
@@ -1246,10 +1231,7 @@ export default function DashboardV2() {
         severityBackground={severityBackground}
         severityBorder={severityBorder}
       />
-
-
-
+      </div>
     </div>
-
   );
 }
