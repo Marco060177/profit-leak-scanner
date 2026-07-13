@@ -5,6 +5,7 @@ import type {
   ProfitAlertEffort,
   ProfitBusinessAction,
 } from "~/utils/profit-monitor";
+
 import { getStoredLanguage } from "~/utils/i18n";
 import { money } from "~/utils/margin";
 
@@ -13,8 +14,6 @@ type Props = {
   navigate: (path: string) => void;
   maxItems?: number;
 };
-
-type Language = "it" | "en";
 
 type ActionStyle = {
   label: string;
@@ -26,9 +25,9 @@ type ActionStyle = {
 
 function getActionStyle(
   action: ProfitBusinessAction,
-  language: Language,
+  language: "it" | "en",
 ): ActionStyle {
-  const styles: Record<ProfitBusinessAction, ActionStyle> = {
+  return {
     action: {
       label: language === "it" ? "Intervieni" : "Action",
       color: "#ff7b61",
@@ -40,31 +39,29 @@ function getActionStyle(
       label: language === "it" ? "Controlla" : "Review",
       color: "#fbbf24",
       background: "rgba(245,158,11,0.10)",
-      border: "rgba(245,158,11,0.26)",
+      border: "rgba(245,158,11,0.25)",
       icon: "◌",
     },
     optimize: {
       label: language === "it" ? "Ottimizza" : "Optimize",
       color: "#4ade80",
       background: "rgba(34,197,94,0.10)",
-      border: "rgba(34,197,94,0.26)",
+      border: "rgba(34,197,94,0.25)",
       icon: "↗",
     },
     monitor: {
       label: language === "it" ? "Monitora" : "Monitor",
       color: "#7dd3fc",
       background: "rgba(56,189,248,0.10)",
-      border: "rgba(56,189,248,0.26)",
+      border: "rgba(56,189,248,0.25)",
       icon: "◉",
     },
-  };
-
-  return styles[action];
+  }[action];
 }
 
 function getEffortLabel(
   effort: ProfitAlertEffort,
-  language: Language,
+  language: "it" | "en",
 ) {
   if (language === "it") {
     if (effort === "easy") return "Facile";
@@ -79,21 +76,56 @@ function getEffortLabel(
 
 function getBusinessStatus(alerts: ProfitAlert[]) {
   if (alerts.some((alert) => alert.businessAction === "action")) {
-    return { key: "action", color: "#ff6b4a" } as const;
+    return { key: "action", color: "#ff6b4a" };
   }
 
   if (alerts.some((alert) => alert.businessAction === "review")) {
-    return { key: "review", color: "#f59e0b" } as const;
+    return { key: "review", color: "#f59e0b" };
   }
 
   if (alerts.some((alert) => alert.businessAction === "optimize")) {
-    return { key: "optimize", color: "#22c55e" } as const;
+    return { key: "optimize", color: "#22c55e" };
   }
 
-  return { key: "stable", color: "#38bdf8" } as const;
+  return { key: "stable", color: "#38bdf8" };
 }
 
-function Metric({
+function getModuleButtonLabel(
+  alert: ProfitAlert,
+  language: "it" | "en",
+) {
+  if (language === "en") {
+    return `Open ${alert.recommendedModule}`;
+  }
+
+  if (alert.recommendedModule === "Recovery Simulator") {
+    return "Apri Recovery Simulator";
+  }
+
+  if (alert.recommendedModule === "Profit Intelligence") {
+    return "Apri Analisi Profitti";
+  }
+
+  if (alert.recommendedModule === "Products") {
+    return "Apri Prodotti";
+  }
+
+  if (alert.recommendedModule === "Profit Action Center") {
+    return "Apri Profit Action Center";
+  }
+
+  if (alert.recommendedModule === "Profit Forecast") {
+    return "Apri Previsioni";
+  }
+
+  if (alert.recommendedModule === "Profit Copilot") {
+    return "Apri Profit Copilot";
+  }
+
+  return alert.actionLabel;
+}
+
+function MetricBox({
   label,
   value,
   color = "#f8fafc",
@@ -123,15 +155,14 @@ function Metric({
       >
         {label}
       </div>
+
       <div
         style={{
-          marginTop: 6,
+          marginTop: 7,
           color,
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: 950,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          lineHeight: 1.15,
         }}
       >
         {value}
@@ -140,45 +171,13 @@ function Metric({
   );
 }
 
-function PriorityBadge({
-  alert,
-  language,
-}: {
-  alert: ProfitAlert;
-  language: Language;
-}) {
-  const style = getActionStyle(alert.businessAction, language);
-
-  return (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "7px 10px",
-        borderRadius: 999,
-        color: style.color,
-        background: style.background,
-        border: `1px solid ${style.border}`,
-        fontSize: 9,
-        fontWeight: 950,
-        textTransform: "uppercase",
-        letterSpacing: "0.09em",
-      }}
-    >
-      <span>{style.icon}</span>
-      <span>{style.label}</span>
-    </div>
-  );
-}
-
-function MainPriority({
+function PrimaryPriorityCard({
   alert,
   language,
   navigate,
 }: {
   alert: ProfitAlert;
-  language: Language;
+  language: "it" | "en";
   navigate: (path: string) => void;
 }) {
   const style = getActionStyle(alert.businessAction, language);
@@ -188,41 +187,60 @@ function MainPriority({
       style={{
         position: "relative",
         overflow: "hidden",
-        minHeight: 390,
-        padding: 24,
-        borderRadius: 23,
-        background: `radial-gradient(circle at 85% 15%, ${style.background}, transparent 36%), linear-gradient(145deg, rgba(18,25,40,0.99), rgba(6,11,20,0.99))`,
+        minHeight: 455,
+        padding: 25,
+        borderRadius: 24,
+        background:
+          "radial-gradient(circle at 16% 10%, rgba(255,115,80,0.12), transparent 34%), linear-gradient(150deg, rgba(17,24,39,0.99), rgba(6,11,20,0.99))",
         border: `1px solid ${style.border}`,
+        boxShadow:
+          "inset 0 1px 0 rgba(255,255,255,0.04), 0 24px 60px rgba(0,0,0,0.28)",
         display: "flex",
         flexDirection: "column",
       }}
     >
       <div
         style={{
+          position: "absolute",
+          top: -70,
+          right: -55,
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          background: style.background,
+          filter: "blur(18px)",
+        }}
+      />
+
+      <div
+        style={{
+          position: "relative",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "flex-start",
           gap: 14,
-          flexWrap: "wrap",
+          alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              display: "grid",
-              placeItems: "center",
-              borderRadius: 14,
-              color: style.color,
-              background: style.background,
-              border: `1px solid ${style.border}`,
-              fontWeight: 950,
-            }}
-          >
-            1
-          </div>
-          <PriorityBadge alert={alert} language={language} />
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "8px 11px",
+            borderRadius: 999,
+            color: style.color,
+            background: style.background,
+            border: `1px solid ${style.border}`,
+            fontSize: 9,
+            fontWeight: 950,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {style.icon}{" "}
+          {language === "it"
+            ? "Priorità principale"
+            : "Primary priority"}
         </div>
 
         <div
@@ -232,17 +250,33 @@ function MainPriority({
             fontWeight: 900,
           }}
         >
-          {language === "it" ? "Priorità" : "Priority"} {alert.priority}/100
+          {language === "it" ? "Priorità" : "Priority"}{" "}
+          {alert.priority}/100
         </div>
       </div>
 
       <div
         style={{
-          marginTop: 22,
-          color: "#f8fafc",
-          fontSize: 25,
+          position: "relative",
+          marginTop: 18,
+          color: style.color,
+          fontSize: 10,
           fontWeight: 950,
-          lineHeight: 1.2,
+          textTransform: "uppercase",
+          letterSpacing: "0.12em",
+        }}
+      >
+        {style.label}
+      </div>
+
+      <div
+        style={{
+          position: "relative",
+          marginTop: 9,
+          color: "#f8fafc",
+          fontSize: 27,
+          fontWeight: 950,
+          lineHeight: 1.18,
           letterSpacing: "-0.035em",
         }}
       >
@@ -251,11 +285,12 @@ function MainPriority({
 
       <div
         style={{
-          marginTop: 11,
-          color: "rgba(255,255,255,0.66)",
+          position: "relative",
+          marginTop: 12,
+          color: "rgba(255,255,255,0.65)",
           fontSize: 13,
-          lineHeight: 1.68,
-          fontWeight: 730,
+          fontWeight: 720,
+          lineHeight: 1.7,
         }}
       >
         {alert.description}
@@ -264,7 +299,8 @@ function MainPriority({
       {alert.productTitle && (
         <div
           style={{
-            marginTop: 16,
+            position: "relative",
+            marginTop: 15,
             padding: 13,
             borderRadius: 15,
             background: "rgba(255,255,255,0.03)",
@@ -280,13 +316,16 @@ function MainPriority({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it" ? "Prodotto coinvolto" : "Related product"}
+            {language === "it"
+              ? "Prodotto coinvolto"
+              : "Related product"}
           </div>
+
           <div
             style={{
-              marginTop: 5,
+              marginTop: 6,
               color: "#f8fafc",
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 900,
             }}
           >
@@ -297,28 +336,39 @@ function MainPriority({
 
       <div
         style={{
-          marginTop: 18,
+          position: "relative",
+          marginTop: 16,
           display: "grid",
           gridTemplateColumns: "repeat(3,minmax(0,1fr))",
           gap: 10,
         }}
       >
-        <Metric
+        <MetricBox
           label={language === "it" ? "Impatto" : "Impact"}
           value={
             alert.monthlyImpact > 0
-              ? `${alert.businessAction === "optimize" ? "+" : ""}${money(alert.monthlyImpact)}`
+              ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
+                  alert.monthlyImpact,
+                )}`
               : language === "it"
                 ? "Qualitativo"
                 : "Qualitative"
           }
-          color={alert.monthlyImpact > 0 ? style.color : "#f8fafc"}
+          color={
+            alert.businessAction === "optimize"
+              ? "#22c55e"
+              : style.color
+          }
         />
-        <Metric
-          label={language === "it" ? "Difficoltà" : "Effort"}
+
+        <MetricBox
+          label={
+            language === "it" ? "Difficoltà" : "Effort"
+          }
           value={getEffortLabel(alert.effort, language)}
         />
-        <Metric
+
+        <MetricBox
           label={language === "it" ? "Tempo" : "Time"}
           value={`${alert.estimatedMinutes} min`}
           color="#7dd3fc"
@@ -327,53 +377,44 @@ function MainPriority({
 
       <div
         style={{
+          position: "relative",
           marginTop: "auto",
-          paddingTop: 18,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 14,
-          flexWrap: "wrap",
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          paddingTop: 20,
         }}
       >
-        <div>
-          <div
-            style={{
-              color: "rgba(255,255,255,0.36)",
-              fontSize: 8,
-              fontWeight: 950,
-              textTransform: "uppercase",
-              letterSpacing: "0.09em",
-            }}
-          >
-            {language === "it" ? "Modulo consigliato" : "Recommended module"}
-          </div>
-          <div
-            style={{
-              marginTop: 5,
-              color: "#f8fafc",
-              fontSize: 13,
-              fontWeight: 900,
-            }}
-          >
+        <div
+          style={{
+            marginBottom: 12,
+            color: "rgba(255,255,255,0.38)",
+            fontSize: 8,
+            fontWeight: 950,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {language === "it"
+            ? "Modulo consigliato"
+            : "Recommended module"}
+          :{" "}
+          <strong style={{ color: "#f8fafc" }}>
             {alert.recommendedModule}
-          </div>
+          </strong>
         </div>
 
         <button
           type="button"
           className="primary-button"
+          style={{ width: "100%", justifyContent: "center" }}
           onClick={() => navigate(alert.route)}
         >
-          {alert.actionLabel} →
+          {getModuleButtonLabel(alert, language)} →
         </button>
       </div>
     </article>
   );
 }
 
-function SecondaryPriority({
+function SecondaryPriorityCard({
   alert,
   index,
   language,
@@ -381,7 +422,7 @@ function SecondaryPriority({
 }: {
   alert: ProfitAlert;
   index: number;
-  language: Language;
+  language: "it" | "en";
   navigate: (path: string) => void;
 }) {
   const style = getActionStyle(alert.businessAction, language);
@@ -389,9 +430,12 @@ function SecondaryPriority({
   return (
     <article
       style={{
-        minHeight: 188,
-        padding: 18,
-        borderRadius: 20,
+        position: "relative",
+        overflow: "hidden",
+        flex: 1,
+        minHeight: 220,
+        padding: 19,
+        borderRadius: 21,
         background:
           "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
         border: `1px solid ${style.border}`,
@@ -403,28 +447,38 @@ function SecondaryPriority({
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
           gap: 10,
+          alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <div
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+            color: style.color,
+            fontSize: 9,
+            fontWeight: 950,
+            textTransform: "uppercase",
+            letterSpacing: "0.09em",
+          }}
+        >
+          <span
             style={{
-              width: 34,
-              height: 34,
+              width: 27,
+              height: 27,
               display: "grid",
               placeItems: "center",
-              borderRadius: 11,
-              color: style.color,
+              borderRadius: 9,
               background: style.background,
               border: `1px solid ${style.border}`,
-              fontWeight: 950,
             }}
           >
             {index + 1}
-          </div>
-          <PriorityBadge alert={alert} language={language} />
+          </span>
+          {style.label}
         </div>
+
         <div
           style={{
             color: "rgba(255,255,255,0.38)",
@@ -440,9 +494,9 @@ function SecondaryPriority({
         style={{
           marginTop: 13,
           color: "#f8fafc",
-          fontSize: 16,
+          fontSize: 17,
           fontWeight: 950,
-          lineHeight: 1.3,
+          lineHeight: 1.28,
         }}
       >
         {alert.title}
@@ -451,10 +505,10 @@ function SecondaryPriority({
       <div
         style={{
           marginTop: 7,
-          color: "rgba(255,255,255,0.54)",
+          color: "rgba(255,255,255,0.55)",
           fontSize: 11,
-          lineHeight: 1.5,
           fontWeight: 720,
+          lineHeight: 1.5,
         }}
       >
         {alert.description}
@@ -462,39 +516,45 @@ function SecondaryPriority({
 
       <div
         style={{
-          marginTop: "auto",
-          paddingTop: 13,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 10,
-          borderTop: "1px solid rgba(255,255,255,0.07)",
+          marginTop: 13,
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 9,
         }}
       >
-        <div>
-          <div style={{ color: style.color, fontSize: 15, fontWeight: 950 }}>
-            {alert.monthlyImpact > 0
-              ? `${alert.businessAction === "optimize" ? "+" : ""}${money(alert.monthlyImpact)}`
-              : getEffortLabel(alert.effort, language)}
-          </div>
-          <div
-            style={{
-              marginTop: 3,
-              color: "rgba(255,255,255,0.38)",
-              fontSize: 9,
-              fontWeight: 800,
-            }}
-          >
-            {alert.estimatedMinutes} min · {alert.recommendedModule}
-          </div>
-        </div>
+        <MetricBox
+          label={language === "it" ? "Impatto" : "Impact"}
+          value={
+            alert.monthlyImpact > 0
+              ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
+                  alert.monthlyImpact,
+                )}`
+              : language === "it"
+                ? "Qualitativo"
+                : "Qualitative"
+          }
+          color={
+            alert.businessAction === "optimize"
+              ? "#22c55e"
+              : style.color
+          }
+        />
 
+        <MetricBox
+          label={language === "it" ? "Tempo" : "Time"}
+          value={`${alert.estimatedMinutes} min`}
+          color="#7dd3fc"
+        />
+      </div>
+
+      <div style={{ marginTop: "auto", paddingTop: 14 }}>
         <button
           type="button"
           className="apply-button"
+          style={{ width: "100%", justifyContent: "center" }}
           onClick={() => navigate(alert.route)}
         >
-          {language === "it" ? "Apri" : "Open"} →
+          {getModuleButtonLabel(alert, language)} →
         </button>
       </div>
     </article>
@@ -506,30 +566,36 @@ export default function BusinessPriorities({
   navigate,
   maxItems = 3,
 }: Props) {
-  const language: Language = getStoredLanguage() === "it" ? "it" : "en";
+  const language =
+    getStoredLanguage() === "it" ? "it" : "en";
 
-  const displayedPriorities = React.useMemo(() => {
-    const active = [...alerts]
-      .filter(
-        (alert) =>
-          alert.businessAction !== "monitor" || alerts.length === 1,
-      )
-      .sort((a, b) => {
-        if (b.priority !== a.priority) return b.priority - a.priority;
-        return b.monthlyImpact - a.monthlyImpact;
-      })
-      .slice(0, maxItems);
+  const priorities = React.useMemo(
+    () =>
+      [...alerts]
+        .filter(
+          (alert) =>
+            alert.businessAction !== "monitor" ||
+            alerts.length === 1,
+        )
+        .sort((a, b) => {
+          if (b.priority !== a.priority) {
+            return b.priority - a.priority;
+          }
 
-    return active.length > 0 ? active : alerts.slice(0, maxItems);
-  }, [alerts, maxItems]);
-
-  const businessStatus = getBusinessStatus(alerts);
-  const mainPriority = displayedPriorities[0];
-  const secondaryPriorities = displayedPriorities.slice(1, 3);
-  const highestImpact = displayedPriorities.reduce(
-    (highest, alert) => Math.max(highest, alert.monthlyImpact),
-    0,
+          return b.monthlyImpact - a.monthlyImpact;
+        })
+        .slice(0, maxItems),
+    [alerts, maxItems],
   );
+
+  const displayedPriorities =
+    priorities.length > 0
+      ? priorities
+      : alerts.slice(0, maxItems);
+
+  const primaryPriority = displayedPriorities[0];
+  const secondaryPriorities = displayedPriorities.slice(1, 3);
+  const businessStatus = getBusinessStatus(alerts);
 
   const statusText =
     language === "it"
@@ -538,7 +604,7 @@ export default function BusinessPriorities({
         : businessStatus.key === "review"
           ? "Da controllare"
           : businessStatus.key === "optimize"
-            ? "Ottimizzazione possibile"
+            ? "Ottimizzazione disponibile"
             : "Situazione stabile"
       : businessStatus.key === "action"
         ? "Action required"
@@ -551,40 +617,48 @@ export default function BusinessPriorities({
   const statusDescription =
     language === "it"
       ? businessStatus.key === "action"
-        ? "Una criticità significativa merita una decisione prioritaria."
+        ? "Esiste almeno una criticità significativa che merita una decisione prioritaria."
         : businessStatus.key === "review"
-          ? "Non emerge un'emergenza generalizzata, ma alcuni aspetti richiedono verifica."
+          ? "Non emerge un'emergenza generale, ma alcuni aspetti devono essere verificati."
           : businessStatus.key === "optimize"
-            ? "La struttura è stabile: le priorità attuali riguardano il miglioramento."
+            ? "La struttura è stabile. Le priorità attuali riguardano il miglioramento."
             : "Nessuna criticità significativa richiede un intervento immediato."
       : businessStatus.key === "action"
-        ? "A significant issue currently deserves a prioritized decision."
+        ? "At least one significant issue currently requires a prioritized decision."
         : businessStatus.key === "review"
-          ? "There is no broad emergency, but some areas require verification."
+          ? "There is no broad emergency, but some areas should be reviewed."
           : businessStatus.key === "optimize"
-            ? "The business is stable; current priorities focus on improvement."
-            : "No significant issue currently requires immediate action.";
+            ? "The business is stable. Current priorities focus on improvement."
+            : "No significant profitability issue requires immediate action.";
+
+  const visibleImpact = displayedPriorities.reduce(
+    (sum, alert) =>
+      sum + Math.max(0, alert.monthlyImpact),
+    0,
+  );
+
+  if (!primaryPriority) {
+    return null;
+  }
 
   return (
     <section
       style={{
         marginTop: 24,
         padding: 28,
-        borderRadius: 28,
+        borderRadius: 29,
         background:
-          "radial-gradient(circle at 10% 10%, rgba(255,115,80,0.12), transparent 30%), radial-gradient(circle at 90% 18%, rgba(34,197,94,0.09), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-        border: "1px solid rgba(255,115,60,0.22)",
+          "radial-gradient(circle at 10% 8%, rgba(255,115,80,0.12), transparent 30%), radial-gradient(circle at 92% 18%, rgba(34,197,94,0.08), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
+        border: "1px solid rgba(255,115,60,0.23)",
         boxShadow:
-          "0 26px 78px rgba(0,0,0,0.36), inset 0 1px 0 rgba(255,255,255,0.03)",
+          "0 28px 84px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.035)",
       }}
     >
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 22,
-          flexWrap: "wrap",
+          display: "grid",
+          gridTemplateColumns: "minmax(0,1fr) 260px",
+          gap: 20,
         }}
       >
         <div>
@@ -597,43 +671,46 @@ export default function BusinessPriorities({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "PRIORITÀ DI BUSINESS" : "BUSINESS PRIORITIES"}
+            {language === "it"
+              ? "PRIORITÀ DI BUSINESS"
+              : "BUSINESS PRIORITIES"}
           </div>
+
           <div
             style={{
-              marginTop: 9,
+              marginTop: 8,
               color: "#f8fafc",
-              fontSize: 28,
+              fontSize: 29,
               fontWeight: 950,
               lineHeight: 1.2,
-              letterSpacing: "-0.035em",
+              letterSpacing: "-0.04em",
             }}
           >
             {language === "it"
               ? "Le decisioni che meritano attenzione adesso"
               : "The decisions that deserve attention now"}
           </div>
+
           <div
             style={{
               marginTop: 8,
-              maxWidth: 720,
-              color: "rgba(255,255,255,0.56)",
+              maxWidth: 760,
+              color: "rgba(255,255,255,0.57)",
               fontSize: 13,
               lineHeight: 1.6,
               fontWeight: 720,
             }}
           >
             {language === "it"
-              ? "MarginLab distingue ciò che richiede un intervento da ciò che può essere semplicemente controllato o ottimizzato."
-              : "MarginLab separates what requires action from what should simply be reviewed, optimized or monitored."}
+              ? "MarginLab ordina rischi e opportunità per impatto, urgenza e impegno richiesto. Non tutte le priorità rappresentano un'emergenza."
+              : "MarginLab ranks risks and opportunities by impact, urgency and required effort. Not every priority represents an emergency."}
           </div>
         </div>
 
         <div
           style={{
-            minWidth: 225,
-            padding: 16,
-            borderRadius: 18,
+            padding: 17,
+            borderRadius: 19,
             background: `${businessStatus.color}0D`,
             border: `1px solid ${businessStatus.color}32`,
           }}
@@ -647,11 +724,14 @@ export default function BusinessPriorities({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it" ? "Stato del business" : "Business status"}
+            {language === "it"
+              ? "Stato del business"
+              : "Business status"}
           </div>
+
           <div
             style={{
-              marginTop: 7,
+              marginTop: 8,
               color: businessStatus.color,
               fontSize: 18,
               fontWeight: 950,
@@ -659,6 +739,7 @@ export default function BusinessPriorities({
           >
             {statusText}
           </div>
+
           <div
             style={{
               marginTop: 6,
@@ -673,66 +754,56 @@ export default function BusinessPriorities({
         </div>
       </div>
 
-      {mainPriority ? (
-        <div
-          style={{
-            marginTop: 22,
-            display: "grid",
-            gridTemplateColumns:
-              secondaryPriorities.length > 0 ? "1.35fr 0.65fr" : "1fr",
-            gap: 14,
-          }}
-        >
-          <MainPriority
-            alert={mainPriority}
-            language={language}
-            navigate={navigate}
-          />
+      <div
+        style={{
+          marginTop: 22,
+          display: "grid",
+          gridTemplateColumns:
+            secondaryPriorities.length > 0
+              ? "minmax(0,1.45fr) minmax(280px,0.75fr)"
+              : "1fr",
+          gap: 16,
+        }}
+      >
+        <PrimaryPriorityCard
+          alert={primaryPriority}
+          language={language}
+          navigate={navigate}
+        />
 
-          {secondaryPriorities.length > 0 && (
-            <div style={{ display: "grid", gap: 14 }}>
-              {secondaryPriorities.map((alert, index) => (
-                <SecondaryPriority
-                  key={alert.id}
-                  alert={alert}
-                  index={index + 1}
-                  language={language}
-                  navigate={navigate}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div
-          style={{
-            marginTop: 22,
-            padding: 22,
-            borderRadius: 20,
-            color: "#86efac",
-            background: "rgba(34,197,94,0.07)",
-            border: "1px solid rgba(34,197,94,0.18)",
-            fontWeight: 800,
-          }}
-        >
-          {language === "it"
-            ? "Nessuna priorità significativa rilevata."
-            : "No significant business priorities detected."}
-        </div>
-      )}
+        {secondaryPriorities.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+            }}
+          >
+            {secondaryPriorities.map((alert, index) => (
+              <SecondaryPriorityCard
+                key={alert.id}
+                alert={alert}
+                index={index + 1}
+                language={language}
+                navigate={navigate}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <div
         style={{
-          marginTop: 18,
-          display: "flex",
-          justifyContent: "space-between",
+          marginTop: 17,
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          gap: 16,
           alignItems: "center",
-          gap: 14,
-          flexWrap: "wrap",
-          padding: 16,
-          borderRadius: 17,
-          background: "rgba(255,255,255,0.025)",
-          border: "1px solid rgba(255,255,255,0.07)",
+          padding: 18,
+          borderRadius: 18,
+          background:
+            "linear-gradient(90deg, rgba(34,197,94,0.08), rgba(255,255,255,0.025))",
+          border: "1px solid rgba(34,197,94,0.17)",
         }}
       >
         <div>
@@ -746,18 +817,21 @@ export default function BusinessPriorities({
             }}
           >
             {language === "it"
-              ? "Impatto mensile più elevato rilevato"
-              : "Highest detected monthly impact"}
+              ? "Impatto mensile delle priorità mostrate"
+              : "Monthly impact of displayed priorities"}
           </div>
+
           <div
             style={{
-              marginTop: 6,
-              color: highestImpact > 0 ? "#22c55e" : "#f8fafc",
-              fontSize: 25,
+              marginTop: 7,
+              color: "#22c55e",
+              fontSize: 31,
+              lineHeight: 1,
               fontWeight: 950,
+              letterSpacing: "-0.04em",
             }}
           >
-            {highestImpact > 0 ? money(highestImpact) : "—"}
+            +{money(visibleImpact)}
           </div>
         </div>
 
@@ -767,7 +841,7 @@ export default function BusinessPriorities({
           onClick={() => navigate("/app/recommendations")}
         >
           {language === "it"
-            ? "Apri il Profit Action Center →"
+            ? "Apri Profit Action Center →"
             : "Open Profit Action Center →"}
         </button>
       </div>
