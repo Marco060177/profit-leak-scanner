@@ -3,6 +3,8 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
+import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import {
@@ -103,22 +105,34 @@ export default function AiAdvisorPage() {
     React.useState<SelectedQuestion>("profitRisk");
   const [showAiReport, setShowAiReport] = React.useState(false);
 
-  const { summary, rows, assumptions } = useLoaderData() as LoaderData & {
-    assumptions: {
-      monthlyAds: number;
-      monthlyShipping: number;
-      monthlyOperating: number;
-      paymentFeePct: number;
-      transactionFeePct: number;
-      taxReservePct: number;
-    } | null;
-  };
+  const { summary, rows, assumptions, period } =
+    useLoaderData() as LoaderData & {
+      assumptions: {
+        monthlyAds: number;
+        monthlyShipping: number;
+        monthlyOperating: number;
+        paymentFeePct: number;
+        transactionFeePct: number;
+        taxReservePct: number;
+      } | null;
+    };
 
   React.useEffect(() => {
     if (aiFetcher.data?.text) {
       setShowAiReport(true);
     }
   }, [aiFetcher.data]);
+
+  const profitAlerts = React.useMemo(
+    () =>
+      generateProfitAlerts({
+        summary,
+        rows,
+        language,
+        period,
+      }),
+    [summary, rows, language, period],
+  );
 
   const losingProducts = rows.filter((row) => row.losing);
   const missingCostProducts = rows.filter((row) => row.missingCost);
@@ -536,8 +550,8 @@ Rules:
       100,
       Math.round(
         100 -
-          losingProducts.length * 18 -
-          lowMarginProducts.length * 5,
+        losingProducts.length * 18 -
+        lowMarginProducts.length * 5,
       ),
     ),
   );
@@ -556,10 +570,10 @@ Rules:
       100,
       Math.round(
         100 -
-          losingProducts.length * 16 -
-          lowMarginProducts.length * 4 -
-          (summary.refunds > 0 ? 6 : 0) -
-          (summary.discounts > 0 ? 4 : 0),
+        losingProducts.length * 16 -
+        lowMarginProducts.length * 4 -
+        (summary.refunds > 0 ? 6 : 0) -
+        (summary.discounts > 0 ? 4 : 0),
       ),
     ),
   );
@@ -570,8 +584,8 @@ Rules:
       100,
       Math.round(
         100 -
-          marginAlerts.length * 8 -
-          (recoverableProfit > 0 ? 10 : 0),
+        marginAlerts.length * 8 -
+        (recoverableProfit > 0 ? 10 : 0),
       ),
     ),
   );
@@ -598,8 +612,8 @@ Rules:
     Math.min(
       3,
       losingProducts.length +
-        (missingCostProducts.length > 0 ? 1 : 0) +
-        (lowMarginProducts.length > 0 ? 1 : 0),
+      (missingCostProducts.length > 0 ? 1 : 0) +
+      (lowMarginProducts.length > 0 ? 1 : 0),
     ),
   );
 
@@ -624,19 +638,19 @@ Rules:
     language === "it"
       ? recoverableProfit > 0
         ? `${priorityConcentration.toFixed(
-            0,
-          )}% del profitto recuperabile è concentrato nei primi ${Math.max(
-            1,
-            topPriorityProducts.length,
-          )} prodotti. Per questo conviene intervenire prima sulle opportunità ad alto impatto, completare i costi mancanti e solo dopo valutare azioni più ampie su sconti o crescita.`
+          0,
+        )}% del profitto recuperabile è concentrato nei primi ${Math.max(
+          1,
+          topPriorityProducts.length,
+        )} prodotti. Per questo conviene intervenire prima sulle opportunità ad alto impatto, completare i costi mancanti e solo dopo valutare azioni più ampie su sconti o crescita.`
         : "Non emerge una singola perdita dominante. La strategia migliore è mantenere dati completi, controllare i prodotti a margine debole e verificare periodicamente sconti e rimborsi."
       : recoverableProfit > 0
         ? `${priorityConcentration.toFixed(
-            0,
-          )}% of recoverable profit is concentrated in the first ${Math.max(
-            1,
-            topPriorityProducts.length,
-          )} products. Prioritize high-impact opportunities, complete missing costs, and only then consider broader discount or growth actions.`
+          0,
+        )}% of recoverable profit is concentrated in the first ${Math.max(
+          1,
+          topPriorityProducts.length,
+        )} products. Prioritize high-impact opportunities, complete missing costs, and only then consider broader discount or growth actions.`
         : "No single dominant leak is visible. The best strategy is to maintain complete data, monitor weak-margin products, and review discounts and refunds regularly.";
 
   const scorecards = [
@@ -699,73 +713,73 @@ Rules:
   const decisionFeed = [
     losingProducts.length > 0
       ? {
-          when: language === "it" ? "Oggi" : "Today",
-          title:
-            language === "it"
-              ? "Rilevati prodotti venduti sotto costo"
-              : "Products selling below cost detected",
-          detail:
-            language === "it"
-              ? `${losingProducts.length} prodotti richiedono una revisione immediata.`
-              : `${losingProducts.length} products require immediate review.`,
-          color: "#ff6b4a",
-        }
+        when: language === "it" ? "Oggi" : "Today",
+        title:
+          language === "it"
+            ? "Rilevati prodotti venduti sotto costo"
+            : "Products selling below cost detected",
+        detail:
+          language === "it"
+            ? `${losingProducts.length} prodotti richiedono una revisione immediata.`
+            : `${losingProducts.length} products require immediate review.`,
+        color: "#ff6b4a",
+      }
       : null,
     missingCostProducts.length > 0
       ? {
-          when: language === "it" ? "Oggi" : "Today",
-          title:
-            language === "it"
-              ? "Affidabilità ridotta dai costi mancanti"
-              : "Missing costs reduce confidence",
-          detail:
-            language === "it"
-              ? `${missingCostProducts.length} prodotti non hanno dati di costo completi.`
-              : `${missingCostProducts.length} products have incomplete cost data.`,
-          color: "#f59e0b",
-        }
+        when: language === "it" ? "Oggi" : "Today",
+        title:
+          language === "it"
+            ? "Affidabilità ridotta dai costi mancanti"
+            : "Missing costs reduce confidence",
+        detail:
+          language === "it"
+            ? `${missingCostProducts.length} prodotti non hanno dati di costo completi.`
+            : `${missingCostProducts.length} products have incomplete cost data.`,
+        color: "#f59e0b",
+      }
       : null,
     recoverableProfit > 0
       ? {
-          when: language === "it" ? "Nuova opportunità" : "New opportunity",
-          title:
-            language === "it"
-              ? "Profitto recuperabile individuato"
-              : "Recoverable profit identified",
-          detail:
-            language === "it"
-              ? `Possibile recupero stimato: $${recoverableProfit.toFixed(0)}.`
-              : `Estimated recovery opportunity: $${recoverableProfit.toFixed(0)}.`,
-          color: "#22c55e",
-        }
+        when: language === "it" ? "Nuova opportunità" : "New opportunity",
+        title:
+          language === "it"
+            ? "Profitto recuperabile individuato"
+            : "Recoverable profit identified",
+        detail:
+          language === "it"
+            ? `Possibile recupero stimato: $${recoverableProfit.toFixed(0)}.`
+            : `Estimated recovery opportunity: $${recoverableProfit.toFixed(0)}.`,
+        color: "#22c55e",
+      }
       : null,
     summary.refunds > 0
       ? {
-          when: language === "it" ? "Periodo attuale" : "Current period",
-          title:
-            language === "it"
-              ? "I rimborsi stanno riducendo i ricavi"
-              : "Refunds are reducing revenue",
-          detail:
-            language === "it"
-              ? `$${summary.refunds.toFixed(2)} di ricavi rimborsati.`
-              : `$${summary.refunds.toFixed(2)} in refunded revenue.`,
-          color: "#fb7185",
-        }
+        when: language === "it" ? "Periodo attuale" : "Current period",
+        title:
+          language === "it"
+            ? "I rimborsi stanno riducendo i ricavi"
+            : "Refunds are reducing revenue",
+        detail:
+          language === "it"
+            ? `$${summary.refunds.toFixed(2)} di ricavi rimborsati.`
+            : `$${summary.refunds.toFixed(2)} in refunded revenue.`,
+        color: "#fb7185",
+      }
       : null,
     summary.discounts > 0
       ? {
-          when: language === "it" ? "Periodo attuale" : "Current period",
-          title:
-            language === "it"
-              ? "Pressione promozionale rilevata"
-              : "Promotional pressure detected",
-          detail:
-            language === "it"
-              ? `$${summary.discounts.toFixed(2)} di sconti applicati.`
-              : `$${summary.discounts.toFixed(2)} in discounts applied.`,
-          color: "#38bdf8",
-        }
+        when: language === "it" ? "Periodo attuale" : "Current period",
+        title:
+          language === "it"
+            ? "Pressione promozionale rilevata"
+            : "Promotional pressure detected",
+        detail:
+          language === "it"
+            ? `$${summary.discounts.toFixed(2)} di sconti applicati.`
+            : `$${summary.discounts.toFixed(2)} in discounts applied.`,
+        color: "#38bdf8",
+      }
       : null,
   ].filter(
     (
@@ -1107,9 +1121,8 @@ Rules:
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    background: `conic-gradient(${healthColor} ${
-                      healthScore * 3.6
-                    }deg, rgba(255,255,255,0.08) 0deg)`,
+                    background: `conic-gradient(${healthColor} ${healthScore * 3.6
+                      }deg, rgba(255,255,255,0.08) 0deg)`,
                     boxShadow: `0 0 54px ${healthColor}22`,
                   }}
                 >
@@ -1182,6 +1195,12 @@ Rules:
             </div>
           </div>
         </div>
+
+        <BusinessPriorities
+          alerts={profitAlerts}
+          navigate={navigate}
+          maxItems={3}
+        />
 
         <div
           style={{
@@ -1268,297 +1287,7 @@ Rules:
           ))}
         </div>
 
-        <div
-          style={{
-            marginTop: 24,
-            display: "grid",
-            gridTemplateColumns: "1.1fr 0.9fr",
-            gap: 22,
-          }}
-        >
-          <div className="panel" style={{ margin: 0, padding: 24 }}>
-            <div className="panel-eyebrow">
-              {language === "it"
-                ? "PRIORITÀ DEL COPILOTA"
-                : "COPILOT PRIORITIES"}
-            </div>
-
-            <h2 className="panel-title" style={{ marginTop: 6 }}>
-              {language === "it"
-                ? "I prodotti da affrontare per primi"
-                : "The products to address first"}
-            </h2>
-
-            <div style={{ display: "grid", gap: 13, marginTop: 20 }}>
-              {topPriorityProducts.length > 0 ? (
-                topPriorityProducts.map((product, index) => (
-                  <div
-                    key={product.productId || product.productTitle}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "42px minmax(0,1fr) auto",
-                      gap: 14,
-                      alignItems: "center",
-                      padding: 16,
-                      borderRadius: 18,
-                      background: "rgba(255,255,255,0.035)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 13,
-                        display: "grid",
-                        placeItems: "center",
-                        color: "#ffffff",
-                        background:
-                          index === 0
-                            ? "rgba(255,107,74,0.18)"
-                            : "rgba(255,115,80,0.12)",
-                        border:
-                          index === 0
-                            ? "1px solid rgba(255,107,74,0.34)"
-                            : "1px solid rgba(255,115,80,0.22)",
-                        fontWeight: 950,
-                      }}
-                    >
-                      {index + 1}
-                    </div>
-
-                    <div style={{ minWidth: 0 }}>
-                      <div
-                        style={{
-                          color: "#f8fafc",
-                          fontSize: 16,
-                          fontWeight: 950,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {product.productTitle}
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: 5,
-                          color: "rgba(255,255,255,0.52)",
-                          fontSize: 11,
-                          fontWeight: 760,
-                        }}
-                      >
-                        {language === "it" ? "Margine" : "Margin"}{" "}
-                        {product.marginPct.toFixed(1)}% ·{" "}
-                        {language === "it" ? "Ricavi" : "Revenue"} $
-                        {product.revenue.toFixed(0)}
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: 5,
-                          color:
-                            product.losing
-                              ? "#ff6b4a"
-                              : product.missingCost
-                                ? "#f59e0b"
-                                : "#38bdf8",
-                          fontSize: 11,
-                          fontWeight: 900,
-                        }}
-                      >
-                        {product.losing
-                          ? language === "it"
-                            ? "Venduto sotto costo"
-                            : "Selling below cost"
-                          : product.missingCost
-                            ? language === "it"
-                              ? "Costo mancante"
-                              : "Missing cost"
-                            : language === "it"
-                              ? "Margine da ottimizzare"
-                              : "Margin optimization"}
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: "right" }}>
-                      <div
-                        style={{
-                          color: "#22c55e",
-                          fontSize: 19,
-                          fontWeight: 950,
-                        }}
-                      >
-                        +${product.recoverableOpportunity.toFixed(0)}
-                      </div>
-
-                      <button
-                        type="button"
-                        className="apply-button"
-                        style={{ marginTop: 8 }}
-                        onClick={() => navigate("/app/recovery-simulator")}
-                      >
-                        {language === "it" ? "Simula →" : "Simulate →"}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div
-                  style={{
-                    padding: 20,
-                    borderRadius: 17,
-                    color: "#86efac",
-                    background: "rgba(34,197,94,0.08)",
-                    border: "1px solid rgba(34,197,94,0.20)",
-                    fontWeight: 800,
-                  }}
-                >
-                  {language === "it"
-                    ? "Nessuna priorità prodotto rilevata."
-                    : "No product priorities detected."}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div
-            style={{
-              borderRadius: 26,
-              padding: 24,
-              background:
-                "radial-gradient(circle at top left, rgba(255,115,80,0.13), transparent 38%), linear-gradient(135deg, rgba(16,23,37,0.99), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(255,115,60,0.22)",
-            }}
-          >
-            <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.13em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it"
-                ? "PERCHÉ QUESTE PRIORITÀ"
-                : "WHY THESE PRIORITIES"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 9,
-                color: "#f8fafc",
-                fontSize: 22,
-                fontWeight: 950,
-                lineHeight: 1.25,
-              }}
-            >
-              {language === "it"
-                ? "Il ragionamento dietro il piano"
-                : "The reasoning behind the plan"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 16,
-                color: "rgba(255,255,255,0.76)",
-                fontSize: 14,
-                lineHeight: 1.75,
-                fontWeight: 730,
-              }}
-            >
-              {reasoningText}
-            </div>
-
-            <div
-              style={{
-                marginTop: 20,
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 11,
-              }}
-            >
-              <div
-                style={{
-                  padding: 15,
-                  borderRadius: 15,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {language === "it"
-                    ? "Concentrazione"
-                    : "Concentration"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 7,
-                    color: "#22c55e",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {priorityConcentration.toFixed(0)}%
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 15,
-                  borderRadius: 15,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {language === "it"
-                    ? "Prodotti prioritari"
-                    : "Priority Products"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 7,
-                    color: "#f8fafc",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {topPriorityProducts.length}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="primary-button"
-              style={{ width: "100%", marginTop: 18 }}
-              onClick={() => navigate("/app/recommendations")}
-            >
-              {language === "it"
-                ? "Vai al Profit Action Center →"
-                : "Open Profit Action Center →"}
-            </button>
-          </div>
-        </div>
+        
 
         <div
           style={{
