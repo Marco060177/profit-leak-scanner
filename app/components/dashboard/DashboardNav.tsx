@@ -35,6 +35,30 @@ export default function DashboardNav({
   const growthMenuRef =
     React.useRef<HTMLDivElement | null>(null);
 
+  const closeTimerRef =
+    React.useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    );
+
+  const openGrowthMenu = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+
+    setGrowthOpen(true);
+  };
+
+  const scheduleGrowthMenuClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+
+    closeTimerRef.current = setTimeout(() => {
+      setGrowthOpen(false);
+    }, 220);
+  };
+
   React.useEffect(() => {
     setLanguage(getStoredLanguage());
   }, []);
@@ -67,25 +91,25 @@ export default function DashboardNav({
   const labels =
     language === "it"
       ? {
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter: "Profit Action Center",
-          recoverySimulator: "Recovery Simulator",
-          profitForecast: "Previsioni di profitto",
-          businessModelStudio: "Business Model Studio",
-          growthDescription:
-            "Strumenti avanzati per aumentare il profitto",
-        }
+        growth: "Growth",
+        profitCopilot: "Profit Copilot",
+        profitActionCenter: "Profit Action Center",
+        recoverySimulator: "Recovery Simulator",
+        profitForecast: "Previsioni di profitto",
+        businessModelStudio: "Business Model Studio",
+        growthDescription:
+          "Strumenti avanzati per aumentare il profitto",
+      }
       : {
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter: "Profit Action Center",
-          recoverySimulator: "Recovery Simulator",
-          profitForecast: "Profit Forecast",
-          businessModelStudio: "Business Model Studio",
-          growthDescription:
-            "Advanced tools to increase profit",
-        };
+        growth: "Growth",
+        profitCopilot: "Profit Copilot",
+        profitActionCenter: "Profit Action Center",
+        recoverySimulator: "Recovery Simulator",
+        profitForecast: "Profit Forecast",
+        businessModelStudio: "Business Model Studio",
+        growthDescription:
+          "Advanced tools to increase profit",
+      };
 
   const changeLanguage = (
     nextLanguage: Language,
@@ -222,8 +246,8 @@ export default function DashboardNav({
           style={{
             position: "relative",
           }}
-          onMouseEnter={() => setGrowthOpen(true)}
-          onMouseLeave={() => setGrowthOpen(false)}
+          onMouseEnter={openGrowthMenu}
+          onMouseLeave={scheduleGrowthMenuClose}
         >
           <button
             type="button"
@@ -261,10 +285,22 @@ export default function DashboardNav({
           </button>
 
           <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "100%",
+              right: 0,
+              width: 330,
+              height: 10,
+              pointerEvents: growthOpen ? "auto" : "none",
+            }}
+          />
+
+          <div
             role="menu"
             style={{
               position: "absolute",
-              top: "calc(100% + 10px)",
+              top: "calc(100% + 6px)",
               right: 0,
               width: 330,
               padding: 10,
