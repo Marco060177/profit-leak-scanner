@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
-
+import CopilotWeeklyMission from "~/components/dashboard/CopilotWeeklyMission";
+import CopilotDecisionFeed from "~/components/dashboard/CopilotDecisionFeed";
+import CopilotConfidenceBar from "~/components/dashboard/CopilotConfidenceBar";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
