@@ -94,9 +94,7 @@ function getModuleButtonLabel(
   alert: ProfitAlert,
   language: "it" | "en",
 ) {
-  if (language === "en") {
-    return `Open ${alert.recommendedModule}`;
-  }
+  if (language === "en") return `Open ${alert.recommendedModule}`;
 
   if (alert.recommendedModule === "Recovery Simulator") {
     return "Apri Recovery Simulator";
@@ -137,8 +135,7 @@ function MetricBox({
   return (
     <div
       style={{
-        minWidth: 0,
-        padding: 12,
+        padding: 13,
         borderRadius: 14,
         background: "rgba(255,255,255,0.03)",
         border: "1px solid rgba(255,255,255,0.07)",
@@ -187,11 +184,11 @@ function PrimaryPriorityCard({
       style={{
         position: "relative",
         overflow: "hidden",
-        minHeight: 455,
-        padding: 25,
+        minHeight: 520,
+        padding: 28,
         borderRadius: 24,
         background:
-          "radial-gradient(circle at 16% 10%, rgba(255,115,80,0.12), transparent 34%), linear-gradient(150deg, rgba(17,24,39,0.99), rgba(6,11,20,0.99))",
+          "radial-gradient(circle at 16% 10%, rgba(255,115,80,0.14), transparent 34%), linear-gradient(150deg, rgba(17,24,39,0.99), rgba(6,11,20,0.99))",
         border: `1px solid ${style.border}`,
         boxShadow:
           "inset 0 1px 0 rgba(255,255,255,0.04), 0 24px 60px rgba(0,0,0,0.28)",
@@ -204,8 +201,8 @@ function PrimaryPriorityCard({
           position: "absolute",
           top: -70,
           right: -55,
-          width: 220,
-          height: 220,
+          width: 240,
+          height: 240,
           borderRadius: "50%",
           background: style.background,
           filter: "blur(18px)",
@@ -258,7 +255,7 @@ function PrimaryPriorityCard({
       <div
         style={{
           position: "relative",
-          marginTop: 18,
+          marginTop: 22,
           color: style.color,
           fontSize: 10,
           fontWeight: 950,
@@ -272,12 +269,12 @@ function PrimaryPriorityCard({
       <div
         style={{
           position: "relative",
-          marginTop: 9,
+          marginTop: 10,
           color: "#f8fafc",
-          fontSize: 27,
+          fontSize: 30,
           fontWeight: 950,
-          lineHeight: 1.18,
-          letterSpacing: "-0.035em",
+          lineHeight: 1.16,
+          letterSpacing: "-0.04em",
         }}
       >
         {alert.title}
@@ -286,11 +283,12 @@ function PrimaryPriorityCard({
       <div
         style={{
           position: "relative",
-          marginTop: 12,
-          color: "rgba(255,255,255,0.65)",
-          fontSize: 13,
+          marginTop: 14,
+          color: "rgba(255,255,255,0.66)",
+          fontSize: 14,
           fontWeight: 720,
-          lineHeight: 1.7,
+          lineHeight: 1.75,
+          maxWidth: 760,
         }}
       >
         {alert.description}
@@ -300,8 +298,8 @@ function PrimaryPriorityCard({
         <div
           style={{
             position: "relative",
-            marginTop: 15,
-            padding: 13,
+            marginTop: 18,
+            padding: 14,
             borderRadius: 15,
             background: "rgba(255,255,255,0.03)",
             border: "1px solid rgba(255,255,255,0.07)",
@@ -325,7 +323,7 @@ function PrimaryPriorityCard({
             style={{
               marginTop: 6,
               color: "#f8fafc",
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: 900,
             }}
           >
@@ -337,7 +335,7 @@ function PrimaryPriorityCard({
       <div
         style={{
           position: "relative",
-          marginTop: 16,
+          marginTop: 18,
           display: "grid",
           gridTemplateColumns: "repeat(3,minmax(0,1fr))",
           gap: 10,
@@ -362,9 +360,7 @@ function PrimaryPriorityCard({
         />
 
         <MetricBox
-          label={
-            language === "it" ? "Difficoltà" : "Effort"
-          }
+          label={language === "it" ? "Difficoltà" : "Effort"}
           value={getEffortLabel(alert.effort, language)}
         />
 
@@ -379,7 +375,7 @@ function PrimaryPriorityCard({
         style={{
           position: "relative",
           marginTop: "auto",
-          paddingTop: 20,
+          paddingTop: 24,
         }}
       >
         <div
@@ -433,8 +429,8 @@ function SecondaryPriorityCard({
         position: "relative",
         overflow: "hidden",
         flex: 1,
-        minHeight: 220,
-        padding: 19,
+        minHeight: 245,
+        padding: 20,
         borderRadius: 21,
         background:
           "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
@@ -492,9 +488,9 @@ function SecondaryPriorityCard({
 
       <div
         style={{
-          marginTop: 13,
+          marginTop: 14,
           color: "#f8fafc",
-          fontSize: 17,
+          fontSize: 18,
           fontWeight: 950,
           lineHeight: 1.28,
         }}
@@ -504,50 +500,34 @@ function SecondaryPriorityCard({
 
       <div
         style={{
-          marginTop: 7,
+          marginTop: 8,
           color: "rgba(255,255,255,0.55)",
           fontSize: 11,
           fontWeight: 720,
-          lineHeight: 1.5,
+          lineHeight: 1.55,
         }}
       >
         {alert.description}
       </div>
 
-      <div
-        style={{
-          marginTop: 13,
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 9,
-        }}
-      >
-        <MetricBox
-          label={language === "it" ? "Impatto" : "Impact"}
-          value={
-            alert.monthlyImpact > 0
-              ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                  alert.monthlyImpact,
-                )}`
-              : language === "it"
-                ? "Qualitativo"
-                : "Qualitative"
-          }
-          color={
-            alert.businessAction === "optimize"
-              ? "#22c55e"
-              : style.color
-          }
-        />
+      {alert.monthlyImpact > 0 && (
+        <div
+          style={{
+            marginTop: 14,
+            color:
+              alert.businessAction === "optimize"
+                ? "#22c55e"
+                : style.color,
+            fontSize: 22,
+            fontWeight: 950,
+          }}
+        >
+          {alert.businessAction === "optimize" ? "+" : ""}
+          {money(alert.monthlyImpact)}
+        </div>
+      )}
 
-        <MetricBox
-          label={language === "it" ? "Tempo" : "Time"}
-          value={`${alert.estimatedMinutes} min`}
-          color="#7dd3fc"
-        />
-      </div>
-
-      <div style={{ marginTop: "auto", paddingTop: 14 }}>
+      <div style={{ marginTop: "auto", paddingTop: 16 }}>
         <button
           type="button"
           className="apply-button"
@@ -589,9 +569,7 @@ export default function BusinessPriorities({
   );
 
   const displayedPriorities =
-    priorities.length > 0
-      ? priorities
-      : alerts.slice(0, maxItems);
+    priorities.length > 0 ? priorities : alerts.slice(0, maxItems);
 
   const primaryPriority = displayedPriorities[0];
   const secondaryPriorities = displayedPriorities.slice(1, 3);
@@ -632,14 +610,11 @@ export default function BusinessPriorities({
             : "No significant profitability issue requires immediate action.";
 
   const visibleImpact = displayedPriorities.reduce(
-    (sum, alert) =>
-      sum + Math.max(0, alert.monthlyImpact),
+    (sum, alert) => sum + Math.max(0, alert.monthlyImpact),
     0,
   );
 
-  if (!primaryPriority) {
-    return null;
-  }
+  if (!primaryPriority) return null;
 
   return (
     <section
@@ -760,7 +735,7 @@ export default function BusinessPriorities({
           display: "grid",
           gridTemplateColumns:
             secondaryPriorities.length > 0
-              ? "minmax(0,1.45fr) minmax(280px,0.75fr)"
+              ? "minmax(0,1.55fr) minmax(280px,0.65fr)"
               : "1fr",
           gap: 16,
         }}
