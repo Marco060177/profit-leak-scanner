@@ -10,6 +10,7 @@ type NavId =
   | "overview"
   | "products"
   | "profit"
+  | "alert-center"
   | "recommendations"
   | "ai-advisor"
   | "recovery-simulator"
@@ -64,10 +65,14 @@ export default function DashboardNav({
   }, []);
 
   React.useEffect(() => {
-    const handleOutsideClick = (event: MouseEvent) => {
+    const handleOutsideClick = (
+      event: MouseEvent,
+    ) => {
       if (
         growthMenuRef.current &&
-        !growthMenuRef.current.contains(event.target as Node)
+        !growthMenuRef.current.contains(
+          event.target as Node,
+        )
       ) {
         setGrowthOpen(false);
       }
@@ -91,25 +96,34 @@ export default function DashboardNav({
   const labels =
     language === "it"
       ? {
-        growth: "Growth",
-        profitCopilot: "Profit Copilot",
-        profitActionCenter: "Profit Action Center",
-        recoverySimulator: "Recovery Simulator",
-        profitForecast: "Previsioni di profitto",
-        businessModelStudio: "Business Model Studio",
-        growthDescription:
-          "Strumenti avanzati per aumentare il profitto",
-      }
+          alerts: "Alert",
+          growth: "Growth",
+          profitCopilot: "Profit Copilot",
+          profitActionCenter:
+            "Profit Action Center",
+          recoverySimulator:
+            "Recovery Simulator",
+          profitForecast:
+            "Previsioni di profitto",
+          businessModelStudio:
+            "Business Model Studio",
+          growthDescription:
+            "Strumenti avanzati per aumentare il profitto",
+        }
       : {
-        growth: "Growth",
-        profitCopilot: "Profit Copilot",
-        profitActionCenter: "Profit Action Center",
-        recoverySimulator: "Recovery Simulator",
-        profitForecast: "Profit Forecast",
-        businessModelStudio: "Business Model Studio",
-        growthDescription:
-          "Advanced tools to increase profit",
-      };
+          alerts: "Alerts",
+          growth: "Growth",
+          profitCopilot: "Profit Copilot",
+          profitActionCenter:
+            "Profit Action Center",
+          recoverySimulator:
+            "Recovery Simulator",
+          profitForecast: "Profit Forecast",
+          businessModelStudio:
+            "Business Model Studio",
+          growthDescription:
+            "Advanced tools to increase profit",
+        };
 
   const changeLanguage = (
     nextLanguage: Language,
@@ -154,6 +168,11 @@ export default function DashboardNav({
       id: "profit",
       label: t.nav.profitIntelligence,
       path: "/app/profit-intelligence",
+    },
+    {
+      id: "alert-center",
+      label: labels.alerts,
+      path: "/app/alert-center",
     },
   ] as const;
 
@@ -247,7 +266,9 @@ export default function DashboardNav({
             position: "relative",
           }}
           onMouseEnter={openGrowthMenu}
-          onMouseLeave={scheduleGrowthMenuClose}
+          onMouseLeave={
+            scheduleGrowthMenuClose
+          }
         >
           <button
             type="button"
@@ -257,7 +278,9 @@ export default function DashboardNav({
                 : "nav-tab"
             }
             onClick={() =>
-              setGrowthOpen((current) => !current)
+              setGrowthOpen(
+                (current) => !current,
+              )
             }
             aria-expanded={growthOpen}
             aria-haspopup="menu"
@@ -277,7 +300,8 @@ export default function DashboardNav({
                 transform: growthOpen
                   ? "rotate(180deg)"
                   : "rotate(0deg)",
-                transition: "transform 160ms ease",
+                transition:
+                  "transform 160ms ease",
               }}
             >
               ▼
@@ -292,7 +316,9 @@ export default function DashboardNav({
               right: 0,
               width: 330,
               height: 10,
-              pointerEvents: growthOpen ? "auto" : "none",
+              pointerEvents: growthOpen
+                ? "auto"
+                : "none",
             }}
           />
 
@@ -369,7 +395,10 @@ export default function DashboardNav({
                   type="button"
                   role="menuitem"
                   onClick={() =>
-                    openPage(item.id, item.path)
+                    openPage(
+                      item.id,
+                      item.path,
+                    )
                   }
                   style={{
                     width: "100%",
@@ -445,7 +474,10 @@ export default function DashboardNav({
             <button
               type="button"
               onClick={() =>
-                openPage("billing", "/app/billing")
+                openPage(
+                  "billing",
+                  "/app/billing",
+                )
               }
               style={{
                 width: "100%",
@@ -476,7 +508,10 @@ export default function DashboardNav({
               : "nav-tab"
           }
           onClick={() =>
-            openPage("billing", "/app/billing")
+            openPage(
+              "billing",
+              "/app/billing",
+            )
           }
         >
           {t.nav.billing}
