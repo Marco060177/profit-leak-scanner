@@ -6,6 +6,11 @@ import {
   type Language,
 } from "~/utils/i18n";
 
+import {
+  getStoredProfitAlertStates,
+  getUnreadProfitAlertCount,
+} from "~/utils/profit-alert-state";
+
 type NavId =
   | "overview"
   | "products"
@@ -32,6 +37,9 @@ export default function DashboardNav({
 
   const [growthOpen, setGrowthOpen] =
     React.useState(false);
+
+  const [unreadAlertCount, setUnreadAlertCount] =
+    React.useState(0);
 
   const growthMenuRef =
     React.useRef<HTMLDivElement | null>(null);
@@ -62,6 +70,56 @@ export default function DashboardNav({
 
   React.useEffect(() => {
     setLanguage(getStoredLanguage());
+  }, []);
+
+  React.useEffect(() => {
+    const refreshUnreadAlertCount = () => {
+      const storedStates =
+        getStoredProfitAlertStates();
+
+      setUnreadAlertCount(
+        getUnreadProfitAlertCount(storedStates),
+      );
+    };
+
+    refreshUnreadAlertCount();
+
+    const handleStorageChange = () => {
+      refreshUnreadAlertCount();
+    };
+
+    const handleWindowFocus = () => {
+      refreshUnreadAlertCount();
+    };
+
+    window.addEventListener(
+      "storage",
+      handleStorageChange,
+    );
+
+    window.addEventListener(
+      "focus",
+      handleWindowFocus,
+    );
+
+    const refreshInterval = window.setInterval(
+      refreshUnreadAlertCount,
+      1500,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "storage",
+        handleStorageChange,
+      );
+
+      window.removeEventListener(
+        "focus",
+        handleWindowFocus,
+      );
+
+      window.clearInterval(refreshInterval);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -96,34 +154,34 @@ export default function DashboardNav({
   const labels =
     language === "it"
       ? {
-          alerts: "Alert",
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter:
-            "Profit Action Center",
-          recoverySimulator:
-            "Recovery Simulator",
-          profitForecast:
-            "Previsioni di profitto",
-          businessModelStudio:
-            "Business Model Studio",
-          growthDescription:
-            "Strumenti avanzati per aumentare il profitto",
-        }
+        alerts: "Alert",
+        growth: "Growth",
+        profitCopilot: "Profit Copilot",
+        profitActionCenter:
+          "Profit Action Center",
+        recoverySimulator:
+          "Recovery Simulator",
+        profitForecast:
+          "Previsioni di profitto",
+        businessModelStudio:
+          "Business Model Studio",
+        growthDescription:
+          "Strumenti avanzati per aumentare il profitto",
+      }
       : {
-          alerts: "Alerts",
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter:
-            "Profit Action Center",
-          recoverySimulator:
-            "Recovery Simulator",
-          profitForecast: "Profit Forecast",
-          businessModelStudio:
-            "Business Model Studio",
-          growthDescription:
-            "Advanced tools to increase profit",
-        };
+        alerts: "Alerts",
+        growth: "Growth",
+        profitCopilot: "Profit Copilot",
+        profitActionCenter:
+          "Profit Action Center",
+        recoverySimulator:
+          "Recovery Simulator",
+        profitForecast: "Profit Forecast",
+        businessModelStudio:
+          "Business Model Studio",
+        growthDescription:
+          "Advanced tools to increase profit",
+      };
 
   const changeLanguage = (
     nextLanguage: Language,
@@ -244,21 +302,81 @@ export default function DashboardNav({
       </div>
 
       <div className="nav-tabs">
-        {mainItems.map((item) => (
-          <div
-            key={item.id}
-            className={
-              active === item.id
-                ? "nav-tab active"
-                : "nav-tab"
-            }
-            onClick={() =>
-              openPage(item.id, item.path)
-            }
-          >
-            {item.label}
-          </div>
-        ))}
+        {mainItems.map((item) => {
+          const isAlertCenter =
+            item.id === "alert-center";
+
+          return (
+            <div
+              key={item.id}
+              className={
+                active === item.id
+                  ? "nav-tab active"
+                  : "nav-tab"
+              }
+              onClick={() =>
+                openPage(item.id, item.path)
+              }
+              style={
+                isAlertCenter
+                  ? {
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 7,
+                    position: "relative",
+                  }
+                  : undefined
+              }
+            >
+              {isAlertCenter && (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-grid",
+                    placeItems: "center",
+                    width: 17,
+                    height: 17,
+                    fontSize: 13,
+                    lineHeight: 1,
+                  }}
+                >
+                  ♢
+                </span>
+              )}
+
+              <span>{item.label}</span>
+
+              {isAlertCenter &&
+                unreadAlertCount > 0 && (
+                  <span
+                    aria-label={`${unreadAlertCount} unread alerts`}
+                    style={{
+                      minWidth: 18,
+                      height: 18,
+                      padding: "0 5px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: 999,
+                      background: "#ff7346",
+                      border:
+                        "1px solid rgba(255,255,255,0.18)",
+                      color: "#ffffff",
+                      boxShadow:
+                        "0 0 14px rgba(255,115,70,0.30)",
+                      fontSize: 9,
+                      lineHeight: 1,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {unreadAlertCount > 99
+                      ? "99+"
+                      : unreadAlertCount}
+                  </span>
+                )}
+            </div>
+          );
+        })}
 
         <div
           ref={growthMenuRef}
