@@ -191,7 +191,7 @@ function PrimaryPriority({
           "radial-gradient(circle at 15% 8%, rgba(255,115,80,0.16), transparent 36%), linear-gradient(150deg, rgba(17,24,39,0.99), rgba(5,10,18,0.99))",
         border: `1px solid ${style.border}`,
         boxShadow:
-          "0 28px 70px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04)",
+          "0 22px 55px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(255,115,60,0.05)",
         display: "flex",
         flexDirection: "column",
       }}
@@ -271,12 +271,12 @@ function PrimaryPriority({
       <h3
         style={{
           position: "relative",
-          margin: "10px 0 0",
+          margin: "14px 0 0",
           color: "#f8fafc",
-          fontSize: 33,
-          lineHeight: 1.14,
+          fontSize: 36,
+          lineHeight: 1.18,
           fontWeight: 950,
-          letterSpacing: "-0.045em",
+          letterSpacing: "-0.05em",
         }}
       >
         {alert.title}
@@ -285,11 +285,11 @@ function PrimaryPriority({
       <p
         style={{
           position: "relative",
-          margin: "16px 0 0",
-          maxWidth: 800,
-          color: "rgba(255,255,255,0.68)",
-          fontSize: 14,
-          lineHeight: 1.75,
+          margin: "20px 0 0",
+          maxWidth: 760,
+          color: "rgba(255,255,255,0.70)",
+          fontSize: 15,
+          lineHeight: 1.8,
           fontWeight: 720,
         }}
       >
@@ -337,7 +337,7 @@ function PrimaryPriority({
       <div
         style={{
           position: "relative",
-          marginTop: 20,
+          marginTop: 28,
           display: "grid",
           gridTemplateColumns: "repeat(3,minmax(0,1fr))",
           gap: 11,
@@ -402,7 +402,14 @@ function PrimaryPriority({
         <button
           type="button"
           className="primary-button"
-          style={{ width: "100%", justifyContent: "center" }}
+          style={{
+            width: "fit-content",
+            minWidth: 240,
+            justifyContent: "center",
+            alignSelf: "flex-start",
+            paddingLeft: 24,
+            paddingRight: 24,
+          }}
           onClick={() => navigate(alert.route)}
         >
           {getModuleButtonLabel(alert, language)} →
@@ -430,11 +437,13 @@ function SecondaryPriority({
       style={{
         flex: 1,
         minHeight: 330,
-        padding: "21px 21px 28px",
+        padding: "24px 24px 32px",
         borderRadius: 22,
         background:
           "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
         border: `1px solid ${style.border}`,
+        boxShadow:
+          "0 16px 42px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.03)",
         display: "flex",
         flexDirection: "column",
       }}
@@ -489,10 +498,10 @@ function SecondaryPriority({
 
       <h4
         style={{
-          margin: "15px 0 0",
+          margin: "18px 0 0",
           color: "#f8fafc",
-          fontSize: 18,
-          lineHeight: 1.28,
+          fontSize: 20,
+          lineHeight: 1.32,
           fontWeight: 950,
         }}
       >
@@ -501,10 +510,10 @@ function SecondaryPriority({
 
       <p
         style={{
-          margin: "8px 0 0",
+          margin: "12px 0 0",
           color: "rgba(255,255,255,0.56)",
-          fontSize: 11,
-          lineHeight: 1.55,
+          fontSize: 12,
+          lineHeight: 1.65,
           fontWeight: 720,
         }}
       >
@@ -529,9 +538,7 @@ function SecondaryPriority({
         </div>
       )}
 
-      <div style={{
-        marginTop: "auto", paddingTop: 24
-      }}>
+      <div style={{ marginTop: "auto", paddingTop: 30 }}>
         <button
           type="button"
           className="apply-button"
@@ -785,8 +792,10 @@ export default function BusinessPriorities({
           padding: 20,
           borderRadius: 19,
           background:
-            "linear-gradient(90deg, rgba(34,197,94,0.10), rgba(255,255,255,0.025))",
+            "linear-gradient(135deg, rgba(34,197,94,0.10), rgba(16,23,37,0.96))",
           border: "1px solid rgba(34,197,94,0.18)",
+          boxShadow:
+            "0 18px 45px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.03)",
         }}
       >
         <div>
