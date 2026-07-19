@@ -348,8 +348,8 @@ function PrimaryPriority({
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                  alert.monthlyImpact,
-                )}`
+                alert.monthlyImpact,
+              )}`
               : language === "it"
                 ? "Qualitativo"
                 : "Qualitative"
@@ -429,8 +429,8 @@ function SecondaryPriority({
     <article
       style={{
         flex: 1,
-        minHeight: 270,
-        padding: 21,
+        minHeight: 330,
+        padding: "21px 21px 28px",
         borderRadius: 22,
         background:
           "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
@@ -529,7 +529,9 @@ function SecondaryPriority({
         </div>
       )}
 
-      <div style={{ marginTop: "auto", paddingTop: 18 }}>
+      <div style={{
+        marginTop: "auto", paddingTop: 24
+      }}>
         <button
           type="button"
           className="apply-button"
