@@ -4,7 +4,10 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
-
+import {
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
@@ -39,10 +42,18 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
+  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
     period,
+    locale,
   });
 
   const assumptions =
@@ -111,6 +122,24 @@ export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
 
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
+  const money = (value: number) =>
+    formatStoreMoney(
+      value,
+      currencyCode,
+      locale,
+    );
+
+  const pct = (value: number) =>
+    formatStorePercent(
+      value,
+      locale,
+    );
+
   const aiFetcher = useFetcher<{ text: string }>();
   const askFetcher = useFetcher<{ text: string }>();
 
@@ -119,7 +148,7 @@ export default function AiAdvisorPage() {
     React.useState<SelectedQuestion>("profitRisk");
   const [showAiReport, setShowAiReport] = React.useState(false);
 
-  const { summary, rows, assumptions, period } =
+  const { summary, rows, assumptions, period, currencyCode } =
     useLoaderData() as LoaderData & {
       assumptions: {
         monthlyAds: number;
@@ -1031,11 +1060,11 @@ Rules:
                 style={{
                   marginTop: 14,
                   color: "#f8fafc",
-                  fontSize: 32,
+                  fontSize: 27,
                   fontWeight: 950,
-                  lineHeight: 1.15,
-                  letterSpacing: "-0.04em",
-                  maxWidth: 850,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.035em",
+                  maxWidth: 760,
                 }}
               >
                 {executiveBrief}
@@ -1130,8 +1159,8 @@ Rules:
                       language === "it"
                         ? "Profitto netto stimato"
                         : "Estimated Net Profit",
-                    value: `$${estimatedNetProfit.toFixed(0)}`,
-                    note: `${estimatedNetMargin.toFixed(1)}%`,
+                    value: money(estimatedNetProfit),
+                    note: pct(estimatedNetMargin),
                     color:
                       estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
                   },
@@ -1140,7 +1169,10 @@ Rules:
                       language === "it"
                         ? "Profitto recuperabile"
                         : "Recoverable Profit",
-                    value: `+$${recoverableProfit.toFixed(0)}`,
+                    value:
+                      recoverableProfit > 0
+                        ? `+${money(recoverableProfit)}`
+                        : money(recoverableProfit),
                     note:
                       language === "it"
                         ? `${prioritizedProducts.length} priorità prodotto`
@@ -1460,6 +1492,7 @@ Rules:
             display: "grid",
             gridTemplateColumns: "0.9fr 1.1fr",
             gap: 22,
+            alignItems: "start",
           }}
         >
           <div
@@ -1532,7 +1565,10 @@ Rules:
                 {
                   label:
                     language === "it" ? "Potenziale" : "Potential",
-                  value: `+$${recoverableProfit.toFixed(0)}`,
+                  value:
+                    recoverableProfit > 0
+                      ? `+${money(recoverableProfit)}`
+                      : money(recoverableProfit),
                   color: "#22c55e",
                 },
               ].map((item) => (
@@ -1776,6 +1812,54 @@ Rules:
                     ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
                     : "AI will use all real store data already loaded on this page."}
                 </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: "grid",
+                    gap: 8,
+                  }}
+                >
+                  {[
+                    language === "it"
+                      ? "Analizza il rischio principale rilevato"
+                      : "Analyzes the highest-priority business risk",
+
+                    language === "it"
+                      ? "Individua i prodotti da correggere per primi"
+                      : "Identifies the first products to fix",
+
+                    language === "it"
+                      ? "Stima il profitto recuperabile e le azioni consigliate"
+                      : "Estimates recoverable profit and recommended actions",
+                  ].map((item) => (
+                    <div
+                      key={item}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        color: "rgba(255,255,255,0.70)",
+                        fontSize: 12,
+                        fontWeight: 720,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          background: "#22c55e",
+                          boxShadow: "0 0 10px rgba(34,197,94,0.5)",
+                          flexShrink: 0,
+                        }}
+                      />
+
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+
               </div>
 
               <aiFetcher.Form
