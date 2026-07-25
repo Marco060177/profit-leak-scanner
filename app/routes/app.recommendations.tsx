@@ -7,7 +7,11 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
-import { type LoaderData, money } from "~/utils/margin";
+import {
+  type LoaderData,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
 import {
   generateProfitAlerts,
@@ -31,6 +35,13 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
+  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
   const { admin, session } = await authenticate.admin(request);
 
   try {
@@ -45,6 +56,7 @@ export const loader = async ({
     admin,
     session,
     period,
+    locale,
   });
 };
 
@@ -255,12 +267,14 @@ function TopPriority({
   navigate,
   completed,
   onToggle,
+  money,
 }: {
   alert: ProfitAlert;
   language: "it" | "en";
   navigate: (path: string) => void;
   completed: boolean;
   onToggle: () => void;
+  money: (value: number) => string;
 }) {
   const status = getStatusStyle(alert.businessAction, language);
 
@@ -369,8 +383,8 @@ function TopPriority({
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                  alert.monthlyImpact,
-                )}`
+                alert.monthlyImpact,
+              )}`
               : language === "it"
                 ? "Qualitativo"
                 : "Qualitative"
@@ -452,10 +466,28 @@ function TopPriority({
 }
 
 export default function RecommendationsPage() {
-  const { summary, rows, period } = useLoaderData() as LoaderData;
+  const { summary, rows, period, currencyCode } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
   const language =
     getStoredLanguage() === "it" ? "it" : "en";
+
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
+  const money = (value: number) =>
+    formatStoreMoney(
+      value,
+      currencyCode,
+      locale,
+    );
+
+  const pct = (value: number) =>
+    formatStorePercent(
+      value,
+      locale,
+    );
 
   const profitAlerts = React.useMemo(
     () =>
@@ -533,17 +565,17 @@ export default function RecommendationsPage() {
   const averagePriority =
     queueAlerts.length > 0
       ? queueAlerts.reduce(
-          (sum, alert) => sum + alert.priority,
-          0,
-        ) / queueAlerts.length
+        (sum, alert) => sum + alert.priority,
+        0,
+      ) / queueAlerts.length
       : 0;
 
   const actionCenterScore = clamp(
     Math.round(
       35 +
-        Math.min(30, actionableCount * 6) +
-        Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
-        Math.min(15, averagePriority * 0.15),
+      Math.min(30, actionableCount * 6) +
+      Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
+      Math.min(15, averagePriority * 0.15),
     ),
     0,
     100,
@@ -737,11 +769,11 @@ export default function RecommendationsPage() {
               >
                 {language === "it"
                   ? `${actionableCount} priorità operative sono disponibili. L'impatto annuale potenziale associato all'opportunità complessiva è ${money(
-                      annualOpportunity,
-                    )}.`
+                    annualOpportunity,
+                  )}.`
                   : `${actionableCount} operational priorities are available. The potential annual impact associated with the overall opportunity is ${money(
-                      annualOpportunity,
-                    )}.`}
+                    annualOpportunity,
+                  )}.`}
               </p>
 
               <div
@@ -831,9 +863,8 @@ export default function RecommendationsPage() {
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    background: `conic-gradient(${businessStatus.color} ${
-                      actionCenterScore * 3.6
-                    }deg, rgba(255,255,255,0.08) 0deg)`,
+                    background: `conic-gradient(${businessStatus.color} ${actionCenterScore * 3.6
+                      }deg, rgba(255,255,255,0.08) 0deg)`,
                     boxShadow: `0 0 50px ${businessStatus.color}22`,
                   }}
                 >
@@ -915,6 +946,7 @@ export default function RecommendationsPage() {
             navigate={navigate}
             completed={completedIds.includes(topAlert.id)}
             onToggle={() => toggleComplete(topAlert.id)}
+            money={money}
           />
         )}
 
@@ -1107,11 +1139,10 @@ export default function RecommendationsPage() {
                           }}
                         >
                           {alert.monthlyImpact > 0
-                            ? `${
-                                alert.businessAction === "optimize"
-                                  ? "+"
-                                  : ""
-                              }${money(alert.monthlyImpact)}`
+                            ? `${alert.businessAction === "optimize"
+                              ? "+"
+                              : ""
+                            }${money(alert.monthlyImpact)}`
                             : language === "it"
                               ? "Qualitativo"
                               : "Qualitative"}
@@ -1194,7 +1225,7 @@ export default function RecommendationsPage() {
                     lineHeight: 1,
                   }}
                 >
-                  {progressPct.toFixed(0)}%
+                  {pct(progressPct)}
                 </div>
 
                 <div
