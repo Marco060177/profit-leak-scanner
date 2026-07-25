@@ -1,3 +1,8 @@
+import {
+  formatMoney,
+  formatPercent,
+} from "~/utils/formatting";
+
 export type Summary = {
   revenue: number;
   cogs: number;
@@ -60,7 +65,9 @@ export type LoaderData = {
   billingActive: boolean;
   period: string;
   shopHandle: string;
-  
+
+  currencyCode: string;
+  timeZone: string;
 };
 
 export function money(
@@ -68,21 +75,19 @@ export function money(
   currencyCode = "USD",
   locale = "en-US",
 ) {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: currencyCode,
-    }).format(n);
-  } catch {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(n);
-  }
+  return formatMoney(n, {
+    currencyCode,
+    locale,
+  });
 }
 
-export function pct(n: number) {
-  return `${n.toFixed(1)}%`;
+export function pct(
+  n: number,
+  locale = "en-US",
+) {
+  return formatPercent(n, {
+    locale,
+  });
 }
 
 export function toYYYYMMDD(d: Date) {

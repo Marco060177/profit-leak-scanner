@@ -11,6 +11,8 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import {
   type LoaderData,
   type Row,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
 } from "~/utils/margin";
 
 export const links = () => [
@@ -28,6 +30,12 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
+  const language =
+    url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
   const { admin, session } = await authenticate.admin(request);
 
   try {
@@ -42,15 +50,42 @@ export const loader = async ({
     admin,
     session,
     period,
+    locale,
   });
 };
 
 export default function ProductsPage() {
-  const { summary, rows, period, shopHandle } =
-    useLoaderData() as LoaderData;
+  const {
+    summary,
+    rows,
+    period,
+    shopHandle,
+    currencyCode,
+  } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
   const language = getStoredLanguage();
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
+  const money = React.useCallback(
+    (value: number) =>
+      formatStoreMoney(
+        value,
+        currencyCode,
+        locale,
+      ),
+    [currencyCode, locale],
+  );
+
+  const pct = React.useCallback(
+    (value: number) =>
+      formatStorePercent(
+        value,
+        locale,
+      ),
+    [locale],
+  );
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
@@ -288,15 +323,15 @@ export default function ProductsPage() {
                     language === "it"
                       ? "Profitto recuperabile"
                       : "Recoverable profit",
-                    `$${summary.totalLeak.toFixed(0)}`,
+                    money(summary.totalLeak),
                   ],
 
                   [
-                    language === "it"
-                      ? "Prodotti in ottimo stato"
-                      : "Healthy products",
-                    `${healthyProducts}`,
-                  ],
+  language === "it"
+    ? "Prodotti in ottimo stato"
+    : "Healthy products",
+  `${ healthyProducts }`,
+],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <div
@@ -381,7 +416,7 @@ export default function ProductsPage() {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      boxShadow: `0 0 46px ${productScoreColor}44`,
+                      boxShadow: `0 0 46px ${ productScoreColor }44`,
                     }}
                   >
                     <div
@@ -389,8 +424,9 @@ export default function ProductsPage() {
                         position: "absolute",
                         inset: -16,
                         borderRadius: "50%",
-                        background: `conic-gradient(${productScoreColor} ${productScore * 3.6
-                          }deg, transparent 0deg)`,
+                        background: `conic-gradient(${productScoreColor} ${
+                          productScore * 3.6
+                        }deg, transparent 0deg)`,
                         mask:
                           "radial-gradient(circle, transparent 58%, black 59%)",
                         WebkitMask:
@@ -479,22 +515,22 @@ export default function ProductsPage() {
               {[
                 [
                   language === "it" ? "Ricavi" : "Revenue",
-                  `$${biggestRiskProduct.revenue.toFixed(0)}`,
+                  money(biggestRiskProduct.revenue),
                   "#f3f4f6",
                 ],
-                [
-                  language === "it" ? "Margine" : "Margin",
-                  `${biggestRiskProduct.marginPct.toFixed(1)}%`,
+                  [
+                    language === "it" ? "Margine" : "Margin",
+                  pct(biggestRiskProduct.marginPct),
                   "#ff6b4a",
                 ],
                 [
                   language === "it" ? "Opportunità" : "Opportunity",
-                  `$${biggestRiskProduct.riskValue.toFixed(0)}`,
+                  money(biggestRiskProduct.riskValue),
                   "#22c55e",
                 ],
-                [
-                  language === "it" ? "Gap Target" : "Target Gap",
-                  `${biggestRiskProduct.marginGap.toFixed(1)}%`,
+                  [
+                    language === "it" ? "Gap Target" : "Target Gap",
+                  pct(biggestRiskProduct.marginGap),
                   "#f59e0b",
                 ],
               ].map(([label, value, color]) => (
@@ -632,7 +668,7 @@ export default function ProductsPage() {
                       height: 10,
                       borderRadius: 999,
                       background: item.color,
-                      boxShadow: `0 0 18px ${item.color}66`,
+                      boxShadow: `0 0 18px ${ item.color }66`,
                     }}
                   />
                 </div>
@@ -658,42 +694,42 @@ export default function ProductsPage() {
                   }}
                 >
                   {language === "it"
-                    ? `${item.pct.toFixed(1)}% del catalogo`
-                    : `${item.pct.toFixed(1)}% of catalog`}
+                    ? `${pct(item.pct)} del catalogo`
+                    : `${pct(item.pct)} of catalog`}
                 </div>
 
-                <div
-                  style={{
-                    marginTop: 10,
-                    minHeight: 42,
-                    color: "rgba(255,255,255,0.48)",
-                    fontSize: 13,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {item.description}
-                </div>
-
-                <div
-                  style={{
-                    height: 9,
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.07)",
-                    overflow: "hidden",
-                    marginTop: 20,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${Math.min(100, Math.max(0, item.pct))}%`,
-                      height: "100%",
-                      borderRadius: 999,
-                      background: item.color,
-                      boxShadow: `0 0 18px ${item.color}55`,
-                    }}
-                  />
-                </div>
+              <div
+                style={{
+                  marginTop: 10,
+                  minHeight: 42,
+                  color: "rgba(255,255,255,0.48)",
+                  fontSize: 13,
+                  lineHeight: 1.5,
+                }}
+              >
+                {item.description}
               </div>
+
+              <div
+                style={{
+                  height: 9,
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.07)",
+                  overflow: "hidden",
+                  marginTop: 20,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.min(100, Math.max(0, item.pct))}%`,
+                    height: "100%",
+                    borderRadius: 999,
+                    background: item.color,
+                    boxShadow: `0 0 18px ${item.color}55`,
+                  }}
+                />
+              </div>
+            </div>
             ))}
           </div>
         </div>
@@ -713,15 +749,19 @@ export default function ProductsPage() {
 
               <p className="panel-subtitle">
                 {language === "it"
-                  ? `$${totalRevenueAtRisk.toFixed(
-                    0,
-                  )} di ricavi stanno attualmente lavorando sotto il margine target del 20%, con un'opportunità stimata di margine pari a $${totalRevenueAtRiskOpportunity.toFixed(
-                    0,
+                  ? `${money(
+                    totalRevenueAtRisk,
+                  )} di ricavi stanno attualmente lavorando sotto il margine target del ${pct(
+                    targetMarginPct,
+                  )}, con un'opportunità stimata di margine pari a ${money(
+                    totalRevenueAtRiskOpportunity,
                   )}.`
-                  : `$${totalRevenueAtRisk.toFixed(
-                    0,
-                  )} in revenue is currently operating below the 20% target margin, with an estimated $${totalRevenueAtRiskOpportunity.toFixed(
-                    0,
+                  : `${money(
+                    totalRevenueAtRisk,
+                  )} in revenue is currently operating below the ${pct(
+                    targetMarginPct,
+                  )} target margin, with an estimated ${money(
+                    totalRevenueAtRiskOpportunity,
                   )} margin opportunity.`}
               </p>
             </div>
@@ -819,7 +859,7 @@ export default function ProductsPage() {
                         color: "#f3f4f6",
                       }}
                     >
-                      ${product.revenue.toFixed(0)}
+                      {money(product.revenue)}
                     </div>
 
                     <div
@@ -835,7 +875,7 @@ export default function ProductsPage() {
                     >
                       <span>{language === "it" ? "Margine" : "Margin"}</span>
                       <span style={{ color: "#ff6b4a" }}>
-                        {product.marginPct.toFixed(1)}%
+                        {pct(product.marginPct)}
                       </span>
                     </div>
 
@@ -853,7 +893,7 @@ export default function ProductsPage() {
                       <span>
                         {language === "it" ? "Opportunità" : "Opportunity"}
                       </span>
-                      <span>${product.riskValue.toFixed(0)}</span>
+                      <span>{money(product.riskValue)}</span>
                     </div>
 
                     <div
@@ -928,6 +968,6 @@ export default function ProductsPage() {
           shopHandle={shopHandle}
         />
       </div>
-    </div >
+    </div>
   );
 }

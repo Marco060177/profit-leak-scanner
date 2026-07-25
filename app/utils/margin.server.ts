@@ -9,16 +9,18 @@ import {
   toYYYYMMDD,
 } from "~/utils/margin";
 
-
+import { formatMoney } from "~/utils/formatting";
 
 export async function loadMarginDashboardData({
   admin,
   session,
   period,
+  locale = "en-US",
 }: {
   admin: any;
   session: any;
   period: string;
+  locale?: string;
 }): Promise<LoaderData> {
   const days = Number.parseInt(period, 10);
 
@@ -31,18 +33,31 @@ export async function loadMarginDashboardData({
   const fromYYYYMMDD = toYYYYMMDD(fromDate);
 
   const previousFromDate = new Date(fromDate);
-  previousFromDate.setDate(previousFromDate.getDate() - safeDays);
+  previousFromDate.setDate(
+    previousFromDate.getDate() - safeDays,
+  );
 
-  const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
+  const previousFromYYYYMMDD =
+    toYYYYMMDD(previousFromDate);
 
-  const queryString = `processed_at:>=${fromYYYYMMDD}`;
+  const queryString =
+    `processed_at:>=${fromYYYYMMDD}`;
 
   const previousQueryString =
     `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 
-  const billingRes = await admin.graphql(`
+  /*
+   * Store settings and billing
+   */
+
+  const appDataResponse = await admin.graphql(`
     #graphql
-    query {
+    query MarginLabAppData {
+      shop {
+        currencyCode
+        ianaTimezone
+      }
+
       appInstallation {
         activeSubscriptions {
           id
@@ -53,17 +68,41 @@ export async function loadMarginDashboardData({
     }
   `);
 
-  const billingJson = await billingRes.json();
+  const appDataJson = await appDataResponse.json();
 
   const activeSubscriptions =
-    billingJson?.data?.appInstallation?.activeSubscriptions ?? [];
+    appDataJson?.data?.appInstallation?.activeSubscriptions ??
+    [];
 
-  const billingActive = activeSubscriptions.length > 0;
+  const billingActive =
+    activeSubscriptions.length > 0;
+
+  const currencyCode =
+    appDataJson?.data?.shop?.currencyCode || "USD";
+
+  const timeZone =
+    appDataJson?.data?.shop?.ianaTimezone || "UTC";
+
+  const storeMoney = (value: number) =>
+    formatMoney(value, {
+      currencyCode,
+      locale,
+      timeZone,
+    });
+
+  /*
+   * Current period orders
+   */
 
   const response = await admin.graphql(
     `#graphql
     query OrdersForLeak($q: String!) {
-      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+      orders(
+        first: 100
+        sortKey: PROCESSED_AT
+        reverse: true
+        query: $q
+      ) {
         edges {
           node {
             id
@@ -184,10 +223,19 @@ export async function loadMarginDashboardData({
 
   const gql = await response.json();
 
+  /*
+   * Previous period orders
+   */
+
   const previousResponse = await admin.graphql(
     `#graphql
     query OrdersForLeakPrevious($q: String!) {
-      orders(first: 100, sortKey: PROCESSED_AT, reverse: true, query: $q) {
+      orders(
+        first: 100
+        sortKey: PROCESSED_AT
+        reverse: true
+        query: $q
+      ) {
         edges {
           node {
             lineItems(first: 250) {
@@ -227,13 +275,18 @@ export async function loadMarginDashboardData({
     },
   );
 
-  const previousGql = await previousResponse.json();
+  const previousGql =
+    await previousResponse.json();
 
   const previousOrderEdges =
     previousGql?.data?.orders?.edges ?? [];
 
   const orderEdges =
     gql?.data?.orders?.edges ?? [];
+
+  /*
+   * Aggregation structures
+   */
 
   const byDay: Record<
     string,
@@ -278,15 +331,21 @@ export async function loadMarginDashboardData({
   let previousRevenue = 0;
   let previousCogs = 0;
 
+  /*
+   * Current period processing
+   */
+
   for (const o of orderEdges) {
     const order = o?.node;
 
     totalDiscounts += Number(
-      order?.totalDiscountsSet?.shopMoney?.amount ?? 0,
+      order?.totalDiscountsSet?.shopMoney?.amount ??
+        0,
     );
 
     totalShipping += Number(
-      order?.totalShippingPriceSet?.shopMoney?.amount ?? 0,
+      order?.totalShippingPriceSet?.shopMoney
+        ?.amount ?? 0,
     );
 
     totalTaxes += Number(
@@ -294,12 +353,15 @@ export async function loadMarginDashboardData({
     );
 
     totalRefunds += Number(
-      order?.totalRefundedSet?.shopMoney?.amount ?? 0,
+      order?.totalRefundedSet?.shopMoney?.amount ??
+        0,
     );
 
     const refundEdges =
       order?.refunds?.flatMap((refund: any) => {
-        return refund?.refundLineItems?.edges ?? [];
+        return (
+          refund?.refundLineItems?.edges ?? []
+        );
       }) ?? [];
 
     for (const refundEdge of refundEdges) {
@@ -312,10 +374,13 @@ export async function loadMarginDashboardData({
         refundProduct?.title ?? "Unknown product";
 
       const refundProductId =
-        refundProduct?.id ? extractNumericId(refundProduct.id) : "";
+        refundProduct?.id
+          ? extractNumericId(refundProduct.id)
+          : "";
 
       const refundAmount = Number(
-        refundNode?.subtotalSet?.shopMoney?.amount ?? 0,
+        refundNode?.subtotalSet?.shopMoney?.amount ??
+          0,
       );
 
       if (!byProduct[refundProductTitle]) {
@@ -331,50 +396,70 @@ export async function loadMarginDashboardData({
         };
       }
 
-      byProduct[refundProductTitle].refunds += refundAmount;
+      byProduct[refundProductTitle].refunds +=
+        refundAmount;
     }
 
-    const items = order?.lineItems?.edges ?? [];
+    const items =
+      order?.lineItems?.edges ?? [];
 
     for (const li of items) {
-      const qty = Number(li?.node?.quantity ?? 0);
+      const qty = Number(
+        li?.node?.quantity ?? 0,
+      );
 
       const price = Number(
-        li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0,
+        li?.node?.originalUnitPriceSet?.shopMoney
+          ?.amount ?? 0,
       );
 
       const costRaw =
-        li?.node?.variant?.inventoryItem?.unitCost?.amount;
+        li?.node?.variant?.inventoryItem?.unitCost
+          ?.amount;
 
       const hasCost =
-        costRaw !== null && costRaw !== undefined;
+        costRaw !== null &&
+        costRaw !== undefined;
 
       const cost = Number(costRaw ?? 0);
 
-      const product = li?.node?.variant?.product;
+      const product =
+        li?.node?.variant?.product;
 
       const productTitle =
         product?.title ?? "Unknown product";
 
       const productId =
-        product?.id ? extractNumericId(product.id) : productTitle;
+        product?.id
+          ? extractNumericId(product.id)
+          : productTitle;
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
 
       const lineDiscounts = (
         li?.node?.discountAllocations ?? []
-      ).reduce((acc: number, allocation: any) => {
-        return (
-          acc +
-          Number(
-            allocation?.allocatedAmountSet?.shopMoney?.amount ?? 0,
-          )
-        );
-      }, 0);
+      ).reduce(
+        (
+          acc: number,
+          allocation: any,
+        ) => {
+          return (
+            acc +
+            Number(
+              allocation?.allocatedAmountSet
+                ?.shopMoney?.amount ?? 0,
+            )
+          );
+        },
+        0,
+      );
 
-      const processedAt = order?.processedAt ?? "";
-      const day = processedAt.slice(0, 10);
+      const processedAt =
+        order?.processedAt ?? "";
+
+      const day =
+        processedAt.slice(0, 10);
 
       if (!byDay[day]) {
         byDay[day] = {
@@ -400,41 +485,60 @@ export async function loadMarginDashboardData({
       }
 
       if (!hasCost) {
-        byProduct[productTitle].missingCost = true;
+        byProduct[productTitle].missingCost =
+          true;
       }
 
       byProduct[productTitle].qty += qty;
-      byProduct[productTitle].revenue += lineRevenue;
-      byProduct[productTitle].cogs += lineCogs;
-      byProduct[productTitle].discounts += lineDiscounts;
+
+      byProduct[productTitle].revenue +=
+        lineRevenue;
+
+      byProduct[productTitle].cogs +=
+        lineCogs;
+
+      byProduct[productTitle].discounts +=
+        lineDiscounts;
 
       totalRevenue += lineRevenue;
       totalCogs += lineCogs;
     }
   }
 
+  /*
+   * Previous period processing
+   */
+
   for (const o of previousOrderEdges) {
-    const items = o?.node?.lineItems?.edges ?? [];
+    const items =
+      o?.node?.lineItems?.edges ?? [];
 
     for (const li of items) {
-      const qty = Number(li?.node?.quantity ?? 0);
+      const qty = Number(
+        li?.node?.quantity ?? 0,
+      );
 
       const price = Number(
-        li?.node?.originalUnitPriceSet?.shopMoney?.amount ?? 0,
+        li?.node?.originalUnitPriceSet?.shopMoney
+          ?.amount ?? 0,
       );
 
       const costRaw =
-        li?.node?.variant?.inventoryItem?.unitCost?.amount;
+        li?.node?.variant?.inventoryItem?.unitCost
+          ?.amount;
 
       const cost = Number(costRaw ?? 0);
 
-      const product = li?.node?.variant?.product;
+      const product =
+        li?.node?.variant?.product;
 
       const productTitle =
         product?.title ?? "Unknown product";
 
       const productId =
-        product?.id ? extractNumericId(product.id) : productTitle;
+        product?.id
+          ? extractNumericId(product.id)
+          : productTitle;
 
       const lineRevenue = price * qty;
       const lineCogs = cost * qty;
@@ -448,31 +552,49 @@ export async function loadMarginDashboardData({
         };
       }
 
-      previousByProduct[productTitle].revenue += lineRevenue;
-      previousByProduct[productTitle].cogs += lineCogs;
+      previousByProduct[
+        productTitle
+      ].revenue += lineRevenue;
+
+      previousByProduct[
+        productTitle
+      ].cogs += lineCogs;
 
       previousRevenue += lineRevenue;
       previousCogs += lineCogs;
     }
   }
 
-  const rows: Row[] = Object.values(byProduct)
+  /*
+   * Product rows
+   */
+
+  const rows: Row[] = Object.values(
+    byProduct,
+  )
     .map((r) => {
-      const profit = r.revenue - r.cogs;
+      const profit =
+        r.revenue - r.cogs;
 
       const marginPct =
-        r.revenue > 0 ? (profit / r.revenue) * 100 : 0;
+        r.revenue > 0
+          ? (profit / r.revenue) * 100
+          : 0;
 
       const previousProduct =
         previousByProduct[r.productTitle];
 
-      const previousProfit = previousProduct
-        ? previousProduct.revenue - previousProduct.cogs
-        : 0;
+      const previousProfit =
+        previousProduct
+          ? previousProduct.revenue -
+            previousProduct.cogs
+          : 0;
 
       const previousMarginPct =
         previousProduct?.revenue
-          ? (previousProfit / previousProduct.revenue) * 100
+          ? (previousProfit /
+              previousProduct.revenue) *
+            100
           : null;
 
       const productMarginDelta =
@@ -481,12 +603,17 @@ export async function loadMarginDashboardData({
           : null;
 
       const avgPrice =
-        r.qty > 0 ? r.revenue / r.qty : 0;
+        r.qty > 0
+          ? r.revenue / r.qty
+          : 0;
 
       const avgCost =
-        r.qty > 0 ? r.cogs / r.qty : 0;
+        r.qty > 0
+          ? r.cogs / r.qty
+          : 0;
 
-      const breakEvenPrice = avgCost;
+      const breakEvenPrice =
+        avgCost;
 
       const targetMargin = 0.2;
 
@@ -495,24 +622,30 @@ export async function loadMarginDashboardData({
           ? avgCost / (1 - targetMargin)
           : avgPrice;
 
-      const targetDelta = targetPrice - avgPrice;
+      const targetDelta =
+        targetPrice - avgPrice;
 
       const aggressiveIncrease =
-        avgPrice > 0 && targetDelta / avgPrice > 0.3;
+        avgPrice > 0 &&
+        targetDelta / avgPrice > 0.3;
 
       const suggestion =
         profit < 0
           ? aggressiveIncrease
             ? "Current margins are critically below target. Review product costs, pricing structure and discounts."
-            : `Increase price to ${moneyServer(targetPrice)} (${targetDelta >= 0 ? "+" : ""}${moneyServer(
-              targetDelta,
-            )} per unit) to reach a healthier margin.`
+            : `Increase price to ${storeMoney(
+                targetPrice,
+              )} (${
+                targetDelta >= 0 ? "+" : ""
+              }${storeMoney(
+                targetDelta,
+              )} per unit) to reach a healthier margin.`
           : targetDelta > 0
             ? aggressiveIncrease
               ? "Margin improvement opportunity detected. Review pricing and operational costs."
-              : `Consider increasing price to ${moneyServer(
-                targetPrice,
-              )} to improve product margins.`
+              : `Consider increasing price to ${storeMoney(
+                  targetPrice,
+                )} to improve product margins.`
             : "Current pricing and margins appear stable based on available cost data.";
 
       return {
@@ -522,7 +655,9 @@ export async function loadMarginDashboardData({
         previousMarginPct,
         productMarginDelta,
         losing: profit < 0,
-        lowMargin: marginPct > 0 && marginPct < 10,
+        lowMargin:
+          marginPct > 0 &&
+          marginPct < 10,
         avgPrice,
         avgCost,
         breakEvenPrice,
@@ -532,72 +667,132 @@ export async function loadMarginDashboardData({
         suggestion,
       };
     })
-    .sort((a, b) => a.profit - b.profit);
+    .sort(
+      (a, b) =>
+        a.profit - b.profit,
+    );
+
+  /*
+   * Margin deterioration
+   */
 
   const marginDeterioration = rows
     .filter(
-      (row): row is Row & { productMarginDelta: number } =>
+      (
+        row,
+      ): row is Row & {
+        productMarginDelta: number;
+      } =>
         row.productMarginDelta !== null,
     )
-    .filter((row) => row.productMarginDelta < -3)
-    .sort((a, b) => a.productMarginDelta - b.productMarginDelta)
+    .filter(
+      (row) =>
+        row.productMarginDelta < -3,
+    )
+    .sort(
+      (a, b) =>
+        a.productMarginDelta -
+        b.productMarginDelta,
+    )
     .slice(0, 5);
+
+  /*
+   * Store summary
+   */
 
   const netRevenue = Math.max(
     0,
-    totalRevenue - totalDiscounts - totalRefunds,
+    totalRevenue -
+      totalDiscounts -
+      totalRefunds,
   );
 
   const contributionProfit =
-    netRevenue - totalCogs - totalShipping;
+    netRevenue -
+    totalCogs -
+    totalShipping;
 
-  const totalProfit = totalRevenue - totalCogs;
+  const totalProfit =
+    totalRevenue - totalCogs;
 
   const contributionMarginPct =
-    netRevenue > 0 ? (contributionProfit / netRevenue) * 100 : 0;
+    netRevenue > 0
+      ? (contributionProfit /
+          netRevenue) *
+        100
+      : 0;
 
-  const previousProfit = previousRevenue - previousCogs;
+  const previousProfit =
+    previousRevenue - previousCogs;
 
   const previousMarginPct =
     previousRevenue > 0
-      ? (previousProfit / previousRevenue) * 100
+      ? (previousProfit /
+          previousRevenue) *
+        100
       : 0;
 
   const marginPct =
     totalRevenue > 0
-      ? (totalProfit / totalRevenue) * 100
+      ? (totalProfit /
+          totalRevenue) *
+        100
       : 0;
 
-  const marginDelta = marginPct - previousMarginPct;
+  const marginDelta =
+    marginPct - previousMarginPct;
 
   const revenueDeltaPct =
     previousRevenue > 0
-      ? ((totalRevenue - previousRevenue) / previousRevenue) * 100
+      ? ((totalRevenue -
+          previousRevenue) /
+          previousRevenue) *
+        100
       : 0;
 
   const totalLeak = Math.abs(
     rows.reduce(
-      (acc, r) => acc + (r.profit < 0 ? r.profit : 0),
+      (acc, row) =>
+        acc +
+        (row.profit < 0
+          ? row.profit
+          : 0),
       0,
     ),
   );
 
   const losingCount =
-    rows.filter((r) => r.losing).length;
+    rows.filter(
+      (row) => row.losing,
+    ).length;
 
   const missingCostCount =
-    rows.filter((r) => r.missingCost).length;
+    rows.filter(
+      (row) => row.missingCost,
+    ).length;
 
   const shopHandle =
-    session.shop.replace(".myshopify.com", "");
+    session.shop.replace(
+      ".myshopify.com",
+      "",
+    );
 
-  const trend: TrendPoint[] = Object.entries(byDay)
-    .map(([date, values]) => ({
-      date,
-      revenue: values.revenue,
-      profit: values.revenue - values.cogs,
-    }))
-    .sort((a, b) => a.date.localeCompare(b.date));
+  /*
+   * Trend
+   */
+
+  const trend: TrendPoint[] =
+    Object.entries(byDay)
+      .map(([date, values]) => ({
+        date,
+        revenue: values.revenue,
+        profit:
+          values.revenue -
+          values.cogs,
+      }))
+      .sort((a, b) =>
+        a.date.localeCompare(b.date),
+      );
 
   return {
     summary: {
@@ -626,13 +821,7 @@ export async function loadMarginDashboardData({
     billingActive,
     period: String(safeDays),
     shopHandle,
-    
+    currencyCode,
+    timeZone,
   };
-}
-
-function moneyServer(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
 }

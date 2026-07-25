@@ -17,8 +17,8 @@ import { generateProfitAlerts } from "~/utils/profit-monitor";
 import {
   type LoaderData,
   type Row,
-  money,
-  pct,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
 } from "~/utils/margin";
 
 export const links = () => [
@@ -36,6 +36,12 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
+  const language =
+    url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
   const { admin, session } = await authenticate.admin(request);
 
   try {
@@ -50,12 +56,19 @@ export const loader = async ({
     admin,
     session,
     period,
+    locale,
   });
 };
 
 export default function DashboardV2() {
-  const { summary, rows, trend, period } =
-    useLoaderData() as LoaderData;
+  const {
+    summary,
+    rows,
+    trend,
+    period,
+    currencyCode,
+    timeZone,
+  } = useLoaderData() as LoaderData;
 
 
   const navigate = useNavigate();
@@ -63,6 +76,28 @@ export default function DashboardV2() {
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
   const language = getStoredLanguage();
+
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
+  const money = React.useCallback(
+    (value: number) =>
+      formatStoreMoney(
+        value,
+        currencyCode,
+        locale,
+      ),
+    [currencyCode, locale],
+  );
+
+  const pct = React.useCallback(
+    (value: number) =>
+      formatStorePercent(
+        value,
+        locale,
+      ),
+    [locale],
+  );
 
   const alerts = React.useMemo(
     () =>
@@ -154,7 +189,7 @@ export default function DashboardV2() {
       breakEvenPrice: 48,
       targetPrice: 60,
       targetDelta: 8,
-      suggestion: "Increase price by $8 to reach target margin.",
+      suggestion: "Increase price to reach the target margin.",
       missingCost: false,
     },
     {
@@ -344,7 +379,7 @@ export default function DashboardV2() {
     weakBestSeller.revenue > 1000 &&
     weakBestSellerMargin < 30;
 
-  
+
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
@@ -827,19 +862,19 @@ export default function DashboardV2() {
 
     <div className="dashboard-shell">
       <div className="dashboard-container">
-      <DashboardHero
-        period={period}
-        setPeriod={setPeriod}
-        navigate={navigate}
-        scrollToSection={scrollToSection}
-        analysisLoading={analysisLoading}
-        analysisText={analysisText}
-        analysisSteps={analysisSteps}
-        setAnalysisLoading={setAnalysisLoading}
-        setAnalysisText={setAnalysisText}
-      />
+        <DashboardHero
+          period={period}
+          setPeriod={setPeriod}
+          navigate={navigate}
+          scrollToSection={scrollToSection}
+          analysisLoading={analysisLoading}
+          analysisText={analysisText}
+          analysisSteps={analysisSteps}
+          setAnalysisLoading={setAnalysisLoading}
+          setAnalysisText={setAnalysisText}
+        />
 
-      {/* {!billingActive ? (
+        {/* {!billingActive ? (
               <div className="billing-banner">
                 <div>
                   <strong>Margin Intelligence preview mode</strong>
@@ -856,376 +891,376 @@ export default function DashboardV2() {
               </div>
             ) : null} */}
 
-      <ScoreCard
-        score={score}
-        scoreLabel={scoreLabel}
-        visualLeak={visualLeak}
-        visualProductsAtRisk={visualProductsAtRisk}
-        visualMarginPct={visualMarginPct}
-      />
+        <ScoreCard
+          score={score}
+          scoreLabel={scoreLabel}
+          visualLeak={visualLeak}
+          visualProductsAtRisk={visualProductsAtRisk}
+          visualMarginPct={visualMarginPct}
+        />
 
-      <AIProfitMonitor
-        alerts={alerts}
-        navigate={navigate}
-      />
+        <AIProfitMonitor
+          alerts={alerts}
+          navigate={navigate}
+        />
 
 
-      <KpiGrid
-        items={[
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Ricavi analizzati"
-                : "Revenue scanned",
-            value: money(
-              sourceRows.reduce(
-                (acc, row) => acc + row.revenue,
-                0,
-              ),
-            ),
-            note:
-              getStoredLanguage() === "it"
-                ? `Ultimi ${period} giorni`
-                : `Last ${period} days`,
-            icon: "$",
-            tone: "positive",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Prodotti analizzati"
-                : "Products analyzed",
-            value: String(sourceRows.length),
-            note:
-              getStoredLanguage() === "it"
-                ? `${sourceRows.filter(
-                  (row) =>
-                    row.losing ||
-                    row.lowMargin ||
-                    row.missingCost,
-                ).length} a rischio`
-                : `${sourceRows.filter(
-                  (row) =>
-                    row.losing ||
-                    row.lowMargin ||
-                    row.missingCost,
-                ).length} at risk`,
-            icon: "◈",
-            tone: "warning",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Prodotti a basso margine"
-                : "Low margin products",
-            value: String(
-              sourceRows.filter((row) => row.lowMargin).length,
-            ),
-            note:
-              getStoredLanguage() === "it"
-                ? "Sotto il 10%"
-                : "Below 10%",
-            icon: "↓",
-            tone: "warning",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Costi mancanti"
-                : "Missing costs",
-            value: String(
-              sourceRows.filter((row) => row.missingCost).length,
-            ),
-            note:
-              getStoredLanguage() === "it"
-                ? "Da correggere"
-                : "Fix required",
-            icon: "⚠",
-            tone: "danger",
-          },
-        ]}
-      />
-
-      <KpiGrid
-        marginBottom={24}
-        items={[
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Perdita Principale"
-                : "Biggest Profit Leak",
-            value: worstProduct
-              ? worstProduct.productTitle
-              : getStoredLanguage() === "it"
-                ? "Nessun dato"
-                : "No data",
-            note: worstProduct
-              ? getStoredLanguage() === "it"
-                ? `${money(
-                  Math.abs(worstProduct.profit),
-                )} perdita stimata`
-                : `${money(
-                  Math.abs(worstProduct.profit),
-                )} estimated loss`
-              : getStoredLanguage() === "it"
-                ? "Nessun problema rilevato"
-                : "No issues detected",
-            icon: "↓",
-            tone: "danger",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Miglior Margine"
-                : "Best Margin Product",
-            value: bestProduct
-              ? bestProduct.productTitle
-              : getStoredLanguage() === "it"
-                ? "Nessun dato"
-                : "No data",
-            note: bestProduct
-              ? bestProduct.missingCost
-                ? getStoredLanguage() === "it"
-                  ? "Costo mancante"
-                  : "Missing cost data"
-                : getStoredLanguage() === "it"
-                  ? `${pct(bestProduct.marginPct)} margine`
-                  : `${pct(bestProduct.marginPct)} margin`
-              : getStoredLanguage() === "it"
-                ? "Nessun prodotto disponibile"
-                : "No products available",
-            icon: "↑",
-            tone: "positive",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "Profitto Recuperabile"
-                : "Recoverable Profit",
-            value: money(recoverableProfit),
-            note:
-              getStoredLanguage() === "it"
-                ? "Potenziale recupero margine"
-                : "Potential margin recovery",
-            icon: "+",
-            tone: "warning",
-          },
-          {
-            label:
-              getStoredLanguage() === "it"
-                ? "MARGINE MEDIO PRODOTTO"
-                : "AVERAGE PRODUCT MARGIN",
-            value: pct(
-              sourceRows.length > 0
-                ? sourceRows.reduce(
-                  (acc, row) => acc + row.marginPct,
+        <KpiGrid
+          items={[
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Ricavi analizzati"
+                  : "Revenue scanned",
+              value: money(
+                sourceRows.reduce(
+                  (acc, row) => acc + row.revenue,
                   0,
-                ) / sourceRows.length
-                : 0,
-            ),
-            note:
-              getStoredLanguage() === "it"
-                ? "Su tutti i prodotti analizzati"
-                : "Across analyzed products",
-            icon: "%",
-            tone: "positive",
-          },
-        ]}
-      />
+                ),
+              ),
+              note:
+                getStoredLanguage() === "it"
+                  ? `Ultimi ${period} giorni`
+                  : `Last ${period} days`,
+              icon: "¤",
+              tone: "positive",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Prodotti analizzati"
+                  : "Products analyzed",
+              value: String(sourceRows.length),
+              note:
+                getStoredLanguage() === "it"
+                  ? `${sourceRows.filter(
+                    (row) =>
+                      row.losing ||
+                      row.lowMargin ||
+                      row.missingCost,
+                  ).length} a rischio`
+                  : `${sourceRows.filter(
+                    (row) =>
+                      row.losing ||
+                      row.lowMargin ||
+                      row.missingCost,
+                  ).length} at risk`,
+              icon: "◈",
+              tone: "warning",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Prodotti a basso margine"
+                  : "Low margin products",
+              value: String(
+                sourceRows.filter((row) => row.lowMargin).length,
+              ),
+              note:
+                getStoredLanguage() === "it"
+                  ? "Sotto il 10%"
+                  : "Below 10%",
+              icon: "↓",
+              tone: "warning",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Costi mancanti"
+                  : "Missing costs",
+              value: String(
+                sourceRows.filter((row) => row.missingCost).length,
+              ),
+              note:
+                getStoredLanguage() === "it"
+                  ? "Da correggere"
+                  : "Fix required",
+              icon: "⚠",
+              tone: "danger",
+            },
+          ]}
+        />
 
-      <TrendChart
-        chartData={chartData}
-        maxChartValue={maxChartValue}
-        revenuePoints={revenuePoints}
-        profitPoints={profitPoints}
-        visualMarginPct={visualMarginPct}
-      />
+        <KpiGrid
+          marginBottom={24}
+          items={[
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Perdita Principale"
+                  : "Biggest Profit Leak",
+              value: worstProduct
+                ? worstProduct.productTitle
+                : getStoredLanguage() === "it"
+                  ? "Nessun dato"
+                  : "No data",
+              note: worstProduct
+                ? getStoredLanguage() === "it"
+                  ? `${money(
+                    Math.abs(worstProduct.profit),
+                  )} perdita stimata`
+                  : `${money(
+                    Math.abs(worstProduct.profit),
+                  )} estimated loss`
+                : getStoredLanguage() === "it"
+                  ? "Nessun problema rilevato"
+                  : "No issues detected",
+              icon: "↓",
+              tone: "danger",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Miglior Margine"
+                  : "Best Margin Product",
+              value: bestProduct
+                ? bestProduct.productTitle
+                : getStoredLanguage() === "it"
+                  ? "Nessun dato"
+                  : "No data",
+              note: bestProduct
+                ? bestProduct.missingCost
+                  ? getStoredLanguage() === "it"
+                    ? "Costo mancante"
+                    : "Missing cost data"
+                  : getStoredLanguage() === "it"
+                    ? `${pct(bestProduct.marginPct)} margine`
+                    : `${pct(bestProduct.marginPct)} margin`
+                : getStoredLanguage() === "it"
+                  ? "Nessun prodotto disponibile"
+                  : "No products available",
+              icon: "↑",
+              tone: "positive",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "Profitto Recuperabile"
+                  : "Recoverable Profit",
+              value: money(recoverableProfit),
+              note:
+                getStoredLanguage() === "it"
+                  ? "Potenziale recupero margine"
+                  : "Potential margin recovery",
+              icon: "+",
+              tone: "warning",
+            },
+            {
+              label:
+                getStoredLanguage() === "it"
+                  ? "MARGINE MEDIO PRODOTTO"
+                  : "AVERAGE PRODUCT MARGIN",
+              value: pct(
+                sourceRows.length > 0
+                  ? sourceRows.reduce(
+                    (acc, row) => acc + row.marginPct,
+                    0,
+                  ) / sourceRows.length
+                  : 0,
+              ),
+              note:
+                getStoredLanguage() === "it"
+                  ? "Su tutti i prodotti analizzati"
+                  : "Across analyzed products",
+              icon: "%",
+              tone: "positive",
+            },
+          ]}
+        />
 
-      <section
-        className="panel"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,0.75fr)",
-          gap: 22,
-          alignItems: "stretch",
-        }}
-      >
-        <div>
-          <div className="section-eyebrow">
-            {language === "it"
-              ? "RIEPILOGO ESECUTIVO"
-              : "EXECUTIVE SUMMARY"}
-          </div>
+        <TrendChart
+          chartData={chartData}
+          maxChartValue={maxChartValue}
+          revenuePoints={revenuePoints}
+          profitPoints={profitPoints}
+          visualMarginPct={visualMarginPct}
+        />
 
-          <div
-            className="section-title"
-            style={{ marginTop: 8, fontSize: 28 }}
-          >
-            {language === "it"
-              ? "Le informazioni che contano oggi"
-              : "What matters today"}
-          </div>
-
-          <div
-            style={{
-              marginTop: 11,
-              maxWidth: 760,
-              color: "rgba(226,232,240,0.72)",
-              fontSize: 14,
-              lineHeight: 1.7,
-              fontWeight: 720,
-            }}
-          >
-            {language === "it"
-              ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il profitto recuperabile stimato nel periodo è ${money(recoverableProfit)}.`
-              : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated recoverable profit for the period is ${money(recoverableProfit)}.`}
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-              gap: 11,
-              marginTop: 20,
-            }}
-          >
-            {[
-              {
-                label: language === "it" ? "Critici" : "Critical",
-                value: alertCounts.critical,
-                color: "#ff6b4a",
-              },
-              {
-                label: language === "it" ? "Avvisi" : "Warnings",
-                value: alertCounts.warning,
-                color: "#f59e0b",
-              },
-              {
-                label: language === "it" ? "Opportunità" : "Opportunities",
-                value: alertCounts.opportunity,
-                color: "#22c55e",
-              },
-              {
-                label: language === "it" ? "A rischio" : "At risk",
-                value: visualProductsAtRisk,
-                color: "#38bdf8",
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                style={{
-                  padding: 15,
-                  borderRadius: 16,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(226,232,240,0.48)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                  }}
-                >
-                  {item.label}
-                </div>
-                <div
-                  style={{
-                    marginTop: 7,
-                    color: item.color,
-                    fontSize: 24,
-                    lineHeight: 1,
-                    fontWeight: 950,
-                  }}
-                >
-                  {item.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div
+        <section
+          className="panel"
           style={{
-            padding: 20,
-            borderRadius: 20,
-            background:
-              "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 42%), rgba(5,10,18,0.55)",
-            border: "1px solid rgba(255,115,60,0.20)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
+            display: "grid",
+            gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,0.75fr)",
+            gap: 22,
+            alignItems: "stretch",
           }}
         >
           <div>
+            <div className="section-eyebrow">
+              {language === "it"
+                ? "RIEPILOGO ESECUTIVO"
+                : "EXECUTIVE SUMMARY"}
+            </div>
+
             <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 10,
-                fontWeight: 950,
-                textTransform: "uppercase",
-                letterSpacing: "0.11em",
-              }}
+              className="section-title"
+              style={{ marginTop: 8, fontSize: 28 }}
             >
-              {language === "it" ? "PROSSIMA DECISIONE" : "NEXT DECISION"}
+              {language === "it"
+                ? "Le informazioni che contano oggi"
+                : "What matters today"}
             </div>
 
             <div
               style={{
-                marginTop: 10,
-                color: "#f8fafc",
-                fontSize: 19,
-                lineHeight: 1.35,
-                fontWeight: 950,
-              }}
-            >
-              {primaryAlert?.title ??
-                (language === "it"
-                  ? "Nessuna azione urgente rilevata"
-                  : "No urgent action detected")}
-            </div>
-
-            <div
-              style={{
-                marginTop: 8,
-                color: "rgba(226,232,240,0.56)",
-                fontSize: 12,
-                lineHeight: 1.55,
+                marginTop: 11,
+                maxWidth: 760,
+                color: "rgba(226,232,240,0.72)",
+                fontSize: 14,
+                lineHeight: 1.7,
                 fontWeight: 720,
               }}
             >
-              {primaryAlert?.description ??
-                (language === "it"
-                  ? "Continua a monitorare margini, costi e opportunità."
-                  : "Continue monitoring margins, costs and opportunities.")}
+              {language === "it"
+                ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il profitto recuperabile stimato nel periodo è ${money(recoverableProfit)}.`
+                : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated recoverable profit for the period is ${money(recoverableProfit)}.`}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+                gap: 11,
+                marginTop: 20,
+              }}
+            >
+              {[
+                {
+                  label: language === "it" ? "Critici" : "Critical",
+                  value: alertCounts.critical,
+                  color: "#ff6b4a",
+                },
+                {
+                  label: language === "it" ? "Avvisi" : "Warnings",
+                  value: alertCounts.warning,
+                  color: "#f59e0b",
+                },
+                {
+                  label: language === "it" ? "Opportunità" : "Opportunities",
+                  value: alertCounts.opportunity,
+                  color: "#22c55e",
+                },
+                {
+                  label: language === "it" ? "A rischio" : "At risk",
+                  value: visualProductsAtRisk,
+                  color: "#38bdf8",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    padding: 15,
+                    borderRadius: 16,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                >
+                  <div
+                    style={{
+                      color: "rgba(226,232,240,0.48)",
+                      fontSize: 9,
+                      fontWeight: 950,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 7,
+                      color: item.color,
+                      fontSize: 24,
+                      lineHeight: 1,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {item.value}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <button
-            type="button"
-            className="primary-button"
-            style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
-            onClick={() =>
-              navigate(primaryAlert?.route ?? "/app/ai-advisor")
-            }
+          <div
+            style={{
+              padding: 20,
+              borderRadius: 20,
+              background:
+                "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 42%), rgba(5,10,18,0.55)",
+              border: "1px solid rgba(255,115,60,0.20)",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
           >
-            {primaryAlert?.actionLabel ??
-              (language === "it" ? "Apri Profit Copilot" : "Open Profit Copilot")}
-            {" →"}
-          </button>
-        </div>
-      </section>
+            <div>
+              <div
+                style={{
+                  color: "#ff9a70",
+                  fontSize: 10,
+                  fontWeight: 950,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.11em",
+                }}
+              >
+                {language === "it" ? "PROSSIMA DECISIONE" : "NEXT DECISION"}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 10,
+                  color: "#f8fafc",
+                  fontSize: 19,
+                  lineHeight: 1.35,
+                  fontWeight: 950,
+                }}
+              >
+                {primaryAlert?.title ??
+                  (language === "it"
+                    ? "Nessuna azione urgente rilevata"
+                    : "No urgent action detected")}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 8,
+                  color: "rgba(226,232,240,0.56)",
+                  fontSize: 12,
+                  lineHeight: 1.55,
+                  fontWeight: 720,
+                }}
+              >
+                {primaryAlert?.description ??
+                  (language === "it"
+                    ? "Continua a monitorare margini, costi e opportunità."
+                    : "Continue monitoring margins, costs and opportunities.")}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
+              onClick={() =>
+                navigate(primaryAlert?.route ?? "/app/ai-advisor")
+              }
+            >
+              {primaryAlert?.actionLabel ??
+                (language === "it" ? "Apri Profit Copilot" : "Open Profit Copilot")}
+              {" →"}
+            </button>
+          </div>
+        </section>
 
 
 
-      <TopLeaksPanel
-        topLeaks={topLeaks}
-        severityColor={severityColor}
-        severityBackground={severityBackground}
-        severityBorder={severityBorder}
-      />
+        <TopLeaksPanel
+          topLeaks={topLeaks}
+          severityColor={severityColor}
+          severityBackground={severityBackground}
+          severityBorder={severityBorder}
+        />
       </div>
     </div>
   );
