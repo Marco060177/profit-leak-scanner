@@ -5,7 +5,11 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import { type LoaderData, money } from "~/utils/margin";
+import {
+  type LoaderData,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
@@ -21,6 +25,12 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
+  const language =
+    url.searchParams.get("lang") === "it" ? "it" : "en";
+
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
   const { admin, session } = await authenticate.admin(request);
 
   try {
@@ -31,16 +41,41 @@ export const loader = async ({
     });
   }
 
-  return loadMarginDashboardData({ admin, session, period });
+  return loadMarginDashboardData({
+    admin,
+    session,
+    period,
+    locale,
+  });
 };
 
 export default function ProfitIntelligencePage() {
-  const { summary, trend, rows, marginDeterioration } =
-    useLoaderData() as LoaderData;
+  const {
+    summary,
+    trend,
+    rows,
+    marginDeterioration,
+    currencyCode,
+  } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
 
   const language = getStoredLanguage();
+  const locale =
+    language === "it" ? "it-IT" : "en-US";
+
+  const money = (value: number) =>
+    formatStoreMoney(
+      value,
+      currencyCode,
+      locale,
+    );
+
+  const pct = (value: number) =>
+    formatStorePercent(
+      value,
+      locale,
+    );
 
   const topDiscountProducts = [...rows]
     .filter((row) => row.discounts > 0)
@@ -320,13 +355,13 @@ export default function ProfitIntelligencePage() {
                     language === "it"
                       ? "Dipendenza dai ricavi"
                       : "Revenue dependency",
-                    `${top3RevenueShare.toFixed(1)}%`,
+                    pct(top3RevenueShare),
                   ],
                   [
                     language === "it"
                       ? "Dipendenza dai profitti"
                       : "Profit dependency",
-                    `${top3ProfitShare.toFixed(1)}%`,
+                    pct(top3ProfitShare),
                   ],
                   [
                     language === "it"
@@ -508,7 +543,9 @@ export default function ProfitIntelligencePage() {
                         color: "rgba(255,255,255,0.55)",
                       }}
                     >
-                      {driver.impactPct.toFixed(1)}% impact
+                      {language === "it"
+                        ? `${pct(driver.impactPct)} di impatto`
+                        : `${pct(driver.impactPct)} impact`}
                     </div>
                   </div>
                 </div>
@@ -592,7 +629,12 @@ export default function ProfitIntelligencePage() {
                         color: "#ef4444",
                       }}
                     >
-                      {row.productMarginDelta?.toFixed(1)} pts
+                      {row.productMarginDelta != null
+                        ? `${new Intl.NumberFormat(locale, {
+                          minimumFractionDigits: 1,
+                          maximumFractionDigits: 1,
+                        }).format(row.productMarginDelta)} pts`
+                        : "—"}
                     </div>
 
                     <div
@@ -603,8 +645,10 @@ export default function ProfitIntelligencePage() {
                         color: "rgba(255,255,255,0.58)",
                       }}
                     >
-                      {row.previousMarginPct?.toFixed(1)}% →{" "}
-                      {row.marginPct.toFixed(1)}%
+                      {row.previousMarginPct != null
+                        ? pct(row.previousMarginPct)
+                        : "—"}{" "}
+                      → {pct(row.marginPct)}
                     </div>
                   </div>
                 </div>
@@ -676,8 +720,8 @@ export default function ProfitIntelligencePage() {
                         }}
                       >
                         {language === "it"
-                          ? `${discountPct.toFixed(1)}% dei ricavi del prodotto`
-                          : `${discountPct.toFixed(1)}% of product revenue`}
+                          ? `${pct(discountPct)} dei ricavi del prodotto`
+                          : `${pct(discountPct)} of product revenue`}
                       </div>
                     </div>
 
@@ -737,14 +781,14 @@ export default function ProfitIntelligencePage() {
                 text:
                   language === "it"
                     ? marginDeteriorating
-                      ? `Il margine è diminuito del ${Math.abs(
-                        summary.marginDelta,
-                      ).toFixed(1)}% rispetto al periodo precedente.`
+                      ? `Il margine è diminuito del ${pct(
+                        Math.abs(summary.marginDelta),
+                      )} rispetto al periodo precedente.`
                       : "Il margine è stabile rispetto al periodo precedente."
                     : marginDeteriorating
-                      ? `Margin dropped by ${Math.abs(
-                        summary.marginDelta,
-                      ).toFixed(1)}% compared to the previous period.`
+                      ? `Margin dropped by ${pct(
+                        Math.abs(summary.marginDelta),
+                      )} compared to the previous period.`
                       : "Margin is stable compared to the previous period.",
                 color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
               },
@@ -761,19 +805,19 @@ export default function ProfitIntelligencePage() {
                 text:
                   language === "it"
                     ? profitDeteriorating
-                      ? `I profitti sono diminuiti del ${Math.abs(
+                      ? `I profitti sono diminuiti del ${pct(
+                        Math.abs(profitTrendPct),
+                      )} nel periodo analizzato.`
+                      : `I profitti sono variati del ${pct(
                         profitTrendPct,
-                      ).toFixed(1)}% nel periodo analizzato.`
-                      : `I profitti sono variati del ${profitTrendPct.toFixed(
-                        1,
-                      )}% nel periodo analizzato.`
+                      )} nel periodo analizzato.`
                     : profitDeteriorating
-                      ? `Profit declined by ${Math.abs(profitTrendPct).toFixed(
-                        1,
-                      )}% across the selected trend window.`
-                      : `Profit changed by ${profitTrendPct.toFixed(
-                        1,
-                      )}% across the selected trend window.`,
+                      ? `Profit declined by ${pct(
+                        Math.abs(profitTrendPct),
+                      )} across the selected trend window.`
+                      : `Profit changed by ${pct(
+                        profitTrendPct,
+                      )} across the selected trend window.`,
                 color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
@@ -869,6 +913,7 @@ export default function ProfitIntelligencePage() {
           }}
         >
           <ConcentrationCard
+            pct={pct}
             eyebrow={
               language === "it"
                 ? "DIPENDENZA DAI RICAVI"
@@ -912,6 +957,7 @@ export default function ProfitIntelligencePage() {
           />
 
           <ConcentrationCard
+            pct={pct}
             eyebrow={
               language === "it"
                 ? "DIPENDENZA DAI PROFITTI"
@@ -1089,7 +1135,7 @@ export default function ProfitIntelligencePage() {
                           lineHeight: 1,
                         }}
                       >
-                        {row.marginPct.toFixed(1)}%
+                        {pct(row.marginPct)}
                       </div>
 
                       <div
@@ -1240,12 +1286,14 @@ function ConcentrationCard({
   status,
   statusColor,
   rows,
+  pct,
 }: {
   eyebrow: string;
   title: string;
   status: string;
   statusColor: string;
   rows: [string, number][];
+  pct: (value: number) => string;
 }) {
   return (
     <div className="panel" style={{ marginBottom: 0 }}>
@@ -1282,7 +1330,7 @@ function ConcentrationCard({
                 color: "#f3f4f6",
               }}
             >
-              {value.toFixed(1)}%
+              {pct(value)}
             </div>
 
             <div
