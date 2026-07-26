@@ -486,7 +486,7 @@ export default function DashboardV2() {
     riskyRevenueShare > 25
       ? {
         title: "High-risk products are driving a significant share of revenue",
-        value: `${riskyRevenueShare.toFixed(1)}% of revenue`,
+        value: `${pct(riskyRevenueShare)} of revenue`,
         description:
           "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
         severity: "Critical",
@@ -497,7 +497,7 @@ export default function DashboardV2() {
     topRevenueShare > 50
       ? {
         title: "Revenue is concentrated in a small group of products",
-        value: `${topRevenueShare.toFixed(1)}% from top 3 products`,
+        value: `${pct(topRevenueShare)} from top 3 products`,
         description:
           "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
         severity: "High",
@@ -649,7 +649,7 @@ export default function DashboardV2() {
           getStoredLanguage() === "it"
             ? "La redditività del negozio sta diminuendo"
             : "Store profitability is decreasing",
-        badge: `${marginDelta.toFixed(1)}%`,
+        badge: pct(marginDelta),
         description: (
           <>
             {getStoredLanguage() === "it"
@@ -710,18 +710,18 @@ export default function DashboardV2() {
             : "Revenue growth is outpacing margin growth",
         badge:
           getStoredLanguage() === "it"
-            ? `${summary.revenueDeltaPct.toFixed(1)}% ricavi`
-            : `${summary.revenueDeltaPct.toFixed(1)}% revenue`,
+            ? `${pct(summary.revenueDeltaPct)} ricavi`
+            : `${pct(summary.revenueDeltaPct)} revenue`,
         description: (
           <>
             {getStoredLanguage() === "it"
               ? "I ricavi del negozio sono aumentati del"
               : "Store revenue increased by"}{" "}
-            <strong>{summary.revenueDeltaPct.toFixed(1)}%</strong>
+            <strong>{pct(summary.revenueDeltaPct)}</strong>
             {getStoredLanguage() === "it"
               ? ", ma il margine è sceso del"
               : ", but margin dropped by"}{" "}
-            <strong>{Math.abs(summary.marginDelta).toFixed(1)}%</strong>
+            <strong>{pct(Math.abs(summary.marginDelta))}</strong>
             {getStoredLanguage() === "it"
               ? ". Una crescita rapida con margini in calo può indicare sconti aggressivi, costi in aumento o bestseller sottoprezzati."
               : ". Rapid growth combined with weakening margins may indicate aggressive discounts, rising costs or underpriced best sellers."}

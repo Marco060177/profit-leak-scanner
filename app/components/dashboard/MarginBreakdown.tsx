@@ -1,4 +1,5 @@
 import { getStoredLanguage } from "~/utils/i18n";
+import { pct } from "~/utils/margin";
 
 type Props = {
   cogsPercentage: number;
@@ -123,7 +124,7 @@ export default function MarginBreakdown({
                 letterSpacing: "-0.04em",
               }}
             >
-              {item.value.toFixed(1)}%
+              {pct(item.value)}
             </div>
 
             <div

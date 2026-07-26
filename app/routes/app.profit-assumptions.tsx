@@ -8,7 +8,11 @@ import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import type { LoaderData } from "~/utils/margin";
+import {
+  type LoaderData,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
@@ -17,12 +21,14 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
+  const locale = url.searchParams.get("lang") === "it" ? "it-IT" : "en-US";
   const period = url.searchParams.get("period") ?? "30";
 
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
     period,
+    locale,
   });
 
   const assumptions =
@@ -85,17 +91,7 @@ export async function action({ request }: { request: Request }) {
   };
 }
 
-function money(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(n) ? n : 0);
-}
 
-function pct(n: number) {
-  return `${(Number.isFinite(n) ? n : 0).toFixed(1)}%`;
-}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -275,17 +271,28 @@ export default function ProfitAssumptionsPage() {
   const language = getStoredLanguage();
   const saveFetcher = useFetcher<{ ok: boolean }>();
 
-  const { summary, assumptions } =
-    useLoaderData() as LoaderData & {
-      assumptions: {
-        monthlyAds: number;
-        monthlyShipping: number;
-        monthlyOperating: number;
-        paymentFeePct: number;
-        transactionFeePct: number;
-        taxReservePct: number;
-      };
+  const {
+    summary,
+    assumptions,
+    currencyCode,
+  } = useLoaderData() as LoaderData & {
+    assumptions: {
+      monthlyAds: number;
+      monthlyShipping: number;
+      monthlyOperating: number;
+      paymentFeePct: number;
+      transactionFeePct: number;
+      taxReservePct: number;
     };
+  };
+
+  const locale = language === "it" ? "it-IT" : "en-US";
+
+  const money = (value: number, digits = 0) =>
+    formatStoreMoney(value, currencyCode, locale, digits);
+
+  const pct = (value: number, digits = 1) =>
+    formatStorePercent(value, locale, digits);
 
   const [monthlyAds, setMonthlyAds] =
     React.useState(assumptions.monthlyAds);
@@ -462,11 +469,11 @@ export default function ProfitAssumptionsPage() {
   const healthScore = clamp(
     Math.round(
       100 -
-        Math.max(0, -estimatedNetMargin) * 2 -
-        (totalEstimatedCosts > summary.profit ? 20 : 0) -
-        (largestCost && totalEstimatedCosts > 0
-          ? (largestCost.value / totalEstimatedCosts) * 12
-          : 0),
+      Math.max(0, -estimatedNetMargin) * 2 -
+      (totalEstimatedCosts > summary.profit ? 20 : 0) -
+      (largestCost && totalEstimatedCosts > 0
+        ? (largestCost.value / totalEstimatedCosts) * 12
+        : 0),
     ),
     0,
     100,
@@ -488,28 +495,24 @@ export default function ProfitAssumptionsPage() {
   const advice =
     language === "it"
       ? largestCost && totalEstimatedCosts > 0
-        ? `${largestCost.label} rappresenta circa ${(
-            (largestCost.value / totalEstimatedCosts) *
-            100
-          ).toFixed(
-            0,
-          )}% dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
-            largestCost.value * 0.1,
-          )} e quello annuale di circa ${money(
-            largestCost.value * 1.2,
-          )}.`
+        ? `${largestCost.label} rappresenta circa ${pct(
+          (largestCost.value / totalEstimatedCosts) * 100,
+          0,
+        )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
+          largestCost.value * 0.1,
+        )} e quello annuale di circa ${money(
+          largestCost.value * 1.2,
+        )}.`
         : "Inserisci i costi principali per ottenere una raccomandazione economica più affidabile."
       : largestCost && totalEstimatedCosts > 0
-        ? `${largestCost.label} represents approximately ${(
-            (largestCost.value / totalEstimatedCosts) *
-            100
-          ).toFixed(
-            0,
-          )}% of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
-            largestCost.value * 0.1,
-          )} and annual profit by about ${money(
-            largestCost.value * 1.2,
-          )}.`
+        ? `${largestCost.label} represents approximately ${pct(
+          (largestCost.value / totalEstimatedCosts) * 100,
+          0,
+        )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
+          largestCost.value * 0.1,
+        )} and annual profit by about ${money(
+          largestCost.value * 1.2,
+        )}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
 
   return (
@@ -576,9 +579,8 @@ export default function ProfitAssumptionsPage() {
                 : "Estimated Net Profit"
             }
             value={money(estimatedNetProfit)}
-            note={`${pct(estimatedNetMargin)} ${
-              language === "it" ? "di margine netto" : "net margin"
-            }`}
+            note={`${pct(estimatedNetMargin)} ${language === "it" ? "di margine netto" : "net margin"
+              }`}
             color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
             highlight
           />
@@ -1112,22 +1114,22 @@ export default function ProfitAssumptionsPage() {
                 {estimatedNetProfit >= 0
                   ? language === "it"
                     ? `Il modello genera un profitto netto positivo di ${money(
-                        estimatedNetProfit,
-                      )}. Il break-even stimato è ${money(
-                        breakEvenRevenue,
-                      )} di ricavi mensili.`
+                      estimatedNetProfit,
+                    )}. Il break-even stimato è ${money(
+                      breakEvenRevenue,
+                    )} di ricavi mensili.`
                     : `The model generates positive net profit of ${money(
-                        estimatedNetProfit,
-                      )}. Estimated break-even is ${money(
-                        breakEvenRevenue,
-                      )} in monthly revenue.`
+                      estimatedNetProfit,
+                    )}. Estimated break-even is ${money(
+                      breakEvenRevenue,
+                    )} in monthly revenue.`
                   : language === "it"
                     ? `Il modello attuale produce una perdita stimata di ${money(
-                        Math.abs(estimatedNetProfit),
-                      )}. Riduci i costi o aumenta il margine prima di scalare.`
+                      Math.abs(estimatedNetProfit),
+                    )}. Riduci i costi o aumenta il margine prima di scalare.`
                     : `The current model produces an estimated loss of ${money(
-                        Math.abs(estimatedNetProfit),
-                      )}. Reduce costs or improve margin before scaling.`}
+                      Math.abs(estimatedNetProfit),
+                    )}. Reduce costs or improve margin before scaling.`}
               </div>
             </div>
           </div>
@@ -1184,7 +1186,7 @@ export default function ProfitAssumptionsPage() {
                     >
                       <span>{item.label}</span>
                       <span style={{ color: item.color }}>
-                        {money(item.value)} · {share.toFixed(0)}%
+                        {money(item.value)} · {pct(share, 0)}
                       </span>
                     </div>
 
@@ -1412,11 +1414,11 @@ export default function ProfitAssumptionsPage() {
                   >
                     {language === "it"
                       ? `Impatto annuale stimato: +${money(
-                          scenario.impact * 12,
-                        )}`
+                        scenario.impact * 12,
+                      )}`
                       : `Estimated annual impact: +${money(
-                          scenario.impact * 12,
-                        )}`}
+                        scenario.impact * 12,
+                      )}`}
                   </div>
                 </div>
               ))}

@@ -5,7 +5,11 @@ import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import type { LoaderData } from "~/utils/margin";
+import {
+  type LoaderData,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
@@ -25,6 +29,7 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
+  const locale = url.searchParams.get("lang") === "it" ? "it-IT" : "en-US";
   const period = url.searchParams.get("period") ?? "30";
   const parsedPeriod = Number(period);
   const forecastPeriod =
@@ -34,6 +39,7 @@ export async function loader({ request }: { request: Request }) {
     admin,
     session,
     period,
+    locale,
   });
 
   const assumptions =
@@ -65,26 +71,11 @@ function safeNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
 }
 
-function money(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(safeNumber(n));
-}
 
-function compactMoney(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(safeNumber(n));
-}
 
-function pct(n: number, digits = 1) {
-  return `${safeNumber(n).toFixed(digits)}%`;
-}
+
+
+
 
 function SliderControl({
   label,
@@ -306,11 +297,40 @@ export default function ForecastingPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
 
-  const { summary, rows, assumptions, forecastPeriod } =
-    useLoaderData() as LoaderData & {
-      assumptions: Assumptions;
-      forecastPeriod: number;
-    };
+  const {
+    summary,
+    rows,
+    assumptions,
+    forecastPeriod,
+    currencyCode,
+
+  } = useLoaderData() as LoaderData & {
+    assumptions: Assumptions;
+    forecastPeriod: number;
+  };
+
+  const locale = language === "it" ? "it-IT" : "en-US";
+
+  const money = (value: number, digits = 0) =>
+    formatStoreMoney(value, currencyCode, locale, digits);
+
+  const pct = (value: number, digits = 1) =>
+    formatStorePercent(value, locale, digits);
+
+  const number = (value: number, digits = 1) =>
+    new Intl.NumberFormat(locale, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(Number.isFinite(value) ? value : 0);
+
+  function compactMoney(n: number) {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyCode,
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(safeNumber(n));
+  }
 
   const periodDays = Math.max(1, forecastPeriod);
   const monthlyFactor = 30 / periodDays;
@@ -432,7 +452,7 @@ export default function ForecastingPage() {
 
       const improvedGrossMarginPct = clamp(
         baselineGrossMarginPct +
-          marginImprovement * (month / horizon),
+        marginImprovement * (month / horizon),
         -100,
         95,
       );
@@ -546,9 +566,9 @@ export default function ForecastingPage() {
 
   const dataConfidence = clamp(
     45 +
-      Math.min(25, rows.length * 1.5) +
-      (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
-      (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
+    Math.min(25, rows.length * 1.5) +
+    (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
+    (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
     45,
     98,
   );
@@ -572,7 +592,7 @@ export default function ForecastingPage() {
 
   const strongestLever =
     marginImprovement >= monthlyRevenueGrowth &&
-    marginImprovement >= recoveryCapture / 25
+      marginImprovement >= recoveryCapture / 25
       ? language === "it"
         ? "miglioramento del margine"
         : "margin improvement"
@@ -586,53 +606,71 @@ export default function ForecastingPage() {
 
   const recommendation =
     language === "it"
-      ? `Lo scenario ${selectedScenario === "custom" ? "personalizzato" : selectedScenario === "balanced" ? "bilanciato" : selectedScenario === "conservative" ? "prudente" : "aggressivo"} porta il profitto netto mensile stimato da ${money(
-          currentMonthlyNetProfit,
-        )} a ${money(finalPoint.netProfit)} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${marginImprovement.toFixed(
-          1,
-        )} punti e il recupero del ${recoveryCapture.toFixed(
-          0,
-        )}% delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
-          finalPoint.cumulativeLift,
-        )}.`
-      : `The ${selectedScenario === "custom" ? "custom" : selectedScenario} scenario moves estimated monthly net profit from ${money(
-          currentMonthlyNetProfit,
-        )} to ${money(finalPoint.netProfit)} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${marginImprovement.toFixed(
-          1,
-        )}-point margin improvement and ${recoveryCapture.toFixed(
-          0,
-        )}% of identified opportunities captured, estimated cumulative additional profit is ${money(
-          finalPoint.cumulativeLift,
-        )}.`;
+      ? `Lo scenario ${selectedScenario === "custom"
+        ? "personalizzato"
+        : selectedScenario === "balanced"
+          ? "bilanciato"
+          : selectedScenario === "conservative"
+            ? "prudente"
+            : "aggressivo"
+      } porta il profitto netto mensile stimato da ${money(
+        currentMonthlyNetProfit,
+      )} a ${money(
+        finalPoint.netProfit,
+      )} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${number(
+        marginImprovement,
+        1,
+      )} punti e il recupero del ${pct(
+        recoveryCapture,
+        0,
+      )} delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
+        finalPoint.cumulativeLift,
+      )}.`
+      : `The ${selectedScenario === "custom" ? "custom" : selectedScenario
+      } scenario moves estimated monthly net profit from ${money(
+        currentMonthlyNetProfit,
+      )} to ${money(
+        finalPoint.netProfit,
+      )} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${number(
+        marginImprovement,
+        1,
+      )}-point margin improvement and ${pct(
+        recoveryCapture,
+        0,
+      )} of identified opportunities captured, estimated cumulative additional profit is ${money(
+        finalPoint.cumulativeLift,
+      )}.`;
 
   const actions =
     language === "it"
       ? [
-          marginImprovement > 0
-            ? `Porta gradualmente il margine lordo a +${marginImprovement.toFixed(
-                1,
-              )} punti rispetto al livello attuale.`
-            : "Mantieni stabile il margine lordo e monitora i prodotti più deboli.",
-          recoveryCapture > 0
-            ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
-            : "Valuta almeno una parte delle opportunità di recupero già individuate.",
-          monthlyCostGrowth > 1
-            ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
-            : "La crescita dei costi è sotto controllo nello scenario selezionato.",
-        ]
+        marginImprovement > 0
+          ? `Porta gradualmente il margine lordo a +${number(
+            marginImprovement,
+            1,
+          )} punti rispetto al livello attuale.`
+          : "Mantieni stabile il margine lordo e monitora i prodotti più deboli.",
+        recoveryCapture > 0
+          ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
+          : "Valuta almeno una parte delle opportunità di recupero già individuate.",
+        monthlyCostGrowth > 1
+          ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
+          : "La crescita dei costi è sotto controllo nello scenario selezionato.",
+      ]
       : [
-          marginImprovement > 0
-            ? `Gradually lift gross margin by ${marginImprovement.toFixed(
-                1,
-              )} points from the current level.`
-            : "Keep gross margin stable and monitor the weakest products.",
-          recoveryCapture > 0
-            ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
-            : "Capture at least part of the recovery opportunities already identified.",
-          monthlyCostGrowth > 1
-            ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
-            : "Cost growth remains controlled in the selected scenario.",
-        ];
+        marginImprovement > 0
+          ? `Gradually lift gross margin by ${number(
+            marginImprovement,
+            1,
+          )} points from the current level.`
+          : "Keep gross margin stable and monitor the weakest products.",
+        recoveryCapture > 0
+          ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
+          : "Capture at least part of the recovery opportunities already identified.",
+        monthlyCostGrowth > 1
+          ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
+          : "Cost growth remains controlled in the selected scenario.",
+      ];
 
   return (
     <div className="dashboard-shell">
@@ -1354,8 +1392,8 @@ export default function ForecastingPage() {
                   }}
                 >
                   {language === "it"
-                    ? `Affidabilità ${dataConfidence.toFixed(0)}%`
-                    : `Confidence ${dataConfidence.toFixed(0)}%`}
+                    ? `Affidabilità ${pct(dataConfidence, 0)}`
+                    : `Confidence ${pct(dataConfidence, 0)}`}
                 </div>
               </div>
 
@@ -1566,18 +1604,18 @@ export default function ForecastingPage() {
                   {firstGoalMonth !== undefined
                     ? language === "it"
                       ? `Con queste ipotesi il profitto mensile supera ${money(
-                          profitGoal,
-                        )}.`
+                        profitGoal,
+                      )}.`
                       : `Under these assumptions, monthly profit exceeds ${money(
-                          profitGoal,
-                        )}.`
+                        profitGoal,
+                      )}.`
                     : language === "it"
                       ? `Lo scenario non raggiunge ${money(
-                          profitGoal,
-                        )} entro ${horizon} mesi.`
+                        profitGoal,
+                      )} entro ${horizon} mesi.`
                       : `The scenario does not reach ${money(
-                          profitGoal,
-                        )} within ${horizon} months.`}
+                        profitGoal,
+                      )} within ${horizon} months.`}
                 </div>
               </div>
             </div>

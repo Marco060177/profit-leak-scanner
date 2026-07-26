@@ -774,11 +774,11 @@ ${[...losingProducts]
       .slice(0, 3)
       .map(
         (product) =>
-          `${product.productTitle} | Revenue ${product.revenue.toFixed(
-            2,
-          )} | Profit ${product.profit.toFixed(
-            2,
-          )} | Margin ${product.marginPct.toFixed(1)}%`,
+          `${product.productTitle} | Revenue ${money(
+            product.revenue,
+          )} | Profit ${money(
+            product.profit,
+          )} | Margin ${pct(product.marginPct)}`,
       )
       .join("\n") || "None"
     }
@@ -789,11 +789,11 @@ ${[...lowMarginProducts]
       .slice(0, 3)
       .map(
         (product) =>
-          `${product.productTitle} | Revenue ${product.revenue.toFixed(
-            2,
-          )} | Profit ${product.profit.toFixed(
-            2,
-          )} | Margin ${product.marginPct.toFixed(1)}%`,
+          `${product.productTitle} | Revenue ${money(
+            product.revenue,
+          )} | Profit ${money(
+            product.profit,
+          )} | Margin ${pct(product.marginPct)}`,
       )
       .join("\n") || "None"
     }
@@ -810,13 +810,13 @@ ${[...rows]
       .slice(0, 3)
       .map(
         (product) =>
-          `${product.productTitle} | Revenue ${product.revenue.toFixed(
-            2,
-          )} | Margin ${product.marginPct.toFixed(
-            1,
-          )}% | Potential Recovery ${(
-            product.targetDelta * product.qty
-          ).toFixed(0)}`,
+          `${product.productTitle} | Revenue ${money(
+            product.revenue,
+          )} | Margin ${pct(
+            product.marginPct,
+          )} | Potential Recovery ${money(
+            product.targetDelta * product.qty,
+          )}`,
       )
       .join("\n") || "None"
     }

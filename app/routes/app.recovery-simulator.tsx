@@ -731,7 +731,7 @@ export default function RecoverySimulatorPage() {
                   ],
                   [
                     language === "it" ? "Vendite mensili" : "Monthly sales",
-                    currentMonthlyQty.toFixed(0),
+                    Math.round(currentMonthlyQty).toString()
                   ],
                   [
                     language === "it" ? "Margine" : "Margin",
@@ -988,7 +988,8 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 950,
                       }}
                     >
-                      {costReductionPct.toFixed(1)}%
+                      {pct(costReductionPct, 1)}
+
                     </div>
                   </div>
                   <input
@@ -1046,8 +1047,8 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {language === "it"
-                          ? `${simulatedMonthlyQty.toFixed(0)} unità mensili stimate`
-                          : `${simulatedMonthlyQty.toFixed(0)} estimated monthly units`}
+                          ? `${Math.round(simulatedMonthlyQty)} unità mensili stimate`
+                          : `${Math.round(simulatedMonthlyQty)} estimated monthly units`}
                       </div>
                     </div>
                     <div
@@ -1303,8 +1304,8 @@ export default function RecoverySimulatorPage() {
                 {[
                   {
                     label: language === "it" ? "Margine" : "Margin",
-                    current: `${currentMarginPct.toFixed(1)}%`,
-                    next: `${simulatedMarginPct.toFixed(1)}%`,
+                    current: pct(currentMarginPct, 1),
+                    next: pct(simulatedMarginPct, 1),
                     currentBar: clamp(currentMarginPct, 0, 60),
                     nextBar: clamp(simulatedMarginPct, 0, 60),
                     max: 60,
@@ -1462,7 +1463,7 @@ export default function RecoverySimulatorPage() {
                 {language === "it" ? "Impatto annuale" : "Annual impact"}
               </div>
               <div
-                key={`annual-${recoveredAnnualProfit.toFixed(0)}`}
+                key={`annual-${Math.round(recoveredAnnualProfit)}`}
                 className="recovery-annual-value"
                 style={{
                   marginTop: 15,
@@ -1490,7 +1491,7 @@ export default function RecoverySimulatorPage() {
 
               {recoveredAnnualProfit > 0 && (
                 <div
-                  key={`unlock-${recoveredAnnualProfit.toFixed(0)}`}
+                  key={`unlock-${Math.round(recoveredAnnualProfit)}`}
                   className="recovery-unlocked-badge"
                 >
                   <span>↗</span>
@@ -1541,7 +1542,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {simulatedMarginPct.toFixed(1)}%
+                    {pct(simulatedMarginPct, 1)}
                   </div>
                 </div>
                 <div

@@ -1,3 +1,5 @@
+import { pct } from "~/utils/margin";
+
 type Props = {
   criticalCount: number;
   warningCount: number;
@@ -84,7 +86,7 @@ export default function RiskDistribution({
               </div>
 
               <div className="risk-percent">
-                {percentage.toFixed(0)}% of products
+                {pct(percentage, "en-US", 0)} of products
               </div>
             </div>
           );

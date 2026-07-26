@@ -1,5 +1,9 @@
 import type { Language } from "~/utils/i18n";
-import type { Row, Summary } from "~/utils/margin";
+import {
+    pct as formatStorePercent,
+    type Row,
+    type Summary,
+} from "~/utils/margin";
 
 export type ProfitAlertSeverity =
     | "critical"
@@ -389,6 +393,17 @@ export function generateProfitAlerts({
     const isItalian = language === "it";
     const periodDays = getPeriodDays(period);
 
+    const locale = isItalian ? "it-IT" : "en-US";
+
+    const pct = (value: number, digits = 1) =>
+        formatStorePercent(value, locale, digits);
+
+    const number = (value: number, digits = 0) =>
+        new Intl.NumberFormat(locale, {
+            minimumFractionDigits: digits,
+            maximumFractionDigits: digits,
+        }).format(safeNumber(value));
+
     const revenue = safeNumber(summary.revenue);
     const grossProfit = safeNumber(summary.profit);
     const grossMargin = safeNumber(summary.marginPct);
@@ -451,8 +466,8 @@ export function generateProfitAlerts({
             category: "pricing",
 
             title: isItalian
-                ? `${losingProducts.length} prodotti stanno generando perdite`
-                : `${losingProducts.length} products are losing money`,
+                ? `Il margine complessivo è sceso al ${pct(grossMargin)}`
+                : `Overall margin is ${pct(grossMargin)}`,
 
             description: worstLosingProduct
                 ? isItalian
@@ -581,24 +596,26 @@ export function generateProfitAlerts({
             category: "margin",
 
             title: isItalian
-                ? `Il margine è diminuito di ${Math.abs(marginDelta).toFixed(
+                ? `Il margine è diminuito di ${number(
+                    Math.abs(marginDelta),
                     1,
                 )} punti`
-                : `Margin dropped by ${Math.abs(marginDelta).toFixed(
+                : `Margin dropped by ${number(
+                    Math.abs(marginDelta),
                     1,
                 )} points`,
 
             description: isItalian
-                ? `Il margine è passato da circa ${previousMargin.toFixed(
-                    1,
-                )}% al ${grossMargin.toFixed(
-                    1,
-                )}%. Controlla i prodotti che hanno subito il peggioramento maggiore.`
-                : `Margin moved from approximately ${previousMargin.toFixed(
-                    1,
-                )}% to ${grossMargin.toFixed(
-                    1,
-                )}%. Review the products with the largest deterioration.`,
+                ? `Il margine è passato da circa ${pct(
+                    previousMargin,
+                )} al ${pct(
+                    grossMargin,
+                )}. Controlla i prodotti che hanno subito il peggioramento maggiore.`
+                : `Margin moved from approximately ${pct(
+                    previousMargin,
+                )} to ${pct(
+                    grossMargin,
+                )}. Review the products with the largest deterioration.`,
 
             monthlyImpact: normalizeToMonthly(
                 estimatedPeriodImpact,
@@ -635,12 +652,8 @@ export function generateProfitAlerts({
             category: "discounts",
 
             title: isItalian
-                ? `Gli sconti assorbono il ${discountRate.toFixed(
-                    1,
-                )}% dei ricavi`
-                : `Discounts represent ${discountRate.toFixed(
-                    1,
-                )}% of revenue`,
+                ? `Gli sconti assorbono il ${pct(discountRate)} dei ricavi`
+                : `Discounts represent ${pct(discountRate)} of revenue`,
 
             description: isItalian
                 ? "Verifica che le promozioni stiano generando vendite aggiuntive sufficienti a compensare la perdita di margine."
@@ -675,12 +688,8 @@ export function generateProfitAlerts({
             category: "refunds",
 
             title: isItalian
-                ? `I rimborsi rappresentano il ${refundRate.toFixed(
-                    1,
-                )}% dei ricavi`
-                : `Refunds represent ${refundRate.toFixed(
-                    1,
-                )}% of revenue`,
+                ? `I rimborsi rappresentano il ${pct(refundRate)} dei ricavi`
+                : `Refunds represent ${pct(refundRate)} of revenue`,
 
             description: isItalian
                 ? "Controlla se i rimborsi sono concentrati su specifici prodotti, problemi di qualità o criticità nell'evasione degli ordini."
@@ -713,10 +722,12 @@ export function generateProfitAlerts({
             category: "growth",
 
             title: isItalian
-                ? `${monthlyRecoverableProfit.toFixed(
+                ? `${number(
+                    monthlyRecoverableProfit,
                     0,
                 )} di profitto mensile potenzialmente recuperabile`
-                : `${monthlyRecoverableProfit.toFixed(
+                : `${number(
+                    monthlyRecoverableProfit,
                     0,
                 )} in potential monthly profit recovery`,
 
@@ -785,14 +796,16 @@ export function generateProfitAlerts({
                 : `${row.productTitle} has the strongest pricing opportunity`,
 
             description: isItalian
-                ? `Un adeguamento stimato del ${priceIncreasePct.toFixed(
-                    1,
-                )}% porterebbe il prezzo verso ${row.targetPrice.toFixed(
+                ? `Un adeguamento stimato del ${pct(
+                    priceIncreasePct,
+                )} porterebbe il prezzo verso ${number(
+                    row.targetPrice,
                     2,
                 )}, con un recupero potenziale da verificare nel simulatore.`
-                : `An estimated ${priceIncreasePct.toFixed(
-                    1,
-                )}% adjustment would move the price toward ${row.targetPrice.toFixed(
+                : `An estimated ${pct(
+                    priceIncreasePct,
+                )} adjustment would move the price toward ${number(
+                    row.targetPrice,
                     2,
                 )}, with a potential recovery that should be tested in the simulator.`,
 
@@ -844,12 +857,12 @@ export function generateProfitAlerts({
                 : `A best seller is generating weak margin`,
 
             description: isItalian
-                ? `${weakBestSeller.productTitle} genera ricavi elevati ma lavora con un margine del ${weakBestSeller.marginPct.toFixed(
-                    1,
-                )}%. L'aumento dei volumi potrebbe amplificare il problema.`
-                : `${weakBestSeller.productTitle} generates strong revenue but operates at a ${weakBestSeller.marginPct.toFixed(
-                    1,
-                )}% margin. Higher volume could amplify the problem.`,
+                ? `${weakBestSeller.productTitle} genera ricavi elevati ma lavora con un margine del ${pct(
+                    weakBestSeller.marginPct,
+                )}. L'aumento dei volumi potrebbe amplificare il problema.`
+                : `${weakBestSeller.productTitle} generates strong revenue but operates at a ${pct(
+                    weakBestSeller.marginPct,
+                )} margin. Higher volume could amplify the problem.`,
 
             monthlyImpact: normalizeToMonthly(
                 Math.max(
@@ -898,18 +911,16 @@ export function generateProfitAlerts({
                 : "Revenue is growing while margin is declining",
 
             description: isItalian
-                ? `I ricavi sono aumentati del ${revenueDeltaPct.toFixed(
-                    1,
-                )}%, mentre il margine è diminuito di ${Math.abs(
-                    marginDelta,
-                ).toFixed(
+                ? `I ricavi sono aumentati del ${pct(
+                    revenueDeltaPct,
+                )}, mentre il margine è diminuito di ${number(
+                    Math.abs(marginDelta),
                     1,
                 )} punti. La crescita attuale potrebbe non tradursi in profitto di qualità.`
-                : `Revenue increased by ${revenueDeltaPct.toFixed(
-                    1,
-                )}%, while margin declined by ${Math.abs(
-                    marginDelta,
-                ).toFixed(
+                : `Revenue increased by ${pct(
+                    revenueDeltaPct,
+                )}, while margin declined by ${number(
+                    Math.abs(marginDelta),
                     1,
                 )} points. Current growth may not be translating into quality profit.`,
 

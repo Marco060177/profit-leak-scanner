@@ -73,10 +73,14 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function compactMoney(value: number) {
-  return new Intl.NumberFormat("en-US", {
+function compactMoney(
+  value: number,
+  currencyCode: string,
+  locale: string,
+) {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
-    currency: "USD",
+    currency: currencyCode,
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(Number.isFinite(value) ? value : 0);
@@ -790,7 +794,7 @@ export default function RecommendationsPage() {
                       ? "Impatto annuale"
                       : "Annual impact"
                   }
-                  value={`+${compactMoney(annualOpportunity)}`}
+                  value={`+${compactMoney(annualOpportunity, currencyCode, locale)}`}
                   note={
                     language === "it"
                       ? "Basato sull'opportunità complessiva"
@@ -1552,7 +1556,7 @@ export default function RecommendationsPage() {
                     ? "Priorità media"
                     : "Average priority"
                 }
-                value={`${averagePriority.toFixed(0)}/100`}
+                value={`${Math.round(averagePriority)}/100`}
                 note={
                   language === "it"
                     ? "Della coda attuale"
