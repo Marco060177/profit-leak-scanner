@@ -547,8 +547,8 @@ export function generateProfitAlerts({
             category: "margin",
 
             title: isItalian
-                ? `Il margine complessivo è sceso al ${grossMargin.toFixed(1)}%`
-                : `Overall margin is ${grossMargin.toFixed(1)}%`,
+                ? `Il margine complessivo è sceso al ${pct(grossMargin)}`
+                : `Overall margin is ${pct(grossMargin)}`,
 
             description: isItalian
                 ? isCritical

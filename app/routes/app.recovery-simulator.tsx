@@ -19,15 +19,9 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
-  const language =
-    url.searchParams.get("lang") === "it"
-      ? "it"
-      : "en";
+  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
 
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   return loadMarginDashboardData({
     admin,
@@ -44,6 +38,20 @@ type Scenario = {
   priceChangePct: number;
   costReductionPct: number;
   salesChangePct: number;
+};
+
+type SavedScenario = {
+  id: string;
+  name: string;
+  productId: string;
+  productTitle: string;
+  simulatedPrice: number;
+  costReductionPct: number;
+  salesChangePct: number;
+  monthlyProfit: number;
+  annualRecovery: number;
+  marginPct: number;
+  createdAt: string;
 };
 
 const cardStyle: React.CSSProperties = {
@@ -75,10 +83,7 @@ export default function RecoverySimulatorPage() {
   const language = getStoredLanguage();
   const loaderData = useLoaderData() as LoaderData;
 
-  const {
-    rows,
-    currencyCode,
-  } = loaderData;
+  const { rows, currencyCode } = loaderData;
 
   const periodValue = Number(loaderData.period ?? 30);
   const periodDays =
@@ -101,6 +106,41 @@ export default function RecoverySimulatorPage() {
   const [simulatedPrice, setSimulatedPrice] = React.useState(0);
   const [costReductionPct, setCostReductionPct] = React.useState(0);
   const [salesChangePct, setSalesChangePct] = React.useState(0);
+  const [savedScenarios, setSavedScenarios] = React.useState<SavedScenario[]>(
+    [],
+  );
+  const [scenarioName, setScenarioName] = React.useState("");
+  const [saveMessage, setSaveMessage] = React.useState("");
+  const [pendingScenario, setPendingScenario] =
+    React.useState<SavedScenario | null>(null);
+
+  const storageKey = React.useMemo(
+    () => `marginlab:recovery-scenarios:${loaderData.shopHandle || "store"}`,
+    [loaderData.shopHandle],
+  );
+
+  React.useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(storageKey);
+      if (!stored) {
+        setSavedScenarios([]);
+        return;
+      }
+
+      const parsed = JSON.parse(stored);
+      setSavedScenarios(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setSavedScenarios([]);
+    }
+  }, [storageKey]);
+
+  React.useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(savedScenarios));
+    } catch {
+      // The simulator remains fully usable if browser storage is unavailable.
+    }
+  }, [savedScenarios, storageKey]);
 
   React.useEffect(() => {
     if (
@@ -169,6 +209,21 @@ export default function RecoverySimulatorPage() {
     setCostReductionPct(balanced.costReductionPct);
     setSalesChangePct(balanced.salesChangePct);
   }, [selectedProduct?.productId]);
+
+  React.useEffect(() => {
+    if (
+      !pendingScenario ||
+      pendingScenario.productId !== selectedProduct?.productId
+    ) {
+      return;
+    }
+
+    setScenario("custom");
+    setSimulatedPrice(pendingScenario.simulatedPrice);
+    setCostReductionPct(pendingScenario.costReductionPct);
+    setSalesChangePct(pendingScenario.salesChangePct);
+    setPendingScenario(null);
+  }, [pendingScenario, selectedProduct?.productId]);
 
   const filteredProducts = React.useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -241,6 +296,66 @@ export default function RecoverySimulatorPage() {
         : 0;
 
   const breakEvenPrice = simulatedCost;
+  const priceChangePct =
+    currentPrice > 0
+      ? ((simulatedPrice - currentPrice) / currentPrice) * 100
+      : 0;
+
+  const priceRecoveryMonthly =
+    (simulatedPrice - currentPrice) * currentMonthlyQty;
+  const costRecoveryMonthly = (currentCost - simulatedCost) * currentMonthlyQty;
+  const volumeRecoveryMonthly =
+    (simulatedMonthlyQty - currentMonthlyQty) * simulatedUnitProfit;
+  const recoveryBreakdown = [
+    {
+      key: "price",
+      label: language === "it" ? "Variazione prezzo" : "Price change",
+      value: priceRecoveryMonthly * 12,
+    },
+    {
+      key: "cost",
+      label: language === "it" ? "Riduzione costo" : "Cost reduction",
+      value: costRecoveryMonthly * 12,
+    },
+    {
+      key: "volume",
+      label: language === "it" ? "Variazione volume" : "Volume change",
+      value: volumeRecoveryMonthly * 12,
+    },
+  ];
+
+  const commercialRiskScore = clamp(
+    Math.round(
+      Math.max(0, priceChangePct) * 6 +
+        Math.max(0, -salesChangePct) * 4 +
+        (priceChangePct > 8 ? 12 : 0),
+    ),
+    0,
+    100,
+  );
+  const riskLabel =
+    commercialRiskScore >= 65
+      ? language === "it"
+        ? "Alto"
+        : "High"
+      : commercialRiskScore >= 35
+        ? language === "it"
+          ? "Medio"
+          : "Medium"
+        : language === "it"
+          ? "Basso"
+          : "Low";
+  const riskColor =
+    commercialRiskScore >= 65
+      ? "#f87171"
+      : commercialRiskScore >= 35
+        ? "#f59e0b"
+        : "#4ade80";
+
+  const timeline = [1, 3, 6, 12].map((month) => ({
+    month,
+    value: recoveredMonthlyProfit * month,
+  }));
   const priceMin = Math.max(0.01, currentPrice * 0.7);
   const priceMax = Math.max(currentPrice * 1.5, currentPrice + 1);
   const priceStep = Math.max(0.01, currentPrice / 500);
@@ -248,9 +363,9 @@ export default function RecoverySimulatorPage() {
   const dataConfidenceScore = clamp(
     Math.round(
       (currentCost > 0 ? 40 : 0) +
-      (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
-      (selectedProduct.revenue > 0 ? 20 : 0) +
-      (!selectedProduct.missingCost ? 10 : 0),
+        (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
+        (selectedProduct.revenue > 0 ? 20 : 0) +
+        (!selectedProduct.missingCost ? 10 : 0),
     ),
     0,
     100,
@@ -290,10 +405,7 @@ export default function RecoverySimulatorPage() {
               ? "Forte"
               : "Strong";
 
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);
@@ -320,76 +432,68 @@ export default function RecoverySimulatorPage() {
     if (simulatedMonthlyProfit <= currentMonthlyProfit) {
       return language === "it"
         ? `Questo scenario riduce il profitto mensile stimato. La variazione delle vendite non compensa il nuovo equilibrio tra prezzo e costo. Riduci l'ipotesi di calo delle vendite oppure aumenta il prezzo sopra ${money(
-          Math.max(currentPrice, breakEvenPrice),
-          2,
-        )}.`
+            Math.max(currentPrice, breakEvenPrice),
+            2,
+          )}.`
         : `This scenario lowers estimated monthly profit. The sales change does not compensate for the new price and cost balance. Reduce the assumed sales decline or move the price above ${money(
-          Math.max(currentPrice, breakEvenPrice),
-          2,
-        )}.`;
+            Math.max(currentPrice, breakEvenPrice),
+            2,
+          )}.`;
     }
 
     if (costReductionPct >= 4 && priceIncreasePct < 4) {
       return language === "it"
         ? `La leva più efficace in questo scenario è il costo. Una riduzione del ${pct(
-          costReductionPct,
-        )} porta il margine dal ${pct(
-          currentMarginPct,
-        )} al ${pct(
-          simulatedMarginPct,
-        )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
+            costReductionPct,
+          )} porta il margine dal ${pct(currentMarginPct)} al ${pct(
+            simulatedMarginPct,
+          )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
         : `Cost reduction is the strongest lever in this scenario. A ${pct(
-          costReductionPct,
-        )} reduction moves margin from ${pct(
-          currentMarginPct,
-        )} to ${pct(
-          simulatedMarginPct,
-        )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
+            costReductionPct,
+          )} reduction moves margin from ${pct(currentMarginPct)} to ${pct(
+            simulatedMarginPct,
+          )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
     }
 
     if (priceIncreasePct >= 8) {
       return language === "it"
         ? `Portare il prezzo a ${money(
-          simulatedPrice,
-          2,
-        )} genera un impatto importante, ma l'aumento del ${pct(
-          priceIncreasePct,
-        )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
+            simulatedPrice,
+            2,
+          )} genera un impatto importante, ma l'aumento del ${pct(
+            priceIncreasePct,
+          )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
         : `Moving the price to ${money(
-          simulatedPrice,
-          2,
-        )} creates a meaningful impact, but the ${pct(
-          priceIncreasePct,
-        )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
+            simulatedPrice,
+            2,
+          )} creates a meaningful impact, but the ${pct(
+            priceIncreasePct,
+          )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
     }
 
     return language === "it"
       ? `Portare il prezzo a ${money(
-        simulatedPrice,
-        2,
-      )} e ridurre il costo del ${pct(
-        costReductionPct,
-      )} aumenta il margine dal ${pct(
-        currentMarginPct,
-      )} al ${pct(
-        simulatedMarginPct,
-      )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
-        recoveredAnnualProfit,
-        0,
-      )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
+          simulatedPrice,
+          2,
+        )} e ridurre il costo del ${pct(
+          costReductionPct,
+        )} aumenta il margine dal ${pct(currentMarginPct)} al ${pct(
+          simulatedMarginPct,
+        )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
+          recoveredAnnualProfit,
+          0,
+        )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
       : `Moving the price to ${money(
-        simulatedPrice,
-        2,
-      )} and reducing cost by ${pct(
-        costReductionPct,
-      )} increases margin from ${pct(
-        currentMarginPct,
-      )} to ${pct(
-        simulatedMarginPct,
-      )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
-        recoveredAnnualProfit,
-        0,
-      )} per year. This is a credible balance between profitability and commercial risk.`;
+          simulatedPrice,
+          2,
+        )} and reducing cost by ${pct(
+          costReductionPct,
+        )} increases margin from ${pct(currentMarginPct)} to ${pct(
+          simulatedMarginPct,
+        )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
+          recoveredAnnualProfit,
+          0,
+        )} per year. This is a credible balance between profitability and commercial risk.`;
   })();
 
   const suggestedActions = [
@@ -403,7 +507,6 @@ export default function RecoverySimulatorPage() {
     {
       visible: costReductionPct > 0,
       text:
-
         language === "it"
           ? `Negozia una riduzione costo del ${pct(costReductionPct)}`
           : `Negotiate a ${pct(costReductionPct)} cost reduction`,
@@ -437,6 +540,80 @@ export default function RecoverySimulatorPage() {
   const handleManualSalesChange = (value: number) => {
     setScenario("custom");
     setSalesChangePct(value);
+  };
+
+  const applyAiSuggestedScenario = () => {
+    const targetMarginPct =
+      currentMarginPct < 20 ? 20 : Math.min(30, currentMarginPct + 5);
+    const suggestedCostReduction = currentCost > 0 ? 2 : 0;
+    const suggestedCost = currentCost * (1 - suggestedCostReduction / 100);
+    const priceForTargetMargin =
+      targetMarginPct < 100
+        ? suggestedCost / (1 - targetMarginPct / 100)
+        : currentPrice;
+    const suggestedPriceIncrease = clamp(
+      currentPrice > 0
+        ? ((priceForTargetMargin - currentPrice) / currentPrice) * 100
+        : 0,
+      0,
+      8,
+    );
+
+    setScenario("custom");
+    setSimulatedPrice(currentPrice * (1 + suggestedPriceIncrease / 100));
+    setCostReductionPct(suggestedCostReduction);
+    setSalesChangePct(-Math.round(suggestedPriceIncrease * 0.35 * 10) / 10);
+    setSaveMessage(
+      language === "it"
+        ? "Scenario suggerito applicato"
+        : "Suggested scenario applied",
+    );
+  };
+
+  const saveCurrentScenario = () => {
+    const defaultName =
+      language === "it"
+        ? `Scenario ${savedScenarios.length + 1}`
+        : `Scenario ${savedScenarios.length + 1}`;
+    const saved: SavedScenario = {
+      id: `${Date.now()}-${selectedProduct.productId}`,
+      name: scenarioName.trim() || defaultName,
+      productId: selectedProduct.productId,
+      productTitle: selectedProduct.productTitle,
+      simulatedPrice,
+      costReductionPct,
+      salesChangePct,
+      monthlyProfit: simulatedMonthlyProfit,
+      annualRecovery: recoveredAnnualProfit,
+      marginPct: simulatedMarginPct,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSavedScenarios((current) => [saved, ...current].slice(0, 6));
+    setScenarioName("");
+    setSaveMessage(language === "it" ? "Scenario salvato" : "Scenario saved");
+  };
+
+  const loadSavedScenario = (saved: SavedScenario) => {
+    const productExists = availableProducts.some(
+      (product) => product.productId === saved.productId,
+    );
+    if (!productExists) return;
+
+    if (saved.productId === selectedProduct.productId) {
+      setScenario("custom");
+      setSimulatedPrice(saved.simulatedPrice);
+      setCostReductionPct(saved.costReductionPct);
+      setSalesChangePct(saved.salesChangePct);
+    } else {
+      setPendingScenario(saved);
+      setSelectedProductId(saved.productId);
+    }
+    setSaveMessage(language === "it" ? "Scenario caricato" : "Scenario loaded");
+  };
+
+  const deleteSavedScenario = (id: string) => {
+    setSavedScenarios((current) => current.filter((item) => item.id !== id));
   };
 
   return (
@@ -725,13 +902,10 @@ export default function RecoverySimulatorPage() {
                     language === "it" ? "Prezzo" : "Selling price",
                     money(currentPrice, 2),
                   ],
-                  [
-                    language === "it" ? "Costo" : "Cost",
-                    money(currentCost, 2),
-                  ],
+                  [language === "it" ? "Costo" : "Cost", money(currentCost, 2)],
                   [
                     language === "it" ? "Vendite mensili" : "Monthly sales",
-                    Math.round(currentMonthlyQty).toString()
+                    Math.round(currentMonthlyQty).toString(),
                   ],
                   [
                     language === "it" ? "Margine" : "Margin",
@@ -989,7 +1163,6 @@ export default function RecoverySimulatorPage() {
                       }}
                     >
                       {pct(costReductionPct, 1)}
-
                     </div>
                   </div>
                   <input
@@ -1176,6 +1349,73 @@ export default function RecoverySimulatorPage() {
             })}
           </div>
 
+          <div
+            style={{
+              ...cardStyle,
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+              gap: 22,
+              marginTop: 24,
+              alignItems: "center",
+              background:
+                "radial-gradient(circle at top left, rgba(124,58,237,0.16), transparent 42%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+              border: "1px solid rgba(167,139,250,0.24)",
+            }}
+          >
+            <div>
+              <div style={{ ...mutedLabelStyle, color: "#c4b5fd" }}>
+                {language === "it"
+                  ? "SCENARIO SUGGERITO"
+                  : "SUGGESTED SCENARIO"}
+              </div>
+              <div
+                style={{
+                  marginTop: 9,
+                  color: "#f8fafc",
+                  fontSize: 21,
+                  fontWeight: 950,
+                }}
+              >
+                {language === "it"
+                  ? "Lascia che MarginLab trovi un equilibrio credibile"
+                  : "Let MarginLab find a credible balance"}
+              </div>
+              <div
+                style={{
+                  marginTop: 8,
+                  color: "rgba(255,255,255,0.58)",
+                  lineHeight: 1.65,
+                  fontSize: 13,
+                  fontWeight: 750,
+                }}
+              >
+                {language === "it"
+                  ? "La proposta usa margine, costo e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
+                  : "The proposal uses the product's margin, cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={applyAiSuggestedScenario}
+              style={{
+                minHeight: 52,
+                padding: "14px 20px",
+                borderRadius: 16,
+                cursor: "pointer",
+                color: "#fff",
+                background:
+                  "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(255,115,60,0.9))",
+                border: "1px solid rgba(255,255,255,0.16)",
+                boxShadow: "0 14px 34px rgba(124,58,237,0.2)",
+                fontWeight: 950,
+              }}
+            >
+              {language === "it"
+                ? "Applica scenario suggerito"
+                : "Apply suggested scenario"}
+            </button>
+          </div>
+
           <div style={{ marginTop: 24 }}>
             <div className="section-header">
               <div>
@@ -1274,6 +1514,457 @@ export default function RecoverySimulatorPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div
+            style={{
+              ...cardStyle,
+              marginTop: 24,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 20,
+                alignItems: "flex-end",
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div style={mutedLabelStyle}>
+                  {language === "it" ? "SCENARI SALVATI" : "SAVED SCENARIOS"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 9,
+                    color: "#f8fafc",
+                    fontSize: 21,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Salva e confronta le decisioni"
+                    : "Save and compare decisions"}
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                }}
+              >
+                <input
+                  value={scenarioName}
+                  onChange={(event) => setScenarioName(event.target.value)}
+                  placeholder={
+                    language === "it" ? "Nome dello scenario" : "Scenario name"
+                  }
+                  style={{
+                    minHeight: 46,
+                    minWidth: 220,
+                    padding: "0 14px",
+                    borderRadius: 14,
+                    color: "#f8fafc",
+                    background: "rgba(255,255,255,0.045)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    outline: "none",
+                    fontWeight: 800,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={saveCurrentScenario}
+                  style={{
+                    minHeight: 46,
+                    padding: "0 18px",
+                    borderRadius: 14,
+                    cursor: "pointer",
+                    color: "#fff",
+                    background: "#ff733c",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it" ? "Salva scenario" : "Save scenario"}
+                </button>
+              </div>
+            </div>
+
+            {saveMessage && (
+              <div
+                style={{
+                  marginTop: 12,
+                  color: "#86efac",
+                  fontSize: 12,
+                  fontWeight: 900,
+                }}
+              >
+                ✓ {saveMessage}
+              </div>
+            )}
+
+            {savedScenarios.length === 0 ? (
+              <div
+                style={{
+                  marginTop: 20,
+                  padding: 18,
+                  borderRadius: 16,
+                  color: "rgba(255,255,255,0.5)",
+                  background: "rgba(255,255,255,0.025)",
+                  border: "1px dashed rgba(255,255,255,0.1)",
+                  fontSize: 13,
+                  lineHeight: 1.6,
+                  fontWeight: 750,
+                }}
+              >
+                {language === "it"
+                  ? "Salva almeno due scenari per confrontare rapidamente margine, profitto e recupero annuale."
+                  : "Save at least two scenarios to quickly compare margin, profit and annual recovery."}
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: 14,
+                  marginTop: 20,
+                }}
+              >
+                {savedScenarios.map((saved) => (
+                  <div
+                    key={saved.id}
+                    style={{
+                      padding: 17,
+                      borderRadius: 17,
+                      background: "rgba(255,255,255,0.035)",
+                      border: "1px solid rgba(255,115,60,0.15)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            color: "#f8fafc",
+                            fontWeight: 950,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {saved.name}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 5,
+                            color: "rgba(255,255,255,0.44)",
+                            fontSize: 11,
+                            fontWeight: 750,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {saved.productTitle}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteSavedScenario(saved.id)}
+                        aria-label={
+                          language === "it"
+                            ? "Elimina scenario"
+                            : "Delete scenario"
+                        }
+                        style={{
+                          width: 30,
+                          height: 30,
+                          borderRadius: 10,
+                          cursor: "pointer",
+                          color: "rgba(255,255,255,0.52)",
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                          fontWeight: 900,
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                        gap: 10,
+                        marginTop: 15,
+                      }}
+                    >
+                      {[
+                        [
+                          language === "it" ? "Margine" : "Margin",
+                          pct(saved.marginPct),
+                        ],
+                        [
+                          language === "it"
+                            ? "Profitto/mese"
+                            : "Monthly profit",
+                          money(saved.monthlyProfit, 0),
+                        ],
+                        [
+                          language === "it"
+                            ? "Recupero/anno"
+                            : "Annual recovery",
+                          formatSignedMoney(saved.annualRecovery, 0),
+                        ],
+                        [
+                          language === "it" ? "Prezzo" : "Price",
+                          money(saved.simulatedPrice, 2),
+                        ],
+                      ].map(([label, value]) => (
+                        <div
+                          key={label}
+                          style={{
+                            padding: 10,
+                            borderRadius: 12,
+                            background: "rgba(255,255,255,0.025)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: "rgba(255,255,255,0.42)",
+                              fontSize: 10,
+                              fontWeight: 850,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 5,
+                              color: "#f8fafc",
+                              fontSize: 14,
+                              fontWeight: 950,
+                            }}
+                          >
+                            {value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => loadSavedScenario(saved)}
+                      style={{
+                        width: "100%",
+                        minHeight: 40,
+                        marginTop: 13,
+                        borderRadius: 12,
+                        cursor: "pointer",
+                        color: "#ff9a70",
+                        background: "rgba(255,115,60,0.075)",
+                        border: "1px solid rgba(255,115,60,0.18)",
+                        fontWeight: 900,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Carica questo scenario"
+                        : "Load this scenario"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "minmax(0, 1.15fr) minmax(260px, 0.7fr) minmax(0, 1fr)",
+              gap: 24,
+              marginTop: 24,
+            }}
+          >
+            <div style={cardStyle}>
+              <div style={mutedLabelStyle}>
+                {language === "it"
+                  ? "ORIGINE DEL RECUPERO"
+                  : "RECOVERY BREAKDOWN"}
+              </div>
+              <div
+                style={{
+                  marginTop: 9,
+                  color: "#f8fafc",
+                  fontSize: 20,
+                  fontWeight: 950,
+                }}
+              >
+                {language === "it"
+                  ? "Da dove nasce l'impatto annuale"
+                  : "Where the annual impact comes from"}
+              </div>
+              <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+                {recoveryBreakdown.map((item) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 18,
+                      paddingBottom: 12,
+                      borderBottom: "1px solid rgba(255,255,255,0.07)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    <strong
+                      style={{
+                        color: item.value >= 0 ? "#4ade80" : "#f87171",
+                      }}
+                    >
+                      {formatSignedMoney(item.value, 0)}
+                    </strong>
+                  </div>
+                ))}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 18,
+                    paddingTop: 2,
+                    color: "#f8fafc",
+                    fontWeight: 950,
+                  }}
+                >
+                  <span>{language === "it" ? "Totale" : "Total"}</span>
+                  <span
+                    style={{
+                      color: recoveredAnnualProfit >= 0 ? "#4ade80" : "#f87171",
+                    }}
+                  >
+                    {formatSignedMoney(recoveredAnnualProfit, 0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={mutedLabelStyle}>
+                {language === "it" ? "RISCHIO" : "RISK"}
+              </div>
+              <div
+                style={{
+                  marginTop: 14,
+                  color: riskColor,
+                  fontSize: 31,
+                  fontWeight: 950,
+                }}
+              >
+                {riskLabel}
+              </div>
+              <div
+                style={{
+                  height: 9,
+                  marginTop: 16,
+                  borderRadius: 999,
+                  overflow: "hidden",
+                  background: "rgba(255,255,255,0.075)",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.max(6, commercialRiskScore)}%`,
+                    height: "100%",
+                    borderRadius: 999,
+                    background: riskColor,
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  marginTop: 15,
+                  color: "rgba(255,255,255,0.56)",
+                  fontSize: 13,
+                  lineHeight: 1.65,
+                  fontWeight: 750,
+                }}
+              >
+                {language === "it"
+                  ? `Aumento prezzo ${formatSignedPct(priceChangePct)} e risposta vendite ${formatSignedPct(salesChangePct)}. Verifica il risultato reale per 30 giorni.`
+                  : `Price change ${formatSignedPct(priceChangePct)} and sales response ${formatSignedPct(salesChangePct)}. Validate the real result for 30 days.`}
+              </div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={mutedLabelStyle}>
+                {language === "it" ? "TIMELINE" : "TIMELINE"}
+              </div>
+              <div
+                style={{
+                  marginTop: 9,
+                  color: "#f8fafc",
+                  fontSize: 20,
+                  fontWeight: 950,
+                }}
+              >
+                {language === "it"
+                  ? "Recupero cumulativo"
+                  : "Cumulative recovery"}
+              </div>
+              <div style={{ display: "grid", gap: 11, marginTop: 20 }}>
+                {timeline.map((item) => (
+                  <div
+                    key={item.month}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      alignItems: "center",
+                      padding: "10px 12px",
+                      borderRadius: 13,
+                      background: "rgba(255,255,255,0.035)",
+                      border: "1px solid rgba(255,255,255,0.065)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: "rgba(255,255,255,0.58)",
+                        fontSize: 12,
+                        fontWeight: 850,
+                      }}
+                    >
+                      {item.month === 1
+                        ? language === "it"
+                          ? "1 mese"
+                          : "1 month"
+                        : `${item.month} ${language === "it" ? "mesi" : "months"}`}
+                    </span>
+                    <strong
+                      style={{
+                        color: item.value >= 0 ? "#4ade80" : "#f87171",
+                      }}
+                    >
+                      {formatSignedMoney(item.value, 0)}
+                    </strong>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1589,8 +2280,8 @@ export default function RecoverySimulatorPage() {
               <div>
                 <div style={{ ...mutedLabelStyle, color: "#ff9a70" }}>
                   {language === "it"
-                    ? "Raccomandazione AI"
-                    : "AI recommendation"}
+                    ? "RACCOMANDAZIONE ESECUTIVA"
+                    : "EXECUTIVE RECOMMENDATION"}
                 </div>
                 <div
                   style={{
@@ -1618,7 +2309,8 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 {language === "it" ? "Affidabilità" : "Confidence"}:{" "}
-                {confidenceLabel} · {dataConfidenceScore}%
+                {confidenceLabel} · {dataConfidenceScore}% ·{" "}
+                {language === "it" ? "Rischio" : "Risk"} {riskLabel}
               </div>
             </div>
 
