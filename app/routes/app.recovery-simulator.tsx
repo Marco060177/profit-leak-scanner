@@ -4,7 +4,11 @@ import { useLoaderData, useNavigate } from "react-router";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import type { LoaderData } from "~/utils/margin";
+import {
+  type LoaderData,
+  money as formatStoreMoney,
+  pct as formatStorePercent,
+} from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
@@ -15,10 +19,21 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
+  const language =
+    url.searchParams.get("lang") === "it"
+      ? "it"
+      : "en";
+
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
   return loadMarginDashboardData({
     admin,
     session,
     period,
+    locale,
   });
 }
 
@@ -59,7 +74,11 @@ export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
   const loaderData = useLoaderData() as LoaderData;
-  const { rows } = loaderData;
+
+  const {
+    rows,
+    currencyCode,
+  } = loaderData;
 
   const periodValue = Number(loaderData.period ?? 30);
   const periodDays =
@@ -229,9 +248,9 @@ export default function RecoverySimulatorPage() {
   const dataConfidenceScore = clamp(
     Math.round(
       (currentCost > 0 ? 40 : 0) +
-        (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
-        (selectedProduct.revenue > 0 ? 20 : 0) +
-        (!selectedProduct.missingCost ? 10 : 0),
+      (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
+      (selectedProduct.revenue > 0 ? 20 : 0) +
+      (!selectedProduct.missingCost ? 10 : 0),
     ),
     0,
     100,
@@ -271,23 +290,25 @@ export default function RecoverySimulatorPage() {
               ? "Forte"
               : "Strong";
 
-  const formatMoney = (value: number, digits = 0) =>
-    `$${safeNumber(value).toLocaleString(
-      language === "it" ? "it-IT" : "en-US",
-      {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits,
-      },
-    )}`;
+  const locale =
+    language === "it"
+      ? "it-IT"
+      : "en-US";
+
+  const money = (value: number, digits = 0) =>
+    formatStoreMoney(value, currencyCode, locale, digits);
+
+  const pct = (value: number, digits = 1) =>
+    formatStorePercent(value, locale, digits);
 
   const formatSignedMoney = (value: number, digits = 0) => {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-    return `${sign}${formatMoney(Math.abs(value), digits)}`;
+    return `${sign}${money(Math.abs(value), digits)}`;
   };
 
   const formatSignedPct = (value: number, digits = 1) => {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-    return `${sign}${Math.abs(value).toFixed(digits)}%`;
+    return `${sign}${pct(Math.abs(value), digits)}`;
   };
 
   const recommendation = (() => {
@@ -298,77 +319,77 @@ export default function RecoverySimulatorPage() {
 
     if (simulatedMonthlyProfit <= currentMonthlyProfit) {
       return language === "it"
-        ? `Questo scenario riduce il profitto mensile stimato. La variazione delle vendite non compensa il nuovo equilibrio tra prezzo e costo. Riduci l'ipotesi di calo delle vendite oppure aumenta il prezzo sopra ${formatMoney(
-            Math.max(currentPrice, breakEvenPrice),
-            2,
-          )}.`
-        : `This scenario lowers estimated monthly profit. The sales change does not compensate for the new price and cost balance. Reduce the assumed sales decline or move the price above ${formatMoney(
-            Math.max(currentPrice, breakEvenPrice),
-            2,
-          )}.`;
+        ? `Questo scenario riduce il profitto mensile stimato. La variazione delle vendite non compensa il nuovo equilibrio tra prezzo e costo. Riduci l'ipotesi di calo delle vendite oppure aumenta il prezzo sopra ${money(
+          Math.max(currentPrice, breakEvenPrice),
+          2,
+        )}.`
+        : `This scenario lowers estimated monthly profit. The sales change does not compensate for the new price and cost balance. Reduce the assumed sales decline or move the price above ${money(
+          Math.max(currentPrice, breakEvenPrice),
+          2,
+        )}.`;
     }
 
     if (costReductionPct >= 4 && priceIncreasePct < 4) {
       return language === "it"
-        ? `La leva più efficace in questo scenario è il costo. Una riduzione del ${costReductionPct.toFixed(
-            1,
-          )}% porta il margine dal ${currentMarginPct.toFixed(
-            1,
-          )}% al ${simulatedMarginPct.toFixed(
-            1,
-          )}% con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
-        : `Cost reduction is the strongest lever in this scenario. A ${costReductionPct.toFixed(
-            1,
-          )}% reduction moves margin from ${currentMarginPct.toFixed(
-            1,
-          )}% to ${simulatedMarginPct.toFixed(
-            1,
-          )}% with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
+        ? `La leva più efficace in questo scenario è il costo. Una riduzione del ${pct(
+          costReductionPct,
+        )} porta il margine dal ${pct(
+          currentMarginPct,
+        )} al ${pct(
+          simulatedMarginPct,
+        )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
+        : `Cost reduction is the strongest lever in this scenario. A ${pct(
+          costReductionPct,
+        )} reduction moves margin from ${pct(
+          currentMarginPct,
+        )} to ${pct(
+          simulatedMarginPct,
+        )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
     }
 
     if (priceIncreasePct >= 8) {
       return language === "it"
-        ? `Portare il prezzo a ${formatMoney(
-            simulatedPrice,
-            2,
-          )} genera un impatto importante, ma l'aumento del ${priceIncreasePct.toFixed(
-            1,
-          )}% è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
-        : `Moving the price to ${formatMoney(
-            simulatedPrice,
-            2,
-          )} creates a meaningful impact, but the ${priceIncreasePct.toFixed(
-            1,
-          )}% increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
+        ? `Portare il prezzo a ${money(
+          simulatedPrice,
+          2,
+        )} genera un impatto importante, ma l'aumento del ${pct(
+          priceIncreasePct,
+        )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
+        : `Moving the price to ${money(
+          simulatedPrice,
+          2,
+        )} creates a meaningful impact, but the ${pct(
+          priceIncreasePct,
+        )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
     }
 
     return language === "it"
-      ? `Portare il prezzo a ${formatMoney(
-          simulatedPrice,
-          2,
-        )} e ridurre il costo del ${costReductionPct.toFixed(
-          1,
-        )}% aumenta il margine dal ${currentMarginPct.toFixed(
-          1,
-        )}% al ${simulatedMarginPct.toFixed(
-          1,
-        )}%. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
-          recoveredAnnualProfit,
-          0,
-        )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
-      : `Moving the price to ${formatMoney(
-          simulatedPrice,
-          2,
-        )} and reducing cost by ${costReductionPct.toFixed(
-          1,
-        )}% increases margin from ${currentMarginPct.toFixed(
-          1,
-        )}% to ${simulatedMarginPct.toFixed(
-          1,
-        )}%. At the assumed volume, estimated recovery is ${formatSignedMoney(
-          recoveredAnnualProfit,
-          0,
-        )} per year. This is a credible balance between profitability and commercial risk.`;
+      ? `Portare il prezzo a ${money(
+        simulatedPrice,
+        2,
+      )} e ridurre il costo del ${pct(
+        costReductionPct,
+      )} aumenta il margine dal ${pct(
+        currentMarginPct,
+      )} al ${pct(
+        simulatedMarginPct,
+      )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
+        recoveredAnnualProfit,
+        0,
+      )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
+      : `Moving the price to ${money(
+        simulatedPrice,
+        2,
+      )} and reducing cost by ${pct(
+        costReductionPct,
+      )} increases margin from ${pct(
+        currentMarginPct,
+      )} to ${pct(
+        simulatedMarginPct,
+      )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
+        recoveredAnnualProfit,
+        0,
+      )} per year. This is a credible balance between profitability and commercial risk.`;
   })();
 
   const suggestedActions = [
@@ -376,15 +397,16 @@ export default function RecoverySimulatorPage() {
       visible: simulatedPrice > currentPrice,
       text:
         language === "it"
-          ? `Valuta un prezzo di ${formatMoney(simulatedPrice, 2)}`
-          : `Evaluate a ${formatMoney(simulatedPrice, 2)} selling price`,
+          ? `Valuta un prezzo di ${money(simulatedPrice, 2)}`
+          : `Evaluate a ${money(simulatedPrice, 2)} selling price`,
     },
     {
       visible: costReductionPct > 0,
       text:
+
         language === "it"
-          ? `Negozia una riduzione costo del ${costReductionPct.toFixed(1)}%`
-          : `Negotiate a ${costReductionPct.toFixed(1)}% cost reduction`,
+          ? `Negozia una riduzione costo del ${pct(costReductionPct)}`
+          : `Negotiate a ${pct(costReductionPct)} cost reduction`,
     },
     {
       visible: salesChangePct < 0,
@@ -657,7 +679,7 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 800,
                       }}
                     >
-                      {formatMoney(product.avgPrice, 2)} · {product.qty}{" "}
+                      {money(product.avgPrice, 2)} · {product.qty}{" "}
                       {language === "it" ? "unità" : "units"}
                     </div>
                   </button>
@@ -701,11 +723,11 @@ export default function RecoverySimulatorPage() {
                 {[
                   [
                     language === "it" ? "Prezzo" : "Selling price",
-                    formatMoney(currentPrice, 2),
+                    money(currentPrice, 2),
                   ],
                   [
                     language === "it" ? "Costo" : "Cost",
-                    formatMoney(currentCost, 2),
+                    money(currentCost, 2),
                   ],
                   [
                     language === "it" ? "Vendite mensili" : "Monthly sales",
@@ -713,11 +735,11 @@ export default function RecoverySimulatorPage() {
                   ],
                   [
                     language === "it" ? "Margine" : "Margin",
-                    `${currentMarginPct.toFixed(1)}%`,
+                    pct(currentMarginPct),
                   ],
                   [
                     language === "it" ? "Profitto mensile" : "Monthly profit",
-                    formatMoney(currentMonthlyProfit, 0),
+                    money(currentMonthlyProfit, 0),
                   ],
                 ].map(([label, value]) => (
                   <div
@@ -775,7 +797,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {formatMoney(currentCost, 2)}
+                  {money(currentCost, 2)}
                 </div>
                 <div
                   style={{
@@ -883,8 +905,8 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {language === "it"
-                          ? `Attuale ${formatMoney(currentPrice, 2)}`
-                          : `Current ${formatMoney(currentPrice, 2)}`}
+                          ? `Attuale ${money(currentPrice, 2)}`
+                          : `Current ${money(currentPrice, 2)}`}
                       </div>
                     </div>
                     <div
@@ -897,7 +919,7 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 950,
                       }}
                     >
-                      {formatMoney(simulatedPrice, 2)}
+                      {money(simulatedPrice, 2)}
                     </div>
                   </div>
                   <input
@@ -926,8 +948,8 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 750,
                     }}
                   >
-                    <span>{formatMoney(priceMin, 2)}</span>
-                    <span>{formatMoney(priceMax, 2)}</span>
+                    <span>{money(priceMin, 2)}</span>
+                    <span>{money(priceMax, 2)}</span>
                   </div>
                 </div>
 
@@ -955,8 +977,8 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {language === "it"
-                          ? `Nuovo costo ${formatMoney(simulatedCost, 2)}`
-                          : `New cost ${formatMoney(simulatedCost, 2)}`}
+                          ? `Nuovo costo ${money(simulatedCost, 2)}`
+                          : `New cost ${money(simulatedCost, 2)}`}
                       </div>
                     </div>
                     <div
@@ -1180,7 +1202,7 @@ export default function RecoverySimulatorPage() {
               {[
                 {
                   label: language === "it" ? "Nuovo margine" : "New margin",
-                  value: `${simulatedMarginPct.toFixed(1)}%`,
+                  value: pct(simulatedMarginPct),
                   note: formatSignedPct(marginDelta, 1),
                   positive: marginDelta >= 0,
                 },
@@ -1189,7 +1211,7 @@ export default function RecoverySimulatorPage() {
                     language === "it"
                       ? "Nuovo profitto mensile"
                       : "New monthly profit",
-                  value: formatMoney(simulatedMonthlyProfit, 0),
+                  value: money(simulatedMonthlyProfit, 0),
                   note: formatSignedPct(profitDeltaPct, 1),
                   positive: recoveredMonthlyProfit >= 0,
                 },
@@ -1290,8 +1312,8 @@ export default function RecoverySimulatorPage() {
                   {
                     label:
                       language === "it" ? "Profitto mensile" : "Monthly profit",
-                    current: formatMoney(currentMonthlyProfit, 0),
-                    next: formatMoney(simulatedMonthlyProfit, 0),
+                    current: money(currentMonthlyProfit, 0),
+                    next: money(simulatedMonthlyProfit, 0),
                     currentBar: Math.max(0, currentMonthlyProfit),
                     nextBar: Math.max(0, simulatedMonthlyProfit),
                     max: Math.max(
@@ -1303,8 +1325,8 @@ export default function RecoverySimulatorPage() {
                   {
                     label:
                       language === "it" ? "Ricavi mensili" : "Monthly revenue",
-                    current: formatMoney(currentMonthlyRevenue, 0),
-                    next: formatMoney(simulatedMonthlyRevenue, 0),
+                    current: money(currentMonthlyRevenue, 0),
+                    next: money(simulatedMonthlyRevenue, 0),
                     currentBar: Math.max(0, currentMonthlyRevenue),
                     nextBar: Math.max(0, simulatedMonthlyRevenue),
                     max: Math.max(
