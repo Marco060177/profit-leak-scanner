@@ -37,10 +37,7 @@ export const loader = async ({
 
   const language = url.searchParams.get("lang") === "it" ? "it" : "en";
 
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   const { admin, session } = await authenticate.admin(request);
 
@@ -73,11 +70,7 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function compactMoney(
-  value: number,
-  currencyCode: string,
-  locale: string,
-) {
+function compactMoney(value: number, currencyCode: string, locale: string) {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: currencyCode,
@@ -118,10 +111,7 @@ function getStatusStyle(
   }[action];
 }
 
-function getEffortLabel(
-  effort: ProfitAlertEffort,
-  language: "it" | "en",
-) {
+function getEffortLabel(effort: ProfitAlertEffort, language: "it" | "en") {
   if (language === "it") {
     if (effort === "easy") return "Facile";
     if (effort === "medium") return "Media";
@@ -138,6 +128,56 @@ function getActionStage(alert: ProfitAlert): ActionStage {
   if (alert.businessAction === "review") return "next";
   if (alert.businessAction === "optimize") return "planned";
   return "monitor";
+}
+
+function getConfidence(alert: ProfitAlert) {
+  const impactEvidence = alert.monthlyImpact > 0 ? 8 : 0;
+  const effortEvidence =
+    alert.effort === "easy" ? 5 : alert.effort === "medium" ? 2 : 0;
+  const actionEvidence =
+    alert.businessAction === "monitor"
+      ? -4
+      : alert.businessAction === "review"
+        ? 1
+        : 4;
+
+  return clamp(
+    Math.round(
+      70 +
+        alert.priority * 0.12 +
+        impactEvidence +
+        effortEvidence +
+        actionEvidence,
+    ),
+    68,
+    96,
+  );
+}
+
+function getDecisionScore(alert: ProfitAlert) {
+  const confidence = getConfidence(alert);
+  const impactScore =
+    alert.monthlyImpact > 0
+      ? Math.min(100, 35 + Math.log10(alert.monthlyImpact + 1) * 22)
+      : 25;
+  const effortScore =
+    alert.effort === "easy" ? 100 : alert.effort === "medium" ? 72 : 48;
+  const actionWeight =
+    alert.businessAction === "action"
+      ? 100
+      : alert.businessAction === "review"
+        ? 82
+        : alert.businessAction === "optimize"
+          ? 70
+          : 45;
+
+  return (
+    alert.priority * 0.38 +
+    impactScore * 0.24 +
+    confidence * 0.2 +
+    effortScore * 0.1 +
+    actionWeight * 0.08
+  );
 }
 
 function getBusinessStatus(alerts: ProfitAlert[]) {
@@ -330,9 +370,7 @@ function TopPriority({
               textTransform: "uppercase",
             }}
           >
-            {language === "it"
-              ? "PRIORITÀ PRINCIPALE"
-              : "TOP PRIORITY"}
+            {language === "it" ? "PRIORITÀ PRINCIPALE" : "TOP PRIORITY"}
           </div>
 
           <h2
@@ -350,9 +388,7 @@ function TopPriority({
           </h2>
         </div>
 
-        <TinyBadge color={status.color}>
-          {status.label}
-        </TinyBadge>
+        <TinyBadge color={status.color}>{status.label}</TinyBadge>
       </div>
 
       <p
@@ -379,16 +415,12 @@ function TopPriority({
         }}
       >
         <ActionMetric
-          label={
-            language === "it"
-              ? "Impatto mensile"
-              : "Monthly impact"
-          }
+          label={language === "it" ? "Impatto mensile" : "Monthly impact"}
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                alert.monthlyImpact,
-              )}`
+                  alert.monthlyImpact,
+                )}`
               : language === "it"
                 ? "Qualitativo"
                 : "Qualitative"
@@ -404,30 +436,20 @@ function TopPriority({
         <ActionMetric
           label={language === "it" ? "Priorità" : "Priority"}
           value={`${alert.priority}/100`}
-          note={
-            language === "it"
-              ? "Urgenza e valore"
-              : "Urgency and value"
-          }
+          note={language === "it" ? "Urgenza e valore" : "Urgency and value"}
         />
 
         <ActionMetric
-          label={language === "it" ? "Impegno" : "Effort"}
+          label={language === "it" ? "Difficoltà" : "Difficulty"}
           value={getEffortLabel(alert.effort, language)}
           note={`${alert.estimatedMinutes} min`}
         />
 
         <ActionMetric
-          label={
-            language === "it"
-              ? "Modulo consigliato"
-              : "Recommended module"
-          }
-          value={alert.recommendedModule}
+          label={language === "it" ? "Affidabilità" : "Confidence"}
+          value={`${getConfidence(alert)}%`}
           note={
-            language === "it"
-              ? "Apri il modulo corretto"
-              : "Open the right module"
+            language === "it" ? "Qualità della stima" : "Estimate reliability"
           }
         />
       </div>
@@ -470,28 +492,17 @@ function TopPriority({
 }
 
 export default function RecommendationsPage() {
-  const { summary, rows, period, currencyCode } = useLoaderData() as LoaderData;
+  const { summary, rows, period, currencyCode, shopHandle } =
+    useLoaderData() as LoaderData;
   const navigate = useNavigate();
-  const language =
-    getStoredLanguage() === "it" ? "it" : "en";
+  const language = getStoredLanguage() === "it" ? "it" : "en";
 
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
-    formatStoreMoney(
-      value,
-      currencyCode,
-      locale,
-    );
+    formatStoreMoney(value, currencyCode, locale);
 
-  const pct = (value: number) =>
-    formatStorePercent(
-      value,
-      locale,
-    );
+  const pct = (value: number) => formatStorePercent(value, locale);
 
   const profitAlerts = React.useMemo(
     () =>
@@ -505,8 +516,7 @@ export default function RecommendationsPage() {
   );
 
   const aggregateRecovery = profitAlerts.find(
-    (alert) =>
-      alert.id === "recoverable-profit-opportunity",
+    (alert) => alert.id === "recoverable-profit-opportunity",
   );
 
   const queueAlerts = React.useMemo(() => {
@@ -526,11 +536,10 @@ export default function RecommendationsPage() {
         return true;
       })
       .sort((a, b) => {
-        if (b.priority !== a.priority) {
-          return b.priority - a.priority;
-        }
-
-        return b.monthlyImpact - a.monthlyImpact;
+        const scoreDifference = getDecisionScore(b) - getDecisionScore(a);
+        return scoreDifference !== 0
+          ? scoreDifference
+          : b.monthlyImpact - a.monthlyImpact;
       })
       .slice(0, 8);
   }, [profitAlerts]);
@@ -539,13 +548,9 @@ export default function RecommendationsPage() {
 
   const headlineMonthlyOpportunity =
     aggregateRecovery?.monthlyImpact ??
-    Math.max(
-      0,
-      ...queueAlerts.map((alert) => alert.monthlyImpact),
-    );
+    Math.max(0, ...queueAlerts.map((alert) => alert.monthlyImpact));
 
-  const annualOpportunity =
-    headlineMonthlyOpportunity * 12;
+  const annualOpportunity = headlineMonthlyOpportunity * 12;
 
   const totalMinutes = queueAlerts.reduce(
     (sum, alert) => sum + alert.estimatedMinutes,
@@ -568,18 +573,16 @@ export default function RecommendationsPage() {
 
   const averagePriority =
     queueAlerts.length > 0
-      ? queueAlerts.reduce(
-        (sum, alert) => sum + alert.priority,
-        0,
-      ) / queueAlerts.length
+      ? queueAlerts.reduce((sum, alert) => sum + alert.priority, 0) /
+        queueAlerts.length
       : 0;
 
   const actionCenterScore = clamp(
     Math.round(
       35 +
-      Math.min(30, actionableCount * 6) +
-      Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
-      Math.min(15, averagePriority * 0.15),
+        Math.min(30, actionableCount * 6) +
+        Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
+        Math.min(15, averagePriority * 0.15),
     ),
     0,
     100,
@@ -621,8 +624,41 @@ export default function RecommendationsPage() {
             ? "The business is relatively stable. Current priorities focus on improvement."
             : "No significant profitability issue requires immediate action.";
 
-  const [completedIds, setCompletedIds] =
-    React.useState<string[]>([]);
+  const storageKey = `marginlab:recommendations:${shopHandle || "store"}`;
+  const [completedIds, setCompletedIds] = React.useState<string[]>([]);
+  const [hasLoadedProgress, setHasLoadedProgress] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      const parsed = saved ? JSON.parse(saved) : [];
+      setCompletedIds(
+        Array.isArray(parsed)
+          ? parsed.filter((id): id is string => typeof id === "string")
+          : [],
+      );
+    } catch {
+      setCompletedIds([]);
+    } finally {
+      setHasLoadedProgress(true);
+    }
+  }, [storageKey]);
+
+  React.useEffect(() => {
+    if (!hasLoadedProgress) return;
+
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(completedIds));
+    } catch {
+      // The page remains fully usable when browser storage is unavailable.
+    }
+  }, [completedIds, hasLoadedProgress, storageKey]);
+
+  React.useEffect(() => {
+    if (!hasLoadedProgress) return;
+    const validIds = new Set(queueAlerts.map((alert) => alert.id));
+    setCompletedIds((current) => current.filter((id) => validIds.has(id)));
+  }, [hasLoadedProgress, queueAlerts]);
 
   const toggleComplete = (id: string) => {
     setCompletedIds((current) =>
@@ -670,18 +706,13 @@ export default function RecommendationsPage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <DashboardNav
-          active="recommendations"
-          navigate={navigate}
-        />
+        <DashboardNav active="recommendations" navigate={navigate} />
 
         <div className="hero-header">
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it"
-                ? "Funzione Growth"
-                : "Growth Feature"}
+              {language === "it" ? "Funzione Growth" : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -707,9 +738,7 @@ export default function RecommendationsPage() {
             className="primary-button"
             onClick={() => navigate("/app/billing")}
           >
-            {language === "it"
-              ? "Gestisci il piano →"
-              : "Manage plan →"}
+            {language === "it" ? "Gestisci il piano →" : "Manage plan →"}
           </button>
         </div>
 
@@ -773,11 +802,11 @@ export default function RecommendationsPage() {
               >
                 {language === "it"
                   ? `${actionableCount} priorità operative sono disponibili. L'impatto annuale potenziale associato all'opportunità complessiva è ${money(
-                    annualOpportunity,
-                  )}.`
+                      annualOpportunity,
+                    )}.`
                   : `${actionableCount} operational priorities are available. The potential annual impact associated with the overall opportunity is ${money(
-                    annualOpportunity,
-                  )}.`}
+                      annualOpportunity,
+                    )}.`}
               </p>
 
               <div
@@ -790,9 +819,7 @@ export default function RecommendationsPage() {
               >
                 <ActionMetric
                   label={
-                    language === "it"
-                      ? "Impatto annuale"
-                      : "Annual impact"
+                    language === "it" ? "Impatto annuale" : "Annual impact"
                   }
                   value={`+${compactMoney(annualOpportunity, currencyCode, locale)}`}
                   note={
@@ -818,11 +845,7 @@ export default function RecommendationsPage() {
                 />
 
                 <ActionMetric
-                  label={
-                    language === "it"
-                      ? "Tempo stimato"
-                      : "Estimated time"
-                  }
+                  label={language === "it" ? "Tempo stimato" : "Estimated time"}
                   value={`${totalMinutes} min`}
                   note={
                     language === "it"
@@ -832,11 +855,7 @@ export default function RecommendationsPage() {
                 />
 
                 <ActionMetric
-                  label={
-                    language === "it"
-                      ? "Vittorie rapide"
-                      : "Quick wins"
-                  }
+                  label={language === "it" ? "Vittorie rapide" : "Quick wins"}
                   value={`${quickWins.length}`}
                   note={
                     language === "it"
@@ -867,8 +886,9 @@ export default function RecommendationsPage() {
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    background: `conic-gradient(${businessStatus.color} ${actionCenterScore * 3.6
-                      }deg, rgba(255,255,255,0.08) 0deg)`,
+                    background: `conic-gradient(${businessStatus.color} ${
+                      actionCenterScore * 3.6
+                    }deg, rgba(255,255,255,0.08) 0deg)`,
                     boxShadow: `0 0 50px ${businessStatus.color}22`,
                   }}
                 >
@@ -881,8 +901,7 @@ export default function RecommendationsPage() {
                       placeItems: "center",
                       background:
                         "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
-                      border:
-                        "1px solid rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.06)",
                     }}
                   >
                     <div>
@@ -963,10 +982,7 @@ export default function RecommendationsPage() {
             alignItems: "start",
           }}
         >
-          <section
-            className="panel"
-            style={{ margin: 0, padding: 24 }}
-          >
+          <section className="panel" style={{ margin: 0, padding: 24 }}>
             <div
               style={{
                 display: "flex",
@@ -978,15 +994,10 @@ export default function RecommendationsPage() {
             >
               <div>
                 <div className="panel-eyebrow">
-                  {language === "it"
-                    ? "CODA DELLE PRIORITÀ"
-                    : "PRIORITY QUEUE"}
+                  {language === "it" ? "CODA DELLE PRIORITÀ" : "PRIORITY QUEUE"}
                 </div>
 
-                <h2
-                  className="panel-title"
-                  style={{ marginTop: 6 }}
-                >
+                <h2 className="panel-title" style={{ marginTop: 6 }}>
                   {language === "it"
                     ? "Le attività da affrontare in ordine"
                     : "Work through priorities in order"}
@@ -1009,18 +1020,14 @@ export default function RecommendationsPage() {
               {queueAlerts.length > 0 ? (
                 queueAlerts.map((alert, index) => {
                   const completed = completedIds.includes(alert.id);
-                  const status = getStatusStyle(
-                    alert.businessAction,
-                    language,
-                  );
+                  const status = getStatusStyle(alert.businessAction, language);
 
                   return (
                     <article
                       key={alert.id}
                       style={{
                         display: "grid",
-                        gridTemplateColumns:
-                          "46px minmax(0,1fr) auto",
+                        gridTemplateColumns: "46px minmax(0,1fr) auto",
                         gap: 15,
                         alignItems: "center",
                         padding: 17,
@@ -1083,9 +1090,7 @@ export default function RecommendationsPage() {
                             fontSize: 17,
                             fontWeight: 950,
                             lineHeight: 1.25,
-                            textDecoration: completed
-                              ? "line-through"
-                              : "none",
+                            textDecoration: completed ? "line-through" : "none",
                           }}
                         >
                           {alert.title}
@@ -1119,6 +1124,11 @@ export default function RecommendationsPage() {
                             {getEffortLabel(alert.effort, language)}
                           </TinyBadge>
 
+                          <TinyBadge color="#22c55e">
+                            {language === "it" ? "Affidabilità" : "Confidence"}{" "}
+                            {getConfidence(alert)}%
+                          </TinyBadge>
+
                           <TinyBadge color="#c084fc">
                             {alert.recommendedModule}
                           </TinyBadge>
@@ -1143,10 +1153,9 @@ export default function RecommendationsPage() {
                           }}
                         >
                           {alert.monthlyImpact > 0
-                            ? `${alert.businessAction === "optimize"
-                              ? "+"
-                              : ""
-                            }${money(alert.monthlyImpact)}`
+                            ? `${
+                                alert.businessAction === "optimize" ? "+" : ""
+                              }${money(alert.monthlyImpact)}`
                             : language === "it"
                               ? "Qualitativo"
                               : "Qualitative"}
@@ -1207,9 +1216,7 @@ export default function RecommendationsPage() {
                   letterSpacing: "0.12em",
                 }}
               >
-                {language === "it"
-                  ? "AVANZAMENTO DEL PIANO"
-                  : "PLAN PROGRESS"}
+                {language === "it" ? "AVANZAMENTO DEL PIANO" : "PLAN PROGRESS"}
               </div>
 
               <div
@@ -1257,8 +1264,7 @@ export default function RecommendationsPage() {
                     width: `${progressPct}%`,
                     height: "100%",
                     borderRadius: 999,
-                    background:
-                      "linear-gradient(90deg, #16a34a, #4ade80)",
+                    background: "linear-gradient(90deg, #16a34a, #4ade80)",
                     transition: "width 220ms ease",
                   }}
                 />
@@ -1320,9 +1326,7 @@ export default function RecommendationsPage() {
                   letterSpacing: "0.12em",
                 }}
               >
-                {language === "it"
-                  ? "IMPATTO POTENZIALE"
-                  : "POTENTIAL IMPACT"}
+                {language === "it" ? "IMPATTO POTENZIALE" : "POTENTIAL IMPACT"}
               </div>
 
               <div
@@ -1362,20 +1366,12 @@ export default function RecommendationsPage() {
             gap: 22,
           }}
         >
-          <section
-            className="panel"
-            style={{ margin: 0, padding: 24 }}
-          >
+          <section className="panel" style={{ margin: 0, padding: 24 }}>
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "VITTORIE RAPIDE"
-                : "QUICK WINS"}
+              {language === "it" ? "VITTORIE RAPIDE" : "QUICK WINS"}
             </div>
 
-            <h2
-              className="panel-title"
-              style={{ marginTop: 6 }}
-            >
+            <h2 className="panel-title" style={{ marginTop: 6 }}>
               {language === "it"
                 ? "Più valore con meno lavoro"
                 : "More value with less work"}
@@ -1400,10 +1396,8 @@ export default function RecommendationsPage() {
                       textAlign: "left",
                       padding: 15,
                       borderRadius: 17,
-                      background:
-                        "rgba(255,255,255,0.035)",
-                      border:
-                        "1px solid rgba(255,255,255,0.07)",
+                      background: "rgba(255,255,255,0.035)",
+                      border: "1px solid rgba(255,255,255,0.07)",
                     }}
                   >
                     <div
@@ -1459,10 +1453,8 @@ export default function RecommendationsPage() {
                     padding: 18,
                     borderRadius: 16,
                     color: "rgba(255,255,255,0.58)",
-                    background:
-                      "rgba(255,255,255,0.03)",
-                    border:
-                      "1px solid rgba(255,255,255,0.07)",
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.07)",
                     fontWeight: 760,
                   }}
                 >
@@ -1492,9 +1484,7 @@ export default function RecommendationsPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "STRATEGIA MARGINLAB"
-                : "MARGINLAB STRATEGY"}
+              {language === "it" ? "STRATEGIA MARGINLAB" : "MARGINLAB STRATEGY"}
             </div>
 
             <h2
@@ -1532,16 +1522,10 @@ export default function RecommendationsPage() {
               }}
             >
               <ActionMetric
-                label={
-                  language === "it"
-                    ? "Prima priorità"
-                    : "Top priority"
-                }
+                label={language === "it" ? "Prima priorità" : "Top priority"}
                 value={
                   topAlert?.recommendedModule ??
-                  (language === "it"
-                    ? "Monitoraggio"
-                    : "Monitoring")
+                  (language === "it" ? "Monitoraggio" : "Monitoring")
                 }
                 note={
                   language === "it"
@@ -1552,9 +1536,7 @@ export default function RecommendationsPage() {
 
               <ActionMetric
                 label={
-                  language === "it"
-                    ? "Priorità media"
-                    : "Average priority"
+                  language === "it" ? "Priorità media" : "Average priority"
                 }
                 value={`${Math.round(averagePriority)}/100`}
                 note={
@@ -1565,11 +1547,7 @@ export default function RecommendationsPage() {
               />
 
               <ActionMetric
-                label={
-                  language === "it"
-                    ? "Tempo totale"
-                    : "Total time"
-                }
+                label={language === "it" ? "Tempo totale" : "Total time"}
                 value={`${totalMinutes} min`}
                 note={
                   language === "it"
@@ -1590,15 +1568,10 @@ export default function RecommendationsPage() {
           }}
         >
           <div className="panel-eyebrow">
-            {language === "it"
-              ? "PIANIFICAZIONE"
-              : "ACTION PLANNING"}
+            {language === "it" ? "PIANIFICAZIONE" : "ACTION PLANNING"}
           </div>
 
-          <h2
-            className="panel-title"
-            style={{ marginTop: 6 }}
-          >
+          <h2 className="panel-title" style={{ marginTop: 6 }}>
             {language === "it"
               ? "Come organizzare le priorità attuali"
               : "How to organize current priorities"}
@@ -1608,131 +1581,123 @@ export default function RecommendationsPage() {
             style={{
               marginTop: 21,
               display: "grid",
-              gridTemplateColumns:
-                "repeat(4,minmax(0,1fr))",
+              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
               gap: 14,
             }}
           >
-            {(
-              ["now", "next", "planned", "monitor"] as ActionStage[]
-            ).map((stage) => {
-              const alerts = queueAlerts.filter(
-                (alert) => getActionStage(alert) === stage,
-              );
+            {(["now", "next", "planned", "monitor"] as ActionStage[]).map(
+              (stage) => {
+                const alerts = queueAlerts.filter(
+                  (alert) => getActionStage(alert) === stage,
+                );
 
-              const stageColor =
-                stage === "now"
-                  ? "#ff6b4a"
-                  : stage === "next"
-                    ? "#f59e0b"
-                    : stage === "planned"
-                      ? "#22c55e"
-                      : "#38bdf8";
+                const stageColor =
+                  stage === "now"
+                    ? "#ff6b4a"
+                    : stage === "next"
+                      ? "#f59e0b"
+                      : stage === "planned"
+                        ? "#22c55e"
+                        : "#38bdf8";
 
-              return (
-                <div
-                  key={stage}
-                  style={{
-                    minHeight: 190,
-                    padding: 17,
-                    borderRadius: 19,
-                    background:
-                      "rgba(255,255,255,0.03)",
-                    border:
-                      "1px solid rgba(255,255,255,0.07)",
-                  }}
-                >
+                return (
                   <div
+                    key={stage}
                     style={{
-                      color: stageColor,
-                      fontSize: 10,
-                      fontWeight: 950,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.11em",
+                      minHeight: 190,
+                      padding: 17,
+                      borderRadius: 19,
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.07)",
                     }}
                   >
-                    {stageLabels[stage]}
-                  </div>
+                    <div
+                      style={{
+                        color: stageColor,
+                        fontSize: 10,
+                        fontWeight: 950,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.11em",
+                      }}
+                    >
+                      {stageLabels[stage]}
+                    </div>
 
-                  <div
-                    style={{
-                      marginTop: 13,
-                      display: "grid",
-                      gap: 9,
-                    }}
-                  >
-                    {alerts.length > 0 ? (
-                      alerts.map((alert) => (
-                        <button
-                          key={alert.id}
-                          type="button"
-                          onClick={() => navigate(alert.route)}
+                    <div
+                      style={{
+                        marginTop: 13,
+                        display: "grid",
+                        gap: 9,
+                      }}
+                    >
+                      {alerts.length > 0 ? (
+                        alerts.map((alert) => (
+                          <button
+                            key={alert.id}
+                            type="button"
+                            onClick={() => navigate(alert.route)}
+                            style={{
+                              cursor: "pointer",
+                              textAlign: "left",
+                              padding: 12,
+                              borderRadius: 13,
+                              background: "rgba(255,255,255,0.035)",
+                              border: "1px solid rgba(255,255,255,0.06)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                color: "#f8fafc",
+                                fontSize: 11,
+                                fontWeight: 870,
+                                lineHeight: 1.4,
+                              }}
+                            >
+                              {alert.title}
+                            </div>
+
+                            <div
+                              style={{
+                                marginTop: 6,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                gap: 8,
+                                color: "rgba(255,255,255,0.42)",
+                                fontSize: 9,
+                                fontWeight: 800,
+                              }}
+                            >
+                              <span>{alert.estimatedMinutes} min</span>
+
+                              <span style={{ color: stageColor }}>
+                                {alert.monthlyImpact > 0
+                                  ? money(alert.monthlyImpact)
+                                  : "→"}
+                              </span>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div
                           style={{
-                            cursor: "pointer",
-                            textAlign: "left",
                             padding: 12,
-                            borderRadius: 13,
-                            background:
-                              "rgba(255,255,255,0.035)",
-                            border:
-                              "1px solid rgba(255,255,255,0.06)",
+                            borderRadius: 12,
+                            color: "rgba(255,255,255,0.36)",
+                            fontSize: 10,
+                            fontWeight: 750,
+                            background: "rgba(255,255,255,0.02)",
                           }}
                         >
-                          <div
-                            style={{
-                              color: "#f8fafc",
-                              fontSize: 11,
-                              fontWeight: 870,
-                              lineHeight: 1.4,
-                            }}
-                          >
-                            {alert.title}
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: 6,
-                              display: "flex",
-                              justifyContent: "space-between",
-                              gap: 8,
-                              color: "rgba(255,255,255,0.42)",
-                              fontSize: 9,
-                              fontWeight: 800,
-                            }}
-                          >
-                            <span>
-                              {alert.estimatedMinutes} min
-                            </span>
-
-                            <span style={{ color: stageColor }}>
-                              {alert.monthlyImpact > 0
-                                ? money(alert.monthlyImpact)
-                                : "→"}
-                            </span>
-                          </div>
-                        </button>
-                      ))
-                    ) : (
-                      <div
-                        style={{
-                          padding: 12,
-                          borderRadius: 12,
-                          color: "rgba(255,255,255,0.36)",
-                          fontSize: 10,
-                          fontWeight: 750,
-                          background:
-                            "rgba(255,255,255,0.02)",
-                        }}
-                      >
-                        {language === "it"
-                          ? "Nessuna attività"
-                          : "No actions"}
-                      </div>
-                    )}
+                          {language === "it"
+                            ? "Nessuna attività"
+                            : "No actions"}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              },
+            )}
           </div>
         </section>
 
