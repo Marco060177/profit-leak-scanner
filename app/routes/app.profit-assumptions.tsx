@@ -1,9 +1,5 @@
 import * as React from "react";
-import {
-  useFetcher,
-  useLoaderData,
-  useNavigate,
-} from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
@@ -31,19 +27,18 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions =
-    (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? {
-      monthlyAds: 500,
-      monthlyShipping: 300,
-      monthlyOperating: 200,
-      paymentFeePct: 2.9,
-      transactionFeePct: 0.5,
-      taxReservePct: 0,
-    };
+  const assumptions = (await prisma.profitAssumptions.findUnique({
+    where: {
+      shop: session.shop,
+    },
+  })) ?? {
+    monthlyAds: 500,
+    monthlyShipping: 300,
+    monthlyOperating: 200,
+    paymentFeePct: 2.9,
+    transactionFeePct: 0.5,
+    taxReservePct: 0,
+  };
 
   return {
     ...dashboardData,
@@ -56,12 +51,22 @@ export async function action({ request }: { request: Request }) {
 
   const formData = await request.formData();
 
-  const monthlyAds = Number(formData.get("monthlyAds") || 0);
-  const monthlyShipping = Number(formData.get("monthlyShipping") || 0);
-  const monthlyOperating = Number(formData.get("monthlyOperating") || 0);
-  const paymentFeePct = Number(formData.get("paymentFeePct") || 0);
-  const transactionFeePct = Number(formData.get("transactionFeePct") || 0);
-  const taxReservePct = Number(formData.get("taxReservePct") || 0);
+  const safeAmount = (value: FormDataEntryValue | null) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? clamp(parsed, 0, 10_000_000) : 0;
+  };
+
+  const safePercentage = (value: FormDataEntryValue | null) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? clamp(parsed, 0, 100) : 0;
+  };
+
+  const monthlyAds = safeAmount(formData.get("monthlyAds"));
+  const monthlyShipping = safeAmount(formData.get("monthlyShipping"));
+  const monthlyOperating = safeAmount(formData.get("monthlyOperating"));
+  const paymentFeePct = safePercentage(formData.get("paymentFeePct"));
+  const transactionFeePct = safePercentage(formData.get("transactionFeePct"));
+  const taxReservePct = safePercentage(formData.get("taxReservePct"));
 
   await prisma.profitAssumptions.upsert({
     where: {
@@ -90,8 +95,6 @@ export async function action({ request }: { request: Request }) {
     ok: true,
   };
 }
-
-
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -173,6 +176,8 @@ function FieldCard({
   onChange,
   prefix,
   suffix,
+  min = 0,
+  max,
 }: {
   label: string;
   helper: string;
@@ -180,6 +185,8 @@ function FieldCard({
   onChange: (value: number) => void;
   prefix?: string;
   suffix?: string;
+  min?: number;
+  max?: number;
 }) {
   return (
     <label
@@ -238,8 +245,18 @@ function FieldCard({
 
         <input
           type="number"
+          min={min}
+          max={max}
+          step={suffix === "%" ? 0.1 : 1}
           value={value}
-          onChange={(event) => onChange(Number(event.target.value) || 0)}
+          onChange={(event) => {
+            const parsed = Number(event.target.value);
+            onChange(
+              Number.isFinite(parsed)
+                ? clamp(parsed, min, max ?? Number.MAX_SAFE_INTEGER)
+                : min,
+            );
+          }}
           style={{
             width: "100%",
             background: "transparent",
@@ -271,22 +288,24 @@ export default function ProfitAssumptionsPage() {
   const language = getStoredLanguage();
   const saveFetcher = useFetcher<{ ok: boolean }>();
 
-  const {
-    summary,
-    assumptions,
-    currencyCode,
-  } = useLoaderData() as LoaderData & {
-    assumptions: {
-      monthlyAds: number;
-      monthlyShipping: number;
-      monthlyOperating: number;
-      paymentFeePct: number;
-      transactionFeePct: number;
-      taxReservePct: number;
+  const { summary, assumptions, currencyCode, period } =
+    useLoaderData() as LoaderData & {
+      assumptions: {
+        monthlyAds: number;
+        monthlyShipping: number;
+        monthlyOperating: number;
+        paymentFeePct: number;
+        transactionFeePct: number;
+        taxReservePct: number;
+      };
     };
-  };
 
   const locale = language === "it" ? "it-IT" : "en-US";
+  const periodValue = Number(period ?? 30);
+  const periodDays =
+    Number.isFinite(periodValue) && periodValue > 0 ? periodValue : 30;
+  const periodFractionOfMonth = periodDays / 30;
+  const annualizationMultiplier = 360 / periodDays;
 
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);
@@ -294,75 +313,60 @@ export default function ProfitAssumptionsPage() {
   const pct = (value: number, digits = 1) =>
     formatStorePercent(value, locale, digits);
 
-  const [monthlyAds, setMonthlyAds] =
-    React.useState(assumptions.monthlyAds);
+  const [monthlyAds, setMonthlyAds] = React.useState(assumptions.monthlyAds);
 
-  const [monthlyShipping, setMonthlyShipping] =
-    React.useState(assumptions.monthlyShipping);
+  const [monthlyShipping, setMonthlyShipping] = React.useState(
+    assumptions.monthlyShipping,
+  );
 
-  const [monthlyOperating, setMonthlyOperating] =
-    React.useState(assumptions.monthlyOperating);
+  const [monthlyOperating, setMonthlyOperating] = React.useState(
+    assumptions.monthlyOperating,
+  );
 
-  const [paymentFeePct, setPaymentFeePct] =
-    React.useState(assumptions.paymentFeePct);
+  const [paymentFeePct, setPaymentFeePct] = React.useState(
+    assumptions.paymentFeePct,
+  );
 
-  const [transactionFeePct, setTransactionFeePct] =
-    React.useState(assumptions.transactionFeePct);
+  const [transactionFeePct, setTransactionFeePct] = React.useState(
+    assumptions.transactionFeePct,
+  );
 
-  const [taxReservePct, setTaxReservePct] =
-    React.useState(assumptions.taxReservePct);
+  const [taxReservePct, setTaxReservePct] = React.useState(
+    assumptions.taxReservePct,
+  );
 
-  const estimatedPaymentFees =
-    summary.revenue * (paymentFeePct / 100);
+  const estimatedPaymentFees = summary.revenue * (paymentFeePct / 100);
 
-  const estimatedTransactionFees =
-    summary.revenue * (transactionFeePct / 100);
+  const estimatedTransactionFees = summary.revenue * (transactionFeePct / 100);
 
-  const estimatedTaxReserve =
-    summary.revenue * (taxReservePct / 100);
+  const estimatedTaxReserve = summary.revenue * (taxReservePct / 100);
 
-  const totalFixedCosts =
-    monthlyAds +
-    monthlyShipping +
-    monthlyOperating;
+  const monthlyFixedCosts = monthlyAds + monthlyShipping + monthlyOperating;
+  const totalFixedCosts = monthlyFixedCosts * periodFractionOfMonth;
 
   const totalVariableCosts =
-    estimatedPaymentFees +
-    estimatedTransactionFees +
-    estimatedTaxReserve;
+    estimatedPaymentFees + estimatedTransactionFees + estimatedTaxReserve;
 
-  const totalEstimatedCosts =
-    totalFixedCosts +
-    totalVariableCosts;
+  const totalEstimatedCosts = totalFixedCosts + totalVariableCosts;
 
-  const estimatedNetProfit =
-    summary.profit - totalEstimatedCosts;
+  const estimatedNetProfit = summary.profit - totalEstimatedCosts;
 
   const estimatedNetMargin =
-    summary.revenue > 0
-      ? (estimatedNetProfit / summary.revenue) * 100
-      : 0;
+    summary.revenue > 0 ? (estimatedNetProfit / summary.revenue) * 100 : 0;
 
-  const annualNetProfit = estimatedNetProfit * 12;
-  const annualEstimatedCosts = totalEstimatedCosts * 12;
+  const annualNetProfit = estimatedNetProfit * annualizationMultiplier;
+  const annualEstimatedCosts = totalEstimatedCosts * annualizationMultiplier;
 
   const grossMarginRate =
-    summary.revenue > 0
-      ? summary.profit / summary.revenue
-      : 0;
+    summary.revenue > 0 ? summary.profit / summary.revenue : 0;
 
   const variableCostRate =
-    paymentFeePct / 100 +
-    transactionFeePct / 100 +
-    taxReservePct / 100;
+    paymentFeePct / 100 + transactionFeePct / 100 + taxReservePct / 100;
 
-  const contributionRate =
-    grossMarginRate - variableCostRate;
+  const contributionRate = grossMarginRate - variableCostRate;
 
   const breakEvenRevenue =
-    contributionRate > 0
-      ? totalFixedCosts / contributionRate
-      : 0;
+    contributionRate > 0 ? monthlyFixedCosts / contributionRate : 0;
 
   const profitAfterFees =
     summary.profit -
@@ -374,20 +378,19 @@ export default function ProfitAssumptionsPage() {
     {
       key: "ads",
       label: language === "it" ? "Pubblicità" : "Advertising",
-      value: monthlyAds,
+      value: monthlyAds * periodFractionOfMonth,
       color: "#ff6b4a",
     },
     {
       key: "shipping",
       label: language === "it" ? "Spedizioni" : "Shipping",
-      value: monthlyShipping,
+      value: monthlyShipping * periodFractionOfMonth,
       color: "#38bdf8",
     },
     {
       key: "operating",
-      label:
-        language === "it" ? "Costi operativi" : "Operating Costs",
-      value: monthlyOperating,
+      label: language === "it" ? "Costi operativi" : "Operating Costs",
+      value: monthlyOperating * periodFractionOfMonth,
       color: "#f59e0b",
     },
     {
@@ -399,7 +402,7 @@ export default function ProfitAssumptionsPage() {
       value: estimatedPaymentFees,
       color: "#a78bfa",
     },
-    {
+        {
       key: "transaction",
       label:
         language === "it"
@@ -410,22 +413,15 @@ export default function ProfitAssumptionsPage() {
     },
     {
       key: "tax",
-      label:
-        language === "it"
-          ? "Accantonamento fiscale"
-          : "Tax Reserve",
+      label: language === "it" ? "Accantonamento fiscale" : "Tax Reserve",
       value: estimatedTaxReserve,
       color: "#22c55e",
     },
   ];
 
-  const maxCost = Math.max(
-    1,
-    ...costItems.map((item) => item.value),
-  );
+  const maxCost = Math.max(1, ...costItems.map((item) => item.value));
 
-  const largestCost =
-    [...costItems].sort((a, b) => b.value - a.value)[0];
+  const largestCost = [...costItems].sort((a, b) => b.value - a.value)[0];
 
   const whatIfScenarios = [
     {
@@ -434,7 +430,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci la pubblicità del 10%"
           : "Reduce advertising by 10%",
-      impact: monthlyAds * 0.1,
+      impact: monthlyAds * periodFractionOfMonth * 0.1,
       note:
         language === "it"
           ? "Effetto mensile immediato"
@@ -446,7 +442,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci le spedizioni del 10%"
           : "Reduce shipping by 10%",
-      impact: monthlyShipping * 0.1,
+      impact: monthlyShipping * periodFractionOfMonth * 0.1,
       note:
         language === "it"
           ? "Miglioramento operativo"
@@ -469,11 +465,11 @@ export default function ProfitAssumptionsPage() {
   const healthScore = clamp(
     Math.round(
       100 -
-      Math.max(0, -estimatedNetMargin) * 2 -
-      (totalEstimatedCosts > summary.profit ? 20 : 0) -
-      (largestCost && totalEstimatedCosts > 0
-        ? (largestCost.value / totalEstimatedCosts) * 12
-        : 0),
+        Math.max(0, -estimatedNetMargin) * 2 -
+        (totalEstimatedCosts > summary.profit ? 20 : 0) -
+        (largestCost && totalEstimatedCosts > 0
+          ? (largestCost.value / totalEstimatedCosts) * 12
+          : 0),
     ),
     0,
     100,
@@ -496,40 +492,31 @@ export default function ProfitAssumptionsPage() {
     language === "it"
       ? largestCost && totalEstimatedCosts > 0
         ? `${largestCost.label} rappresenta circa ${pct(
-          (largestCost.value / totalEstimatedCosts) * 100,
-          0,
-        )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
-          largestCost.value * 0.1,
-        )} e quello annuale di circa ${money(
-          largestCost.value * 1.2,
-        )}.`
+            (largestCost.value / totalEstimatedCosts) * 100,
+            0,
+          )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
+            largestCost.value * 0.1,
+          )} e quello annuale di circa ${money(largestCost.value * 1.2)}.`
         : "Inserisci i costi principali per ottenere una raccomandazione economica più affidabile."
       : largestCost && totalEstimatedCosts > 0
         ? `${largestCost.label} represents approximately ${pct(
-          (largestCost.value / totalEstimatedCosts) * 100,
-          0,
-        )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
-          largestCost.value * 0.1,
-        )} and annual profit by about ${money(
-          largestCost.value * 1.2,
-        )}.`
+            (largestCost.value / totalEstimatedCosts) * 100,
+            0,
+          )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
+            largestCost.value * 0.1,
+          )} and annual profit by about ${money(largestCost.value * 1.2)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
 
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <DashboardNav
-          active="profit-assumptions"
-          navigate={navigate}
-        />
+        <DashboardNav active="profit-assumptions" navigate={navigate} />
 
         <div className="hero-header">
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it"
-                ? "Funzione Growth"
-                : "Growth Feature"}
+              {language === "it" ? "Funzione Growth" : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -559,9 +546,7 @@ export default function ProfitAssumptionsPage() {
                 "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
             }}
           >
-            {language === "it"
-              ? "Sblocca Growth →"
-              : "Unlock Growth →"}
+            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
           </button>
         </div>
 
@@ -579,17 +564,16 @@ export default function ProfitAssumptionsPage() {
                 : "Estimated Net Profit"
             }
             value={money(estimatedNetProfit)}
-            note={`${pct(estimatedNetMargin)} ${language === "it" ? "di margine netto" : "net margin"
-              }`}
+            note={`${pct(estimatedNetMargin)} ${
+              language === "it" ? "di margine netto" : "net margin"
+            }`}
             color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
             highlight
           />
 
           <KpiCard
             label={
-              language === "it"
-                ? "Costi mensili totali"
-                : "Total Monthly Costs"
+              language === "it" ? "Costi mensili totali" : "Total Monthly Costs"
             }
             value={money(totalEstimatedCosts)}
             note={
@@ -601,9 +585,7 @@ export default function ProfitAssumptionsPage() {
 
           <KpiCard
             label={
-              language === "it"
-                ? "Ricavi di pareggio"
-                : "Break-even Revenue"
+              language === "it" ? "Ricavi di pareggio" : "Break-even Revenue"
             }
             value={money(breakEvenRevenue)}
             note={
@@ -621,18 +603,14 @@ export default function ProfitAssumptionsPage() {
             }
             value={money(profitAfterFees)}
             note={
-              language === "it"
-                ? "Prima dei costi fissi"
-                : "Before fixed costs"
+              language === "it" ? "Prima dei costi fissi" : "Before fixed costs"
             }
             color={profitAfterFees >= 0 ? "#f8fafc" : "#ff6b4a"}
           />
 
           <KpiCard
             label={
-              language === "it"
-                ? "Profitto netto annuale"
-                : "Annual Net Profit"
+              language === "it" ? "Profitto netto annuale" : "Annual Net Profit"
             }
             value={money(annualNetProfit)}
             note={
@@ -644,11 +622,7 @@ export default function ProfitAssumptionsPage() {
           />
 
           <KpiCard
-            label={
-              language === "it"
-                ? "Salute del modello"
-                : "Model Health"
-            }
+            label={language === "it" ? "Salute del modello" : "Model Health"}
             value={`${healthScore}/100`}
             note={healthLabel}
             color={
@@ -670,14 +644,9 @@ export default function ProfitAssumptionsPage() {
             alignItems: "stretch",
           }}
         >
-          <div
-            className="panel"
-            style={{ margin: 0, padding: 24 }}
-          >
+          <div className="panel" style={{ margin: 0, padding: 24 }}>
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "INPUT DEL MODELLO"
-                : "MODEL INPUTS"}
+              {language === "it" ? "INPUT DEL MODELLO" : "MODEL INPUTS"}
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -732,11 +701,7 @@ export default function ProfitAssumptionsPage() {
                     }}
                   >
                     <FieldCard
-                      label={
-                        language === "it"
-                          ? "Pubblicità"
-                          : "Advertising"
-                      }
+                      label={language === "it" ? "Pubblicità" : "Advertising"}
                       helper={
                         language === "it"
                           ? "Spesa media mensile per campagne."
@@ -748,11 +713,7 @@ export default function ProfitAssumptionsPage() {
                     />
 
                     <FieldCard
-                      label={
-                        language === "it"
-                          ? "Spedizioni"
-                          : "Shipping"
-                      }
+                      label={language === "it" ? "Spedizioni" : "Shipping"}
                       helper={
                         language === "it"
                           ? "Costo mensile sostenuto dallo store."
@@ -818,6 +779,7 @@ export default function ProfitAssumptionsPage() {
                       value={paymentFeePct}
                       onChange={setPaymentFeePct}
                       suffix="%"
+                      max={100}
                     />
 
                     <FieldCard
@@ -834,6 +796,7 @@ export default function ProfitAssumptionsPage() {
                       value={transactionFeePct}
                       onChange={setTransactionFeePct}
                       suffix="%"
+                      max={100}
                     />
                   </div>
                 </div>
@@ -849,9 +812,7 @@ export default function ProfitAssumptionsPage() {
                       marginBottom: 10,
                     }}
                   >
-                    {language === "it"
-                      ? "Riserva fiscale"
-                      : "Tax Reserve"}
+                    {language === "it" ? "Riserva fiscale" : "Tax Reserve"}
                   </div>
 
                   <FieldCard
@@ -868,15 +829,12 @@ export default function ProfitAssumptionsPage() {
                     value={taxReservePct}
                     onChange={setTaxReservePct}
                     suffix="%"
+                    max={100}
                   />
                 </div>
               </div>
 
-              <input
-                type="hidden"
-                name="monthlyAds"
-                value={monthlyAds}
-              />
+              <input type="hidden" name="monthlyAds" value={monthlyAds} />
               <input
                 type="hidden"
                 name="monthlyShipping"
@@ -887,21 +845,13 @@ export default function ProfitAssumptionsPage() {
                 name="monthlyOperating"
                 value={monthlyOperating}
               />
-              <input
-                type="hidden"
-                name="paymentFeePct"
-                value={paymentFeePct}
-              />
+              <input type="hidden" name="paymentFeePct" value={paymentFeePct} />
               <input
                 type="hidden"
                 name="transactionFeePct"
                 value={transactionFeePct}
               />
-              <input
-                type="hidden"
-                name="taxReservePct"
-                value={taxReservePct}
-              />
+              <input type="hidden" name="taxReservePct" value={taxReservePct} />
 
               <button
                 type="submit"
@@ -912,8 +862,7 @@ export default function ProfitAssumptionsPage() {
                   background:
                     "linear-gradient(135deg, rgba(34,197,94,0.30), rgba(34,197,94,0.13))",
                   border: "1px solid rgba(34,197,94,0.32)",
-                  boxShadow:
-                    "0 14px 34px rgba(34,197,94,0.12)",
+                  boxShadow: "0 14px 34px rgba(34,197,94,0.12)",
                 }}
               >
                 {saveFetcher.state !== "idle"
@@ -957,8 +906,7 @@ export default function ProfitAssumptionsPage() {
             <div
               style={{
                 marginTop: 11,
-                color:
-                  estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
+                color: estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
                 fontSize: 54,
                 fontWeight: 950,
                 lineHeight: 1,
@@ -991,26 +939,17 @@ export default function ProfitAssumptionsPage() {
             >
               {[
                 {
-                  label:
-                    language === "it"
-                      ? "Ricavi"
-                      : "Revenue",
+                  label: language === "it" ? "Ricavi" : "Revenue",
                   value: money(summary.revenue),
                   color: "#f8fafc",
                 },
                 {
-                  label:
-                    language === "it"
-                      ? "Profitto lordo"
-                      : "Gross Profit",
+                  label: language === "it" ? "Profitto lordo" : "Gross Profit",
                   value: money(summary.profit),
                   color: "#22c55e",
                 },
                 {
-                  label:
-                    language === "it"
-                      ? "Costi fissi"
-                      : "Fixed Costs",
+                  label: language === "it" ? "Costi fissi" : "Fixed Costs",
                   value: `-${money(totalFixedCosts)}`,
                   color: "#f8fafc",
                 },
@@ -1031,15 +970,9 @@ export default function ProfitAssumptionsPage() {
                   color: "#ff9a70",
                 },
                 {
-                  label:
-                    language === "it"
-                      ? "Profitto netto"
-                      : "Net Profit",
+                  label: language === "it" ? "Profitto netto" : "Net Profit",
                   value: money(estimatedNetProfit),
-                  color:
-                    estimatedNetProfit >= 0
-                      ? "#22c55e"
-                      : "#ff6b4a",
+                  color: estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
                 },
               ].map((item, index) => (
                 <div
@@ -1050,22 +983,16 @@ export default function ProfitAssumptionsPage() {
                     gap: 14,
                     padding: "10px 0",
                     borderTop:
-                      index === 5
-                        ? "1px solid rgba(255,115,60,0.20)"
-                        : "none",
+                      index === 5 ? "1px solid rgba(255,115,60,0.20)" : "none",
                     borderBottom:
-                      index < 5
-                        ? "1px solid rgba(255,255,255,0.06)"
-                        : "none",
+                      index < 5 ? "1px solid rgba(255,255,255,0.06)" : "none",
                     color: "rgba(255,255,255,0.68)",
                     fontSize: 13,
                     fontWeight: 800,
                   }}
                 >
                   <span>{item.label}</span>
-                  <strong style={{ color: item.color }}>
-                    {item.value}
-                  </strong>
+                  <strong style={{ color: item.color }}>{item.value}</strong>
                 </div>
               ))}
             </div>
@@ -1087,19 +1014,14 @@ export default function ProfitAssumptionsPage() {
             >
               <div
                 style={{
-                  color:
-                    estimatedNetProfit >= 0
-                      ? "#86efac"
-                      : "#ff9a70",
+                  color: estimatedNetProfit >= 0 ? "#86efac" : "#ff9a70",
                   fontSize: 10,
                   fontWeight: 950,
                   textTransform: "uppercase",
                   letterSpacing: "0.11em",
                 }}
               >
-                {language === "it"
-                  ? "Lettura del modello"
-                  : "Model Reading"}
+                {language === "it" ? "Lettura del modello" : "Model Reading"}
               </div>
 
               <div
@@ -1114,22 +1036,22 @@ export default function ProfitAssumptionsPage() {
                 {estimatedNetProfit >= 0
                   ? language === "it"
                     ? `Il modello genera un profitto netto positivo di ${money(
-                      estimatedNetProfit,
-                    )}. Il break-even stimato è ${money(
-                      breakEvenRevenue,
-                    )} di ricavi mensili.`
+                        estimatedNetProfit,
+                      )}. Il break-even stimato è ${money(
+                        breakEvenRevenue,
+                      )} di ricavi mensili.`
                     : `The model generates positive net profit of ${money(
-                      estimatedNetProfit,
-                    )}. Estimated break-even is ${money(
-                      breakEvenRevenue,
-                    )} in monthly revenue.`
+                        estimatedNetProfit,
+                      )}. Estimated break-even is ${money(
+                        breakEvenRevenue,
+                      )} in monthly revenue.`
                   : language === "it"
                     ? `Il modello attuale produce una perdita stimata di ${money(
-                      Math.abs(estimatedNetProfit),
-                    )}. Riduci i costi o aumenta il margine prima di scalare.`
+                        Math.abs(estimatedNetProfit),
+                      )}. Riduci i costi o aumenta il margine prima di scalare.`
                     : `The current model produces an estimated loss of ${money(
-                      Math.abs(estimatedNetProfit),
-                    )}. Reduce costs or improve margin before scaling.`}
+                        Math.abs(estimatedNetProfit),
+                      )}. Reduce costs or improve margin before scaling.`}
               </div>
             </div>
           </div>
@@ -1143,14 +1065,9 @@ export default function ProfitAssumptionsPage() {
             gap: 22,
           }}
         >
-          <div
-            className="panel"
-            style={{ margin: 0, padding: 24 }}
-          >
+          <div className="panel" style={{ margin: 0, padding: 24 }}>
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "STRUTTURA DEI COSTI"
-                : "COST STRUCTURE"}
+              {language === "it" ? "STRUTTURA DEI COSTI" : "COST STRUCTURE"}
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -1241,9 +1158,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Costi fissi"
-                    : "Fixed Costs"}
+                  {language === "it" ? "Costi fissi" : "Fixed Costs"}
                 </div>
 
                 <div
@@ -1274,9 +1189,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Costi annuali"
-                    : "Annual Costs"}
+                  {language === "it" ? "Costi annuali" : "Annual Costs"}
                 </div>
 
                 <div
@@ -1289,7 +1202,7 @@ export default function ProfitAssumptionsPage() {
                 >
                   {money(annualEstimatedCosts)}
                 </div>
-              </div>
+                              </div>
             </div>
           </div>
 
@@ -1311,9 +1224,7 @@ export default function ProfitAssumptionsPage() {
                 letterSpacing: "0.13em",
               }}
             >
-              {language === "it"
-                ? "SIMULAZIONI RAPIDE"
-                : "QUICK WHAT-IF"}
+              {language === "it" ? "SIMULAZIONI RAPIDE" : "QUICK WHAT-IF"}
             </div>
 
             <div
@@ -1397,9 +1308,7 @@ export default function ProfitAssumptionsPage() {
                           textTransform: "uppercase",
                         }}
                       >
-                        {language === "it"
-                          ? "al mese"
-                          : "per month"}
+                        {language === "it" ? "al mese" : "per month"}
                       </div>
                     </div>
                   </div>
@@ -1414,11 +1323,11 @@ export default function ProfitAssumptionsPage() {
                   >
                     {language === "it"
                       ? `Impatto annuale stimato: +${money(
-                        scenario.impact * 12,
-                      )}`
+                          scenario.impact * 12,
+                        )}`
                       : `Estimated annual impact: +${money(
-                        scenario.impact * 12,
-                      )}`}
+                          scenario.impact * 12,
+                        )}`}
                   </div>
                 </div>
               ))}
@@ -1452,9 +1361,7 @@ export default function ProfitAssumptionsPage() {
                 letterSpacing: "0.13em",
               }}
             >
-              {language === "it"
-                ? "CONSIGLIO MARGINLAB"
-                : "MARGINLAB ADVICE"}
+              {language === "it" ? "CONSIGLIO MARGINLAB" : "MARGINLAB ADVICE"}
             </div>
 
             <div
@@ -1506,9 +1413,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Costo principale"
-                    : "Largest Cost"}
+                  {language === "it" ? "Costo principale" : "Largest Cost"}
                 </div>
 
                 <div
@@ -1539,9 +1444,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Risparmio 10%"
-                    : "10% Savings"}
+                  {language === "it" ? "Risparmio 10%" : "10% Savings"}
                 </div>
 
                 <div
@@ -1572,9 +1475,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Impatto annuo"
-                    : "Annual Impact"}
+                  {language === "it" ? "Impatto annuo" : "Annual Impact"}
                 </div>
 
                 <div
@@ -1601,7 +1502,7 @@ export default function ProfitAssumptionsPage() {
             }}
           >
             <div
-              style={{
+                          style={{
                 color: "#86efac",
                 fontSize: 11,
                 fontWeight: 950,
@@ -1609,9 +1510,7 @@ export default function ProfitAssumptionsPage() {
                 letterSpacing: "0.13em",
               }}
             >
-              {language === "it"
-                ? "MODULI COLLEGATI"
-                : "CONNECTED MODULES"}
+              {language === "it" ? "MODULI COLLEGATI" : "CONNECTED MODULES"}
             </div>
 
             <div
