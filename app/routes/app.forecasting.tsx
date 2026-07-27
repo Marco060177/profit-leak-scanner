@@ -23,7 +23,38 @@ type Assumptions = {
   taxReservePct: number;
 };
 
-type ScenarioKey = "conservative" | "balanced" | "aggressive" | "custom";
+type ScenarioKey = "worst" | "expected" | "best" | "custom";
+
+type ScenarioInputs = {
+  monthlyRevenueGrowth: number;
+  marginImprovement: number;
+  monthlyCostGrowth: number;
+  recoveryCapture: number;
+};
+
+const SCENARIO_INPUTS: Record<
+  Exclude<ScenarioKey, "custom">,
+  ScenarioInputs
+> = {
+  worst: {
+    monthlyRevenueGrowth: -1,
+    marginImprovement: 0,
+    monthlyCostGrowth: 2,
+    recoveryCapture: 10,
+  },
+  expected: {
+    monthlyRevenueGrowth: 2,
+    marginImprovement: 2,
+    monthlyCostGrowth: 1,
+    recoveryCapture: 50,
+  },
+  best: {
+    monthlyRevenueGrowth: 4,
+    marginImprovement: 4,
+    monthlyCostGrowth: 0.5,
+    recoveryCapture: 100,
+  },
+};
 
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
@@ -42,19 +73,18 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions =
-    (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? {
-      monthlyAds: 0,
-      monthlyShipping: 0,
-      monthlyOperating: 0,
-      paymentFeePct: 0,
-      transactionFeePct: 0,
-      taxReservePct: 0,
-    };
+  const assumptions = (await prisma.profitAssumptions.findUnique({
+    where: {
+      shop: session.shop,
+    },
+  })) ?? {
+    monthlyAds: 0,
+    monthlyShipping: 0,
+    monthlyOperating: 0,
+    paymentFeePct: 0,
+    transactionFeePct: 0,
+    taxReservePct: 0,
+  };
 
   return {
     ...dashboardData,
@@ -70,12 +100,6 @@ function clamp(value: number, min: number, max: number) {
 function safeNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
 }
-
-
-
-
-
-
 
 function SliderControl({
   label,
@@ -98,6 +122,7 @@ function SliderControl({
   onChange: (value: number) => void;
   accent?: string;
 }) {
+  const locale = getStoredLanguage() === "it" ? "it-IT" : "en-US";
   const progress = ((value - min) / (max - min)) * 100;
 
   return (
@@ -147,7 +172,10 @@ function SliderControl({
           }}
         >
           {value > 0 ? "+" : ""}
-          {value.toFixed(step < 1 ? 1 : 0)}
+          {new Intl.NumberFormat(locale, {
+            minimumFractionDigits: step < 1 ? 1 : 0,
+            maximumFractionDigits: step < 1 ? 1 : 0,
+          }).format(value)}
           {suffix}
         </div>
       </div>
@@ -241,16 +269,12 @@ function MetricCard({
         border: highlighted
           ? "1px solid rgba(34,197,94,0.30)"
           : "1px solid rgba(255,115,60,0.17)",
-        boxShadow: highlighted
-          ? "0 18px 45px rgba(34,197,94,0.08)"
-          : "none",
+        boxShadow: highlighted ? "0 18px 45px rgba(34,197,94,0.08)" : "none",
       }}
     >
       <div
         style={{
-          color: highlighted
-            ? "#4ade80"
-            : "rgba(255,255,255,0.52)",
+          color: highlighted ? "#4ade80" : "rgba(255,255,255,0.52)",
           fontSize: 10,
           fontWeight: 950,
           letterSpacing: "0.13em",
@@ -263,10 +287,7 @@ function MetricCard({
       <div
         style={{
           marginTop: 13,
-          color:
-            positive || highlighted
-              ? "#22c55e"
-              : "#f8fafc",
+          color: positive || highlighted ? "#22c55e" : "#f8fafc",
           fontSize: 30,
           lineHeight: 1,
           fontWeight: 950,
@@ -297,17 +318,11 @@ export default function ForecastingPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
 
-  const {
-    summary,
-    rows,
-    assumptions,
-    forecastPeriod,
-    currencyCode,
-
-  } = useLoaderData() as LoaderData & {
-    assumptions: Assumptions;
-    forecastPeriod: number;
-  };
+  const { summary, rows, assumptions, forecastPeriod, currencyCode } =
+    useLoaderData() as LoaderData & {
+      assumptions: Assumptions;
+      forecastPeriod: number;
+    };
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
@@ -340,7 +355,8 @@ export default function ForecastingPage() {
   const monthlyCogs = Math.max(0, monthlyRevenue - monthlyGrossProfit);
 
   const recoverableProfitInPeriod = rows.reduce(
-    (sum, row) => sum + Math.max(0, safeNumber(row.targetDelta)) * safeNumber(row.qty),
+    (sum, row) =>
+      sum + Math.max(0, safeNumber(row.targetDelta)) * safeNumber(row.qty),
     0,
   );
   const monthlyRecoverableProfit = recoverableProfitInPeriod * monthlyFactor;
@@ -359,30 +375,21 @@ export default function ForecastingPage() {
     safeNumber(assumptions.transactionFeePct) +
     safeNumber(assumptions.taxReservePct);
 
-  const currentMonthlyVariableFees =
-    monthlyRevenue * (variableFeePct / 100);
+  const currentMonthlyVariableFees = monthlyRevenue * (variableFeePct / 100);
 
   const currentMonthlyNetProfit =
-    monthlyGrossProfit -
-    monthlyFixedCosts -
-    currentMonthlyVariableFees;
+    monthlyGrossProfit - monthlyFixedCosts - currentMonthlyVariableFees;
 
   const currentNetMargin =
-    monthlyRevenue > 0
-      ? (currentMonthlyNetProfit / monthlyRevenue) * 100
-      : 0;
+    monthlyRevenue > 0 ? (currentMonthlyNetProfit / monthlyRevenue) * 100 : 0;
 
   const [selectedScenario, setSelectedScenario] =
-    React.useState<ScenarioKey>("balanced");
+    React.useState<ScenarioKey>("expected");
   const [horizon, setHorizon] = React.useState(12);
-  const [monthlyRevenueGrowth, setMonthlyRevenueGrowth] =
-    React.useState(2);
-  const [marginImprovement, setMarginImprovement] =
-    React.useState(2);
-  const [monthlyCostGrowth, setMonthlyCostGrowth] =
-    React.useState(1);
-  const [recoveryCapture, setRecoveryCapture] =
-    React.useState(50);
+  const [monthlyRevenueGrowth, setMonthlyRevenueGrowth] = React.useState(2);
+  const [marginImprovement, setMarginImprovement] = React.useState(2);
+  const [monthlyCostGrowth, setMonthlyCostGrowth] = React.useState(1);
+  const [recoveryCapture, setRecoveryCapture] = React.useState(50);
   const [profitGoal, setProfitGoal] = React.useState(
     Math.max(0, Math.round(currentMonthlyNetProfit * 1.5)),
   );
@@ -390,27 +397,11 @@ export default function ForecastingPage() {
   const applyScenario = React.useCallback(
     (scenario: Exclude<ScenarioKey, "custom">) => {
       setSelectedScenario(scenario);
-
-      if (scenario === "conservative") {
-        setMonthlyRevenueGrowth(0.5);
-        setMarginImprovement(0.8);
-        setMonthlyCostGrowth(1.5);
-        setRecoveryCapture(25);
-      }
-
-      if (scenario === "balanced") {
-        setMonthlyRevenueGrowth(2);
-        setMarginImprovement(2);
-        setMonthlyCostGrowth(1);
-        setRecoveryCapture(50);
-      }
-
-      if (scenario === "aggressive") {
-        setMonthlyRevenueGrowth(4);
-        setMarginImprovement(4);
-        setMonthlyCostGrowth(0.5);
-        setRecoveryCapture(100);
-      }
+      const inputs = SCENARIO_INPUTS[scenario];
+      setMonthlyRevenueGrowth(inputs.monthlyRevenueGrowth);
+      setMarginImprovement(inputs.marginImprovement);
+      setMonthlyCostGrowth(inputs.monthlyCostGrowth);
+      setRecoveryCapture(inputs.recoveryCapture);
     },
     [],
   );
@@ -439,26 +430,19 @@ export default function ForecastingPage() {
         1 + monthlyRevenueGrowth / 100,
         month,
       );
-      const costGrowthFactor = Math.pow(
-        1 + monthlyCostGrowth / 100,
-        month,
-      );
+      const costGrowthFactor = Math.pow(1 + monthlyCostGrowth / 100, month);
 
       const revenue = monthlyRevenue * revenueGrowthFactor;
       const baselineGrossMarginPct =
-        monthlyRevenue > 0
-          ? (monthlyGrossProfit / monthlyRevenue) * 100
-          : 0;
+        monthlyRevenue > 0 ? (monthlyGrossProfit / monthlyRevenue) * 100 : 0;
 
       const improvedGrossMarginPct = clamp(
-        baselineGrossMarginPct +
-        marginImprovement * (month / horizon),
+        baselineGrossMarginPct + marginImprovement * (month / horizon),
         -100,
         95,
       );
 
-      const grossProfit =
-        revenue * (improvedGrossMarginPct / 100);
+      const grossProfit = revenue * (improvedGrossMarginPct / 100);
 
       const capturedRecovery =
         monthlyRecoverableProfit *
@@ -468,21 +452,14 @@ export default function ForecastingPage() {
       const fixedCosts = monthlyFixedCosts * costGrowthFactor;
       const variableFees = revenue * (variableFeePct / 100);
       const netProfit =
-        grossProfit +
-        capturedRecovery -
-        fixedCosts -
-        variableFees;
+        grossProfit + capturedRecovery - fixedCosts - variableFees;
 
-      const netMargin =
-        revenue > 0 ? (netProfit / revenue) * 100 : 0;
+      const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
-      const baselineRevenue =
-        monthlyRevenue * revenueGrowthFactor;
+      const baselineRevenue = monthlyRevenue * revenueGrowthFactor;
       const baselineGrossProfit =
         baselineRevenue *
-        ((monthlyRevenue > 0
-          ? monthlyGrossProfit / monthlyRevenue
-          : 0));
+        (monthlyRevenue > 0 ? monthlyGrossProfit / monthlyRevenue : 0);
 
       const baselineNetProfit =
         baselineGrossProfit -
@@ -499,8 +476,7 @@ export default function ForecastingPage() {
         netProfit,
         netMargin,
         cumulativeNetProfit,
-        cumulativeLift:
-          cumulativeNetProfit - baselineCumulativeNetProfit,
+        cumulativeLift: cumulativeNetProfit - baselineCumulativeNetProfit,
       });
     }
 
@@ -518,16 +494,59 @@ export default function ForecastingPage() {
     variableFeePct,
   ]);
 
-  const finalPoint =
-    forecast[forecast.length - 1] ?? {
-      revenue: monthlyRevenue,
-      grossProfit: monthlyGrossProfit,
-      netProfit: currentMonthlyNetProfit,
-      netMargin: currentNetMargin,
-      cumulativeNetProfit: currentMonthlyNetProfit,
-      cumulativeLift: 0,
-      month: horizon,
+  const finalPoint = forecast[forecast.length - 1] ?? {
+    revenue: monthlyRevenue,
+    grossProfit: monthlyGrossProfit,
+    netProfit: currentMonthlyNetProfit,
+    netMargin: currentNetMargin,
+    cumulativeNetProfit: currentMonthlyNetProfit,
+    cumulativeLift: 0,
+    month: horizon,
+  };
+
+  const scenarioComparison = (
+    Object.entries(SCENARIO_INPUTS) as Array<
+      [Exclude<ScenarioKey, "custom">, ScenarioInputs]
+    >
+  ).map(([key, inputs]) => {
+    let cumulativeNetProfit = 0;
+    let finalNetProfit = currentMonthlyNetProfit;
+    let finalNetMargin = currentNetMargin;
+
+    for (let month = 1; month <= horizon; month += 1) {
+      const revenue =
+        monthlyRevenue * Math.pow(1 + inputs.monthlyRevenueGrowth / 100, month);
+      const baselineGrossMarginPct =
+        monthlyRevenue > 0 ? (monthlyGrossProfit / monthlyRevenue) * 100 : 0;
+      const improvedGrossMarginPct = clamp(
+        baselineGrossMarginPct + inputs.marginImprovement * (month / horizon),
+        -100,
+        95,
+      );
+      const grossProfit = revenue * (improvedGrossMarginPct / 100);
+      const capturedRecovery =
+        monthlyRecoverableProfit *
+        (inputs.recoveryCapture / 100) *
+        Math.min(1, month / Math.max(1, horizon / 2));
+      const fixedCosts =
+        monthlyFixedCosts * Math.pow(1 + inputs.monthlyCostGrowth / 100, month);
+      const variableFees = revenue * (variableFeePct / 100);
+
+      finalNetProfit =
+        grossProfit + capturedRecovery - fixedCosts - variableFees;
+      finalNetMargin = revenue > 0 ? (finalNetProfit / revenue) * 100 : 0;
+      cumulativeNetProfit += finalNetProfit;
+    }
+
+    return {
+      key,
+      finalNetProfit,
+      finalNetMargin,
+      cumulativeNetProfit,
+      differenceFromCurrent:
+        cumulativeNetProfit - currentMonthlyNetProfit * horizon,
     };
+  });
 
   const totalProjectedRevenue = forecast.reduce(
     (sum, item) => sum + item.revenue,
@@ -566,9 +585,9 @@ export default function ForecastingPage() {
 
   const dataConfidence = clamp(
     45 +
-    Math.min(25, rows.length * 1.5) +
-    (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
-    (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
+      Math.min(25, rows.length * 1.5) +
+      (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
+      (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
     45,
     98,
   );
@@ -592,7 +611,7 @@ export default function ForecastingPage() {
 
   const strongestLever =
     marginImprovement >= monthlyRevenueGrowth &&
-      marginImprovement >= recoveryCapture / 25
+    marginImprovement >= recoveryCapture / 25
       ? language === "it"
         ? "miglioramento del margine"
         : "margin improvement"
@@ -606,71 +625,79 @@ export default function ForecastingPage() {
 
   const recommendation =
     language === "it"
-      ? `Lo scenario ${selectedScenario === "custom"
-        ? "personalizzato"
-        : selectedScenario === "balanced"
-          ? "bilanciato"
-          : selectedScenario === "conservative"
-            ? "prudente"
-            : "aggressivo"
-      } porta il profitto netto mensile stimato da ${money(
-        currentMonthlyNetProfit,
-      )} a ${money(
-        finalPoint.netProfit,
-      )} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${number(
-        marginImprovement,
-        1,
-      )} punti e il recupero del ${pct(
-        recoveryCapture,
-        0,
-      )} delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
-        finalPoint.cumulativeLift,
-      )}.`
-      : `The ${selectedScenario === "custom" ? "custom" : selectedScenario
-      } scenario moves estimated monthly net profit from ${money(
-        currentMonthlyNetProfit,
-      )} to ${money(
-        finalPoint.netProfit,
-      )} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${number(
-        marginImprovement,
-        1,
-      )}-point margin improvement and ${pct(
-        recoveryCapture,
-        0,
-      )} of identified opportunities captured, estimated cumulative additional profit is ${money(
-        finalPoint.cumulativeLift,
-      )}.`;
+      ? `Lo scenario ${
+          selectedScenario === "custom"
+            ? "personalizzato"
+            : selectedScenario === "expected"
+              ? "realistico"
+              : selectedScenario === "worst"
+                ? "negativo"
+                : "positivo"
+        } porta il profitto netto mensile stimato da ${money(
+          currentMonthlyNetProfit,
+        )} a ${money(
+          finalPoint.netProfit,
+        )} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${number(
+          marginImprovement,
+          1,
+        )} punti e il recupero del ${pct(
+          recoveryCapture,
+          0,
+        )} delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
+          finalPoint.cumulativeLift,
+        )}.`
+      : `The ${
+          selectedScenario === "custom"
+            ? "custom"
+            : selectedScenario === "expected"
+              ? "expected-case"
+              : selectedScenario === "worst"
+                ? "worst-case"
+                : "best-case"
+        } scenario moves estimated monthly net profit from ${money(
+          currentMonthlyNetProfit,
+        )} to ${money(
+          finalPoint.netProfit,
+        )} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${number(
+          marginImprovement,
+          1,
+        )}-point margin improvement and ${pct(
+          recoveryCapture,
+          0,
+        )} of identified opportunities captured, estimated cumulative additional profit is ${money(
+          finalPoint.cumulativeLift,
+        )}.`;
 
   const actions =
     language === "it"
       ? [
-        marginImprovement > 0
-          ? `Porta gradualmente il margine lordo a +${number(
-            marginImprovement,
-            1,
-          )} punti rispetto al livello attuale.`
-          : "Mantieni stabile il margine lordo e monitora i prodotti più deboli.",
-        recoveryCapture > 0
-          ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
-          : "Valuta almeno una parte delle opportunità di recupero già individuate.",
-        monthlyCostGrowth > 1
-          ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
-          : "La crescita dei costi è sotto controllo nello scenario selezionato.",
-      ]
+          marginImprovement > 0
+            ? `Porta gradualmente il margine lordo a +${number(
+                marginImprovement,
+                1,
+              )} punti rispetto al livello attuale.`
+            : "Mantieni stabile il margine lordo e monitora i prodotti più deboli.",
+          recoveryCapture > 0
+            ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
+            : "Valuta almeno una parte delle opportunità di recupero già individuate.",
+          monthlyCostGrowth > 1
+            ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
+            : "La crescita dei costi è sotto controllo nello scenario selezionato.",
+        ]
       : [
-        marginImprovement > 0
-          ? `Gradually lift gross margin by ${number(
-            marginImprovement,
-            1,
-          )} points from the current level.`
-          : "Keep gross margin stable and monitor the weakest products.",
-        recoveryCapture > 0
-          ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
-          : "Capture at least part of the recovery opportunities already identified.",
-        monthlyCostGrowth > 1
-          ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
-          : "Cost growth remains controlled in the selected scenario.",
-      ];
+          marginImprovement > 0
+            ? `Gradually lift gross margin by ${number(
+                marginImprovement,
+                1,
+              )} points from the current level.`
+            : "Keep gross margin stable and monitor the weakest products.",
+          recoveryCapture > 0
+            ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
+            : "Capture at least part of the recovery opportunities already identified.",
+          monthlyCostGrowth > 1
+            ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
+            : "Cost growth remains controlled in the selected scenario.",
+        ];
 
   return (
     <div className="dashboard-shell">
@@ -681,9 +708,7 @@ export default function ForecastingPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it"
-                ? "Funzione Growth"
-                : "Growth Feature"}
+              {language === "it" ? "Funzione Growth" : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -713,9 +738,7 @@ export default function ForecastingPage() {
                 "0 12px 30px rgba(255,115,80,0.28), 0 0 28px rgba(255,115,80,0.16)",
             }}
           >
-            {language === "it"
-              ? "Sblocca Growth →"
-              : "Unlock Growth →"}
+            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
           </button>
         </div>
 
@@ -773,9 +796,7 @@ export default function ForecastingPage() {
 
             <MetricCard
               label={
-                language === "it"
-                  ? "Ricavi previsti"
-                  : "Projected Revenue"
+                language === "it" ? "Ricavi previsti" : "Projected Revenue"
               }
               value={compactMoney(totalProjectedRevenue)}
               note={
@@ -856,9 +877,15 @@ export default function ForecastingPage() {
               >
                 {(
                   [
-                    ["conservative", language === "it" ? "Prudente" : "Conservative"],
-                    ["balanced", language === "it" ? "Bilanciato" : "Balanced"],
-                    ["aggressive", language === "it" ? "Ambizioso" : "Ambitious"],
+                    [
+                      "worst",
+                      language === "it" ? "Caso peggiore" : "Worst Case",
+                    ],
+                    [
+                      "expected",
+                      language === "it" ? "Caso atteso" : "Expected Case",
+                    ],
+                    ["best", language === "it" ? "Caso migliore" : "Best Case"],
                   ] as Array<[Exclude<ScenarioKey, "custom">, string]>
                 ).map(([key, label]) => {
                   const active = selectedScenario === key;
@@ -1206,9 +1233,7 @@ export default function ForecastingPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {language === "it"
-                      ? "Mese migliore"
-                      : "Best Month"}
+                    {language === "it" ? "Mese migliore" : "Best Month"}
                   </div>
                   <div
                     style={{
@@ -1248,9 +1273,7 @@ export default function ForecastingPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {language === "it"
-                      ? "Margine medio"
-                      : "Average Margin"}
+                    {language === "it" ? "Margine medio" : "Average Margin"}
                   </div>
                   <div
                     style={{
@@ -1292,9 +1315,7 @@ export default function ForecastingPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {language === "it"
-                      ? "Salute prevista"
-                      : "Forecast Health"}
+                    {language === "it" ? "Salute prevista" : "Forecast Health"}
                   </div>
                   <div
                     style={{
@@ -1323,6 +1344,174 @@ export default function ForecastingPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 22,
+              borderRadius: 24,
+              padding: 24,
+              background:
+                "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+              border: "1px solid rgba(255,115,60,0.18)",
+            }}
+          >
+            <div
+              style={{
+                color: "#ff9a70",
+                fontSize: 11,
+                fontWeight: 950,
+                textTransform: "uppercase",
+                letterSpacing: "0.13em",
+              }}
+            >
+              {language === "it"
+                ? "Confronto degli scenari"
+                : "Scenario Comparison"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 8,
+                color: "#f8fafc",
+                fontSize: 20,
+                fontWeight: 950,
+              }}
+            >
+              {language === "it"
+                ? `Tre possibili risultati a ${horizon} mesi`
+                : `Three possible outcomes over ${horizon} months`}
+            </div>
+
+            <div
+              style={{
+                marginTop: 18,
+                display: "grid",
+                gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+                gap: 12,
+              }}
+            >
+              {scenarioComparison.map((scenario) => {
+                const active = selectedScenario === scenario.key;
+                const label =
+                  scenario.key === "worst"
+                    ? language === "it"
+                      ? "Caso peggiore"
+                      : "Worst Case"
+                    : scenario.key === "expected"
+                      ? language === "it"
+                        ? "Caso atteso"
+                        : "Expected Case"
+                      : language === "it"
+                        ? "Caso migliore"
+                        : "Best Case";
+                const accent =
+                  scenario.key === "worst"
+                    ? "#fb7185"
+                    : scenario.key === "expected"
+                      ? "#ff9a70"
+                      : "#4ade80";
+
+                return (
+                  <button
+                    key={scenario.key}
+                    type="button"
+                    onClick={() => applyScenario(scenario.key)}
+                    style={{
+                      padding: 18,
+                      borderRadius: 18,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      background: active
+                        ? `${accent}12`
+                        : "rgba(255,255,255,0.03)",
+                      border: active
+                        ? `1px solid ${accent}55`
+                        : "1px solid rgba(255,255,255,0.07)",
+                      color: "#f8fafc",
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: accent,
+                        fontSize: 12,
+                        fontWeight: 950,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      {label}
+                    </div>
+
+                    {[
+                      [
+                        language === "it"
+                          ? "Profitto mensile finale"
+                          : "Final Monthly Profit",
+                        money(scenario.finalNetProfit),
+                      ],
+                      [
+                        language === "it" ? "Margine finale" : "Final Margin",
+                        pct(scenario.finalNetMargin),
+                      ],
+                      [
+                        language === "it"
+                          ? "Profitto cumulativo"
+                          : "Cumulative Profit",
+                        money(scenario.cumulativeNetProfit),
+                      ],
+                      [
+                        language === "it"
+                          ? "Differenza vs oggi"
+                          : "Difference vs Today",
+                        `${scenario.differenceFromCurrent >= 0 ? "+" : ""}${money(
+                          scenario.differenceFromCurrent,
+                        )}`,
+                      ],
+                    ].map(([metricLabel, metricValue]) => (
+                      <div
+                        key={metricLabel}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          marginTop: 13,
+                          paddingTop: 13,
+                          borderTop: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: "rgba(255,255,255,0.48)",
+                            fontSize: 11,
+                            fontWeight: 800,
+                          }}
+                        >
+                          {metricLabel}
+                        </span>
+                        <span
+                          style={{
+                            color:
+                              metricLabel ===
+                                (language === "it"
+                                  ? "Differenza vs oggi"
+                                  : "Difference vs Today") &&
+                              scenario.differenceFromCurrent < 0
+                                ? "#fb7185"
+                                : "#f8fafc",
+                            fontSize: 12,
+                            fontWeight: 950,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {metricValue}
+                        </span>
+                      </div>
+                    ))}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1479,9 +1668,7 @@ export default function ForecastingPage() {
                   letterSpacing: "0.13em",
                 }}
               >
-                {language === "it"
-                  ? "Obiettivo mensile"
-                  : "Monthly Goal"}
+                {language === "it" ? "Obiettivo mensile" : "Monthly Goal"}
               </div>
 
               <div
@@ -1559,19 +1746,14 @@ export default function ForecastingPage() {
               >
                 <div
                   style={{
-                    color:
-                      firstGoalMonth !== undefined
-                        ? "#86efac"
-                        : "#fbbf24",
+                    color: firstGoalMonth !== undefined ? "#86efac" : "#fbbf24",
                     fontSize: 11,
                     fontWeight: 950,
                     textTransform: "uppercase",
                     letterSpacing: "0.10em",
                   }}
                 >
-                  {language === "it"
-                    ? "Tempo stimato"
-                    : "Estimated Timing"}
+                  {language === "it" ? "Tempo stimato" : "Estimated Timing"}
                 </div>
 
                 <div
@@ -1604,18 +1786,18 @@ export default function ForecastingPage() {
                   {firstGoalMonth !== undefined
                     ? language === "it"
                       ? `Con queste ipotesi il profitto mensile supera ${money(
-                        profitGoal,
-                      )}.`
+                          profitGoal,
+                        )}.`
                       : `Under these assumptions, monthly profit exceeds ${money(
-                        profitGoal,
-                      )}.`
+                          profitGoal,
+                        )}.`
                     : language === "it"
                       ? `Lo scenario non raggiunge ${money(
-                        profitGoal,
-                      )} entro ${horizon} mesi.`
+                          profitGoal,
+                        )} entro ${horizon} mesi.`
                       : `The scenario does not reach ${money(
-                        profitGoal,
-                      )} within ${horizon} months.`}
+                          profitGoal,
+                        )} within ${horizon} months.`}
                 </div>
               </div>
             </div>
