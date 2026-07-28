@@ -143,12 +143,11 @@ function KpiCard({
         style={{
           marginTop: 12,
           color,
-          fontSize: 30,
+          fontSize: value.length >= 14 ? 21 : value.length >= 10 ? 25 : 30,
           lineHeight: 1,
           fontWeight: 950,
           letterSpacing: "-0.04em",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}
       >
         {value}
@@ -312,6 +311,15 @@ export default function ProfitAssumptionsPage() {
 
   const pct = (value: number, digits = 1) =>
     formatStorePercent(value, locale, digits);
+
+  const currencySymbol =
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currencyCode,
+      currencyDisplay: "narrowSymbol",
+    })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")?.value ?? currencyCode;
 
   const [monthlyAds, setMonthlyAds] = React.useState(assumptions.monthlyAds);
 
@@ -709,7 +717,7 @@ export default function ProfitAssumptionsPage() {
                       }
                       value={monthlyAds}
                       onChange={setMonthlyAds}
-                      prefix="$"
+                      prefix={currencySymbol}
                     />
 
                     <FieldCard
@@ -721,7 +729,7 @@ export default function ProfitAssumptionsPage() {
                       }
                       value={monthlyShipping}
                       onChange={setMonthlyShipping}
-                      prefix="$"
+                      prefix={currencySymbol}
                     />
 
                     <FieldCard
@@ -737,7 +745,7 @@ export default function ProfitAssumptionsPage() {
                       }
                       value={monthlyOperating}
                       onChange={setMonthlyOperating}
-                      prefix="$"
+                      prefix={currencySymbol}
                     />
                   </div>
                 </div>
@@ -1612,8 +1620,8 @@ export default function ProfitAssumptionsPage() {
           }}
         >
           {language === "it"
-            ? "I valori sono inseriti manualmente e alimentano le stime di profitto netto usate dalle funzioni Growth. Questa versione non modifica il database e mantiene gli stessi sei parametri già esistenti."
-            : "Values are entered manually and power the net-profit estimates used by Growth features. This version does not modify the database and keeps the same six existing parameters."}
+            ? "I valori inseriti manualmente vengono salvati e alimentano le stime di profitto netto utilizzate dalle funzioni Growth."
+            : "Manually entered values are saved and power the net-profit estimates used by Growth features."}
         </div>
       </div>
     </div>
