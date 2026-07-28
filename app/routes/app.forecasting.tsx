@@ -292,8 +292,7 @@ function MetricCard({
           lineHeight: 1,
           fontWeight: 950,
           letterSpacing: "-0.04em",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          overflowWrap: "anywhere",
         }}
       >
         {value}
@@ -442,27 +441,34 @@ export default function ForecastingPage() {
         95,
       );
 
-      const grossProfit = revenue * (improvedGrossMarginPct / 100);
+      const baselineGrossProfit =
+        revenue * (baselineGrossMarginPct / 100);
+      const marginImprovementValue =
+        revenue *
+        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100);
 
       const capturedRecovery =
         monthlyRecoverableProfit *
         (recoveryCapture / 100) *
         Math.min(1, month / Math.max(1, horizon / 2));
 
+      const grossProfit =
+        baselineGrossProfit +
+        Math.max(marginImprovementValue, capturedRecovery);
+
       const fixedCosts = monthlyFixedCosts * costGrowthFactor;
       const variableFees = revenue * (variableFeePct / 100);
-      const netProfit =
-        grossProfit + capturedRecovery - fixedCosts - variableFees;
+      const netProfit = grossProfit - fixedCosts - variableFees;
 
       const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
       const baselineRevenue = monthlyRevenue * revenueGrowthFactor;
-      const baselineGrossProfit =
+      const baselineForecastGrossProfit =
         baselineRevenue *
         (monthlyRevenue > 0 ? monthlyGrossProfit / monthlyRevenue : 0);
 
       const baselineNetProfit =
-        baselineGrossProfit -
+        baselineForecastGrossProfit -
         fixedCosts -
         baselineRevenue * (variableFeePct / 100);
 
@@ -523,17 +529,23 @@ export default function ForecastingPage() {
         -100,
         95,
       );
-      const grossProfit = revenue * (improvedGrossMarginPct / 100);
+      const baselineGrossProfit =
+        revenue * (baselineGrossMarginPct / 100);
+      const marginImprovementValue =
+        revenue *
+        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100);
       const capturedRecovery =
         monthlyRecoverableProfit *
         (inputs.recoveryCapture / 100) *
         Math.min(1, month / Math.max(1, horizon / 2));
+      const grossProfit =
+        baselineGrossProfit +
+        Math.max(marginImprovementValue, capturedRecovery);
       const fixedCosts =
         monthlyFixedCosts * Math.pow(1 + inputs.monthlyCostGrowth / 100, month);
       const variableFees = revenue * (variableFeePct / 100);
 
-      finalNetProfit =
-        grossProfit + capturedRecovery - fixedCosts - variableFees;
+      finalNetProfit = grossProfit - fixedCosts - variableFees;
       finalNetMargin = revenue > 0 ? (finalNetProfit / revenue) * 100 : 0;
       cumulativeNetProfit += finalNetProfit;
     }
@@ -1581,8 +1593,8 @@ export default function ForecastingPage() {
                   }}
                 >
                   {language === "it"
-                    ? `Affidabilità ${pct(dataConfidence, 0)}`
-                    : `Confidence ${pct(dataConfidence, 0)}`}
+                    ? `Qualità dei dati ${pct(dataConfidence, 0)}`
+                    : `Data Quality ${pct(dataConfidence, 0)}`}
                 </div>
               </div>
 
