@@ -2,6 +2,7 @@ import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import prisma from "~/db.server";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import {
@@ -23,12 +24,31 @@ export async function loader({ request }: { request: Request }) {
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
-  return loadMarginDashboardData({
+  const dashboardData = await loadMarginDashboardData({
     admin,
     session,
     period,
     locale,
   });
+
+  const assumptions = (await prisma.profitAssumptions.findUnique({
+    where: {
+      shop: session.shop,
+    },
+  })) ?? {
+    paymentFeePct: 2.9,
+    transactionFeePct: 0.5,
+    taxReservePct: 0,
+  };
+
+  return {
+    ...dashboardData,
+    assumptions: {
+      paymentFeePct: assumptions.paymentFeePct,
+      transactionFeePct: assumptions.transactionFeePct,
+      taxReservePct: assumptions.taxReservePct,
+    },
+  };
 }
 
 type ScenarioKey = "conservative" | "balanced" | "aggressive" | "custom";
@@ -81,7 +101,13 @@ function safeNumber(value: number) {
 export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
-  const loaderData = useLoaderData() as LoaderData;
+  const loaderData = useLoaderData() as LoaderData & {
+    assumptions: {
+      paymentFeePct: number;
+      transactionFeePct: number;
+      taxReservePct: number;
+    };
+  };
 
   const { rows, currencyCode } = loaderData;
 
@@ -273,7 +299,17 @@ export default function RecoverySimulatorPage() {
   const currentMarginPct =
     currentPrice > 0 ? (currentUnitProfit / currentPrice) * 100 : 0;
   const currentMonthlyRevenue = currentPrice * currentMonthlyQty;
-  const currentMonthlyProfit = currentUnitProfit * currentMonthlyQty;
+  const variableFeeRate = clamp(
+    (safeNumber(loaderData.assumptions.paymentFeePct) +
+      safeNumber(loaderData.assumptions.transactionFeePct)) /
+      100,
+    0,
+    1,
+  );
+  const currentMonthlyProfitBeforeFees = currentUnitProfit * currentMonthlyQty;
+  const currentMonthlyFees = currentMonthlyRevenue * variableFeeRate;
+  const currentMonthlyProfit =
+    currentMonthlyProfitBeforeFees - currentMonthlyFees;
 
   const simulatedCost = Math.max(0, currentCost * (1 - costReductionPct / 100));
   const simulatedMonthlyQty = Math.max(
@@ -284,7 +320,11 @@ export default function RecoverySimulatorPage() {
   const simulatedMarginPct =
     simulatedPrice > 0 ? (simulatedUnitProfit / simulatedPrice) * 100 : 0;
   const simulatedMonthlyRevenue = simulatedPrice * simulatedMonthlyQty;
-  const simulatedMonthlyProfit = simulatedUnitProfit * simulatedMonthlyQty;
+  const simulatedMonthlyProfitBeforeFees =
+    simulatedUnitProfit * simulatedMonthlyQty;
+  const simulatedMonthlyFees = simulatedMonthlyRevenue * variableFeeRate;
+  const simulatedMonthlyProfit =
+    simulatedMonthlyProfitBeforeFees - simulatedMonthlyFees;
   const recoveredMonthlyProfit = simulatedMonthlyProfit - currentMonthlyProfit;
   const recoveredAnnualProfit = recoveredMonthlyProfit * 12;
   const marginDelta = simulatedMarginPct - currentMarginPct;
@@ -306,6 +346,7 @@ export default function RecoverySimulatorPage() {
   const costRecoveryMonthly = (currentCost - simulatedCost) * currentMonthlyQty;
   const volumeRecoveryMonthly =
     (simulatedMonthlyQty - currentMonthlyQty) * simulatedUnitProfit;
+  const feeImpactMonthly = currentMonthlyFees - simulatedMonthlyFees;
   const recoveryBreakdown = [
     {
       key: "price",
@@ -321,6 +362,14 @@ export default function RecoverySimulatorPage() {
       key: "volume",
       label: language === "it" ? "Variazione volume" : "Volume change",
       value: volumeRecoveryMonthly * 12,
+    },
+    {
+      key: "fees",
+      label:
+        language === "it"
+          ? "Impatto commissioni"
+          : "Variable fee impact",
+      value: feeImpactMonthly * 12,
     },
   ];
 
