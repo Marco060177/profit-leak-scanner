@@ -19,10 +19,7 @@ import {
 
 import type { LoaderData } from "~/utils/margin";
 
-import {
-  getStoredLanguage,
-  type Language,
-} from "~/utils/i18n";
+import { getStoredLanguage, type Language } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
 
@@ -36,18 +33,134 @@ type SelectedQuestion =
   | "hiddenCosts"
   | "growthOpportunity";
 
+const MONTHLY_AI_LIMIT = 100;
+
+function getAiUsageMonth() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+function normalizePeriod(value: FormDataEntryValue | null) {
+  const period = String(value ?? "30");
+  return period === "7" || period === "90" ? period : "30";
+}
+
+function buildServerStoreSummary({
+  dashboardData,
+  assumptions,
+  period,
+}: {
+  dashboardData: any;
+  assumptions: any;
+  period: string;
+}) {
+  const { summary, rows } = dashboardData;
+  const periodDays = Number(period);
+  const fixedCostFactor = periodDays / 30;
+  const modelConfigured = assumptions !== null;
+
+  const monthlyAds = assumptions?.monthlyAds ?? 0;
+  const monthlyShipping = assumptions?.monthlyShipping ?? 0;
+  const monthlyOperating = assumptions?.monthlyOperating ?? 0;
+  const paymentFeePct = assumptions?.paymentFeePct ?? 0;
+  const transactionFeePct = assumptions?.transactionFeePct ?? 0;
+  const taxReservePct = assumptions?.taxReservePct ?? 0;
+
+  const proratedFixedCosts =
+    (monthlyAds + monthlyShipping + monthlyOperating) * fixedCostFactor;
+
+  const estimatedVariableCosts =
+    summary.revenue *
+    ((paymentFeePct + transactionFeePct + taxReservePct) / 100);
+
+  const totalEstimatedCosts = proratedFixedCosts + estimatedVariableCosts;
+
+  const estimatedNetProfit = modelConfigured
+    ? summary.profit - totalEstimatedCosts
+    : null;
+
+  const estimatedNetMargin =
+    modelConfigured && summary.revenue > 0
+      ? ((estimatedNetProfit as number) / summary.revenue) * 100
+      : null;
+
+  const profitAlerts = generateProfitAlerts({
+    summary,
+    rows,
+    language: "en",
+    period,
+  });
+
+  const recoverableProfit = rows.reduce(
+    (sum: number, row: any) => sum + Math.max(0, row.targetDelta) * row.qty,
+    0,
+  );
+
+  const products = [...rows]
+    .sort((a: any, b: any) => a.profit - b.profit)
+    .slice(0, 8)
+    .map(
+      (row: any) =>
+        `${row.productTitle} | revenue ${row.revenue} | profit ${row.profit} | margin ${row.marginPct}% | quantity ${row.qty} | missing cost ${row.missingCost ? "yes" : "no"}`,
+    )
+    .join("\n");
+
+  return `
+SERVER-VERIFIED MARGINLAB CONTEXT
+
+Analysis period: ${periodDays} days
+Revenue: ${summary.revenue}
+Gross profit: ${summary.profit}
+Gross margin: ${summary.marginPct}%
+Previous gross margin: ${summary.previousMarginPct}
+Margin change: ${summary.marginDelta}%
+Revenue change: ${summary.revenueDeltaPct}%
+Discounts: ${summary.discounts}
+Refunds: ${summary.refunds}
+Recoverable profit: ${recoverableProfit}
+
+BUSINESS MODEL
+
+Configuration status: ${modelConfigured ? "configured" : "not configured"}
+${
+  modelConfigured
+    ? `Monthly advertising: ${monthlyAds}
+Monthly shipping: ${monthlyShipping}
+Monthly operating costs: ${monthlyOperating}
+Fixed costs prorated to ${periodDays} days: ${proratedFixedCosts}
+Payment fee: ${paymentFeePct}%
+Transaction fee: ${transactionFeePct}%
+Tax reserve: ${taxReservePct}%
+Variable costs for the selected period: ${estimatedVariableCosts}
+Estimated net profit for the selected period: ${estimatedNetProfit}
+Estimated net margin for the selected period: ${estimatedNetMargin}%`
+    : `Net profit is unavailable because Business Model Studio has not been configured.
+Do not treat zero assumptions as real costs and do not claim that the store is profitable after operating costs.`
+}
+
+PROFIT MONITOR EVENTS
+
+${
+  profitAlerts
+    .map(
+      (alert: any, index: number) =>
+        `${index + 1}. ${alert.severity} | ${alert.title} | ${alert.description} | action: ${alert.actionLabel} | destination: ${alert.route}`,
+    )
+    .join("\n") || "No active events."
+}
+
+PRODUCT DATA
+
+${products || "No product data available."}
+`;
+}
+
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
-
   const language = url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   const dashboardData = await loadMarginDashboardData({
     admin,
@@ -63,24 +176,85 @@ export async function loader({ request }: { request: Request }) {
       },
     })) ?? null;
 
+  const month = getAiUsageMonth();
+  const usage = await prisma.aiUsage.findUnique({
+    where: {
+      shop_month: {
+        shop: session.shop,
+        month,
+      },
+    },
+  });
+
   return {
     ...dashboardData,
     assumptions,
+    aiUsage: {
+      used: usage?.requests ?? 0,
+      limit: MONTHLY_AI_LIMIT,
+    },
   };
 }
 
 export async function action({ request }: { request: Request }) {
-  await authenticate.admin(request);
-
+  const { admin, session } = await authenticate.admin(request);
   const formData = await request.formData();
 
   const intent = String(formData.get("intent") || "analysis");
-  const storeSummary = String(formData.get("storeSummary") || "");
-
+  const period = normalizePeriod(formData.get("period"));
   const submittedLanguage = String(formData.get("language") || "en");
 
-  const language: Language =
-    submittedLanguage === "it" ? "it" : "en";
+  const language: Language = submittedLanguage === "it" ? "it" : "en";
+
+  const locale = language === "it" ? "it-IT" : "en-US";
+  const month = getAiUsageMonth();
+
+  const currentUsage = await prisma.aiUsage.findUnique({
+    where: {
+      shop_month: {
+        shop: session.shop,
+        month,
+      },
+    },
+  });
+
+  const usedRequests = currentUsage?.requests ?? 0;
+
+  if (usedRequests >= MONTHLY_AI_LIMIT) {
+    return {
+      text:
+        language === "it"
+          ? "Hai raggiunto il limite mensile di richieste AI. Il contatore si rinnoverà automaticamente il prossimo mese."
+          : "You have reached the monthly AI request limit. Your allowance will renew automatically next month.",
+      quotaExceeded: true,
+      aiUsage: {
+        used: usedRequests,
+        limit: MONTHLY_AI_LIMIT,
+      },
+    };
+  }
+
+  const dashboardData = await loadMarginDashboardData({
+    admin,
+    session,
+    period,
+    locale,
+  });
+
+  const assumptions =
+    (await prisma.profitAssumptions.findUnique({
+      where: {
+        shop: session.shop,
+      },
+    })) ?? null;
+
+  const storeSummary = buildServerStoreSummary({
+    dashboardData,
+    assumptions,
+    period,
+  });
+
+  let aiResult: { text: string };
 
   if (intent === "ask") {
     const question = String(formData.get("question") || "");
@@ -105,50 +279,83 @@ Use only the supplied store data.
 Do not generate a complete business analysis.
 `;
 
-    return generateAiAnswer({
+    aiResult = await generateAiAnswer({
       question,
       context,
       language,
     });
+  } else {
+    aiResult = await generateAiMarginAnalysis({
+      storeSummary,
+      language,
+    });
   }
 
-  return generateAiMarginAnalysis({
-    storeSummary,
-    language,
+  const updatedUsage = await prisma.aiUsage.upsert({
+    where: {
+      shop_month: {
+        shop: session.shop,
+        month,
+      },
+    },
+    update: {
+      requests: {
+        increment: 1,
+      },
+    },
+    create: {
+      shop: session.shop,
+      month,
+      requests: 1,
+    },
   });
+
+  return {
+    ...aiResult,
+    quotaExceeded: false,
+    aiUsage: {
+      used: updatedUsage.requests,
+      limit: MONTHLY_AI_LIMIT,
+    },
+  };
 }
 
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
 
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
-    formatStoreMoney(
-      value,
-      currencyCode,
-      locale,
-    );
+    formatStoreMoney(value, currencyCode, locale);
 
-  const pct = (value: number) =>
-    formatStorePercent(
-      value,
-      locale,
-    );
+  const pct = (value: number) => formatStorePercent(value, locale);
 
-  const aiFetcher = useFetcher<{ text: string }>();
-  const askFetcher = useFetcher<{ text: string }>();
+  const aiFetcher = useFetcher<{
+    text: string;
+    quotaExceeded?: boolean;
+    aiUsage?: {
+      used: number;
+      limit: number;
+    };
+  }>();
+
+  const askFetcher = useFetcher<{
+    text: string;
+    quotaExceeded?: boolean;
+    aiUsage?: {
+      used: number;
+      limit: number;
+    };
+  }>();
 
   const [question, setQuestion] = React.useState("");
   const [selectedQuestion, setSelectedQuestion] =
     React.useState<SelectedQuestion>("profitRisk");
+
   const [showAiReport, setShowAiReport] = React.useState(false);
 
-  const { summary, rows, assumptions, period, currencyCode } =
+  const { summary, rows, assumptions, period, currencyCode, aiUsage } =
     useLoaderData() as LoaderData & {
       assumptions: {
         monthlyAds: number;
@@ -158,13 +365,31 @@ export default function AiAdvisorPage() {
         transactionFeePct: number;
         taxReservePct: number;
       } | null;
+      aiUsage: {
+        used: number;
+        limit: number;
+      };
     };
+
+  const [aiRequestsUsed, setAiRequestsUsed] = React.useState(aiUsage.used);
 
   React.useEffect(() => {
     if (aiFetcher.data?.text) {
       setShowAiReport(true);
     }
+
+    if (aiFetcher.data?.aiUsage) {
+      setAiRequestsUsed(aiFetcher.data.aiUsage.used);
+    }
   }, [aiFetcher.data]);
+
+  React.useEffect(() => {
+    if (askFetcher.data?.aiUsage) {
+      setAiRequestsUsed(askFetcher.data.aiUsage.used);
+    }
+  }, [askFetcher.data]);
+
+  const aiLimitReached = aiRequestsUsed >= aiUsage.limit;
 
   /*
   |--------------------------------------------------------------------------
@@ -194,38 +419,25 @@ export default function AiAdvisorPage() {
     () =>
       profitAlerts.filter(
         (alert) =>
-          alert.severity === "critical" ||
-          alert.severity === "warning",
+          alert.severity === "critical" || alert.severity === "warning",
       ),
     [profitAlerts],
   );
 
   const criticalAlerts = React.useMemo(
-    () =>
-      profitAlerts.filter(
-        (alert) => alert.severity === "critical",
-      ),
+    () => profitAlerts.filter((alert) => alert.severity === "critical"),
     [profitAlerts],
   );
 
   const opportunityAlerts = React.useMemo(
-    () =>
-      profitAlerts.filter(
-        (alert) => alert.severity === "opportunity",
-      ),
+    () => profitAlerts.filter((alert) => alert.severity === "opportunity"),
     [profitAlerts],
   );
 
   const missionAlert =
-    profitAlerts.find(
-      (alert) => alert.severity === "critical",
-    ) ??
-    profitAlerts.find(
-      (alert) => alert.severity === "warning",
-    ) ??
-    profitAlerts.find(
-      (alert) => alert.severity === "opportunity",
-    ) ??
+    profitAlerts.find((alert) => alert.severity === "critical") ??
+    profitAlerts.find((alert) => alert.severity === "warning") ??
+    profitAlerts.find((alert) => alert.severity === "opportunity") ??
     profitAlerts[0] ??
     null;
 
@@ -237,13 +449,9 @@ export default function AiAdvisorPage() {
 
   const losingProducts = rows.filter((row) => row.losing);
 
-  const missingCostProducts = rows.filter(
-    (row) => row.missingCost,
-  );
+  const missingCostProducts = rows.filter((row) => row.missingCost);
 
-  const lowMarginProducts = rows.filter(
-    (row) => row.lowMargin,
-  );
+  const lowMarginProducts = rows.filter((row) => row.lowMargin);
 
   const topProfitLeak =
     rows.length > 0
@@ -251,8 +459,7 @@ export default function AiAdvisorPage() {
       : undefined;
 
   const recoverableProfit = rows.reduce(
-    (sum, row) =>
-      sum + Math.max(0, row.targetDelta) * row.qty,
+    (sum, row) => sum + Math.max(0, row.targetDelta) * row.qty,
     0,
   );
 
@@ -265,34 +472,32 @@ export default function AiAdvisorPage() {
   const monthlyAds = assumptions?.monthlyAds ?? 0;
   const monthlyShipping = assumptions?.monthlyShipping ?? 0;
   const monthlyOperating = assumptions?.monthlyOperating ?? 0;
+  const modelConfigured = assumptions !== null;
+  const periodDays = Number(period);
+  const fixedCostFactor = periodDays / 30;
 
   const paymentFeePct = assumptions?.paymentFeePct ?? 0;
-  const transactionFeePct =
-    assumptions?.transactionFeePct ?? 0;
+  const transactionFeePct = assumptions?.transactionFeePct ?? 0;
+
   const taxReservePct = assumptions?.taxReservePct ?? 0;
 
-  const estimatedPaymentFees =
-    summary.revenue * (paymentFeePct / 100);
+  const estimatedPaymentFees = summary.revenue * (paymentFeePct / 100);
 
-  const estimatedTransactionFees =
-    summary.revenue * (transactionFeePct / 100);
+  const estimatedTransactionFees = summary.revenue * (transactionFeePct / 100);
 
-  const estimatedTaxReserve =
-    summary.revenue * (taxReservePct / 100);
+  const estimatedTaxReserve = summary.revenue * (taxReservePct / 100);
 
   const totalEstimatedCosts =
-    monthlyAds +
-    monthlyShipping +
-    monthlyOperating +
+    (monthlyAds + monthlyShipping + monthlyOperating) * fixedCostFactor +
     estimatedPaymentFees +
     estimatedTransactionFees +
     estimatedTaxReserve;
-
-  const estimatedNetProfit =
-    summary.profit - totalEstimatedCosts;
+  const estimatedNetProfit = modelConfigured
+    ? summary.profit - totalEstimatedCosts
+    : 0;
 
   const estimatedNetMargin =
-    summary.revenue > 0
+    modelConfigured && summary.revenue > 0
       ? (estimatedNetProfit / summary.revenue) * 100
       : 0;
 
@@ -312,9 +517,9 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        losingProducts.length * 15 -
-        missingCostProducts.length * 10 -
-        lowMarginProducts.length * 4,
+          losingProducts.length * 15 -
+          missingCostProducts.length * 10 -
+          lowMarginProducts.length * 4,
       ),
     ),
   );
@@ -333,11 +538,7 @@ export default function AiAdvisorPage() {
           : "Healthy";
 
   const healthColor =
-    healthScore < 40
-      ? "#ff6b4a"
-      : healthScore < 70
-        ? "#f59e0b"
-        : "#22c55e";
+    healthScore < 40 ? "#ff6b4a" : healthScore < 70 ? "#f59e0b" : "#22c55e";
 
   /*
   |--------------------------------------------------------------------------
@@ -348,14 +549,12 @@ export default function AiAdvisorPage() {
   const prioritizedProducts = [...rows]
     .filter((row) => row.revenue > 0)
     .map((row) => {
-      const recoverableOpportunity =
-        Math.max(0, row.targetDelta) * row.qty;
+      const recoverableOpportunity = Math.max(0, row.targetDelta) * row.qty;
 
       const priorityScore =
         recoverableOpportunity +
         Math.max(0, -row.profit) +
-        (row.revenue * Math.max(0, 20 - row.marginPct)) /
-        100;
+        (row.revenue * Math.max(0, 20 - row.marginPct)) / 100;
 
       return {
         ...row,
@@ -369,17 +568,13 @@ export default function AiAdvisorPage() {
   const topPriorityProducts = prioritizedProducts.slice(0, 3);
 
   const priorityImpact = topPriorityProducts.reduce(
-    (sum, product) =>
-      sum + product.recoverableOpportunity,
+    (sum, product) => sum + product.recoverableOpportunity,
     0,
   );
 
   const priorityConcentration =
     recoverableProfit > 0
-      ? Math.min(
-        100,
-        (priorityImpact / recoverableProfit) * 100,
-      )
+      ? Math.min(100, (priorityImpact / recoverableProfit) * 100)
       : 0;
 
   /*
@@ -401,12 +596,10 @@ export default function AiAdvisorPage() {
     Math.min(
       3,
       criticalAlerts.length +
-      (activeRiskAlerts.some(
-        (alert) => alert.severity === "warning",
-      )
-        ? 1
-        : 0) +
-      (opportunityAlerts.length > 0 ? 1 : 0),
+        (activeRiskAlerts.some((alert) => alert.severity === "warning")
+          ? 1
+          : 0) +
+        (opportunityAlerts.length > 0 ? 1 : 0),
     ),
   );
 
@@ -423,8 +616,7 @@ export default function AiAdvisorPage() {
         ? "Controlla periodicamente rischi e opportunità"
         : "Review risks and opportunities regularly"),
 
-    route:
-      missionAlert?.route ?? "/app/recommendations",
+    route: missionAlert?.route ?? "/app/recommendations",
   };
 
   /*
@@ -454,51 +646,37 @@ export default function AiAdvisorPage() {
   |
   */
 
-  const getDecisionFeedColor = (
-    severity: string,
-  ): string => {
+  const getDecisionFeedColor = (severity: string): string => {
     if (severity === "critical") return "#ff6b4a";
     if (severity === "warning") return "#f59e0b";
     if (severity === "opportunity") return "#22c55e";
     return "#38bdf8";
   };
 
-  const getDecisionFeedWhen = (
-    severity: string,
-  ): string => {
+  const getDecisionFeedWhen = (severity: string): string => {
     if (severity === "opportunity") {
-      return language === "it"
-        ? "Nuova opportunità"
-        : "New opportunity";
+      return language === "it" ? "Nuova opportunità" : "New opportunity";
     }
 
     if (severity === "critical") {
-      return language === "it"
-        ? "Priorità immediata"
-        : "Immediate priority";
+      return language === "it" ? "Priorità immediata" : "Immediate priority";
     }
 
     if (severity === "warning") {
-      return language === "it"
-        ? "Da controllare"
-        : "Needs review";
+      return language === "it" ? "Da controllare" : "Needs review";
     }
 
-    return language === "it"
-      ? "Segnale attivo"
-      : "Active signal";
+    return language === "it" ? "Segnale attivo" : "Active signal";
   };
 
-  const decisionFeed = profitAlerts
-    .slice(0, 5)
-    .map((alert) => ({
-      when: getDecisionFeedWhen(alert.severity),
-      title: alert.title,
-      detail: alert.description,
-      actionLabel: alert.actionLabel,
-      route: alert.route,
-      color: getDecisionFeedColor(alert.severity),
-    }));
+  const decisionFeed = profitAlerts.slice(0, 5).map((alert) => ({
+    when: getDecisionFeedWhen(alert.severity),
+    title: alert.title,
+    detail: alert.description,
+    actionLabel: alert.actionLabel,
+    route: alert.route,
+    color: getDecisionFeedColor(alert.severity),
+  }));
 
   /*
   |--------------------------------------------------------------------------
@@ -511,21 +689,14 @@ export default function AiAdvisorPage() {
     Math.min(
       100,
       Math.round(
-        100 -
-        losingProducts.length * 18 -
-        lowMarginProducts.length * 5,
+        100 - losingProducts.length * 18 - lowMarginProducts.length * 5,
       ),
     ),
   );
 
   const dataQualityScore = Math.max(
     0,
-    Math.min(
-      100,
-      Math.round(
-        100 - missingCostProducts.length * 12,
-      ),
-    ),
+    Math.min(100, Math.round(100 - missingCostProducts.length * 12)),
   );
 
   const profitQualityScore = Math.max(
@@ -534,10 +705,10 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        losingProducts.length * 16 -
-        lowMarginProducts.length * 4 -
-        (summary.refunds > 0 ? 6 : 0) -
-        (summary.discounts > 0 ? 4 : 0),
+          losingProducts.length * 16 -
+          lowMarginProducts.length * 4 -
+          (summary.refunds > 0 ? 6 : 0) -
+          (summary.discounts > 0 ? 4 : 0),
       ),
     ),
   );
@@ -548,12 +719,11 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        criticalAlerts.length * 16 -
-        activeRiskAlerts.filter(
-          (alert) => alert.severity === "warning",
-        ).length *
-        8 -
-        (opportunityAlerts.length > 0 ? 5 : 0),
+          criticalAlerts.length * 16 -
+          activeRiskAlerts.filter((alert) => alert.severity === "warning")
+            .length *
+            8 -
+          (opportunityAlerts.length > 0 ? 5 : 0),
       ),
     ),
   );
@@ -561,19 +731,13 @@ export default function AiAdvisorPage() {
   const scorecards = [
     {
       key: "health",
-      label:
-        language === "it"
-          ? "Salute store"
-          : "Store Health",
+      label: language === "it" ? "Salute store" : "Store Health",
       value: healthScore,
       color: healthColor,
     },
     {
       key: "profit",
-      label:
-        language === "it"
-          ? "Qualità profitto"
-          : "Profit Quality",
+      label: language === "it" ? "Qualità profitto" : "Profit Quality",
       value: profitQualityScore,
       color:
         profitQualityScore < 40
@@ -584,10 +748,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "pricing",
-      label:
-        language === "it"
-          ? "Efficienza prezzi"
-          : "Pricing Efficiency",
+      label: language === "it" ? "Efficienza prezzi" : "Pricing Efficiency",
       value: pricingScore,
       color:
         pricingScore < 40
@@ -598,10 +759,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "data",
-      label:
-        language === "it"
-          ? "Qualità dei dati"
-          : "Data Quality",
+      label: language === "it" ? "Qualità dei dati" : "Data Quality",
       value: dataQualityScore,
       color:
         dataQualityScore < 40
@@ -612,10 +770,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "execution",
-      label:
-        language === "it"
-          ? "Prontezza operativa"
-          : "Execution Readiness",
+      label: language === "it" ? "Prontezza operativa" : "Execution Readiness",
       value: executionScore,
       color:
         executionScore < 40
@@ -635,8 +790,8 @@ export default function AiAdvisorPage() {
   const profitMonitorContext =
     profitAlerts.length > 0
       ? profitAlerts
-        .map(
-          (alert, index) => `
+          .map(
+            (alert, index) => `
 EVENT ${index + 1}
 
 Severity: ${alert.severity}
@@ -645,8 +800,8 @@ Description: ${alert.description}
 Recommended action: ${alert.actionLabel}
 Destination module: ${alert.route}
 `,
-        )
-        .join("\n")
+          )
+          .join("\n")
       : "No active Profit Monitor events detected.";
 
   /*
@@ -727,15 +882,18 @@ Recoverable profit: ${recoverableProfit}
 ACTIVE PROFIT MONITOR COUNTS
 
 Critical events: ${criticalAlerts.length}
-Warning events: ${activeRiskAlerts.filter(
-    (alert) => alert.severity === "warning",
-  ).length
-    }
+Warning events: ${
+    activeRiskAlerts.filter((alert) => alert.severity === "warning").length
+  }
 Opportunity events: ${opportunityAlerts.length}
 Total active risks: ${activeRiskAlerts.length}
 
 ESTIMATED NET PROFIT
 
+Business Model Studio status: ${
+    modelConfigured ? "configured" : "not configured"
+  }
+Fixed-cost period factor: ${fixedCostFactor}
 Monthly advertising spend: ${monthlyAds}
 Monthly shipping costs: ${monthlyShipping}
 Monthly operating costs: ${monthlyOperating}
@@ -750,8 +908,14 @@ Estimated tax reserve: ${estimatedTaxReserve}
 
 Total estimated costs outside product costs: ${totalEstimatedCosts}
 
-Estimated net profit: ${estimatedNetProfit}
-Estimated net margin: ${estimatedNetMargin}%
+${
+  modelConfigured
+    ? `Estimated net profit: ${estimatedNetProfit}
+Estimated net margin: ${estimatedNetMargin}%`
+    : `Estimated net profit: unavailable
+Estimated net margin: unavailable
+Do not interpret missing assumptions as zero costs.`
+}
 
 PRODUCT RISKS
 
@@ -770,61 +934,59 @@ ${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
 
 TOP LOSING PRODUCTS
 
-${[...losingProducts]
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Revenue ${money(
-            product.revenue,
-          )} | Profit ${money(
-            product.profit,
-          )} | Margin ${pct(product.marginPct)}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...losingProducts]
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Revenue ${money(
+          product.revenue,
+        )} | Profit ${money(
+          product.profit,
+        )} | Margin ${pct(product.marginPct)}`,
+    )
+    .join("\n") || "None"
+}
 
 TOP LOW-MARGIN PRODUCTS
 
-${[...lowMarginProducts]
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Revenue ${money(
-            product.revenue,
-          )} | Profit ${money(
-            product.profit,
-          )} | Margin ${pct(product.marginPct)}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...lowMarginProducts]
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Revenue ${money(
+          product.revenue,
+        )} | Profit ${money(
+          product.profit,
+        )} | Margin ${pct(product.marginPct)}`,
+    )
+    .join("\n") || "None"
+}
 
 TOP RECOVERY OPPORTUNITIES
 
-${[...rows]
-      .filter((row) => row.targetDelta > 0)
-      .sort(
-        (a, b) =>
-          b.targetDelta * b.qty -
-          a.targetDelta * a.qty,
-      )
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Revenue ${money(
-            product.revenue,
-          )} | Margin ${pct(
-            product.marginPct,
-          )} | Potential Recovery ${money(
-            product.targetDelta * product.qty,
-          )}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...rows]
+    .filter((row) => row.targetDelta > 0)
+    .sort((a, b) => b.targetDelta * b.qty - a.targetDelta * a.qty)
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Revenue ${money(
+          product.revenue,
+        )} | Margin ${pct(product.marginPct)} | Potential Recovery ${money(
+          product.targetDelta * product.qty,
+        )}`,
+    )
+    .join("\n") || "None"
+}
 
 PRIORITIZED PRODUCTS
 
-${prioritizedProducts.length > 0
-      ? prioritizedProducts
+${
+  prioritizedProducts.length > 0
+    ? prioritizedProducts
         .map(
           (product, index) => `
 PRIORITY ${index + 1}
@@ -845,9 +1007,8 @@ Low margin: ${product.lowMargin ? "Yes" : "No"}
 `,
         )
         .join("\n")
-      : "No product data available."
-    }
-
+    : "No product data available."
+}
 TASK
 
 Act like a profitability consultant reviewing a Shopify business.
@@ -1051,9 +1212,7 @@ Rules:
                   color: "#ff9a70",
                 }}
               >
-                {language === "it"
-                  ? "BRIEFING ESECUTIVO"
-                  : "EXECUTIVE BRIEF"}
+                {language === "it" ? "BRIEFING ESECUTIVO" : "EXECUTIVE BRIEF"}
               </div>
 
               <div
@@ -1159,10 +1318,19 @@ Rules:
                       language === "it"
                         ? "Profitto netto stimato"
                         : "Estimated Net Profit",
-                    value: money(estimatedNetProfit),
-                    note: pct(estimatedNetMargin),
-                    color:
-                      estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
+                    value: modelConfigured
+                      ? money(estimatedNetProfit)
+                      : language === "it"
+                        ? "Da configurare"
+                        : "Not configured",
+                    note: modelConfigured
+                      ? pct(estimatedNetMargin)
+                      : "Business Model Studio",
+                    color: !modelConfigured
+                      ? "#f59e0b"
+                      : estimatedNetProfit >= 0
+                        ? "#22c55e"
+                        : "#ff6b4a",
                   },
                   {
                     label:
@@ -1180,10 +1348,7 @@ Rules:
                     color: "#22c55e",
                   },
                   {
-                    label:
-                      language === "it"
-                        ? "Rischi attivi"
-                        : "Active Risks",
+                    label: language === "it" ? "Rischi attivi" : "Active Risks",
                     value: `${activeRiskAlerts.length}`,
                     note:
                       language === "it"
@@ -1318,8 +1483,9 @@ Rules:
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    background: `conic-gradient(${healthColor} ${healthScore * 3.6
-                      }deg, rgba(255,255,255,0.08) 0deg)`,
+                    background: `conic-gradient(${healthColor} ${
+                      healthScore * 3.6
+                    }deg, rgba(255,255,255,0.08) 0deg)`,
                     boxShadow: `0 0 54px ${healthColor}22`,
                   }}
                 >
@@ -1347,6 +1513,7 @@ Rules:
                       >
                         {healthScore}
                       </div>
+
                       <div
                         style={{
                           marginTop: 7,
@@ -1484,8 +1651,6 @@ Rules:
           ))}
         </div>
 
-
-
         <div
           style={{
             marginTop: 24,
@@ -1557,14 +1722,12 @@ Rules:
                   color: "#f8fafc",
                 },
                 {
-                  label:
-                    language === "it" ? "Tempo stimato" : "Estimated Time",
+                  label: language === "it" ? "Tempo stimato" : "Estimated Time",
                   value: `${missionMinutes}m`,
                   color: "#38bdf8",
                 },
                 {
-                  label:
-                    language === "it" ? "Potenziale" : "Potential",
+                  label: language === "it" ? "Potenziale" : "Potential",
                   value:
                     recoverableProfit > 0
                       ? `+${money(recoverableProfit)}`
@@ -1625,9 +1788,7 @@ Rules:
 
           <div className="panel" style={{ margin: 0, padding: 24 }}>
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "FEED DELLE DECISIONI"
-                : "DECISION FEED"}
+              {language === "it" ? "FEED DELLE DECISIONI" : "DECISION FEED"}
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -1752,348 +1913,390 @@ Rules:
               )}
             </div>
           </div>
+        </div>
 
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 26,
+            padding: 24,
+            background:
+              "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+            border: "1px solid rgba(255,115,60,0.20)",
+          }}
+        >
           <div
             style={{
-              marginTop: 24,
-              borderRadius: 26,
-              padding: 24,
-              background:
-                "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(255,115,60,0.20)",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 16,
+              alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.13em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {language === "it"
-                    ? "ANALISI APPROFONDITA"
-                    : "DEEP ANALYSIS"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 8,
-                    color: "#f8fafc",
-                    fontSize: 22,
-                    fontWeight: 950,
-                  }}
-                >
-                  {language === "it"
-                    ? "Genera il report completo del consulente"
-                    : "Generate the full advisor report"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    color: "rgba(255,255,255,0.54)",
-                    fontSize: 12,
-                    fontWeight: 730,
-                  }}
-                >
-                  {language === "it"
-                    ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
-                    : "AI will use all real store data already loaded on this page."}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "grid",
-                    gap: 8,
-                  }}
-                >
-                  {[
-                    language === "it"
-                      ? "Analizza il rischio principale rilevato"
-                      : "Analyzes the highest-priority business risk",
-
-                    language === "it"
-                      ? "Individua i prodotti da correggere per primi"
-                      : "Identifies the first products to fix",
-
-                    language === "it"
-                      ? "Stima il profitto recuperabile e le azioni consigliate"
-                      : "Estimates recoverable profit and recommended actions",
-                  ].map((item) => (
-                    <div
-                      key={item}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        color: "rgba(255,255,255,0.70)",
-                        fontSize: 12,
-                        fontWeight: 720,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: "#22c55e",
-                          boxShadow: "0 0 10px rgba(34,197,94,0.5)",
-                          flexShrink: 0,
-                        }}
-                      />
-
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-
-              </div>
-
-              <aiFetcher.Form
-                method="post"
-                onSubmit={() => setShowAiReport(false)}
-              >
-                <input type="hidden" name="storeSummary" value={aiPrompt} />
-                <input type="hidden" name="language" value={language} />
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={aiFetcher.state !== "idle"}
-                >
-                  {aiFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Analisi in corso..."
-                      : "Analyzing..."
-                    : language === "it"
-                      ? "Genera analisi AI →"
-                      : "Generate AI Analysis →"}
-                </button>
-              </aiFetcher.Form>
-            </div>
-
-            {showAiReport && aiFetcher.data?.text && (
+            <div>
               <div
                 style={{
-                  marginTop: 20,
-                  padding: 22,
-                  borderRadius: 19,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "rgba(255,255,255,0.84)",
-                  fontSize: 14,
-                  lineHeight: 1.85,
-                  fontWeight: 720,
-                  whiteSpace: "pre-wrap",
+                  color: "#ff9a70",
+                  fontSize: 11,
+                  fontWeight: 950,
+                  letterSpacing: "0.13em",
+                  textTransform: "uppercase",
                 }}
               >
-                {aiFetcher.data.text}
+                {language === "it" ? "ANALISI APPROFONDITA" : "DEEP ANALYSIS"}
               </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              marginTop: 24,
-              borderRadius: 26,
-              padding: 24,
-              background:
-                "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(255,115,60,0.20)",
-            }}
-          >
-            <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.13em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 8,
-                color: "#f8fafc",
-                fontSize: 22,
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Approfondisci una decisione specifica"
-                : "Explore a specific decision"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                color: "rgba(255,255,255,0.54)",
-                fontSize: 12,
-                fontWeight: 730,
-                lineHeight: 1.5,
-              }}
-            >
-              {language === "it"
-                ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
-                : "Questions adapt to the risks and opportunities detected in your store."}
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                gap: 11,
-              }}
-            >
-              {dynamicQuestions.map((presetQuestion) => (
-                <button
-                  key={presetQuestion.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedQuestion(
-                      presetQuestion.id as SelectedQuestion,
-                    );
-                    setQuestion(presetQuestion.label);
-
-                    const formData = new FormData();
-                    formData.append("intent", "ask");
-                    formData.append("question", presetQuestion.label);
-                    formData.append("storeSummary", aiPrompt);
-                    formData.append("language", language);
-
-                    askFetcher.submit(formData, {
-                      method: "post",
-                    });
-                  }}
-                  style={{
-                    padding: "14px 15px",
-                    minHeight: 76,
-                    borderRadius: 15,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    color: "#f8fafc",
-                    background:
-                      selectedQuestion === presetQuestion.id
-                        ? "rgba(255,115,80,0.14)"
-                        : "rgba(255,255,255,0.035)",
-                    border:
-                      selectedQuestion === presetQuestion.id
-                        ? "1px solid rgba(255,115,80,0.42)"
-                        : "1px solid rgba(255,255,255,0.07)",
-                    fontSize: 12,
-                    fontWeight: 850,
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {presetQuestion.label}
-                </button>
-              ))}
-            </div>
-
-            <askFetcher.Form method="post">
-              <input type="hidden" name="intent" value="ask" />
-              <input type="hidden" name="storeSummary" value={aiPrompt} />
-              <input type="hidden" name="language" value={language} />
 
               <div
                 style={{
-                  marginTop: 16,
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 11,
+                  marginTop: 8,
+                  color: "#f8fafc",
+                  fontSize: 22,
+                  fontWeight: 950,
                 }}
               >
-                <input
-                  name="question"
-                  value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  placeholder={
-                    language === "it"
-                      ? "Fai una domanda sulla redditività..."
-                      : "Ask a profitability question..."
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "15px 16px",
-                    borderRadius: 14,
-                    color: "#ffffff",
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,115,60,0.18)",
-                    outline: "none",
-                    fontWeight: 800,
-                  }}
-                />
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={askFetcher.state !== "idle" || !question.trim()}
-                >
-                  {askFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Elaborazione..."
-                      : "Thinking..."
-                    : language === "it"
-                      ? "Chiedi all'AI →"
-                      : "Ask AI →"}
-                </button>
+                {language === "it"
+                  ? "Genera il report completo del consulente"
+                  : "Generate the full advisor report"}
               </div>
-            </askFetcher.Form>
 
-            {askFetcher.data?.text && (
+              <div
+                style={{
+                  marginTop: 6,
+                  color: "rgba(255,255,255,0.54)",
+                  fontSize: 12,
+                  fontWeight: 730,
+                }}
+              >
+                {language === "it"
+                  ? "L'AI utilizzerà i dati reali dello store e gli eventi del Profit Monitor."
+                  : "AI will use real store data and Profit Monitor events."}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 12,
+                  color: aiLimitReached ? "#ff8a6b" : "rgba(255,255,255,0.48)",
+                  fontSize: 11,
+                  fontWeight: 800,
+                }}
+              >
+                {language === "it"
+                  ? `${aiRequestsUsed} di ${aiUsage.limit} richieste AI utilizzate questo mese`
+                  : `${aiRequestsUsed} of ${aiUsage.limit} AI requests used this month`}
+              </div>
+
               <div
                 style={{
                   marginTop: 18,
-                  padding: 21,
-                  borderRadius: 18,
-                  background: "rgba(34,197,94,0.055)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "rgba(255,255,255,0.84)",
-                  lineHeight: 1.8,
-                  fontSize: 14,
-                  fontWeight: 730,
-                  whiteSpace: "pre-wrap",
+                  display: "grid",
+                  gap: 8,
                 }}
               >
-                {askFetcher.data.text}
+                {[
+                  language === "it"
+                    ? "Analizza il rischio principale rilevato"
+                    : "Analyzes the highest-priority business risk",
+
+                  language === "it"
+                    ? "Individua i prodotti da correggere per primi"
+                    : "Identifies the first products to fix",
+
+                  language === "it"
+                    ? "Stima il profitto recuperabile e le azioni consigliate"
+                    : "Estimates recoverable profit and recommended actions",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      color: "rgba(255,255,255,0.70)",
+                      fontSize: 12,
+                      fontWeight: 720,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: "#22c55e",
+                        boxShadow: "0 0 10px rgba(34,197,94,0.5)",
+                        flexShrink: 0,
+                      }}
+                    />
+
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
+
+            <aiFetcher.Form
+              method="post"
+              onSubmit={() => setShowAiReport(false)}
+            >
+              <input type="hidden" name="intent" value="analysis" />
+              <input type="hidden" name="period" value={period} />
+              <input type="hidden" name="language" value={language} />
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={aiFetcher.state !== "idle" || aiLimitReached}
+              >
+                {aiFetcher.state !== "idle"
+                  ? language === "it"
+                    ? "Analisi in corso..."
+                    : "Analyzing..."
+                  : aiLimitReached
+                    ? language === "it"
+                      ? "Limite mensile raggiunto"
+                      : "Monthly limit reached"
+                    : language === "it"
+                      ? "Genera analisi AI →"
+                      : "Generate AI Analysis →"}
+              </button>
+            </aiFetcher.Form>
+          </div>
+
+          {showAiReport && aiFetcher.data?.text && (
+            <div
+              style={{
+                marginTop: 20,
+                padding: 22,
+                borderRadius: 19,
+                background: aiFetcher.data.quotaExceeded
+                  ? "rgba(255,107,74,0.055)"
+                  : "rgba(255,255,255,0.035)",
+                border: aiFetcher.data.quotaExceeded
+                  ? "1px solid rgba(255,107,74,0.20)"
+                  : "1px solid rgba(34,197,94,0.20)",
+                color: "rgba(255,255,255,0.84)",
+                fontSize: 14,
+                lineHeight: 1.85,
+                fontWeight: 720,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {aiFetcher.data.text}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 24,
+            borderRadius: 26,
+            padding: 24,
+            background:
+              "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+            border: "1px solid rgba(255,115,60,0.20)",
+          }}
+        >
+          <div
+            style={{
+              color: "#ff9a70",
+              fontSize: 11,
+              fontWeight: 950,
+              letterSpacing: "0.13em",
+              textTransform: "uppercase",
+            }}
+          >
+            {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
           </div>
 
           <div
             style={{
-              marginTop: 22,
-              padding: 18,
-              borderRadius: 18,
-              background: "rgba(255,115,60,0.07)",
-              border: "1px solid rgba(255,115,60,0.18)",
-              color: "rgba(255,255,255,0.64)",
-              lineHeight: 1.6,
-              fontSize: 12,
-              fontWeight: 700,
+              marginTop: 8,
+              color: "#f8fafc",
+              fontSize: 22,
+              fontWeight: 950,
             }}
           >
             {language === "it"
-              ? "Profit Copilot utilizza esclusivamente i dati Shopify, le ipotesi di costo e i segnali di redditività disponibili. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
-              : "Profit Copilot uses only available Shopify data, saved cost assumptions and profitability signals. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
+              ? "Approfondisci una decisione specifica"
+              : "Explore a specific decision"}
           </div>
+
+          <div
+            style={{
+              marginTop: 6,
+              color: "rgba(255,255,255,0.54)",
+              fontSize: 12,
+              fontWeight: 730,
+              lineHeight: 1.5,
+            }}
+          >
+            {language === "it"
+              ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
+              : "Questions adapt to the risks and opportunities detected in your store."}
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              display: "grid",
+              gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+              gap: 11,
+            }}
+          >
+            {dynamicQuestions.map((presetQuestion) => (
+              <button
+                key={presetQuestion.id}
+                type="button"
+                disabled={askFetcher.state !== "idle" || aiLimitReached}
+                onClick={() => {
+                  setSelectedQuestion(presetQuestion.id as SelectedQuestion);
+
+                  setQuestion(presetQuestion.label);
+
+                  const formData = new FormData();
+
+                  formData.append("intent", "ask");
+                  formData.append("question", presetQuestion.label);
+                  formData.append("period", period);
+                  formData.append("language", language);
+
+                  askFetcher.submit(formData, {
+                    method: "post",
+                  });
+                }}
+                style={{
+                  padding: "14px 15px",
+                  minHeight: 76,
+                  borderRadius: 15,
+                  cursor:
+                    askFetcher.state !== "idle" || aiLimitReached
+                      ? "not-allowed"
+                      : "pointer",
+                  opacity: aiLimitReached ? 0.55 : 1,
+                  textAlign: "left",
+                  color: "#f8fafc",
+                  background:
+                    selectedQuestion === presetQuestion.id
+                      ? "rgba(255,115,80,0.14)"
+                      : "rgba(255,255,255,0.035)",
+                  border:
+                    selectedQuestion === presetQuestion.id
+                      ? "1px solid rgba(255,115,80,0.42)"
+                      : "1px solid rgba(255,255,255,0.07)",
+                  fontSize: 12,
+                  fontWeight: 850,
+                  lineHeight: 1.4,
+                }}
+              >
+                {presetQuestion.label}
+              </button>
+            ))}
+          </div>
+
+          <askFetcher.Form method="post">
+            <input type="hidden" name="intent" value="ask" />
+            <input type="hidden" name="period" value={period} />
+            <input type="hidden" name="language" value={language} />
+
+            <div
+              style={{
+                marginTop: 16,
+                display: "grid",
+                gridTemplateColumns: "1fr auto",
+                gap: 11,
+              }}
+            >
+              <input
+                name="question"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                disabled={aiLimitReached}
+                placeholder={
+                  aiLimitReached
+                    ? language === "it"
+                      ? "Limite mensile raggiunto"
+                      : "Monthly limit reached"
+                    : language === "it"
+                      ? "Fai una domanda sulla redditività..."
+                      : "Ask a profitability question..."
+                }
+                style={{
+                  width: "100%",
+                  padding: "15px 16px",
+                  borderRadius: 14,
+                  color: "#ffffff",
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,115,60,0.18)",
+                  outline: "none",
+                  fontWeight: 800,
+                  opacity: aiLimitReached ? 0.55 : 1,
+                }}
+              />
+
+              <button
+                type="submit"
+                className="primary-button"
+                disabled={
+                  askFetcher.state !== "idle" ||
+                  !question.trim() ||
+                  aiLimitReached
+                }
+              >
+                {askFetcher.state !== "idle"
+                  ? language === "it"
+                    ? "Elaborazione..."
+                    : "Thinking..."
+                  : aiLimitReached
+                    ? language === "it"
+                      ? "Limite raggiunto"
+                      : "Limit reached"
+                    : language === "it"
+                      ? "Chiedi all'AI →"
+                      : "Ask AI →"}
+              </button>
+            </div>
+          </askFetcher.Form>
+
+          {askFetcher.data?.text && (
+            <div
+              style={{
+                marginTop: 18,
+                padding: 21,
+                borderRadius: 18,
+                background: askFetcher.data.quotaExceeded
+                  ? "rgba(255,107,74,0.055)"
+                  : "rgba(34,197,94,0.055)",
+                border: askFetcher.data.quotaExceeded
+                  ? "1px solid rgba(255,107,74,0.20)"
+                  : "1px solid rgba(34,197,94,0.20)",
+                color: "rgba(255,255,255,0.84)",
+                lineHeight: 1.8,
+                fontSize: 14,
+                fontWeight: 730,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {askFetcher.data.text}
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginTop: 22,
+            padding: 18,
+            borderRadius: 18,
+            background: "rgba(255,115,60,0.07)",
+            border: "1px solid rgba(255,115,60,0.18)",
+            color: "rgba(255,255,255,0.64)",
+            lineHeight: 1.6,
+            fontSize: 12,
+            fontWeight: 700,
+          }}
+        >
+          {language === "it"
+            ? "Profit Copilot utilizza esclusivamente i dati Shopify, le ipotesi di costo e i segnali di redditività disponibili. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
+            : "Profit Copilot uses only available Shopify data, saved cost assumptions and profitability signals. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
         </div>
       </div>
     </div>
