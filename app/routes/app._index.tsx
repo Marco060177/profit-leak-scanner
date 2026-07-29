@@ -167,100 +167,7 @@ export default function DashboardV2() {
   const scoreLabel =
     score < 40 ? "High risk" : score < 70 ? "Needs attention" : "Healthy";
 
-  const hasRealData = rows.length > 0;
-
-  const demoRows: Row[] = [
-    {
-      productId: "1",
-      productTitle: "Premium Oversized Hoodie",
-      qty: 124,
-      revenue: 28420,
-      cogs: 5980,
-      discounts: 0,
-      refunds: 0,
-      profit: 420,
-      marginPct: 5,
-      previousMarginPct: null,
-      productMarginDelta: null,
-      losing: false,
-      lowMargin: true,
-      avgPrice: 68,
-      avgCost: 48,
-      breakEvenPrice: 48,
-      targetPrice: 60,
-      targetDelta: 8,
-      suggestion: "Increase price to reach the target margin.",
-      missingCost: false,
-    },
-    {
-      productId: "2",
-      productTitle: "Recovery Compression Leggings",
-      qty: 86,
-      revenue: 18460,
-      cogs: 3740,
-      discounts: 0,
-      refunds: 0,
-      profit: -4280,
-      marginPct: -19.8,
-      previousMarginPct: null,
-      productMarginDelta: null,
-      losing: true,
-      lowMargin: false,
-      avgPrice: 36,
-      avgCost: 43,
-      breakEvenPrice: 43,
-      targetPrice: 54,
-      targetDelta: 32,
-      suggestion: "Product is selling below cost.",
-      missingCost: false,
-    },
-    {
-      productId: "3",
-      productTitle: "Minimalist Travel Backpack",
-      qty: 42,
-      revenue: 32680,
-      cogs: 4110,
-      discounts: 0,
-      refunds: 0,
-      profit: 2780,
-      marginPct: 40.3,
-      previousMarginPct: null,
-      productMarginDelta: null,
-      losing: false,
-      lowMargin: false,
-      avgPrice: 164,
-      avgCost: 97,
-      breakEvenPrice: 97,
-      targetPrice: 122,
-      targetDelta: -42,
-      suggestion: "Pricing looks healthy.",
-      missingCost: false,
-    },
-    {
-      productId: "4",
-      productTitle: "Performance Running Shoes",
-      qty: 58,
-      revenue: 41720,
-      cogs: 8940,
-      discounts: 0,
-      refunds: 0,
-      profit: 3360,
-      marginPct: 27.3,
-      previousMarginPct: null,
-      productMarginDelta: null,
-      losing: false,
-      lowMargin: false,
-      avgPrice: 212,
-      avgCost: 154,
-      breakEvenPrice: 154,
-      targetPrice: 193,
-      targetDelta: -19,
-      suggestion: "Pricing looks healthy.",
-      missingCost: false,
-    },
-  ];
-
-  const sourceRows = hasRealData ? rows : demoRows;
+  const sourceRows = rows;
 
   const visualRevenue = sourceRows.reduce((acc, row) => acc + row.revenue, 0);
   const visualCogs = sourceRows.reduce((acc, row) => acc + row.cogs, 0);
@@ -765,18 +672,7 @@ export default function DashboardV2() {
     return "rgba(34,197,94,0.12)";
   };
 
-  const chartData =
-    trend.length >= 2
-      ? trend
-      : [
-        { date: "Mon", revenue: 4200, profit: 1100 },
-        { date: "Tue", revenue: 5100, profit: 1600 },
-        { date: "Wed", revenue: 4800, profit: 1200 },
-        { date: "Thu", revenue: 6200, profit: 2100 },
-        { date: "Fri", revenue: 7200, profit: 2600 },
-        { date: "Sat", revenue: 6800, profit: 2400 },
-        { date: "Sun", revenue: 7600, profit: 3100 },
-      ];
+  const chartData = trend;
 
   const maxChartValue = Math.max(
     ...chartData.map((d) => Math.max(d.revenue, d.profit)),
