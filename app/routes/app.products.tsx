@@ -176,8 +176,7 @@ export default function ProductsPage() {
             ? "High"
             : "Medium",
     }))
-    .sort((a, b) => b.riskValue - a.riskValue)
-    .slice(0, 5);
+    .sort((a, b) => b.riskValue - a.riskValue);
 
   const totalRevenueAtRisk = revenueAtRisk.reduce(
     (sum, product) => sum + product.revenue,
@@ -269,8 +268,8 @@ export default function ProductsPage() {
               >
                 {criticalProducts > 0
                   ? language === "it"
-                    ? "Rischio prodotti critico"
-                    : "Critical Product Risk"
+                    ? "Rilevato un prodotto critico"
+                    : "Critical Product Detected"
                   : highProducts > 0
                     ? language === "it"
                       ? "Rischio catalogo moderato"
@@ -776,14 +775,14 @@ export default function ProductsPage() {
             }}
           >
             {revenueAtRisk.length > 0 ? (
-              revenueAtRisk.map((product) => {
+              revenueAtRisk.slice(0, 5).map((product) => {
                 const translatedRiskLevel =
                   language === "it"
                     ? product.riskLevel === "Critical"
                       ? "Critico"
                       : product.riskLevel === "High"
                         ? "Alto"
-                        : product.riskLevel === "Moderate"
+                        : product.riskLevel === "Medium"
                           ? "Moderato"
                           : product.riskLevel
                     : product.riskLevel;
