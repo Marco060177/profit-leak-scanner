@@ -1,5 +1,6 @@
 import type { Language } from "~/utils/i18n";
 import {
+    money as formatStoreMoney,
     pct as formatStorePercent,
     type Row,
     type Summary,
@@ -81,6 +82,7 @@ type GenerateProfitAlertsInput = {
     rows: Row[];
     language: Language;
     period?: string | number;
+    currencyCode?: string;
 };
 
 const severityWeight: Record<
@@ -121,20 +123,19 @@ function normalizeToMonthly(value: number, periodDays: number) {
 
 function sortAlerts(alerts: ProfitAlert[]) {
     return [...alerts].sort((a, b) => {
-        const severityDifference =
-            severityWeight[b.severity] - severityWeight[a.severity];
-
-        if (severityDifference !== 0) {
-            return severityDifference;
-        }
-
         const priorityDifference = b.priority - a.priority;
 
         if (priorityDifference !== 0) {
             return priorityDifference;
         }
 
-        return b.monthlyImpact - a.monthlyImpact;
+        const impactDifference = b.monthlyImpact - a.monthlyImpact;
+
+        if (impactDifference !== 0) {
+            return impactDifference;
+        }
+
+        return severityWeight[b.severity] - severityWeight[a.severity];
     });
 }
 
@@ -270,7 +271,7 @@ function enrichProfitAlert(
             businessAction: "review",
             effort: "medium",
             estimatedMinutes: 20,
-            recommendedModule: "Profit Copilot",
+            recommendedModule: "AI Advisor",
         };
     }
 
@@ -283,7 +284,7 @@ function enrichProfitAlert(
             businessAction: "monitor",
             effort: "easy",
             estimatedMinutes: 5,
-            recommendedModule: "Profit Copilot",
+            recommendedModule: "AI Advisor",
         };
     }
 
@@ -364,7 +365,7 @@ function getModuleFromRoute(
     if (
         route.includes("recommendations")
     ) {
-        return "Profit Action Center";
+        return "Recommendations";
     }
 
     if (
@@ -376,7 +377,7 @@ function getModuleFromRoute(
     if (
         route.includes("ai-advisor")
     ) {
-        return "Profit Copilot";
+        return "AI Advisor";
     }
 
     return "MarginLab";
@@ -387,6 +388,7 @@ export function generateProfitAlerts({
     rows,
     language,
     period = 30,
+    currencyCode = "USD",
 }: GenerateProfitAlertsInput): ProfitAlert[] {
     const alerts: ProfitAlertInput[] = [];
 
@@ -404,20 +406,23 @@ export function generateProfitAlerts({
             maximumFractionDigits: digits,
         }).format(safeNumber(value));
 
-    const revenue = safeNumber(summary.revenue);
-    const grossProfit = safeNumber(summary.profit);
-    const grossMargin = safeNumber(summary.marginPct);
+    const money = (value: number, digits = 0) =>
+        formatStoreMoney(value, currencyCode, locale, digits);
+
+    const revenue = safeNumber(
+        summary.netProductRevenue ?? summary.revenue,
+    );
+    const grossProfit = safeNumber(
+        summary.grossProfit ?? summary.profit,
+    );
+    const grossMargin = safeNumber(
+        summary.grossMarginPct ?? summary.marginPct,
+    );
 
     const discounts = Math.max(0, safeNumber(summary.discounts));
     const refunds = Math.max(0, safeNumber(summary.refunds));
-    const totalLeak = Math.max(0, safeNumber(summary.totalLeak));
-
     const losingProducts = rows.filter((row) => row.losing);
     const missingCostProducts = rows.filter((row) => row.missingCost);
-    const lowMarginProducts = rows.filter(
-        (row) => row.lowMargin && !row.losing,
-    );
-
     const recoverableProfitForPeriod = rows.reduce((sum, row) => {
         const opportunity =
             Math.max(0, safeNumber(row.targetDelta)) *
@@ -431,15 +436,18 @@ export function generateProfitAlerts({
         periodDays,
     );
 
-    const monthlyLeak = normalizeToMonthly(totalLeak, periodDays);
     const monthlyDiscounts = normalizeToMonthly(discounts, periodDays);
     const monthlyRefunds = normalizeToMonthly(refunds, periodDays);
 
-    const discountRate =
-        revenue > 0 ? (discounts / revenue) * 100 : 0;
+    const discountRate = safeNumber(
+        summary.discountRatePct ??
+            (revenue > 0 ? (discounts / revenue) * 100 : 0),
+    );
 
-    const refundRate =
-        revenue > 0 ? (refunds / revenue) * 100 : 0;
+    const refundRate = safeNumber(
+        summary.refundRatePct ??
+            (revenue > 0 ? (refunds / revenue) * 100 : 0),
+    );
 
     /*
      * ALERT 1
@@ -451,9 +459,9 @@ export function generateProfitAlerts({
             0,
         );
 
-        const monthlyLosingImpact = Math.max(
-            normalizeToMonthly(losingImpactForPeriod, periodDays),
-            monthlyLeak,
+        const monthlyLosingImpact = normalizeToMonthly(
+            losingImpactForPeriod,
+            periodDays,
         );
 
         const worstLosingProduct = [...losingProducts].sort(
@@ -466,8 +474,8 @@ export function generateProfitAlerts({
             category: "pricing",
 
             title: isItalian
-                ? `Il margine complessivo è sceso al ${pct(grossMargin)}`
-                : `Overall margin is ${pct(grossMargin)}`,
+                ? `${losingProducts.length} ${losingProducts.length === 1 ? "prodotto sta" : "prodotti stanno"} generando perdite`
+                : `${losingProducts.length} ${losingProducts.length === 1 ? "product is" : "products are"} generating losses`,
 
             description: worstLosingProduct
                 ? isItalian
@@ -504,10 +512,25 @@ export function generateProfitAlerts({
      * Costi prodotto mancanti
      */
     if (missingCostProducts.length > 0) {
+        const missingCostRevenue = Math.max(
+            0,
+            safeNumber(summary.missingCostRevenue) ||
+                missingCostProducts.reduce(
+                    (sum, row) =>
+                        sum + Math.max(0, safeNumber(row.revenue)),
+                    0,
+                ),
+        );
+        const missingCostRevenueShare =
+            revenue > 0 ? (missingCostRevenue / revenue) * 100 : 0;
+        const isCritical =
+            missingCostRevenueShare >= 25 ||
+            (summary.revenueCoveragePct !== undefined &&
+                safeNumber(summary.revenueCoveragePct) < 75);
+
         alerts.push({
             id: "missing-product-costs",
-            severity:
-                missingCostProducts.length >= 5 ? "critical" : "warning",
+            severity: isCritical ? "critical" : "warning",
             category: "data-quality",
 
             title: isItalian
@@ -515,11 +538,15 @@ export function generateProfitAlerts({
                 : `${missingCostProducts.length} products are missing cost data`,
 
             description: isItalian
-                ? "I costi mancanti possono nascondere prodotti non profittevoli e riducono l'affidabilità di Copilot, Forecasting e delle simulazioni."
-                : "Missing costs can hide unprofitable products and reduce the reliability of Copilot, Forecasting and simulations.",
+                ? `I prodotti senza costo rappresentano il ${pct(missingCostRevenueShare)} dei ricavi analizzati e riducono l'affidabilità di AI Advisor, Forecasting e delle simulazioni.`
+                : `Products without cost data represent ${pct(missingCostRevenueShare)} of analyzed revenue and reduce the reliability of AI Advisor, Forecasting and simulations.`,
 
             monthlyImpact: 0,
-            priority: missingCostProducts.length >= 5 ? 98 : 88,
+            priority: isCritical ? 98 : clamp(
+                75 + Math.round(missingCostRevenueShare),
+                78,
+                92,
+            ),
 
             actionLabel: isItalian
                 ? "Completa i costi"
@@ -530,6 +557,7 @@ export function generateProfitAlerts({
             metadata: {
                 missingCostCount: missingCostProducts.length,
                 affectedProducts: missingCostProducts.length,
+                revenue: missingCostRevenue,
             },
         });
     }
@@ -558,7 +586,7 @@ export function generateProfitAlerts({
                     ? "The current margin leaves very little room for advertising, shipping, fees and operating costs."
                     : "The current margin is fragile and can deteriorate quickly through discounts, refunds or higher costs.",
 
-            monthlyImpact: monthlyLeak,
+            monthlyImpact: 0,
             priority: isCritical ? 96 : 86,
 
             actionLabel: isItalian
@@ -722,18 +750,12 @@ export function generateProfitAlerts({
             category: "growth",
 
             title: isItalian
-                ? `${number(
-                    monthlyRecoverableProfit,
-                    0,
-                )} di profitto mensile potenzialmente recuperabile`
-                : `${number(
-                    monthlyRecoverableProfit,
-                    0,
-                )} in potential monthly profit recovery`,
+                ? `${money(monthlyRecoverableProfit)} di opportunità teorica mensile al volume attuale`
+                : `${money(monthlyRecoverableProfit)} theoretical monthly opportunity at current volume`,
 
             description: isItalian
-                ? `${rows.filter((row) => row.targetDelta > 0).length} prodotti presentano un'opportunità di prezzo o margine che può essere simulata prima di applicare modifiche.`
-                : `${rows.filter((row) => row.targetDelta > 0).length} products have a pricing or margin opportunity that can be simulated before making changes.`,
+                ? `${rows.filter((row) => row.targetDelta > 0).length} prodotti presentano un'opportunità di prezzo da verificare nel simulatore. La stima presume volumi invariati e non rappresenta profitto già recuperato.`
+                : `${rows.filter((row) => row.targetDelta > 0).length} products have a pricing opportunity to test in the simulator. The estimate assumes unchanged volume and is not profit already recovered.`,
 
             monthlyImpact: monthlyRecoverableProfit,
             priority: clamp(
@@ -798,16 +820,16 @@ export function generateProfitAlerts({
             description: isItalian
                 ? `Un adeguamento stimato del ${pct(
                     priceIncreasePct,
-                )} porterebbe il prezzo verso ${number(
+                )} porterebbe il prezzo verso ${money(
                     row.targetPrice,
                     2,
-                )}, con un recupero potenziale da verificare nel simulatore.`
+                )}. È uno scenario teorico al volume attuale da verificare nel simulatore.`
                 : `An estimated ${pct(
                     priceIncreasePct,
-                )} adjustment would move the price toward ${number(
+                )} adjustment would move the price toward ${money(
                     row.targetPrice,
                     2,
-                )}, with a potential recovery that should be tested in the simulator.`,
+                )}. This is a theoretical current-volume scenario to test in the simulator.`,
 
             monthlyImpact: normalizeToMonthly(opportunity, periodDays),
             priority: 78,
@@ -865,10 +887,7 @@ export function generateProfitAlerts({
                 )} margin. Higher volume could amplify the problem.`,
 
             monthlyImpact: normalizeToMonthly(
-                Math.max(
-                    0,
-                    weakBestSeller.targetDelta * weakBestSeller.qty,
-                ),
+                Math.max(0, -safeNumber(weakBestSeller.profit)),
                 periodDays,
             ),
 
@@ -932,8 +951,8 @@ export function generateProfitAlerts({
             priority: 91,
 
             actionLabel: isItalian
-                ? "Apri Profit Copilot"
-                : "Open Profit Copilot",
+                ? "Apri AI Advisor"
+                : "Open AI Advisor",
 
             route: "/app/ai-advisor",
 
@@ -948,7 +967,13 @@ export function generateProfitAlerts({
     /*
      * Stato positivo quando non esistono problemi significativi.
      */
-    if (alerts.length === 0) {
+    const hasSignificantRisk = alerts.some(
+        (alert) =>
+            alert.severity === "critical" ||
+            alert.severity === "warning",
+    );
+
+    if (!hasSignificantRisk) {
         alerts.push({
             id: "profit-monitor-stable",
             severity: "info",
@@ -959,15 +984,15 @@ export function generateProfitAlerts({
                 : "No critical profit risks detected",
 
             description: isItalian
-                ? "Margini, costi e opportunità risultano stabili sulla base dei dati disponibili. Continua a monitorare l'andamento dello store."
-                : "Margins, costs and opportunities appear stable based on available data. Continue monitoring store performance.",
+                ? "Non emergono rischi significativi dai dati disponibili. Le eventuali opportunità restano separate e possono essere valutate senza urgenza."
+                : "No significant risks emerge from the available data. Any opportunities remain separate and can be evaluated without urgency.",
 
             monthlyImpact: 0,
             priority: 20,
 
             actionLabel: isItalian
-                ? "Apri Profit Copilot"
-                : "Open Profit Copilot",
+                ? "Apri AI Advisor"
+                : "Open AI Advisor",
 
             route: "/app/ai-advisor",
         });
