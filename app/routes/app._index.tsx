@@ -445,7 +445,9 @@ export default function DashboardV2() {
 
   const worstProduct =
     sourceRows.length > 0
-      ? [...sourceRows].sort((a, b) => a.profit - b.profit)[0]
+      ? [...sourceRows]
+        .filter((row) => row.profit < 0)
+        .sort((a, b) => a.profit - b.profit)[0] ?? null
       : null;
 
   const bestProduct =
@@ -888,8 +890,8 @@ export default function DashboardV2() {
               value: worstProduct
                 ? worstProduct.productTitle
                 : getStoredLanguage() === "it"
-                  ? "Nessun dato"
-                  : "No data",
+                  ? "Nessuna perdita rilevata"
+                  : "No losses detected",
               note: worstProduct
                 ? getStoredLanguage() === "it"
                   ? `${money(
@@ -899,10 +901,10 @@ export default function DashboardV2() {
                     Math.abs(worstProduct.profit),
                   )} estimated loss`
                 : getStoredLanguage() === "it"
-                  ? "Nessun problema rilevato"
-                  : "No issues detected",
-              icon: "↓",
-              tone: "danger",
+                  ? "Tutti i prodotti sono profittevoli"
+                  : "All products are profitable",
+              icon: worstProduct ? "↓" : "✓",
+              tone: worstProduct ? "danger" : "positive",
             },
             {
               label:
