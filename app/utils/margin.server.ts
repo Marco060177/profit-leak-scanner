@@ -113,6 +113,14 @@ const ORDERS_QUERY = `#graphql
                   }
                 }
 
+                discountAllocations {
+                  allocatedAmountSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+                }
+
                 variant {
                   product {
                     id
@@ -236,7 +244,25 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       const discountedTotal = amount(
         line?.discountedTotalSet?.shopMoney?.amount,
       );
-      const lineDiscount = Math.max(0, originalTotal - discountedTotal);
+      const allocatedDiscount = (line?.discountAllocations ?? []).reduce(
+        (sum: number, allocation: any) =>
+          sum +
+          amount(
+            allocation?.allocatedAmountSet?.shopMoney?.amount,
+          ),
+        0,
+      );
+      const discountedTotalDifference = Math.max(
+        0,
+        originalTotal - discountedTotal,
+      );
+      const lineDiscount = Math.min(
+        originalTotal,
+        allocatedDiscount > 0
+          ? allocatedDiscount
+          : discountedTotalDifference,
+      );
+      const netLineRevenue = Math.max(0, originalTotal - lineDiscount);
 
       const costRaw = line?.variant?.inventoryItem?.unitCost?.amount;
       const hasCost = costRaw !== null && costRaw !== undefined;
@@ -254,7 +280,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       grossCogs += lineCogs;
 
       if (day) {
-        byDay[day].revenue += discountedTotal;
+        byDay[day].revenue += netLineRevenue;
         byDay[day].cogs += lineCogs;
       }
     }
