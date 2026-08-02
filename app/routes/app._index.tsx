@@ -118,7 +118,8 @@ export default function DashboardV2() {
       opportunityCount: marginAssessment.opportunities.length,
       informationCount: marginAssessment.information.length,
       requiresAction: marginAssessment.requiresAction,
-      actionReasons: marginAssessment.actionReasonCodes.join(", ") || "none",
+      actionReasons:
+        marginAssessment.actionReasonCodes?.join(", ") || "none",
     });
 
     console.log("Primary risk:", marginAssessment.primaryRisk);
