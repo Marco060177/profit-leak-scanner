@@ -13,6 +13,7 @@ import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
+import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 
 import {
   type LoaderData,
@@ -68,6 +69,7 @@ export default function DashboardV2() {
     period,
     currencyCode,
     timeZone,
+    analysisContext,
   } = useLoaderData() as LoaderData;
 
 
@@ -79,6 +81,49 @@ export default function DashboardV2() {
 
   const locale =
     language === "it" ? "it-IT" : "en-US";
+
+  const marginAssessment = React.useMemo(
+    () =>
+      buildMarginAssessment({
+        summary,
+        rows,
+        trend,
+        analysisContext,
+      }),
+    [summary, rows, trend, analysisContext],
+  );
+
+  React.useEffect(() => {
+    console.group(
+      `[MarginLab Decision Engine] ${period} days`,
+    );
+
+    console.log("Analysis context:", analysisContext);
+    console.log("Complete assessment:", marginAssessment);
+
+    console.table({
+      period: `${period} days`,
+      evidenceLevel: marginAssessment.evidence.level,
+      evidenceScore: marginAssessment.evidence.score,
+      economicStatus: marginAssessment.economicStatus,
+      healthScore: marginAssessment.healthScore ?? "not available",
+      comparisonQuality: marginAssessment.comparison.quality,
+      orderCount: marginAssessment.evidence.orderCount,
+      productCount: marginAssessment.evidence.productCount,
+      activeDays: marginAssessment.evidence.activeDays,
+      revenueCoveragePct: marginAssessment.evidence.revenueCoveragePct,
+      riskCount: marginAssessment.risks.length,
+      opportunityCount: marginAssessment.opportunities.length,
+      informationCount: marginAssessment.information.length,
+      requiresAction: marginAssessment.requiresAction,
+    });
+
+    console.log("Primary risk:", marginAssessment.primaryRisk);
+    console.log("Risks:", marginAssessment.risks);
+    console.log("Opportunities:", marginAssessment.opportunities);
+    console.log("Information:", marginAssessment.information);
+    console.groupEnd();
+  }, [analysisContext, marginAssessment, period]);
 
   const money = React.useCallback(
     (value: number) =>
