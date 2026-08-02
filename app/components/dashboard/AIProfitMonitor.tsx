@@ -1,15 +1,14 @@
 import * as React from "react";
 
-import type {
-  ProfitAlert,
-  ProfitAlertSeverity,
-} from "~/utils/profit-monitor";
+import type { ProfitAlert, ProfitAlertSeverity } from "~/utils/profit-monitor";
 
 import { getStoredLanguage } from "~/utils/i18n";
 import { money } from "~/utils/margin";
+import type { MarginAssessment } from "~/utils/margin-decision-engine";
 
 type Props = {
   alerts: ProfitAlert[];
+  assessment: MarginAssessment;
   navigate: (path: string) => void;
 };
 
@@ -25,15 +24,9 @@ function getSeverityStyle(
   severity: ProfitAlertSeverity,
   language: "it" | "en",
 ): SeverityStyle {
-  const styles: Record<
-    ProfitAlertSeverity,
-    SeverityStyle
-  > = {
+  const styles: Record<ProfitAlertSeverity, SeverityStyle> = {
     critical: {
-      label:
-        language === "it"
-          ? "Critico"
-          : "Critical",
+      label: language === "it" ? "Critico" : "Critical",
       color: "#ff7b61",
       background: "rgba(255,107,74,0.10)",
       border: "rgba(255,107,74,0.25)",
@@ -41,10 +34,7 @@ function getSeverityStyle(
     },
 
     warning: {
-      label:
-        language === "it"
-          ? "Attenzione"
-          : "Warning",
+      label: language === "it" ? "Attenzione" : "Warning",
       color: "#fbbf24",
       background: "rgba(245,158,11,0.10)",
       border: "rgba(245,158,11,0.24)",
@@ -52,10 +42,7 @@ function getSeverityStyle(
     },
 
     opportunity: {
-      label:
-        language === "it"
-          ? "Opportunità"
-          : "Opportunity",
+      label: language === "it" ? "Opportunità" : "Opportunity",
       color: "#4ade80",
       background: "rgba(34,197,94,0.10)",
       border: "rgba(34,197,94,0.24)",
@@ -63,10 +50,7 @@ function getSeverityStyle(
     },
 
     info: {
-      label:
-        language === "it"
-          ? "Informazione"
-          : "Information",
+      label: language === "it" ? "Informazione" : "Information",
       color: "#7dd3fc",
       background: "rgba(56,189,248,0.10)",
       border: "rgba(56,189,248,0.24)",
@@ -77,13 +61,8 @@ function getSeverityStyle(
   return styles[severity];
 }
 
-function getSeverityRank(
-  severity: ProfitAlertSeverity,
-) {
-  const rank: Record<
-    ProfitAlertSeverity,
-    number
-  > = {
+function getSeverityRank(severity: ProfitAlertSeverity) {
+  const rank: Record<ProfitAlertSeverity, number> = {
     critical: 4,
     warning: 3,
     opportunity: 2,
@@ -102,10 +81,7 @@ function AlertCounter({
   count: number;
   language: "it" | "en";
 }) {
-  const style = getSeverityStyle(
-    severity,
-    language,
-  );
+  const style = getSeverityStyle(severity, language);
 
   return (
     <div
@@ -179,10 +155,7 @@ function SmallAlertCard({
   language: "it" | "en";
   navigate: (path: string) => void;
 }) {
-  const severity = getSeverityStyle(
-    alert.severity,
-    language,
-  );
+  const severity = getSeverityStyle(alert.severity, language);
 
   return (
     <button
@@ -197,16 +170,13 @@ function SmallAlertCard({
         background:
           "linear-gradient(180deg, rgba(16,23,37,0.96), rgba(7,12,21,0.98))",
         border: `1px solid ${severity.border}`,
-        transition:
-          "transform 180ms ease, border-color 180ms ease",
+        transition: "transform 180ms ease, border-color 180ms ease",
       }}
       onMouseEnter={(event) => {
-        event.currentTarget.style.transform =
-          "translateY(-2px)";
+        event.currentTarget.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={(event) => {
-        event.currentTarget.style.transform =
-          "translateY(0)";
+        event.currentTarget.style.transform = "translateY(0)";
       }}
     >
       <div
@@ -241,19 +211,13 @@ function SmallAlertCard({
           <div
             style={{
               color:
-                alert.severity ===
-                "opportunity"
-                  ? "#22c55e"
-                  : severity.color,
+                alert.severity === "opportunity" ? "#22c55e" : severity.color,
               fontSize: 15,
               fontWeight: 950,
               whiteSpace: "nowrap",
             }}
           >
-            {alert.severity ===
-            "opportunity"
-              ? "+"
-              : ""}
+            {alert.severity === "opportunity" ? "+" : ""}
             {money(alert.monthlyImpact)}
           </div>
         )}
@@ -287,8 +251,7 @@ function SmallAlertCard({
         style={{
           marginTop: 12,
           paddingTop: 11,
-          borderTop:
-            "1px solid rgba(255,255,255,0.07)",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
           color: severity.color,
           fontSize: 11,
           fontWeight: 900,
@@ -302,19 +265,16 @@ function SmallAlertCard({
 
 export default function AIProfitMonitor({
   alerts,
+  assessment,
   navigate,
 }: Props) {
-  const language =
-    getStoredLanguage() === "it"
-      ? "it"
-      : "en";
+  const language = getStoredLanguage() === "it" ? "it" : "en";
 
   const sortedAlerts = React.useMemo(
     () =>
       [...alerts].sort((a, b) => {
         const severityDifference =
-          getSeverityRank(b.severity) -
-          getSeverityRank(a.severity);
+          getSeverityRank(b.severity) - getSeverityRank(a.severity);
 
         if (severityDifference !== 0) {
           return severityDifference;
@@ -324,74 +284,55 @@ export default function AIProfitMonitor({
           return b.priority - a.priority;
         }
 
-        return (
-          b.monthlyImpact -
-          a.monthlyImpact
-        );
+        return b.monthlyImpact - a.monthlyImpact;
       }),
     [alerts],
   );
 
   const counts = React.useMemo(
     () => ({
-      critical: sortedAlerts.filter(
-        (alert) =>
-          alert.severity === "critical",
-      ).length,
+      critical: sortedAlerts.filter((alert) => alert.severity === "critical")
+        .length,
 
-      warning: sortedAlerts.filter(
-        (alert) =>
-          alert.severity === "warning",
-      ).length,
+      warning: sortedAlerts.filter((alert) => alert.severity === "warning")
+        .length,
 
       opportunity: sortedAlerts.filter(
-        (alert) =>
-          alert.severity ===
-          "opportunity",
+        (alert) => alert.severity === "opportunity",
       ).length,
 
-      info: sortedAlerts.filter(
-        (alert) =>
-          alert.severity === "info",
-      ).length,
+      info: sortedAlerts.filter((alert) => alert.severity === "info").length,
     }),
     [sortedAlerts],
   );
 
-  const highestPriority =
-    sortedAlerts[0];
+  const highestPriority = sortedAlerts[0];
 
-  const remainingAlerts =
-    sortedAlerts.slice(1, 5);
+  const remainingAlerts = sortedAlerts.slice(1, 5);
 
-  const highestEconomicImpact =
-    sortedAlerts.reduce(
-      (highest, alert) =>
-        alert.monthlyImpact >
-        highest.monthlyImpact
-          ? alert
-          : highest,
-      sortedAlerts[0] ?? {
-        monthlyImpact: 0,
-      },
-    );
+  const highestEconomicImpact = sortedAlerts.reduce(
+    (highest, alert) =>
+      alert.monthlyImpact > highest.monthlyImpact ? alert : highest,
+    sortedAlerts[0] ?? {
+      monthlyImpact: 0,
+    },
+  );
 
-  const monitorStatus =
-    counts.critical > 0
+  const monitorStatus = assessment.requiresAction
+    ? language === "it"
+      ? "Intervento richiesto"
+      : "Action required"
+    : counts.warning > 0
       ? language === "it"
-        ? "Intervento richiesto"
-        : "Action required"
-      : counts.warning > 0
+        ? "Da controllare"
+        : "Review needed"
+      : counts.opportunity > 0
         ? language === "it"
-          ? "Da controllare"
-          : "Review needed"
-        : counts.opportunity > 0
-          ? language === "it"
-            ? "Opportunità rilevate"
-            : "Opportunities detected"
-          : language === "it"
-            ? "Situazione stabile"
-            : "Stable status";
+          ? "Opportunità rilevate"
+          : "Opportunities detected"
+        : language === "it"
+          ? "Situazione stabile"
+          : "Stable status";
 
   const monitorColor =
     counts.critical > 0
@@ -403,6 +344,8 @@ export default function AIProfitMonitor({
           : "#38bdf8";
 
   if (sortedAlerts.length === 0) {
+    const assessmentUnavailable = !assessment.healthScoreAvailable;
+
     return (
       <div
         style={{
@@ -411,13 +354,14 @@ export default function AIProfitMonitor({
           borderRadius: 24,
           background:
             "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-          border:
-            "1px solid rgba(34,197,94,0.22)",
+          border: assessmentUnavailable
+            ? "1px solid rgba(56,189,248,0.22)"
+            : "1px solid rgba(34,197,94,0.22)",
         }}
       >
         <div
           style={{
-            color: "#86efac",
+            color: assessmentUnavailable ? "#7dd3fc" : "#86efac",
             fontSize: 11,
             fontWeight: 950,
             textTransform: "uppercase",
@@ -436,33 +380,39 @@ export default function AIProfitMonitor({
           }}
         >
           {language === "it"
-            ? "Nessun rischio rilevato"
-            : "No profit risks detected"}
+            ? assessmentUnavailable
+              ? "Valutazione generale non disponibile"
+              : "Nessun rischio rilevato"
+            : assessmentUnavailable
+              ? "Overall assessment unavailable"
+              : "No profit risks detected"}
         </div>
 
         <div
           style={{
             marginTop: 7,
-            color:
-              "rgba(255,255,255,0.56)",
+            color: "rgba(255,255,255,0.56)",
             fontSize: 13,
             lineHeight: 1.55,
             fontWeight: 720,
           }}
         >
           {language === "it"
-            ? "Margini, costi e opportunità risultano stabili sulla base dei dati disponibili."
-            : "Margins, costs and opportunities appear stable based on the available data."}
+            ? assessmentUnavailable
+              ? `Sono stati osservati ${assessment.evidence.orderCount} ordini su ${assessment.evidence.activeDays} giorni attivi. Non sono emersi rischi materiali nel periodo, ma i dati non bastano per dichiarare stabile lo store.`
+              : "Margini, costi e opportunità risultano stabili sulla base dei dati disponibili."
+            : assessmentUnavailable
+              ? `${assessment.evidence.orderCount} orders were observed across ${assessment.evidence.activeDays} active days. No material period risks emerged, but the evidence is not sufficient to call the store stable.`
+              : "Margins, costs and opportunities appear stable based on the available data."}
         </div>
       </div>
     );
   }
 
-  const highestSeverityStyle =
-    getSeverityStyle(
-      highestPriority.severity,
-      language,
-    );
+  const highestSeverityStyle = getSeverityStyle(
+    highestPriority.severity,
+    language,
+  );
 
   return (
     <section
@@ -474,8 +424,7 @@ export default function AIProfitMonitor({
         borderRadius: 30,
         background:
           "radial-gradient(circle at 12% 12%, rgba(255,115,80,0.12), transparent 30%), radial-gradient(circle at 88% 18%, rgba(34,197,94,0.09), transparent 32%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-        border:
-          "1px solid rgba(255,115,60,0.23)",
+        border: "1px solid rgba(255,115,60,0.23)",
         boxShadow:
           "0 28px 80px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
@@ -538,8 +487,7 @@ export default function AIProfitMonitor({
             style={{
               marginTop: 8,
               maxWidth: 760,
-              color:
-                "rgba(255,255,255,0.58)",
+              color: "rgba(255,255,255,0.58)",
               fontSize: 13,
               lineHeight: 1.6,
               fontWeight: 720,
@@ -562,17 +510,14 @@ export default function AIProfitMonitor({
         >
           <div
             style={{
-              color:
-                "rgba(255,255,255,0.42)",
+              color: "rgba(255,255,255,0.42)",
               fontSize: 9,
               fontWeight: 950,
               textTransform: "uppercase",
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it"
-              ? "Stato monitor"
-              : "Monitor status"}
+            {language === "it" ? "Stato monitor" : "Monitor status"}
           </div>
 
           <div
@@ -586,41 +531,35 @@ export default function AIProfitMonitor({
             {monitorStatus}
           </div>
 
-          {highestEconomicImpact &&
-            highestEconomicImpact.monthlyImpact >
-              0 && (
-              <div
+          {highestEconomicImpact && highestEconomicImpact.monthlyImpact > 0 && (
+            <div
+              style={{
+                marginTop: 7,
+                color: "rgba(255,255,255,0.52)",
+                fontSize: 11,
+                fontWeight: 760,
+              }}
+            >
+              {language === "it"
+                ? "Impatto maggiore rilevato"
+                : "Highest detected impact"}
+              :{" "}
+              <strong
                 style={{
-                  marginTop: 7,
-                  color:
-                    "rgba(255,255,255,0.52)",
-                  fontSize: 11,
-                  fontWeight: 760,
+                  color: "#f8fafc",
                 }}
               >
-                {language === "it"
-                  ? "Impatto maggiore rilevato"
-                  : "Highest detected impact"}
-                :{" "}
-                <strong
-                  style={{
-                    color: "#f8fafc",
-                  }}
-                >
-                  {money(
-                    highestEconomicImpact.monthlyImpact,
-                  )}
-                </strong>
-              </div>
-            )}
+                {money(highestEconomicImpact.monthlyImpact)}
+              </strong>
+            </div>
+          )}
         </div>
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns:
-            "repeat(4,minmax(0,1fr))",
+          gridTemplateColumns: "repeat(4,minmax(0,1fr))",
           gap: 12,
           marginTop: 22,
         }}
@@ -643,19 +582,14 @@ export default function AIProfitMonitor({
           language={language}
         />
 
-        <AlertCounter
-          severity="info"
-          count={counts.info}
-          language={language}
-        />
+        <AlertCounter severity="info" count={counts.info} language={language} />
       </div>
 
       <div
         style={{
           marginTop: 22,
           display: "grid",
-          gridTemplateColumns:
-            "1.08fr 0.92fr",
+          gridTemplateColumns: "1.08fr 0.92fr",
           gap: 18,
           alignItems: "stretch",
         }}
@@ -665,16 +599,14 @@ export default function AIProfitMonitor({
             minWidth: 0,
             padding: 22,
             borderRadius: 22,
-            background:
-              highestSeverityStyle.background,
+            background: highestSeverityStyle.background,
             border: `1px solid ${highestSeverityStyle.border}`,
           }}
         >
           <div
             style={{
               display: "flex",
-              justifyContent:
-                "space-between",
+              justifyContent: "space-between",
               gap: 14,
               alignItems: "flex-start",
               flexWrap: "wrap",
@@ -687,10 +619,8 @@ export default function AIProfitMonitor({
                 gap: 8,
                 padding: "7px 10px",
                 borderRadius: 999,
-                color:
-                  highestSeverityStyle.color,
-                background:
-                  "rgba(5,10,18,0.48)",
+                color: highestSeverityStyle.color,
+                background: "rgba(5,10,18,0.48)",
                 border: `1px solid ${highestSeverityStyle.border}`,
                 fontSize: 10,
                 fontWeight: 950,
@@ -698,21 +628,16 @@ export default function AIProfitMonitor({
                 letterSpacing: "0.09em",
               }}
             >
-              <span>
-                {highestSeverityStyle.icon}
-              </span>
+              <span>{highestSeverityStyle.icon}</span>
 
               <span>
-                {language === "it"
-                  ? "Priorità principale"
-                  : "Highest priority"}
+                {language === "it" ? "Priorità principale" : "Highest priority"}
               </span>
             </div>
 
             <div
               style={{
-                color:
-                  "rgba(255,255,255,0.42)",
+                color: "rgba(255,255,255,0.42)",
                 fontSize: 10,
                 fontWeight: 900,
               }}
@@ -739,8 +664,7 @@ export default function AIProfitMonitor({
           <div
             style={{
               marginTop: 10,
-              color:
-                "rgba(255,255,255,0.67)",
+              color: "rgba(255,255,255,0.67)",
               fontSize: 13,
               lineHeight: 1.65,
               fontWeight: 730,
@@ -755,25 +679,20 @@ export default function AIProfitMonitor({
                 marginTop: 14,
                 padding: 12,
                 borderRadius: 14,
-                background:
-                  "rgba(5,10,18,0.42)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
+                background: "rgba(5,10,18,0.42)",
+                border: "1px solid rgba(255,255,255,0.07)",
               }}
             >
               <div
                 style={{
-                  color:
-                    "rgba(255,255,255,0.40)",
+                  color: "rgba(255,255,255,0.40)",
                   fontSize: 9,
                   fontWeight: 950,
                   textTransform: "uppercase",
                   letterSpacing: "0.09em",
                 }}
               >
-                {language === "it"
-                  ? "Prodotto collegato"
-                  : "Related product"}
+                {language === "it" ? "Prodotto collegato" : "Related product"}
               </div>
 
               <div
@@ -784,9 +703,7 @@ export default function AIProfitMonitor({
                   fontWeight: 900,
                 }}
               >
-                {
-                  highestPriority.productTitle
-                }
+                {highestPriority.productTitle}
               </div>
             </div>
           )}
@@ -795,27 +712,22 @@ export default function AIProfitMonitor({
             style={{
               marginTop: 19,
               display: "flex",
-              justifyContent:
-                "space-between",
+              justifyContent: "space-between",
               gap: 14,
               alignItems: "flex-end",
               flexWrap: "wrap",
             }}
           >
             <div>
-              {highestPriority.monthlyImpact >
-                0 && (
+              {highestPriority.monthlyImpact > 0 && (
                 <>
                   <div
                     style={{
-                      color:
-                        "rgba(255,255,255,0.40)",
+                      color: "rgba(255,255,255,0.40)",
                       fontSize: 9,
                       fontWeight: 950,
-                      textTransform:
-                        "uppercase",
-                      letterSpacing:
-                        "0.09em",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.09em",
                     }}
                   >
                     {language === "it"
@@ -827,24 +739,17 @@ export default function AIProfitMonitor({
                     style={{
                       marginTop: 6,
                       color:
-                        highestPriority.severity ===
-                        "opportunity"
+                        highestPriority.severity === "opportunity"
                           ? "#22c55e"
                           : highestSeverityStyle.color,
                       fontSize: 29,
                       lineHeight: 1,
                       fontWeight: 950,
-                      letterSpacing:
-                        "-0.04em",
+                      letterSpacing: "-0.04em",
                     }}
                   >
-                    {highestPriority.severity ===
-                    "opportunity"
-                      ? "+"
-                      : ""}
-                    {money(
-                      highestPriority.monthlyImpact,
-                    )}
+                    {highestPriority.severity === "opportunity" ? "+" : ""}
+                    {money(highestPriority.monthlyImpact)}
                   </div>
                 </>
               )}
@@ -853,16 +758,9 @@ export default function AIProfitMonitor({
             <button
               type="button"
               className="primary-button"
-              onClick={() =>
-                navigate(
-                  highestPriority.route,
-                )
-              }
+              onClick={() => navigate(highestPriority.route)}
             >
-              {
-                highestPriority.actionLabel
-              }{" "}
-              →
+              {highestPriority.actionLabel} →
             </button>
           </div>
         </div>
@@ -872,10 +770,8 @@ export default function AIProfitMonitor({
             minWidth: 0,
             padding: 20,
             borderRadius: 22,
-            background:
-              "rgba(255,255,255,0.025)",
-            border:
-              "1px solid rgba(255,255,255,0.07)",
+            background: "rgba(255,255,255,0.025)",
+            border: "1px solid rgba(255,255,255,0.07)",
           }}
         >
           <div
@@ -893,8 +789,7 @@ export default function AIProfitMonitor({
           <div
             style={{
               marginTop: 5,
-              color:
-                "rgba(255,255,255,0.45)",
+              color: "rgba(255,255,255,0.45)",
               fontSize: 11,
               fontWeight: 720,
             }}
@@ -912,26 +807,22 @@ export default function AIProfitMonitor({
             }}
           >
             {remainingAlerts.length > 0 ? (
-              remainingAlerts.map(
-                (alert) => (
-                  <SmallAlertCard
-                    key={alert.id}
-                    alert={alert}
-                    language={language}
-                    navigate={navigate}
-                  />
-                ),
-              )
+              remainingAlerts.map((alert) => (
+                <SmallAlertCard
+                  key={alert.id}
+                  alert={alert}
+                  language={language}
+                  navigate={navigate}
+                />
+              ))
             ) : (
               <div
                 style={{
                   padding: 17,
                   borderRadius: 16,
                   color: "#86efac",
-                  background:
-                    "rgba(34,197,94,0.07)",
-                  border:
-                    "1px solid rgba(34,197,94,0.18)",
+                  background: "rgba(34,197,94,0.07)",
+                  border: "1px solid rgba(34,197,94,0.18)",
                   fontSize: 12,
                   lineHeight: 1.5,
                   fontWeight: 780,
@@ -951,8 +842,7 @@ export default function AIProfitMonitor({
           style={{
             marginTop: 16,
             textAlign: "center",
-            color:
-              "rgba(255,255,255,0.42)",
+            color: "rgba(255,255,255,0.42)",
             fontSize: 11,
             fontWeight: 760,
           }}
