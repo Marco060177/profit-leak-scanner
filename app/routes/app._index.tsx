@@ -106,6 +106,8 @@ export default function DashboardV2() {
       evidenceLevel: marginAssessment.evidence.level,
       evidenceScore: marginAssessment.evidence.score,
       economicStatus: marginAssessment.economicStatus,
+      observedStatus: marginAssessment.observedStatus,
+      assessmentScope: marginAssessment.assessmentScope,
       healthScore: marginAssessment.healthScore ?? "not available",
       comparisonQuality: marginAssessment.comparison.quality,
       orderCount: marginAssessment.evidence.orderCount,
@@ -116,6 +118,7 @@ export default function DashboardV2() {
       opportunityCount: marginAssessment.opportunities.length,
       informationCount: marginAssessment.information.length,
       requiresAction: marginAssessment.requiresAction,
+      actionReasons: marginAssessment.actionReasonCodes.join(", ") || "none",
     });
 
     console.log("Primary risk:", marginAssessment.primaryRisk);
