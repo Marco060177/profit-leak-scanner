@@ -38,6 +38,10 @@ type PeriodAggregate = {
   taxes: number;
   netProductRevenue: number;
   productCogs: number;
+  orderCount: number;
+  activeDays: number;
+  firstOrderAt: string | null;
+  lastOrderAt: string | null;
 };
 
 const ORDERS_QUERY = `#graphql
@@ -226,10 +230,22 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
   let taxes = 0;
   let grossCogs = 0;
   let refundedCogs = 0;
+  let firstOrderAt: string | null = null;
+  let lastOrderAt: string | null = null;
 
   for (const edge of orderEdges) {
     const order = edge?.node;
+    const processedAt = String(order?.processedAt ?? "");
     const day = String(order?.processedAt ?? "").slice(0, 10);
+
+    if (processedAt) {
+      if (!firstOrderAt || processedAt < firstOrderAt) {
+        firstOrderAt = processedAt;
+      }
+      if (!lastOrderAt || processedAt > lastOrderAt) {
+        lastOrderAt = processedAt;
+      }
+    }
 
     if (day && !byDay[day]) {
       byDay[day] = {
@@ -353,6 +369,10 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     taxes,
     netProductRevenue: grossProductSales - discounts - productRefunds,
     productCogs: Math.max(0, grossCogs - refundedCogs),
+    orderCount: orderEdges.length,
+    activeDays: Object.keys(byDay).length,
+    firstOrderAt,
+    lastOrderAt,
   };
 }
 
@@ -657,5 +677,37 @@ export async function loadMarginDashboardData({
     shopHandle: session.shop.replace(".myshopify.com", ""),
     currencyCode,
     timeZone,
+    analysisContext: {
+      requestedDays: safeDays,
+      current: {
+        orderCount: current.orderCount,
+        productCount: rows.length,
+        orderedQuantity,
+        netQuantity,
+        activeDays: current.activeDays,
+        firstOrderAt: current.firstOrderAt,
+        lastOrderAt: current.lastOrderAt,
+        hasSales: current.orderCount > 0,
+      },
+      previous: {
+        orderCount: previous.orderCount,
+        productCount: Object.keys(previous.byProduct).length,
+        orderedQuantity: Object.values(previous.byProduct).reduce(
+          (sum, product) => sum + product.orderedQty,
+          0,
+        ),
+        netQuantity: Object.values(previous.byProduct).reduce(
+          (sum, product) =>
+            sum + Math.max(0, product.orderedQty - product.refundedQty),
+          0,
+        ),
+        activeDays: previous.activeDays,
+        firstOrderAt: previous.firstOrderAt,
+        lastOrderAt: previous.lastOrderAt,
+        hasSales: previous.orderCount > 0,
+      },
+      comparisonAvailable:
+        current.orderCount > 0 && previous.orderCount > 0,
+    },
   };
 }
