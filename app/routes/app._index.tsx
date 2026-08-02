@@ -106,8 +106,9 @@ export default function DashboardV2() {
         rows,
         language,
         period,
+        currencyCode,
       }),
-    [summary, rows, language, period],
+    [summary, rows, language, period, currencyCode],
   );
 
   const alertCounts = React.useMemo(
