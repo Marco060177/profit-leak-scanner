@@ -13,6 +13,16 @@ export type EconomicStatus =
   | "monitor"
   | "at_risk"
   | "critical";
+export type ObservedStatus =
+  | "no_sales_observed"
+  | "profitable_observed"
+  | "margin_pressure_observed"
+  | "incomplete_costs_observed"
+  | "losses_observed";
+export type AssessmentScope = "store_assessment" | "period_observation";
+export type ActionReasonCode =
+  | "REAL_LOSSES_OBSERVED"
+  | "MATERIAL_MISSING_COSTS";
 export type SignalKind = "risk" | "opportunity" | "information";
 export type SignalSeverity = "critical" | "warning" | "info";
 
@@ -64,6 +74,8 @@ export type ComparisonAssessment = {
 export type MarginAssessment = {
   version: 1;
   economicStatus: EconomicStatus;
+  observedStatus: ObservedStatus;
+  assessmentScope: AssessmentScope;
   evidence: EvidenceAssessment;
   comparison: ComparisonAssessment;
   healthScore: number | null;
@@ -74,6 +86,7 @@ export type MarginAssessment = {
   primaryRisk: DecisionSignal | null;
   primaryOpportunity: DecisionSignal | null;
   requiresAction: boolean;
+  actionReasonCodes: ActionReasonCode[];
   facts: {
     revenue: number;
     profit: number;
@@ -597,17 +610,40 @@ export function buildMarginAssessment({
   }
 
   const primaryRisk = sortedRisks[0] ?? null;
-  const requiresAction =
-    evidence.level !== "limited" &&
-    sortedRisks.some(
-      (signal) =>
-        signal.severity === "critical" ||
-        (signal.severity === "warning" && signal.priority >= 75),
-    );
+  let observedStatus: ObservedStatus;
+  if (evidence.orderCount === 0 || revenue <= 0) {
+    observedStatus = "no_sales_observed";
+  } else if (losingRows.length > 0 || profit < 0) {
+    observedStatus = "losses_observed";
+  } else if (missingCostRows.length > 0) {
+    observedStatus = "incomplete_costs_observed";
+  } else if (marginPct < TARGET_MARGIN_PCT) {
+    observedStatus = "margin_pressure_observed";
+  } else {
+    observedStatus = "profitable_observed";
+  }
+
+  const assessmentScope: AssessmentScope = scoreAvailable
+    ? "store_assessment"
+    : "period_observation";
+
+  const actionReasonCodes: ActionReasonCode[] = [];
+  if (losingRows.length > 0 && lossAmount > 0) {
+    actionReasonCodes.push("REAL_LOSSES_OBSERVED");
+  }
+  if (
+    missingCostRows.length > 0 &&
+    missingCostRevenueSharePct >= MATERIAL_REVENUE_SHARE_PCT
+  ) {
+    actionReasonCodes.push("MATERIAL_MISSING_COSTS");
+  }
+  const requiresAction = actionReasonCodes.length > 0;
 
   return {
     version: 1,
     economicStatus,
+    observedStatus,
+    assessmentScope,
     evidence,
     comparison,
     healthScore,
@@ -618,6 +654,7 @@ export function buildMarginAssessment({
     primaryRisk,
     primaryOpportunity: sortedOpportunities[0] ?? null,
     requiresAction,
+    actionReasonCodes,
     facts: {
       revenue,
       profit,
