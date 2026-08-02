@@ -72,6 +72,40 @@ function getSeverityRank(severity: ProfitAlertSeverity) {
   return rank[severity];
 }
 
+function isMissingCostsAlert(alert: ProfitAlert) {
+  return alert.id === "missing-costs" || alert.category === "data-quality";
+}
+
+function getAlertAmount(alert: ProfitAlert) {
+  if (isMissingCostsAlert(alert)) {
+    return alert.metadata?.revenue ?? 0;
+  }
+
+  if (alert.id === "real-losses") {
+    return alert.metadata?.periodImpact ?? alert.monthlyImpact;
+  }
+
+  return alert.monthlyImpact;
+}
+
+function getAlertAmountLabel(alert: ProfitAlert, language: "it" | "en") {
+  if (isMissingCostsAlert(alert)) {
+    return language === "it"
+      ? "Ricavi con COGS mancanti"
+      : "Revenue with missing COGS";
+  }
+
+  if (alert.severity === "opportunity") {
+    return language === "it" ? "Opportunità stimata" : "Estimated opportunity";
+  }
+
+  if (alert.id === "real-losses") {
+    return language === "it" ? "Perdita accertata" : "Confirmed loss";
+  }
+
+  return language === "it" ? "Impatto rilevato" : "Detected impact";
+}
+
 function AlertCounter({
   severity,
   count,
@@ -156,6 +190,8 @@ function SmallAlertCard({
   navigate: (path: string) => void;
 }) {
   const severity = getSeverityStyle(alert.severity, language);
+  const displayedAmount = getAlertAmount(alert);
+  const amountLabel = getAlertAmountLabel(alert, language);
 
   return (
     <button
@@ -207,7 +243,7 @@ function SmallAlertCard({
           <span>{severity.label}</span>
         </div>
 
-        {alert.monthlyImpact > 0 && (
+        {displayedAmount > 0 && (
           <div
             style={{
               color:
@@ -217,8 +253,21 @@ function SmallAlertCard({
               whiteSpace: "nowrap",
             }}
           >
+            <div
+              style={{
+                marginBottom: 3,
+                color: "rgba(255,255,255,0.42)",
+                fontSize: 8,
+                fontWeight: 900,
+                textAlign: "right",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+              }}
+            >
+              {amountLabel}
+            </div>
             {alert.severity === "opportunity" ? "+" : ""}
-            {money(alert.monthlyImpact)}
+            {money(displayedAmount)}
           </div>
         )}
       </div>
@@ -310,13 +359,20 @@ export default function AIProfitMonitor({
 
   const remainingAlerts = sortedAlerts.slice(1, 5);
 
-  const highestEconomicImpact = sortedAlerts.reduce(
-    (highest, alert) =>
-      alert.monthlyImpact > highest.monthlyImpact ? alert : highest,
-    sortedAlerts[0] ?? {
-      monthlyImpact: 0,
-    },
+  const confirmedLossAlert = sortedAlerts.find(
+    (alert) => alert.id === "real-losses" && getAlertAmount(alert) > 0,
   );
+
+  const bestOpportunityAlert = sortedAlerts
+    .filter(
+      (alert) => alert.severity === "opportunity" && alert.monthlyImpact > 0,
+    )
+    .sort((a, b) => b.monthlyImpact - a.monthlyImpact)[0];
+
+  const monitorSummaryAlert = confirmedLossAlert ?? bestOpportunityAlert;
+  const monitorSummaryLabel = monitorSummaryAlert
+    ? getAlertAmountLabel(monitorSummaryAlert, language)
+    : null;
 
   const monitorStatus = assessment.requiresAction
     ? language === "it"
@@ -411,6 +467,11 @@ export default function AIProfitMonitor({
 
   const highestSeverityStyle = getSeverityStyle(
     highestPriority.severity,
+    language,
+  );
+  const highestPriorityAmount = getAlertAmount(highestPriority);
+  const highestPriorityAmountLabel = getAlertAmountLabel(
+    highestPriority,
     language,
   );
 
@@ -531,7 +592,7 @@ export default function AIProfitMonitor({
             {monitorStatus}
           </div>
 
-          {highestEconomicImpact && highestEconomicImpact.monthlyImpact > 0 && (
+          {monitorSummaryAlert && getAlertAmount(monitorSummaryAlert) > 0 && (
             <div
               style={{
                 marginTop: 7,
@@ -540,16 +601,14 @@ export default function AIProfitMonitor({
                 fontWeight: 760,
               }}
             >
-              {language === "it"
-                ? "Impatto maggiore rilevato"
-                : "Highest detected impact"}
-              :{" "}
+              {monitorSummaryLabel}:{" "}
               <strong
                 style={{
                   color: "#f8fafc",
                 }}
               >
-                {money(highestEconomicImpact.monthlyImpact)}
+                {monitorSummaryAlert.severity === "opportunity" ? "+" : ""}
+                {money(getAlertAmount(monitorSummaryAlert))}
               </strong>
             </div>
           )}
@@ -719,7 +778,7 @@ export default function AIProfitMonitor({
             }}
           >
             <div>
-              {highestPriority.monthlyImpact > 0 && (
+              {highestPriorityAmount > 0 && (
                 <>
                   <div
                     style={{
@@ -730,9 +789,7 @@ export default function AIProfitMonitor({
                       letterSpacing: "0.09em",
                     }}
                   >
-                    {language === "it"
-                      ? "Impatto mensile stimato"
-                      : "Estimated monthly impact"}
+                    {highestPriorityAmountLabel}
                   </div>
 
                   <div
@@ -749,7 +806,7 @@ export default function AIProfitMonitor({
                     }}
                   >
                     {highestPriority.severity === "opportunity" ? "+" : ""}
-                    {money(highestPriority.monthlyImpact)}
+                    {money(highestPriorityAmount)}
                   </div>
                 </>
               )}
