@@ -138,9 +138,8 @@ Confidence reasons: ${economicSnapshot.confidence.reasons.join(", ") || "none"}
 BUSINESS MODEL
 
 Configuration status: ${modelConfigured ? "configured" : "not configured"}
-${
-  modelConfigured
-    ? `Monthly advertising: ${monthlyAds}
+${modelConfigured
+      ? `Monthly advertising: ${monthlyAds}
 Monthly shipping: ${monthlyShipping}
 Monthly operating costs: ${monthlyOperating}
 Fixed costs prorated to ${periodDays} days: ${proratedFixedCosts}
@@ -150,20 +149,19 @@ Tax reserve: ${taxReservePct}%
 Variable costs for the selected period: ${estimatedVariableCosts}
 Estimated net profit for the selected period: ${estimatedNetProfit}
 Estimated net margin for the selected period: ${estimatedNetMargin}%`
-    : `Net profit is unavailable because Business Model Studio has not been configured.
+      : `Net profit is unavailable because Business Model Studio has not been configured.
 Do not treat zero assumptions as real costs and do not claim that the store is profitable after operating costs.`
-}
+    }
 
 PROFIT MONITOR EVENTS
 
-${
-  profitAlerts
-    .map(
-      (alert: any, index: number) =>
-        `${index + 1}. ${alert.severity} | economic kind: ${alert.economicKind} | monthly descriptive impact: ${alert.monthlyImpact} | ${alert.title} | ${alert.description} | action: ${alert.actionLabel} | destination: ${alert.route}`,
-    )
-    .join("\n") || "No active events."
-}
+${profitAlerts
+      .map(
+        (alert: any, index: number) =>
+          `${index + 1}. ${alert.severity} | economic kind: ${alert.economicKind} | ${alert.title} | action: ${alert.actionLabel} | destination: ${alert.route}`,
+      )
+      .join("\n") || "No active events."
+    }
 
 PRODUCT DATA
 
@@ -238,10 +236,12 @@ export async function action({ request }: { request: Request }) {
     period,
     locale,
   });
+
   const assumptions =
     (await prisma.profitAssumptions.findUnique({
       where: { shop: session.shop },
     })) ?? null;
+
   const storeSummary = buildServerStoreSummary({
     dashboardData,
     assumptions,
@@ -325,9 +325,22 @@ Do not generate a complete business analysis.
     });
   }
 
+  const economicSnapshot = dashboardData.economicSnapshot;
+
+  if (!economicSnapshot) {
+    throw new Error("Economic Snapshot is not available.");
+  }
+
   return generateAiMarginAnalysis({
     storeSummary,
     language,
+    economicSnapshot: {
+      currencyCode: economicSnapshot.currencyCode,
+      monthlyOpportunity: economicSnapshot.totals.monthlyOpportunity,
+      confidenceScore: economicSnapshot.confidence.score,
+      confidenceLevel: economicSnapshot.confidence.level,
+      cogsCoveragePct: economicSnapshot.confidence.cogsCoveragePct,
+    },
   });
 }
 
@@ -510,7 +523,7 @@ export default function AiAdvisorPage() {
     (monthlyAds +
       monthlyShipping +
       monthlyOperating) *
-      fixedCostFactor +
+    fixedCostFactor +
     estimatedPaymentFees +
     estimatedTransactionFees +
     estimatedTaxReserve;
@@ -980,14 +993,13 @@ Estimated tax reserve: ${estimatedTaxReserve}
 
 Total estimated costs outside product costs: ${totalEstimatedCosts}
 
-${
-  modelConfigured
-    ? `Estimated net profit: ${estimatedNetProfit}
+${modelConfigured
+      ? `Estimated net profit: ${estimatedNetProfit}
 Estimated net margin: ${estimatedNetMargin}%`
-    : `Estimated net profit: unavailable
+      : `Estimated net profit: unavailable
 Estimated net margin: unavailable
 Do not interpret missing assumptions as zero costs.`
-}
+    }
 
 PRODUCT RISKS
 
