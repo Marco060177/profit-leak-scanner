@@ -106,6 +106,11 @@ CONTENT RULES
 
 - Use only the supplied store data.
 - Do not invent numbers, costs, events, products or assumptions.
+- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly opportunity.
+- Never add loss, exposure and opportunity into one combined total.
+- Never describe exposure as a confirmed loss or opportunity as realized profit.
+- Use Profit Monitor events for severity, priority, recommended action and destination; do not independently re-rank them.
+- Respect Data Confidence. When confidence is not high, describe figures as estimates and state the relevant data limitation concisely.
 - Use concise bullet points.
 - Use short paragraphs.
 - Do not write long walls of text.
@@ -181,6 +186,11 @@ RESPONSE RULES
 - Answer only the user's specific question.
 - Use only the supplied store data.
 - Do not invent numbers, costs, events, products or assumptions.
+- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly opportunity.
+- Never add loss, exposure and opportunity into one combined total.
+- Never describe exposure as a confirmed loss or opportunity as realized profit.
+- Do not contradict or independently re-rank supplied Profit Monitor events.
+- Respect the supplied Data Confidence and mention a relevant limitation when it materially affects the answer.
 - Use 2 to 5 concise bullet points.
 - Do not create section headings.
 - Do not generate a complete business report.

@@ -310,6 +310,7 @@ function AlertCard({
     onAcknowledge: (alertId: string) => void;
 }) {
     const state = alertStates[alert.id];
+    const economicKind = alert.economicKind;
 
     const lifecycleStatus: ProfitAlertStatus =
         state?.status ?? "new";
@@ -474,9 +475,11 @@ function AlertCard({
                     <div
                         style={{
                             color:
-                                alert.severity === "opportunity"
+                                economicKind === "opportunity"
                                     ? "#22c55e"
-                                    : severityStyle.color,
+                                    : economicKind === "exposure"
+                                        ? "#f59e0b"
+                                        : severityStyle.color,
                             fontSize: 23,
                             lineHeight: 1,
                             fontWeight: 950,
@@ -484,7 +487,7 @@ function AlertCard({
                         }}
                     >
                         {alert.monthlyImpact > 0
-                            ? `${alert.severity === "opportunity"
+                            ? `${economicKind === "opportunity"
                                 ? "+"
                                 : ""
                             }${money(alert.monthlyImpact)}`
@@ -504,9 +507,21 @@ function AlertCard({
                         }}
                     >
                         {alert.monthlyImpact > 0
-                            ? language === "it"
-                                ? "Impatto mensile stimato"
-                                : "Estimated monthly impact"
+                            ? economicKind === "loss"
+                                ? language === "it"
+                                    ? "Perdita mensile stimata"
+                                    : "Estimated monthly loss"
+                                : economicKind === "exposure"
+                                    ? language === "it"
+                                        ? "Esposizione mensile stimata"
+                                        : "Estimated monthly exposure"
+                                    : economicKind === "opportunity"
+                                        ? language === "it"
+                                            ? "Opportunità mensile stimata"
+                                            : "Estimated monthly opportunity"
+                                        : language === "it"
+                                            ? "Valore mensile indicativo"
+                                            : "Indicative monthly value"
                             : language === "it"
                                 ? "Impatto da verificare"
                                 : "Impact to review"}

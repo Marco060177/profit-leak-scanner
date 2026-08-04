@@ -1,5 +1,9 @@
 import type { Language } from "~/utils/i18n";
 import {
+    buildEconomicSnapshot,
+    type EconomicAmountKind,
+} from "~/utils/economic-snapshot";
+import {
     money as formatStoreMoney,
     pct as formatStorePercent,
     type Row,
@@ -41,6 +45,7 @@ export type ProfitAlert = {
     description: string;
 
     monthlyImpact: number;
+    economicKind: EconomicAmountKind;
     priority: number;
 
     actionLabel: string;
@@ -395,6 +400,21 @@ export function generateProfitAlerts({
     const isItalian = language === "it";
     const periodDays = getPeriodDays(period);
 
+    const economicSnapshot = buildEconomicSnapshot({
+        summary,
+        rows,
+        period,
+        currencyCode,
+    });
+
+    const monthlyProductLoss = economicSnapshot.totals.monthlyLoss;
+    const monthlyMissingCostExposure =
+        economicSnapshot.amounts.find(
+            (amount) => amount.id === "missing-cogs-revenue",
+        )?.monthlyAmount ?? 0;
+    const monthlyPricingOpportunity =
+        economicSnapshot.totals.monthlyOpportunity;
+
     const locale = isItalian ? "it-IT" : "en-US";
 
     const pct = (value: number, digits = 1) =>
@@ -431,10 +451,7 @@ export function generateProfitAlerts({
         return sum + opportunity;
     }, 0);
 
-    const monthlyRecoverableProfit = normalizeToMonthly(
-        recoverableProfitForPeriod,
-        periodDays,
-    );
+    const monthlyRecoverableProfit = monthlyPricingOpportunity;
 
     const monthlyDiscounts = normalizeToMonthly(discounts, periodDays);
     const monthlyRefunds = normalizeToMonthly(refunds, periodDays);
@@ -459,10 +476,7 @@ export function generateProfitAlerts({
             0,
         );
 
-        const monthlyLosingImpact = normalizeToMonthly(
-            losingImpactForPeriod,
-            periodDays,
-        );
+        const monthlyLosingImpact = monthlyProductLoss;
 
         const worstLosingProduct = [...losingProducts].sort(
             (a, b) => a.profit - b.profit,
@@ -486,6 +500,7 @@ export function generateProfitAlerts({
                     : "Some products are selling at a negative profit and require immediate action.",
 
             monthlyImpact: monthlyLosingImpact,
+            economicKind: "loss",
             priority: 100,
 
             actionLabel: isItalian
@@ -541,7 +556,8 @@ export function generateProfitAlerts({
                 ? `I prodotti senza costo rappresentano il ${pct(missingCostRevenueShare)} dei ricavi analizzati e riducono l'affidabilità di AI Advisor, Forecasting e delle simulazioni.`
                 : `Products without cost data represent ${pct(missingCostRevenueShare)} of analyzed revenue and reduce the reliability of AI Advisor, Forecasting and simulations.`,
 
-            monthlyImpact: 0,
+            monthlyImpact: monthlyMissingCostExposure,
+            economicKind: "exposure",
             priority: isCritical ? 98 : clamp(
                 75 + Math.round(missingCostRevenueShare),
                 78,
@@ -587,6 +603,7 @@ export function generateProfitAlerts({
                     : "The current margin is fragile and can deteriorate quickly through discounts, refunds or higher costs.",
 
             monthlyImpact: 0,
+            economicKind: "qualitative",
             priority: isCritical ? 96 : 86,
 
             actionLabel: isItalian
@@ -649,6 +666,7 @@ export function generateProfitAlerts({
                 estimatedPeriodImpact,
                 periodDays,
             ),
+            economicKind: "exposure",
 
             priority: marginDelta <= -5 ? 97 : 90,
 
@@ -688,6 +706,7 @@ export function generateProfitAlerts({
                 : "Verify that promotions are generating enough additional sales to compensate for the lost margin.",
 
             monthlyImpact: monthlyDiscounts,
+            economicKind: "exposure",
             priority: isHighDiscountExposure ? 84 : 62,
 
             actionLabel: isItalian
@@ -724,6 +743,7 @@ export function generateProfitAlerts({
                 : "Check whether refunds are concentrated around specific products, quality issues or fulfillment problems.",
 
             monthlyImpact: monthlyRefunds,
+            economicKind: "exposure",
             priority: isHighRefundExposure ? 82 : 60,
 
             actionLabel: isItalian
@@ -758,6 +778,7 @@ export function generateProfitAlerts({
                 : `${rows.filter((row) => row.targetDelta > 0).length} products have a pricing opportunity to test in the simulator. The estimate assumes unchanged volume and is not profit already recovered.`,
 
             monthlyImpact: monthlyRecoverableProfit,
+            economicKind: "opportunity",
             priority: clamp(
                 70 + Math.round(monthlyRecoverableProfit / 500),
                 70,
@@ -832,6 +853,7 @@ export function generateProfitAlerts({
                 )}. This is a theoretical current-volume scenario to test in the simulator.`,
 
             monthlyImpact: normalizeToMonthly(opportunity, periodDays),
+            economicKind: "opportunity",
             priority: 78,
 
             actionLabel: isItalian
@@ -890,6 +912,9 @@ export function generateProfitAlerts({
                 Math.max(0, -safeNumber(weakBestSeller.profit)),
                 periodDays,
             ),
+            economicKind: weakBestSeller.losing
+                ? "loss"
+                : "qualitative",
 
             priority: weakBestSeller.losing ? 95 : 85,
 
@@ -947,6 +972,7 @@ export function generateProfitAlerts({
                 revenue * (Math.abs(marginDelta) / 100),
                 periodDays,
             ),
+            economicKind: "exposure",
 
             priority: 91,
 
@@ -988,6 +1014,7 @@ export function generateProfitAlerts({
                 : "No significant risks emerge from the available data. Any opportunities remain separate and can be evaluated without urgency.",
 
             monthlyImpact: 0,
+            economicKind: "qualitative",
             priority: 20,
 
             actionLabel: isItalian
@@ -1019,13 +1046,5 @@ export function getProfitAlertCounts(alerts: ProfitAlert[]) {
             opportunity: 0,
             info: 0,
         },
-    );
-}
-
-export function getTotalMonthlyAlertImpact(alerts: ProfitAlert[]) {
-    return alerts.reduce(
-        (sum, alert) =>
-            sum + Math.max(0, safeNumber(alert.monthlyImpact)),
-        0,
     );
 }
