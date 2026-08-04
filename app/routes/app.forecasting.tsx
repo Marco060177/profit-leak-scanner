@@ -317,7 +317,14 @@ export default function ForecastingPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
 
-  const { summary, rows, assumptions, forecastPeriod, currencyCode } =
+  const {
+    summary,
+    rows,
+    assumptions,
+    forecastPeriod,
+    currencyCode,
+    economicSnapshot,
+  } =
     useLoaderData() as LoaderData & {
       assumptions: Assumptions;
       forecastPeriod: number;
@@ -358,7 +365,9 @@ export default function ForecastingPage() {
       sum + Math.max(0, safeNumber(row.targetDelta)) * safeNumber(row.qty),
     0,
   );
-  const monthlyRecoverableProfit = recoverableProfitInPeriod * monthlyFactor;
+  const monthlyRecoverableProfit =
+    economicSnapshot?.totals.monthlyOpportunity ??
+    recoverableProfitInPeriod * monthlyFactor;
 
   const impactedProducts = rows.filter(
     (row) => safeNumber(row.targetDelta) > 0,
@@ -595,14 +604,16 @@ export default function ForecastingPage() {
     monthlyRevenue,
   );
 
-  const dataConfidence = clamp(
-    45 +
-      Math.min(25, rows.length * 1.5) +
-      (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
-      (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
-    45,
-    98,
-  );
+  const dataConfidence =
+    economicSnapshot?.confidence.score ??
+    clamp(
+      45 +
+        Math.min(25, rows.length * 1.5) +
+        (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
+        (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
+      45,
+      98,
+    );
 
   const health =
     finalPoint.netMargin >= 20
