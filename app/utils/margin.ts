@@ -2,6 +2,7 @@ import {
   formatMoney,
   formatPercent,
 } from "~/utils/formatting";
+import type { EconomicSnapshot } from "~/utils/economic-snapshot";
 
 export type Summary = {
   revenue: number;
@@ -146,6 +147,7 @@ export type LoaderData = {
   currencyCode: string;
   timeZone: string;
   analysisContext?: AnalysisContext;
+  economicSnapshot?: EconomicSnapshot;
 };
 
 export function money(

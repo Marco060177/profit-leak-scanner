@@ -492,7 +492,14 @@ function TopPriority({
 }
 
 export default function RecommendationsPage() {
-  const { summary, rows, period, currencyCode, shopHandle } =
+  const {
+    summary,
+    rows,
+    period,
+    currencyCode,
+    shopHandle,
+    economicSnapshot,
+  } =
     useLoaderData() as LoaderData;
   const navigate = useNavigate();
   const language = getStoredLanguage() === "it" ? "it" : "en";
@@ -546,11 +553,31 @@ export default function RecommendationsPage() {
 
   const topAlert = queueAlerts[0];
 
+  // The headline comes from the shared economic model. Individual alerts
+  // remain useful for prioritization, but their impacts can overlap and must
+  // not be added together or promoted as the store-wide opportunity total.
   const headlineMonthlyOpportunity =
+    economicSnapshot?.totals.monthlyOpportunity ??
     aggregateRecovery?.monthlyImpact ??
     Math.max(0, ...queueAlerts.map((alert) => alert.monthlyImpact));
 
   const annualOpportunity = headlineMonthlyOpportunity * 12;
+
+  const snapshotConfidence = economicSnapshot?.confidence;
+  const confidenceScore = snapshotConfidence?.score ?? 0;
+  const opportunityIsVerified = snapshotConfidence?.level === "high";
+  const confidenceLevelLabel =
+    snapshotConfidence?.level === "high"
+      ? language === "it"
+        ? "Alta"
+        : "High"
+      : snapshotConfidence?.level === "medium"
+        ? language === "it"
+          ? "Media"
+          : "Medium"
+        : language === "it"
+          ? "Bassa"
+          : "Low";
 
   const totalMinutes = queueAlerts.reduce(
     (sum, alert) => sum + alert.estimatedMinutes,
@@ -773,8 +800,12 @@ export default function RecommendationsPage() {
                 }}
               >
                 {language === "it"
-                  ? "OPPORTUNITÀ MENSILE VERIFICATA"
-                  : "VERIFIED MONTHLY OPPORTUNITY"}
+                  ? opportunityIsVerified
+                    ? "OPPORTUNITÀ MENSILE VERIFICATA"
+                    : "OPPORTUNITÀ MENSILE STIMATA"
+                  : opportunityIsVerified
+                    ? "VERIFIED MONTHLY OPPORTUNITY"
+                    : "ESTIMATED MONTHLY OPPORTUNITY"}
               </div>
 
               <div
@@ -808,6 +839,50 @@ export default function RecommendationsPage() {
                       annualOpportunity,
                     )}.`}
               </p>
+
+              {snapshotConfidence && (
+                <div
+                  style={{
+                    marginTop: 15,
+                    display: "flex",
+                    gap: 9,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <TinyBadge
+                    color={
+                      snapshotConfidence.level === "high"
+                        ? "#22c55e"
+                        : snapshotConfidence.level === "medium"
+                          ? "#f59e0b"
+                          : "#fb7185"
+                    }
+                  >
+                    {language === "it" ? "Affidabilità" : "Confidence"}: {confidenceScore}% · {confidenceLevelLabel}
+                  </TinyBadge>
+
+                  <TinyBadge color="#60a5fa">
+                    {language === "it" ? "Copertura COGS" : "COGS coverage"}: {pct(snapshotConfidence.cogsCoveragePct)}
+                  </TinyBadge>
+
+                  <TinyBadge
+                    color={
+                      snapshotConfidence.comparisonAvailable
+                        ? "#a78bfa"
+                        : "#94a3b8"
+                    }
+                  >
+                    {snapshotConfidence.comparisonAvailable
+                      ? language === "it"
+                        ? "Confronto disponibile"
+                        : "Comparison available"
+                      : language === "it"
+                        ? "Confronto non disponibile"
+                        : "Comparison unavailable"}
+                  </TinyBadge>
+                </div>
+              )}
 
               <div
                 style={{

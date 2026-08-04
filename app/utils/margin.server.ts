@@ -2,6 +2,7 @@ import type { LoaderData, Row, TrendPoint } from "~/utils/margin";
 
 import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
+import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 
 type OrderEdge = { node?: any };
 
@@ -194,7 +195,7 @@ async function fetchAllOrders(admin: any, query: string) {
   let after: string | null = null;
 
   do {
-    const response = await admin.graphql(ORDERS_QUERY, {
+    const response: Response = await admin.graphql(ORDERS_QUERY, {
       variables: { q: query, after },
     });
 
@@ -619,7 +620,7 @@ export async function loadMarginDashboardData({
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  return {
+  const loaderData: LoaderData = {
     summary: {
       // Compatibility aliases used by the current UI:
       // revenue = net product revenue after discounts and product refunds
@@ -709,5 +710,16 @@ export async function loadMarginDashboardData({
       comparisonAvailable:
         current.orderCount > 0 && previous.orderCount > 0,
     },
+  };
+
+  return {
+    ...loaderData,
+    economicSnapshot: buildEconomicSnapshot({
+      summary: loaderData.summary,
+      rows: loaderData.rows,
+      period: loaderData.period,
+      currencyCode: loaderData.currencyCode,
+      analysisContext: loaderData.analysisContext,
+    }),
   };
 }

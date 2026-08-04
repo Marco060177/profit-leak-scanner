@@ -651,7 +651,7 @@ function AlertCard({
 }
 
 export default function AlertCenterPage() {
-    const { summary, rows, period } =
+    const { summary, rows, period, currencyCode, economicSnapshot } =
         useLoaderData() as LoaderData;
 
     const navigate = useNavigate();
@@ -724,11 +724,42 @@ export default function AlertCenterPage() {
         showAcknowledged,
     ]);
 
-    const totalMonthlyImpact = alerts.reduce(
-        (sum, alert) =>
-            sum + Math.max(0, alert.monthlyImpact),
-        0,
-    );
+    const economicTotals = economicSnapshot?.totals ?? {
+        monthlyLoss: 0,
+        monthlyExposure: 0,
+        monthlyOpportunity: 0,
+    };
+
+    const dataConfidence = economicSnapshot?.confidence ?? {
+        score: 0,
+        level: "low" as const,
+        cogsCoveragePct: 0,
+        comparisonAvailable: false,
+    };
+
+    const confidenceLabel =
+        dataConfidence.level === "high"
+            ? language === "it"
+                ? "Alta"
+                : "High"
+            : dataConfidence.level === "medium"
+                ? language === "it"
+                    ? "Media"
+                    : "Medium"
+                : language === "it"
+                    ? "Bassa"
+                    : "Low";
+
+    const confidenceColor =
+        dataConfidence.level === "high"
+            ? "#22c55e"
+            : dataConfidence.level === "medium"
+                ? "#f59e0b"
+                : "#ff6b4a";
+
+    const locale = language === "it" ? "it-IT" : "en-US";
+    const storeMoney = (value: number) =>
+        money(value, currencyCode, locale);
 
     const criticalCount = severityCounts.critical;
     const warningCount = severityCounts.warning;
@@ -1023,8 +1054,8 @@ export default function AlertCenterPage() {
                                 }}
                             >
                                 {language === "it"
-                                    ? "IMPATTO COMPLESSIVO MENSILE"
-                                    : "TOTAL MONTHLY IMPACT"}
+                                    ? "IMPATTI ECONOMICI MENSILI"
+                                    : "MONTHLY ECONOMIC IMPACTS"}
                             </div>
 
                             <div
@@ -1037,7 +1068,17 @@ export default function AlertCenterPage() {
                                     letterSpacing: "-0.055em",
                                 }}
                             >
-                                {money(totalMonthlyImpact)}
+                                <span style={{ color: "#ff6b4a" }}>
+                                    {storeMoney(economicTotals.monthlyLoss)}
+                                </span>
+                                <span style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}>·</span>
+                                <span style={{ color: "#f59e0b" }}>
+                                    {storeMoney(economicTotals.monthlyExposure)}
+                                </span>
+                                <span style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}>·</span>
+                                <span style={{ color: "#22c55e" }}>
+                                    {storeMoney(economicTotals.monthlyOpportunity)}
+                                </span>
                             </div>
 
                             <div
@@ -1051,8 +1092,38 @@ export default function AlertCenterPage() {
                                 }}
                             >
                                 {language === "it"
-                                    ? "Somma indicativa dei rischi e delle opportunità rilevate nel periodo selezionato."
-                                    : "Indicative total of risks and opportunities detected during the selected period."}
+                                    ? "Perdita · esposizione · opportunità. Valori distinti e non sommabili."
+                                    : "Loss · exposure · opportunity. Separate, non-additive values."}
+                            </div>
+
+                            <div
+                                style={{
+                                    marginTop: 15,
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                    gap: 9,
+                                }}
+                            >
+                                <TinyBadge color={confidenceColor}>
+                                    {language === "it"
+                                        ? `AFFIDABILITÀ ${dataConfidence.score}% · ${confidenceLabel}`
+                                        : `CONFIDENCE ${dataConfidence.score}% · ${confidenceLabel}`}
+                                </TinyBadge>
+
+                                <TinyBadge color="#60a5fa">
+                                    {language === "it"
+                                        ? `COPERTURA COGS ${Math.round(dataConfidence.cogsCoveragePct)}%`
+                                        : `COGS COVERAGE ${Math.round(dataConfidence.cogsCoveragePct)}%`}
+                                </TinyBadge>
+
+                                {!dataConfidence.comparisonAvailable ? (
+                                    <TinyBadge color="#94a3b8">
+                                        {language === "it"
+                                            ? "CONFRONTO NON DISPONIBILE"
+                                            : "COMPARISON UNAVAILABLE"}
+                                    </TinyBadge>
+                                ) : null}
                             </div>
                         </div>
                     </div>
