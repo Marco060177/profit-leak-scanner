@@ -798,13 +798,17 @@ export default function ForecastingPage() {
                   ? "Profitto aggiuntivo cumulativo"
                   : "Cumulative Profit Lift"
               }
-              value={`+${money(Math.max(0, finalPoint.cumulativeLift))}`}
+              value={
+                finalPoint.cumulativeLift > 0
+                  ? `+${money(finalPoint.cumulativeLift)}`
+                  : money(finalPoint.cumulativeLift)
+              }
               note={
                 language === "it"
                   ? `Impatto totale nei prossimi ${horizon} mesi`
                   : `Total impact across the next ${horizon} months`
               }
-              highlighted
+              highlighted={finalPoint.cumulativeLift >= 0}
             />
 
             <MetricCard
