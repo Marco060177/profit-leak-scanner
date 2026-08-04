@@ -431,7 +431,6 @@ export default function ForecastingPage() {
     }> = [];
 
     let cumulativeNetProfit = 0;
-    let baselineCumulativeNetProfit = 0;
 
     for (let month = 1; month <= horizon; month += 1) {
       const revenueGrowthFactor = Math.pow(
@@ -471,18 +470,7 @@ export default function ForecastingPage() {
 
       const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
-      const baselineRevenue = monthlyRevenue * revenueGrowthFactor;
-      const baselineForecastGrossProfit =
-        baselineRevenue *
-        (monthlyRevenue > 0 ? monthlyGrossProfit / monthlyRevenue : 0);
-
-      const baselineNetProfit =
-        baselineForecastGrossProfit -
-        fixedCosts -
-        baselineRevenue * (variableFeePct / 100);
-
       cumulativeNetProfit += netProfit;
-      baselineCumulativeNetProfit += baselineNetProfit;
 
       points.push({
         month,
@@ -491,13 +479,15 @@ export default function ForecastingPage() {
         netProfit,
         netMargin,
         cumulativeNetProfit,
-        cumulativeLift: cumulativeNetProfit - baselineCumulativeNetProfit,
+        cumulativeLift:
+          cumulativeNetProfit - currentMonthlyNetProfit * month,
       });
     }
 
     return points;
   }, [
     horizon,
+    currentMonthlyNetProfit,
     marginImprovement,
     monthlyCostGrowth,
     monthlyFixedCosts,
