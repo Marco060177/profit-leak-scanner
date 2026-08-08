@@ -451,7 +451,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci la pubblicità del 10%"
           : "Reduce advertising by 10%",
-      impact: monthlyAds * periodFractionOfMonth * 0.1,
+      impact: roundCsvNumber(monthlyAds * periodFractionOfMonth * 0.1),
       note:
         language === "it"
           ? "Effetto mensile immediato"
@@ -463,7 +463,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci le spedizioni del 10%"
           : "Reduce shipping by 10%",
-      impact: monthlyShipping * periodFractionOfMonth * 0.1,
+      impact: roundCsvNumber(monthlyShipping * periodFractionOfMonth * 0.1),
       note:
         language === "it"
           ? "Miglioramento operativo"
@@ -475,7 +475,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci le commissioni dello 0,5%"
           : "Reduce fees by 0.5%",
-      impact: summary.revenue * 0.005,
+      impact: roundCsvNumber(summary.revenue * 0.005),
       note:
         language === "it"
           ? "Rinegoziazione o cambio provider"
