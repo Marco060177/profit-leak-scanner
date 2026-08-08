@@ -262,11 +262,20 @@ export default function ProfitIntelligencePage() {
     const csvCell = (value: string | number | boolean | null | undefined) => {
       if (value === null || value === undefined) return "";
 
+      if (typeof value === "number") {
+        return Number.isFinite(value) ? String(value) : "";
+      }
+
       const text = String(value);
       const excelSafe = /^[=+\-@]/.test(text) ? `'${text}` : text;
 
       return `"${excelSafe.replace(/"/g, '""')}"`;
     };
+
+    const round2 = (value: number | null | undefined) =>
+      value === null || value === undefined || !Number.isFinite(value)
+        ? null
+        : Math.round((value + Number.EPSILON) * 100) / 100;
 
     const line = (values: Array<string | number | boolean | null | undefined>) =>
       values.map(csvCell).join(",");
@@ -294,43 +303,43 @@ export default function ProfitIntelligencePage() {
 
     const summaryRows = language === "it"
       ? [
-          ["Ricavi", summary.revenue],
-          ["COGS", summary.cogs],
-          ["Profitto", summary.profit],
-          ["Margine %", summary.marginPct],
-          ["Sconti", summary.discounts],
-          ["Rimborsi", summary.refunds],
-          ["Spedizione", summary.shipping],
-          ["Imposte registrate", summary.taxes],
-          ["Perdita totale", summary.totalLeak],
+          ["Ricavi", round2(summary.revenue)],
+          ["COGS", round2(summary.cogs)],
+          ["Profitto", round2(summary.profit)],
+          ["Margine %", round2(summary.marginPct)],
+          ["Sconti", round2(summary.discounts)],
+          ["Rimborsi", round2(summary.refunds)],
+          ["Spedizione", round2(summary.shipping)],
+          ["Imposte registrate", round2(summary.taxes)],
+          ["Perdita totale", round2(summary.totalLeak)],
           ["Prodotti in perdita", summary.losingCount],
           ["Prodotti senza costo", summary.missingCostCount],
-          ["Margine precedente %", summary.previousMarginPct],
-          ["Variazione margine (punti)", summary.marginDelta],
-          ["Variazione ricavi %", summary.revenueDeltaPct],
+          ["Margine precedente %", round2(summary.previousMarginPct)],
+          ["Variazione margine (punti)", round2(summary.marginDelta)],
+          ["Variazione ricavi %", round2(summary.revenueDeltaPct)],
           ["Indice di redditività", intelligenceScore],
-          ["Dipendenza ricavi top 3 %", top3RevenueShare],
-          ["Dipendenza profitti top 3 %", top3ProfitShare],
+          ["Dipendenza ricavi top 3 %", round2(top3RevenueShare)],
+          ["Dipendenza profitti top 3 %", round2(top3ProfitShare)],
           ["Qualità dei margini", profitQualityLevelLabel],
         ]
       : [
-          ["Revenue", summary.revenue],
-          ["COGS", summary.cogs],
-          ["Profit", summary.profit],
-          ["Margin %", summary.marginPct],
-          ["Discounts", summary.discounts],
-          ["Refunds", summary.refunds],
-          ["Shipping", summary.shipping],
-          ["Recorded taxes", summary.taxes],
-          ["Total leak", summary.totalLeak],
+          ["Revenue", round2(summary.revenue)],
+          ["COGS", round2(summary.cogs)],
+          ["Profit", round2(summary.profit)],
+          ["Margin %", round2(summary.marginPct)],
+          ["Discounts", round2(summary.discounts)],
+          ["Refunds", round2(summary.refunds)],
+          ["Shipping", round2(summary.shipping)],
+          ["Recorded taxes", round2(summary.taxes)],
+          ["Total leak", round2(summary.totalLeak)],
           ["Losing products", summary.losingCount],
           ["Products missing cost", summary.missingCostCount],
-          ["Previous margin %", summary.previousMarginPct],
-          ["Margin change (points)", summary.marginDelta],
-          ["Revenue change %", summary.revenueDeltaPct],
+          ["Previous margin %", round2(summary.previousMarginPct)],
+          ["Margin change (points)", round2(summary.marginDelta)],
+          ["Revenue change %", round2(summary.revenueDeltaPct)],
           ["Profit Intelligence Score", intelligenceScore],
-          ["Top 3 revenue dependency %", top3RevenueShare],
-          ["Top 3 profit dependency %", top3ProfitShare],
+          ["Top 3 revenue dependency %", round2(top3RevenueShare)],
+          ["Top 3 profit dependency %", round2(top3ProfitShare)],
           ["Margin quality", profitQualityLevelLabel],
         ];
 
@@ -358,21 +367,21 @@ export default function ProfitIntelligencePage() {
       row.productTitle,
       row.productId,
       row.qty,
-      row.revenue,
-      row.cogs,
-      row.discounts,
-      row.refunds,
-      row.profit,
-      row.marginPct,
-      row.previousMarginPct,
-      row.productMarginDelta,
-      row.revenueSharePct ?? (row.revenue / totalRevenue) * 100,
-      row.profitSharePct ?? (row.profit / totalProfitBase) * 100,
-      row.avgPrice,
-      row.avgCost,
-      row.breakEvenPrice,
-      row.targetPrice,
-      row.targetDelta,
+      round2(row.revenue),
+      round2(row.cogs),
+      round2(row.discounts),
+      round2(row.refunds),
+      round2(row.profit),
+      round2(row.marginPct),
+      round2(row.previousMarginPct),
+      round2(row.productMarginDelta),
+      round2(row.revenueSharePct ?? (row.revenue / totalRevenue) * 100),
+      round2(row.profitSharePct ?? (row.profit / totalProfitBase) * 100),
+      round2(row.avgPrice),
+      round2(row.avgCost),
+      round2(row.breakEvenPrice),
+      round2(row.targetPrice),
+      round2(row.targetDelta),
       row.losing ? yes : no,
       row.lowMargin ? yes : no,
       row.missingCost ? yes : no,
