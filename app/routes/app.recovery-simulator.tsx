@@ -692,6 +692,125 @@ export default function RecoverySimulatorPage() {
     setSavedScenarios((current) => current.filter((item) => item.id !== id));
   };
 
+  const exportCurrentScenario = () => {
+    type CsvValue = string | number;
+
+    const round = (value: number, digits = 2) => {
+      const factor = 10 ** digits;
+      return Math.round((safeNumber(value) + Number.EPSILON) * factor) / factor;
+    };
+
+    const csvCell = (value: CsvValue) => {
+      if (typeof value === "number") {
+        return Number.isFinite(value) ? String(value) : "0";
+      }
+
+      const protectedValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+      return `"${protectedValue.replace(/"/g, '""')}"`;
+    };
+
+    const scenarioLabel =
+      scenario === "conservative"
+        ? language === "it"
+          ? "Conservativo"
+          : "Conservative"
+        : scenario === "balanced"
+          ? language === "it"
+            ? "Bilanciato"
+            : "Balanced"
+          : scenario === "aggressive"
+            ? language === "it"
+              ? "Aggressivo"
+              : "Aggressive"
+            : language === "it"
+              ? "Personalizzato"
+              : "Custom";
+
+    const rowsToExport: CsvValue[][] = [
+      ["MarginLab Recovery Simulator"],
+      [],
+      [language === "it" ? "METADATI" : "METADATA"],
+      [language === "it" ? "Voce" : "Field", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Store" : "Store", loaderData.shopHandle || ""],
+      [language === "it" ? "Data esportazione" : "Export date", new Date().toISOString()],
+      [language === "it" ? "Periodo osservato (giorni)" : "Observed period (days)", periodDays],
+      [language === "it" ? "Valuta" : "Currency", currencyCode],
+      [language === "it" ? "Lingua" : "Language", language.toUpperCase()],
+      [language === "it" ? "Scenario" : "Scenario", scenarioLabel],
+      [],
+      [language === "it" ? "PRODOTTO E BASELINE" : "PRODUCT AND BASELINE"],
+      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Prodotto" : "Product", selectedProduct.productTitle],
+      ["Product ID", selectedProduct.productId],
+      [language === "it" ? "Prezzo attuale" : "Current price", round(currentPrice)],
+      [language === "it" ? "Costo attuale" : "Current cost", round(currentCost)],
+      [language === "it" ? "Unità nel periodo" : "Units in observed period", round(currentPeriodQty)],
+      [language === "it" ? "Unità mensili normalizzate" : "Normalized monthly units", round(currentMonthlyQty)],
+      [language === "it" ? "Ricavi mensili attuali" : "Current monthly revenue", round(currentMonthlyRevenue)],
+      [language === "it" ? "Profitto mensile attuale" : "Current monthly profit", round(currentMonthlyProfit)],
+      [language === "it" ? "Margine attuale (%)" : "Current margin (%)", round(currentMarginPct)],
+      [],
+      [language === "it" ? "IPOTESI DELLO SCENARIO" : "SCENARIO ASSUMPTIONS"],
+      [language === "it" ? "Voce" : "Assumption", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Prezzo simulato" : "Simulated price", round(simulatedPrice)],
+      [language === "it" ? "Variazione prezzo (%)" : "Price change (%)", round(priceChangePct)],
+      [language === "it" ? "Riduzione costo (%)" : "Cost reduction (%)", round(costReductionPct)],
+      [language === "it" ? "Variazione vendite (%)" : "Sales change (%)", round(salesChangePct)],
+      [language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)", round(loaderData.assumptions.paymentFeePct)],
+      [language === "it" ? "Commissioni transazione (%)" : "Transaction fees (%)", round(loaderData.assumptions.transactionFeePct)],
+      [language === "it" ? "Riserva fiscale (%)" : "Tax reserve (%)", round(loaderData.assumptions.taxReservePct)],
+      [],
+      [language === "it" ? "RISULTATO SIMULATO" : "SIMULATED RESULT"],
+      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Costo simulato" : "Simulated cost", round(simulatedCost)],
+      [language === "it" ? "Unità mensili simulate" : "Simulated monthly units", round(simulatedMonthlyQty)],
+      [language === "it" ? "Ricavi mensili simulati" : "Simulated monthly revenue", round(simulatedMonthlyRevenue)],
+      [language === "it" ? "Profitto mensile simulato" : "Simulated monthly profit", round(simulatedMonthlyProfit)],
+      [language === "it" ? "Margine simulato (%)" : "Simulated margin (%)", round(simulatedMarginPct)],
+      [language === "it" ? "Variazione margine (punti %)" : "Margin change (percentage points)", round(marginDelta)],
+      [language === "it" ? "Recupero mensile lordo" : "Gross monthly recovery", round(recoveredMonthlyProfit)],
+      [language === "it" ? "Riserva fiscale mensile" : "Monthly tax reserve", round(taxReserveMonthly)],
+      [language === "it" ? "Recupero mensile netto" : "Net monthly recovery", round(netRecoveredMonthlyProfit)],
+      [language === "it" ? "Recupero annuale netto" : "Net annual recovery", round(netRecoveredAnnualProfit)],
+      [language === "it" ? "Salute del profitto" : "Profit health", profitHealth],
+      [language === "it" ? "Rischio commerciale" : "Commercial risk", riskLabel],
+      [language === "it" ? "Punteggio rischio commerciale" : "Commercial risk score", commercialRiskScore],
+      [language === "it" ? "Data Confidence" : "Data Confidence", dataConfidenceScore],
+      [language === "it" ? "Livello Data Confidence" : "Data Confidence level", confidenceLabel],
+      [],
+      [language === "it" ? "IMPATTO ANNUALE PER LEVA" : "ANNUAL IMPACT BY LEVER"],
+      [language === "it" ? "Leva" : "Lever", language === "it" ? "Importo" : "Amount"],
+      ...recoveryBreakdown.map((item) => [item.label, round(item.value)] as CsvValue[]),
+      [],
+      [language === "it" ? "RACCOMANDAZIONE" : "RECOMMENDATION"],
+      [recommendation],
+      [],
+      [
+        language === "it"
+          ? "Nota: questo file contiene una simulazione, non risultati osservati. MarginLab non modifica automaticamente prezzi o costi."
+          : "Note: this file contains a simulation, not observed results. MarginLab does not automatically change prices or costs.",
+      ],
+    ];
+
+    const csv = `\uFEFF${rowsToExport
+      .map((row) => row.map(csvCell).join(","))
+      .join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeProductName = selectedProduct.productTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48);
+    link.href = url;
+    link.download = `${loaderData.shopHandle || "store"}-recovery-scenario-${safeProductName || "product"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="dashboard-shell">
       <style>{`
@@ -1506,6 +1625,24 @@ export default function RecoverySimulatorPage() {
                     : "Comparison between the current situation and the simulated scenario."}
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={exportCurrentScenario}
+                style={{
+                  minHeight: 42,
+                  padding: "0 15px",
+                  borderRadius: 13,
+                  cursor: "pointer",
+                  color: "#f8fafc",
+                  background: "rgba(255,255,255,0.055)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  fontSize: 12,
+                  fontWeight: 900,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {language === "it" ? "Esporta scenario CSV" : "Export scenario CSV"}
+              </button>
             </div>
 
             <div
@@ -2338,10 +2475,10 @@ export default function RecoverySimulatorPage() {
                         simulatedMarginPct >= 20 ? "#22c55e" : "#f59e0b",
                     }}
                   />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
           <div
             style={{
