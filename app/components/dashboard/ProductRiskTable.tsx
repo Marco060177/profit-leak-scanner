@@ -79,12 +79,14 @@ export default function ProductRiskTable({
   const language = getStoredLanguage();
 
   function translatedSuggestion(row: Row) {
-    if (language !== "it") {
-      return row.suggestion;
+    if (row.missingCost) {
+      return language === "it"
+        ? "Inserisci il costo del prodotto in Shopify"
+        : "Add the product cost in Shopify";
     }
 
-    if (row.missingCost) {
-      return "Manca il costo di questo prodotto. Inserisci il costo in Shopify per ottenere un monitoraggio accurato dei margini e un'analisi del rischio affidabile.";
+    if (language !== "it") {
+      return row.suggestion;
     }
 
     if (row.profit < 0) {
