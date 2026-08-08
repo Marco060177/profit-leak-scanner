@@ -886,19 +886,10 @@ export default function RecommendationsPage() {
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
-              className="secondary-button"
-              onClick={exportRecommendationsCsv}
-            >
-              {language === "it"
-                ? "Esporta Recommendations CSV"
-                : "Export Recommendations CSV"}
-            </button>
-
-            <button
               className="primary-button"
               onClick={() => navigate("/app/billing")}
             >
-              {language === "it" ? "Gestisci il piano →" : "Manage plan →"}
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
             </button>
           </div>
         </div>
@@ -926,16 +917,34 @@ export default function RecommendationsPage() {
             <div>
               <div
                 style={{
-                  color: "#4ade80",
-                  fontSize: 10,
-                  fontWeight: 950,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 14,
+                  flexWrap: "wrap",
                 }}
               >
-                {language === "it"
-                  ? "OPPORTUNITÀ MENSILE STIMATA"
-                  : "ESTIMATED MONTHLY OPPORTUNITY"}
+                <div
+                  style={{
+                    color: "#4ade80",
+                    fontSize: 10,
+                    fontWeight: 950,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it"
+                    ? "OPPORTUNITÀ MENSILE STIMATA"
+                    : "ESTIMATED MONTHLY OPPORTUNITY"}
+                </div>
+
+                <button
+                  className="secondary-button"
+                  onClick={exportRecommendationsCsv}
+                  style={{ padding: "10px 14px", fontSize: 12 }}
+                >
+                  {language === "it" ? "Esporta CSV" : "Export CSV"}
+                </button>
               </div>
 
               <div
