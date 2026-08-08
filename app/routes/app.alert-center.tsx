@@ -666,7 +666,7 @@ function AlertCard({
 }
 
 export default function AlertCenterPage() {
-    const { summary, rows, period, currencyCode, economicSnapshot } =
+    const { summary, rows, period, currencyCode, economicSnapshot, shopHandle } =
         useLoaderData() as LoaderData;
 
     const navigate = useNavigate();
@@ -849,6 +849,231 @@ export default function AlertCenterPage() {
             markAllProfitAlertsAsRead();
 
         setAlertStates(nextStates);
+    };
+
+    const handleExportCsv = () => {
+        const round2 = (value: number) =>
+            Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
+
+        const csvCell = (
+            value: string | number | boolean | null | undefined,
+        ) => {
+            if (typeof value === "number") return String(round2(value));
+            if (typeof value === "boolean") return value ? "true" : "false";
+
+            let text = value == null ? "" : String(value);
+
+            if (/^[=+@\t\r]/.test(text) || /^-\D/.test(text)) {
+                text = `'${text}`;
+            }
+
+            return `"${text.replace(/"/g, '""')}"`;
+        };
+
+        const csvRow = (
+            values: Array<string | number | boolean | null | undefined>,
+        ) => values.map(csvCell).join(",");
+
+        const dateTime = (value: string | undefined) => {
+            if (!value) return "";
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? ""
+                : date.toLocaleString(locale);
+        };
+
+        const severityLabel = (severity: ProfitAlertSeverity) =>
+            getSeverityStyle(severity, language).label;
+
+        const statusLabel = (status: ProfitAlertStatus) =>
+            getAlertStatusStyle(status, language).label;
+
+        const economicKindLabel = (kind: ProfitAlert["economicKind"]) => {
+            if (language === "it") {
+                if (kind === "loss") return "Perdita";
+                if (kind === "opportunity") return "Opportunità";
+                if (kind === "exposure") return "Esposizione";
+                return "Qualitativo";
+            }
+
+            if (kind === "loss") return "Loss";
+            if (kind === "opportunity") return "Opportunity";
+            if (kind === "exposure") return "Exposure";
+            return "Qualitative";
+        };
+
+        const labels = language === "it"
+            ? {
+                report: "Report",
+                store: "Store",
+                period: "Periodo (giorni)",
+                currency: "Valuta",
+                language: "Lingua",
+                generated: "Generato il",
+                storage: "Storico stati",
+                storageValue: "Browser corrente (localStorage)",
+                summary: "RIEPILOGO",
+                metric: "Metrica",
+                value: "Valore",
+                total: "Alert totali",
+                unread: "Non letti",
+                active: "Attivi",
+                acknowledged: "Presi in carico",
+                resolved: "Risolti",
+                critical: "Critici",
+                warnings: "Attenzione",
+                opportunities: "Opportunità",
+                information: "Informazioni",
+                monthlyLoss: "Perdita mensile stimata",
+                monthlyExposure: "Esposizione mensile stimata",
+                monthlyOpportunity: "Opportunità mensile stimata",
+                confidence: "Affidabilità dati",
+                cogsCoverage: "Copertura COGS",
+                alerts: "DETTAGLIO ALERT",
+                columns: [
+                    "ID", "Titolo", "Descrizione", "Categoria", "Severità",
+                    "Stato", "Letto", "Natura economica", "Importo economico mensile",
+                    "Priorità", "Azione", "Prodotto", "Tempo stimato (min)",
+                    "Modulo consigliato", "Percorso", "Prima rilevazione",
+                    "Ultima rilevazione", "Preso in carico il", "Risolto il",
+                ],
+            }
+            : {
+                report: "Report",
+                store: "Store",
+                period: "Period (days)",
+                currency: "Currency",
+                language: "Language",
+                generated: "Generated at",
+                storage: "Status history",
+                storageValue: "Current browser (localStorage)",
+                summary: "SUMMARY",
+                metric: "Metric",
+                value: "Value",
+                total: "Total alerts",
+                unread: "Unread",
+                active: "Active",
+                acknowledged: "Acknowledged",
+                resolved: "Resolved",
+                critical: "Critical",
+                warnings: "Warnings",
+                opportunities: "Opportunities",
+                information: "Information",
+                monthlyLoss: "Estimated monthly loss",
+                monthlyExposure: "Estimated monthly exposure",
+                monthlyOpportunity: "Estimated monthly opportunity",
+                confidence: "Data confidence",
+                cogsCoverage: "COGS coverage",
+                alerts: "ALERT DETAILS",
+                columns: [
+                    "ID", "Title", "Description", "Category", "Severity",
+                    "Status", "Read", "Economic kind", "Monthly economic amount",
+                    "Priority", "Business action", "Product", "Estimated time (min)",
+                    "Recommended module", "Route", "First seen", "Last seen",
+                    "Acknowledged at", "Resolved at",
+                ],
+            };
+
+        const currentAlertIds = new Set(alerts.map((alert) => alert.id));
+        const historicalStateRows = Object.values(alertStates)
+            .filter((state) => !currentAlertIds.has(state.alertId))
+            .map((state) =>
+                csvRow([
+                    state.alertId,
+                    "",
+                    "",
+                    "",
+                    "",
+                    statusLabel(state.status),
+                    state.isRead,
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    dateTime(state.firstSeenAt),
+                    dateTime(state.lastSeenAt),
+                    dateTime(state.acknowledgedAt),
+                    dateTime(state.resolvedAt),
+                ]),
+            );
+
+        const output = [
+            csvRow([labels.report, "MarginLab Alert Center"]),
+            csvRow([labels.store, shopHandle || ""]),
+            csvRow([labels.period, period]),
+            csvRow([labels.currency, currencyCode]),
+            csvRow([labels.language, language === "it" ? "Italiano" : "English"]),
+            csvRow([labels.generated, new Date().toLocaleString(locale)]),
+            csvRow([labels.storage, labels.storageValue]),
+            "",
+            csvRow([labels.summary]),
+            csvRow([labels.metric, labels.value]),
+            csvRow([labels.total, severityCounts.total]),
+            csvRow([labels.unread, lifecycleCounts.unread]),
+            csvRow([labels.active, lifecycleCounts.active]),
+            csvRow([labels.acknowledged, lifecycleCounts.acknowledged]),
+            csvRow([labels.resolved, lifecycleCounts.resolved]),
+            csvRow([labels.critical, severityCounts.critical]),
+            csvRow([labels.warnings, severityCounts.warning]),
+            csvRow([labels.opportunities, severityCounts.opportunity]),
+            csvRow([labels.information, severityCounts.info]),
+            csvRow([labels.monthlyLoss, economicTotals.monthlyLoss]),
+            csvRow([labels.monthlyExposure, economicTotals.monthlyExposure]),
+            csvRow([labels.monthlyOpportunity, economicTotals.monthlyOpportunity]),
+            csvRow([labels.confidence, dataConfidence.score]),
+            csvRow([labels.cogsCoverage, dataConfidence.cogsCoveragePct]),
+            "",
+            csvRow([labels.alerts]),
+            csvRow(labels.columns),
+            ...alerts.map((alert) => {
+                const state = alertStates[alert.id];
+                const status = state?.status ?? "new";
+
+                return csvRow([
+                    alert.id,
+                    alert.title,
+                    alert.description,
+                    alert.category,
+                    severityLabel(alert.severity),
+                    statusLabel(status),
+                    state ? state.isRead : false,
+                    economicKindLabel(alert.economicKind),
+                    alert.monthlyImpact,
+                    alert.priority,
+                    alert.businessAction,
+                    alert.productTitle ?? (language === "it" ? "Intero store" : "Store-wide"),
+                    alert.estimatedMinutes,
+                    alert.recommendedModule,
+                    alert.route,
+                    dateTime(state?.firstSeenAt),
+                    dateTime(state?.lastSeenAt),
+                    dateTime(state?.acknowledgedAt),
+                    dateTime(state?.resolvedAt),
+                ]);
+            }),
+            ...historicalStateRows,
+        ].join("\r\n");
+
+        const blob = new Blob([`\uFEFF${output}`], {
+            type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const safeShop = (shopHandle || "store")
+            .replace(/[^a-z0-9_-]+/gi, "-")
+            .replace(/^-+|-+$/g, "")
+            .toLowerCase();
+
+        link.href = url;
+        link.download = `${safeShop}-alert-center-${period}d.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
     };
 
     const filters: Array<{
@@ -1248,32 +1473,52 @@ export default function AlertCenterPage() {
                             </h2>
                         </div>
 
-                        <label
+                        <div
                             style={{
-                                display: "inline-flex",
+                                display: "flex",
                                 alignItems: "center",
-                                gap: 9,
-                                color:
-                                    "rgba(255,255,255,0.55)",
-                                fontSize: 11,
-                                fontWeight: 800,
-                                cursor: "pointer",
+                                gap: 10,
+                                flexWrap: "wrap",
+                                justifyContent: "flex-end",
                             }}
                         >
-                            <input
-                                type="checkbox"
-                                checked={showAcknowledged}
-                                onChange={(event) =>
-                                    setShowAcknowledged(
-                                        event.target.checked,
-                                    )
-                                }
-                            />
+                            <label
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 9,
+                                    color:
+                                        "rgba(255,255,255,0.55)",
+                                    fontSize: 11,
+                                    fontWeight: 800,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={showAcknowledged}
+                                    onChange={(event) =>
+                                        setShowAcknowledged(
+                                            event.target.checked,
+                                        )
+                                    }
+                                />
 
-                            {language === "it"
-                                ? "Mostra presi in carico"
-                                : "Show acknowledged"}
-                        </label>
+                                {language === "it"
+                                    ? "Mostra presi in carico"
+                                    : "Show acknowledged"}
+                            </label>
+
+                            <button
+                                type="button"
+                                className="apply-button"
+                                onClick={handleExportCsv}
+                            >
+                                {language === "it"
+                                    ? "Esporta CSV"
+                                    : "Export CSV"}
+                            </button>
+                        </div>
                     </div>
 
                     <div
