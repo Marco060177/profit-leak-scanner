@@ -1755,7 +1755,7 @@ export default function RecommendationsPage() {
           }}
         >
           {language === "it"
-            ? "Le opportunità sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
+            ? "Lee opportunità sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
             : "Opportunities are estimates built from Shopify data for the selected period. Marking an action complete records operational progress; it does not prove recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
         </div>
       </div>
