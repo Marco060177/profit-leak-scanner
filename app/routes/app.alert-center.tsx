@@ -915,18 +915,20 @@ export default function AlertCenterPage() {
                 summary: "RIEPILOGO",
                 metric: "Metrica",
                 value: "Valore",
-                total: "Alert totali",
-                unread: "Non letti",
+                currentAlerts: "Alert correnti",
+                newAlerts: "Nuovi",
+                unreadCurrent: "Alert correnti non letti",
                 active: "Attivi",
                 acknowledged: "Presi in carico",
-                resolved: "Risolti",
+                historicalResolved: "Risolti storici",
+                totalExported: "Record totali esportati",
                 critical: "Critici",
                 warnings: "Attenzione",
                 opportunities: "Opportunità",
                 information: "Informazioni",
                 monthlyLoss: "Perdita mensile stimata",
-                monthlyExposure: "Esposizione mensile stimata",
-                monthlyOpportunity: "Opportunità mensile stimata",
+                monthlyExposure: "Esposizione ricavi per costi mancanti",
+                monthlyOpportunity: "Opportunità mensile ufficiale (non cumulabile)",
                 confidence: "Affidabilità dati",
                 cogsCoverage: "Copertura COGS",
                 alerts: "DETTAGLIO ALERT",
@@ -950,18 +952,20 @@ export default function AlertCenterPage() {
                 summary: "SUMMARY",
                 metric: "Metric",
                 value: "Value",
-                total: "Total alerts",
-                unread: "Unread",
+                currentAlerts: "Current alerts",
+                newAlerts: "New",
+                unreadCurrent: "Unread current alerts",
                 active: "Active",
                 acknowledged: "Acknowledged",
-                resolved: "Resolved",
+                historicalResolved: "Historical resolved",
+                totalExported: "Total exported records",
                 critical: "Critical",
                 warnings: "Warnings",
                 opportunities: "Opportunities",
                 information: "Information",
                 monthlyLoss: "Estimated monthly loss",
-                monthlyExposure: "Estimated monthly exposure",
-                monthlyOpportunity: "Estimated monthly opportunity",
+                monthlyExposure: "Missing-cost revenue exposure",
+                monthlyOpportunity: "Official monthly opportunity (non-additive)",
                 confidence: "Data confidence",
                 cogsCoverage: "COGS coverage",
                 alerts: "ALERT DETAILS",
@@ -975,8 +979,26 @@ export default function AlertCenterPage() {
             };
 
         const currentAlertIds = new Set(alerts.map((alert) => alert.id));
-        const historicalStateRows = Object.values(alertStates)
-            .filter((state) => !currentAlertIds.has(state.alertId))
+        const currentStates = alerts.map((alert) =>
+            alertStates[alert.id] ?? {
+                alertId: alert.id,
+                status: "new" as ProfitAlertStatus,
+                isRead: false,
+            },
+        );
+        const currentStatusCounts = {
+            new: currentStates.filter((state) => state.status === "new").length,
+            active: currentStates.filter((state) => state.status === "active").length,
+            acknowledged: currentStates.filter(
+                (state) => state.status === "acknowledged",
+            ).length,
+            unread: currentStates.filter((state) => !state.isRead).length,
+        };
+        const historicalResolvedStates = Object.values(alertStates).filter(
+            (state) =>
+                !currentAlertIds.has(state.alertId) && state.status === "resolved",
+        );
+        const historicalStateRows = historicalResolvedStates
             .map((state) =>
                 csvRow([
                     state.alertId,
@@ -1012,11 +1034,13 @@ export default function AlertCenterPage() {
             "",
             csvRow([labels.summary]),
             csvRow([labels.metric, labels.value]),
-            csvRow([labels.total, severityCounts.total]),
-            csvRow([labels.unread, lifecycleCounts.unread]),
-            csvRow([labels.active, lifecycleCounts.active]),
-            csvRow([labels.acknowledged, lifecycleCounts.acknowledged]),
-            csvRow([labels.resolved, lifecycleCounts.resolved]),
+            csvRow([labels.currentAlerts, alerts.length]),
+            csvRow([labels.newAlerts, currentStatusCounts.new]),
+            csvRow([labels.active, currentStatusCounts.active]),
+            csvRow([labels.acknowledged, currentStatusCounts.acknowledged]),
+            csvRow([labels.historicalResolved, historicalResolvedStates.length]),
+            csvRow([labels.totalExported, alerts.length + historicalResolvedStates.length]),
+            csvRow([labels.unreadCurrent, currentStatusCounts.unread]),
             csvRow([labels.critical, severityCounts.critical]),
             csvRow([labels.warnings, severityCounts.warning]),
             csvRow([labels.opportunities, severityCounts.opportunity]),
