@@ -252,13 +252,12 @@ function ActionMetric({
       <div
         style={{
           marginTop: 11,
-          fontSize: 29,
+          fontSize: value.length >= 9 ? 22 : value.length >= 7 ? 25 : 29,
           fontWeight: 950,
           lineHeight: 1,
           letterSpacing: "-0.04em",
           color: highlight ? "#22c55e" : "#f8fafc",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}
       >
         {value}
@@ -696,6 +695,164 @@ export default function RecommendationsPage() {
         ? `The primary priority is “${topAlert.title}”. MarginLab recommends completing higher-priority work first, validating the effect in the recommended module, and only then moving to optimization opportunities.`
         : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
 
+  const exportRecommendationsCsv = () => {
+    const round = (value: number) =>
+      Number.isFinite(value) ? Math.round(value * 100) / 100 : 0;
+
+    const csvCell = (value: string | number) => {
+      if (typeof value === "number") return String(round(value));
+
+      const safeValue = /^[=+@\t\r]/.test(value) ? `'${value}` : value;
+      return `"${safeValue.replace(/"/g, '""')}"`;
+    };
+
+    const csvRow = (values: Array<string | number>) =>
+      values.map(csvCell).join(",");
+
+    const labels =
+      language === "it"
+        ? {
+            report: "Report",
+            store: "Store",
+            period: "Periodo (giorni)",
+            currency: "Valuta",
+            language: "Lingua",
+            generated: "Generato il",
+            summary: "RIEPILOGO DEL PIANO",
+            metric: "Metrica",
+            value: "Valore",
+            monthlyOpportunity: "Opportunità mensile stimata",
+            annualOpportunity: "Opportunità annuale stimata",
+            confidence: "Data Confidence",
+            totalActions: "Azioni totali",
+            completedActions: "Azioni completate",
+            remainingActions: "Azioni rimanenti",
+            progress: "Avanzamento %",
+            totalTime: "Tempo totale stimato (minuti)",
+            priorities: "PRIORITÀ OPERATIVE",
+            columns: [
+              "Posizione",
+              "ID",
+              "Titolo",
+              "Descrizione",
+              "Categoria",
+              "Stato operativo",
+              "Fase",
+              "Priorità",
+              "Impatto mensile stimato",
+              "Difficoltà",
+              "Tempo stimato (minuti)",
+              "Data Confidence %",
+              "Stato completamento",
+              "Modulo consigliato",
+              "Azione consigliata",
+              "Percorso",
+            ],
+            completed: "Completata",
+            pending: "Da completare",
+          }
+        : {
+            report: "Report",
+            store: "Store",
+            period: "Period (days)",
+            currency: "Currency",
+            language: "Language",
+            generated: "Generated at",
+            summary: "ACTION PLAN SUMMARY",
+            metric: "Metric",
+            value: "Value",
+            monthlyOpportunity: "Estimated monthly opportunity",
+            annualOpportunity: "Estimated annual opportunity",
+            confidence: "Data Confidence",
+            totalActions: "Total actions",
+            completedActions: "Completed actions",
+            remainingActions: "Remaining actions",
+            progress: "Progress %",
+            totalTime: "Total estimated time (minutes)",
+            priorities: "OPERATIONAL PRIORITIES",
+            columns: [
+              "Rank",
+              "ID",
+              "Title",
+              "Description",
+              "Category",
+              "Business status",
+              "Stage",
+              "Priority",
+              "Estimated monthly impact",
+              "Difficulty",
+              "Estimated time (minutes)",
+              "Data Confidence %",
+              "Completion status",
+              "Recommended module",
+              "Recommended action",
+              "Route",
+            ],
+            completed: "Completed",
+            pending: "Pending",
+          };
+
+    const lines = [
+      csvRow([labels.report, "MarginLab Recommendations"]),
+      csvRow([labels.store, shopHandle || ""]),
+      csvRow([labels.period, period]),
+      csvRow([labels.currency, currencyCode]),
+      csvRow([labels.language, language === "it" ? "Italiano" : "English"]),
+      csvRow([labels.generated, new Date().toLocaleString(locale)]),
+      "",
+      csvRow([labels.summary]),
+      csvRow([labels.metric, labels.value]),
+      csvRow([labels.monthlyOpportunity, headlineMonthlyOpportunity]),
+      csvRow([labels.annualOpportunity, annualOpportunity]),
+      csvRow([labels.confidence, confidenceScore]),
+      csvRow([labels.totalActions, queueAlerts.length]),
+      csvRow([labels.completedActions, completedAlerts.length]),
+      csvRow([
+        labels.remainingActions,
+        queueAlerts.length - completedAlerts.length,
+      ]),
+      csvRow([labels.progress, progressPct]),
+      csvRow([labels.totalTime, totalMinutes]),
+      "",
+      csvRow([labels.priorities]),
+      csvRow(labels.columns),
+      ...queueAlerts.map((alert, index) => {
+        const completed = completedIds.includes(alert.id);
+        return csvRow([
+          index + 1,
+          alert.id,
+          alert.title,
+          alert.description,
+          alert.category,
+          getStatusStyle(alert.businessAction, language).label,
+          stageLabels[getActionStage(alert)],
+          alert.priority,
+          alert.monthlyImpact,
+          getEffortLabel(alert.effort, language),
+          alert.estimatedMinutes,
+          confidenceScore,
+          completed ? labels.completed : labels.pending,
+          alert.recommendedModule,
+          alert.actionLabel,
+          alert.route,
+        ]);
+      }),
+    ];
+
+    const blob = new Blob(["\uFEFF", lines.join("\r\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeShop = (shopHandle || "store").replace(/[^a-zA-Z0-9_-]/g, "-");
+    link.href = url;
+    link.download = `${safeShop}-recommendations-${period}d.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -727,12 +884,23 @@ export default function RecommendationsPage() {
             </div>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={() => navigate("/app/billing")}
-          >
-            {language === "it" ? "Gestisci il piano →" : "Manage plan →"}
-          </button>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <button
+              className="secondary-button"
+              onClick={exportRecommendationsCsv}
+            >
+              {language === "it"
+                ? "Esporta Recommendations CSV"
+                : "Export Recommendations CSV"}
+            </button>
+
+            <button
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+            >
+              {language === "it" ? "Gestisci il piano →" : "Manage plan →"}
+            </button>
+          </div>
         </div>
 
         <section
