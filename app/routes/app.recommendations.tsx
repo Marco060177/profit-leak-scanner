@@ -130,32 +130,7 @@ function getActionStage(alert: ProfitAlert): ActionStage {
   return "monitor";
 }
 
-function getConfidence(alert: ProfitAlert) {
-  const impactEvidence = alert.monthlyImpact > 0 ? 8 : 0;
-  const effortEvidence =
-    alert.effort === "easy" ? 5 : alert.effort === "medium" ? 2 : 0;
-  const actionEvidence =
-    alert.businessAction === "monitor"
-      ? -4
-      : alert.businessAction === "review"
-        ? 1
-        : 4;
-
-  return clamp(
-    Math.round(
-      70 +
-        alert.priority * 0.12 +
-        impactEvidence +
-        effortEvidence +
-        actionEvidence,
-    ),
-    68,
-    96,
-  );
-}
-
 function getDecisionScore(alert: ProfitAlert) {
-  const confidence = getConfidence(alert);
   const impactScore =
     alert.monthlyImpact > 0
       ? Math.min(100, 35 + Math.log10(alert.monthlyImpact + 1) * 22)
@@ -174,7 +149,6 @@ function getDecisionScore(alert: ProfitAlert) {
   return (
     alert.priority * 0.38 +
     impactScore * 0.24 +
-    confidence * 0.2 +
     effortScore * 0.1 +
     actionWeight * 0.08
   );
@@ -312,6 +286,7 @@ function TopPriority({
   completed,
   onToggle,
   money,
+  confidenceScore,
 }: {
   alert: ProfitAlert;
   language: "it" | "en";
@@ -319,6 +294,7 @@ function TopPriority({
   completed: boolean;
   onToggle: () => void;
   money: (value: number) => string;
+  confidenceScore: number;
 }) {
   const status = getStatusStyle(alert.businessAction, language);
 
@@ -447,7 +423,7 @@ function TopPriority({
 
         <ActionMetric
           label={language === "it" ? "Affidabilità" : "Confidence"}
-          value={`${getConfidence(alert)}%`}
+          value={`${confidenceScore}%`}
           note={
             language === "it" ? "Qualità della stima" : "Estimate reliability"
           }
@@ -518,8 +494,9 @@ export default function RecommendationsPage() {
         rows,
         language,
         period,
+        currencyCode,
       }),
-    [summary, rows, language, period],
+    [summary, rows, language, period, currencyCode],
   );
 
   const aggregateRecovery = profitAlerts.find(
@@ -565,7 +542,6 @@ export default function RecommendationsPage() {
 
   const snapshotConfidence = economicSnapshot?.confidence;
   const confidenceScore = snapshotConfidence?.score ?? 0;
-  const opportunityIsVerified = snapshotConfidence?.level === "high";
   const confidenceLevelLabel =
     snapshotConfidence?.level === "high"
       ? language === "it"
@@ -699,16 +675,6 @@ export default function RecommendationsPage() {
     completedIds.includes(alert.id),
   );
 
-  const completedPotential = completedAlerts.reduce(
-    (sum, alert) => sum + Math.max(0, alert.monthlyImpact),
-    0,
-  );
-
-  const remainingPotential = Math.max(
-    0,
-    headlineMonthlyOpportunity - completedPotential,
-  );
-
   const progressPct =
     queueAlerts.length > 0
       ? (completedAlerts.length / queueAlerts.length) * 100
@@ -800,12 +766,8 @@ export default function RecommendationsPage() {
                 }}
               >
                 {language === "it"
-                  ? opportunityIsVerified
-                    ? "OPPORTUNITÀ MENSILE VERIFICATA"
-                    : "OPPORTUNITÀ MENSILE STIMATA"
-                  : opportunityIsVerified
-                    ? "VERIFIED MONTHLY OPPORTUNITY"
-                    : "ESTIMATED MONTHLY OPPORTUNITY"}
+                  ? "OPPORTUNITÀ MENSILE STIMATA"
+                  : "ESTIMATED MONTHLY OPPORTUNITY"}
               </div>
 
               <div
@@ -1045,6 +1007,7 @@ export default function RecommendationsPage() {
             completed={completedIds.includes(topAlert.id)}
             onToggle={() => toggleComplete(topAlert.id)}
             money={money}
+            confidenceScore={confidenceScore}
           />
         )}
 
@@ -1201,7 +1164,7 @@ export default function RecommendationsPage() {
 
                           <TinyBadge color="#22c55e">
                             {language === "it" ? "Affidabilità" : "Confidence"}{" "}
-                            {getConfidence(alert)}%
+                            {confidenceScore}%
                           </TinyBadge>
 
                           <TinyBadge color="#c084fc">
@@ -1356,28 +1319,31 @@ export default function RecommendationsPage() {
                 <ActionMetric
                   label={
                     language === "it"
-                      ? "Impatto completato"
-                      : "Completed potential"
+                      ? "Azioni completate"
+                      : "Completed actions"
                   }
-                  value={money(completedPotential)}
+                  value={`${completedAlerts.length}`}
                   note={
                     language === "it"
-                      ? "Azioni segnate come completate"
-                      : "Actions marked complete"
+                      ? "Segnate come completate"
+                      : "Marked as complete"
                   }
                 />
 
                 <ActionMetric
                   label={
                     language === "it"
-                      ? "Potenziale rimanente"
-                      : "Remaining potential"
+                      ? "Azioni rimanenti"
+                      : "Remaining actions"
                   }
-                  value={money(remainingPotential)}
+                  value={`${Math.max(
+                    0,
+                    queueAlerts.length - completedAlerts.length,
+                  )}`}
                   note={
                     language === "it"
-                      ? "Non ancora affrontato"
-                      : "Not yet addressed"
+                      ? "Non ancora completate"
+                      : "Not yet completed"
                   }
                 />
               </div>
@@ -1789,8 +1755,8 @@ export default function RecommendationsPage() {
           }}
         >
           {language === "it"
-            ? "Le opportunità sono stime costruite sui dati Shopify del periodo selezionato. Le attività segnate come completate rappresentano potenziale affrontato, non profitto già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-            : "Opportunities are estimates built from Shopify data for the selected period. Actions marked complete represent addressed potential, not verified recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
+            ? "Le opportunità sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
+            : "Opportunities are estimates built from Shopify data for the selected period. Marking an action complete records operational progress; it does not prove recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
         </div>
       </div>
     </div>
