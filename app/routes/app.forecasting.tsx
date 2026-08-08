@@ -101,6 +101,10 @@ function safeNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function roundMoney(value: number) {
+  return Math.round((safeNumber(value) + Number.EPSILON) * 100) / 100;
+}
+
 function SliderControl({
   label,
   value,
@@ -443,6 +447,7 @@ export default function ForecastingPage() {
     }> = [];
 
     let cumulativeNetProfit = 0;
+    const roundedCurrentMonthlyNetProfit = roundMoney(currentMonthlyNetProfit);
 
     for (let month = 1; month <= horizon; month += 1) {
       const revenueGrowthFactor = Math.pow(
@@ -451,7 +456,7 @@ export default function ForecastingPage() {
       );
       const costGrowthFactor = Math.pow(1 + monthlyCostGrowth / 100, month);
 
-      const revenue = monthlyRevenue * revenueGrowthFactor;
+      const revenue = roundMoney(monthlyRevenue * revenueGrowthFactor);
       const baselineGrossMarginPct =
         monthlyRevenue > 0 ? (monthlyGrossProfit / monthlyRevenue) * 100 : 0;
 
@@ -461,30 +466,38 @@ export default function ForecastingPage() {
         95,
       );
 
-      const baselineGrossProfit =
-        revenue * (baselineGrossMarginPct / 100);
-      const marginImprovementValue =
+      const baselineGrossProfit = roundMoney(
+        revenue * (baselineGrossMarginPct / 100),
+      );
+      const marginImprovementValue = roundMoney(
         revenue *
-        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100);
+          ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
+      );
 
-      const capturedRecovery =
+      const capturedRecovery = roundMoney(
         monthlyRecoverableProfit *
-        (recoveryCapture / 100) *
-        Math.min(1, month / Math.max(1, horizon / 2));
+          (recoveryCapture / 100) *
+          Math.min(1, month / Math.max(1, horizon / 2)),
+      );
 
-      const grossProfit =
+      const grossProfit = roundMoney(
         baselineGrossProfit +
-        Math.max(marginImprovementValue, capturedRecovery);
+          Math.max(marginImprovementValue, capturedRecovery),
+      );
 
-      const fixedCosts = monthlyFixedCosts * costGrowthFactor;
-      const variableFees = revenue * (variableFeePct / 100);
-      const profitBeforeTaxReserve = grossProfit - fixedCosts - variableFees;
-      const taxReserve = Math.max(0, profitBeforeTaxReserve) * taxReserveRate;
-      const netProfit = profitBeforeTaxReserve - taxReserve;
+      const fixedCosts = roundMoney(monthlyFixedCosts * costGrowthFactor);
+      const variableFees = roundMoney(revenue * (variableFeePct / 100));
+      const profitBeforeTaxReserve = roundMoney(
+        grossProfit - fixedCosts - variableFees,
+      );
+      const taxReserve = roundMoney(
+        Math.max(0, profitBeforeTaxReserve) * taxReserveRate,
+      );
+      const netProfit = roundMoney(profitBeforeTaxReserve - taxReserve);
 
       const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
-      cumulativeNetProfit += netProfit;
+      cumulativeNetProfit = roundMoney(cumulativeNetProfit + netProfit);
 
       points.push({
         month,
@@ -493,8 +506,9 @@ export default function ForecastingPage() {
         netProfit,
         netMargin,
         cumulativeNetProfit,
-        cumulativeLift:
-          cumulativeNetProfit - currentMonthlyNetProfit * month,
+        cumulativeLift: roundMoney(
+          cumulativeNetProfit - roundedCurrentMonthlyNetProfit * month,
+        ),
       });
     }
 
@@ -530,12 +544,15 @@ export default function ForecastingPage() {
     >
   ).map(([key, inputs]) => {
     let cumulativeNetProfit = 0;
-    let finalNetProfit = currentMonthlyNetProfit;
+    const roundedCurrentMonthlyNetProfit = roundMoney(currentMonthlyNetProfit);
+    let finalNetProfit = roundedCurrentMonthlyNetProfit;
     let finalNetMargin = currentNetMargin;
 
     for (let month = 1; month <= horizon; month += 1) {
-      const revenue =
-        monthlyRevenue * Math.pow(1 + inputs.monthlyRevenueGrowth / 100, month);
+      const revenue = roundMoney(
+        monthlyRevenue *
+          Math.pow(1 + inputs.monthlyRevenueGrowth / 100, month),
+      );
       const baselineGrossMarginPct =
         monthlyRevenue > 0 ? (monthlyGrossProfit / monthlyRevenue) * 100 : 0;
       const improvedGrossMarginPct = clamp(
@@ -543,27 +560,39 @@ export default function ForecastingPage() {
         -100,
         95,
       );
-      const baselineGrossProfit =
-        revenue * (baselineGrossMarginPct / 100);
-      const marginImprovementValue =
+      const baselineGrossProfit = roundMoney(
+        revenue * (baselineGrossMarginPct / 100),
+      );
+      const marginImprovementValue = roundMoney(
         revenue *
-        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100);
-      const capturedRecovery =
+          ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
+      );
+      const capturedRecovery = roundMoney(
         monthlyRecoverableProfit *
-        (inputs.recoveryCapture / 100) *
-        Math.min(1, month / Math.max(1, horizon / 2));
-      const grossProfit =
+          (inputs.recoveryCapture / 100) *
+          Math.min(1, month / Math.max(1, horizon / 2)),
+      );
+      const grossProfit = roundMoney(
         baselineGrossProfit +
-        Math.max(marginImprovementValue, capturedRecovery);
-      const fixedCosts =
-        monthlyFixedCosts * Math.pow(1 + inputs.monthlyCostGrowth / 100, month);
-      const variableFees = revenue * (variableFeePct / 100);
+          Math.max(marginImprovementValue, capturedRecovery),
+      );
+      const fixedCosts = roundMoney(
+        monthlyFixedCosts *
+          Math.pow(1 + inputs.monthlyCostGrowth / 100, month),
+      );
+      const variableFees = roundMoney(revenue * (variableFeePct / 100));
 
-      const profitBeforeTaxReserve = grossProfit - fixedCosts - variableFees;
-      const taxReserve = Math.max(0, profitBeforeTaxReserve) * taxReserveRate;
-      finalNetProfit = profitBeforeTaxReserve - taxReserve;
+      const profitBeforeTaxReserve = roundMoney(
+        grossProfit - fixedCosts - variableFees,
+      );
+      const taxReserve = roundMoney(
+        Math.max(0, profitBeforeTaxReserve) * taxReserveRate,
+      );
+      finalNetProfit = roundMoney(profitBeforeTaxReserve - taxReserve);
       finalNetMargin = revenue > 0 ? (finalNetProfit / revenue) * 100 : 0;
-      cumulativeNetProfit += finalNetProfit;
+      cumulativeNetProfit = roundMoney(
+        cumulativeNetProfit + finalNetProfit,
+      );
     }
 
     return {
@@ -571,17 +600,18 @@ export default function ForecastingPage() {
       finalNetProfit,
       finalNetMargin,
       cumulativeNetProfit,
-      differenceFromCurrent:
-        cumulativeNetProfit - currentMonthlyNetProfit * horizon,
+      differenceFromCurrent: roundMoney(
+        cumulativeNetProfit - roundedCurrentMonthlyNetProfit * horizon,
+      ),
     };
   });
 
   const totalProjectedRevenue = forecast.reduce(
-    (sum, item) => sum + item.revenue,
+    (sum, item) => roundMoney(sum + item.revenue),
     0,
   );
   const totalProjectedNetProfit = forecast.reduce(
-    (sum, item) => sum + item.netProfit,
+    (sum, item) => roundMoney(sum + item.netProfit),
     0,
   );
   const averageProjectedNetMargin =
