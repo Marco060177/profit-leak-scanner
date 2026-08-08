@@ -4,6 +4,7 @@ import { getStoredLanguage } from "~/utils/i18n";
 
 type Props = {
   sortedRiskRows: Row[];
+  exportRows: Row[];
   onlyLosing: boolean;
   setOnlyLosing: React.Dispatch<React.SetStateAction<boolean>>;
   period: string;
@@ -11,7 +12,12 @@ type Props = {
   riskColor: (row: Row) => string;
   riskBackground: (row: Row) => string;
   shopHandle: string;
+  currencyCode: string;
 };
+
+function escapeCsvCell(value: string | number | boolean | null | undefined) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
 
 function getProductRiskScore(row: Row) {
   let score = 0;
@@ -59,6 +65,7 @@ function getScoreStyle(score: number, row: Row) {
 
 export default function ProductRiskTable({
   sortedRiskRows,
+  exportRows,
   onlyLosing,
   setOnlyLosing,
   period,
@@ -66,6 +73,7 @@ export default function ProductRiskTable({
   riskColor,
   riskBackground,
   shopHandle,
+  currencyCode,
 }: Props) {
 
   const language = getStoredLanguage();
@@ -137,38 +145,64 @@ export default function ProductRiskTable({
           type="button"
           className="secondary-button"
           onClick={() => {
-            const headers = [
-              "Product",
-              "Revenue",
-              "COGS",
-              "Profit",
-              "Margin %",
-              "Target Price",
-              "Price Delta",
-              "Risk Score",
-              "Risk",
-            ];
+            const isItalian = language === "it";
+            const headers = isItalian
+              ? [
+                  "Store", "Periodo (giorni)", "Filtro", "Valuta", "ID prodotto",
+                  "Prodotto", "Quantità", "Ricavi", "COGS", "Sconti", "Rimborsi",
+                  "Profitto", "Margine %", "Margine precedente %", "Variazione margine (pp)",
+                  "Prezzo medio", "Costo medio", "Prezzo di pareggio", "Prezzo target",
+                  "Delta prezzo", "Punteggio rischio", "Rischio", "In perdita",
+                  "Margine basso", "Costo mancante", "Azione consigliata",
+                ]
+              : [
+                  "Store", "Period (days)", "Filter", "Currency", "Product ID",
+                  "Product", "Quantity", "Revenue", "COGS", "Discounts", "Refunds",
+                  "Profit", "Margin %", "Previous margin %", "Margin change (pp)",
+                  "Average price", "Average cost", "Break-even price", "Target price",
+                  "Price delta", "Risk score", "Risk", "Losing", "Low margin",
+                  "Missing cost", "Recommended action",
+                ];
 
-            const csvRows = sortedRiskRows.map((row) => [
+            const filterLabel = onlyLosing
+              ? isItalian ? "Solo in perdita" : "Losing only"
+              : isItalian ? "Tutti i prodotti" : "All products";
+
+            const csvRows = exportRows.map((row) => [
+              shopHandle,
+              period,
+              filterLabel,
+              currencyCode,
+              row.productId,
               row.productTitle,
+              row.qty,
               row.revenue.toFixed(2),
               row.cogs.toFixed(2),
+              row.discounts.toFixed(2),
+              row.refunds.toFixed(2),
               row.profit.toFixed(2),
-              row.marginPct.toFixed(1),
+              row.marginPct.toFixed(2),
+              row.previousMarginPct == null ? "" : row.previousMarginPct.toFixed(2),
+              row.productMarginDelta == null ? "" : row.productMarginDelta.toFixed(2),
+              row.avgPrice.toFixed(2),
+              row.avgCost.toFixed(2),
+              row.breakEvenPrice.toFixed(2),
               row.targetPrice.toFixed(2),
               row.targetDelta.toFixed(2),
               getProductRiskScore(row),
               riskLabel(row),
+              row.losing,
+              row.lowMargin,
+              row.missingCost,
+              translatedSuggestion(row),
             ]);
 
             const csvContent = [
-              headers.join(","),
-              ...csvRows.map((row) =>
-                row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-              ),
+              headers.map(escapeCsvCell).join(","),
+              ...csvRows.map((row) => row.map(escapeCsvCell).join(",")),
             ].join("\n");
 
-            const blob = new Blob([csvContent], {
+            const blob = new Blob(["\uFEFF", csvContent], {
               type: "text/csv;charset=utf-8;",
             });
 
@@ -176,10 +210,11 @@ export default function ProductRiskTable({
             const link = document.createElement("a");
 
             link.href = url;
-            link.download = `marginlab-products-${period}d.csv`;
+            link.download = `marginlab-${shopHandle}-products-${period}d-${onlyLosing ? "losing" : "all"}.csv`;
             link.click();
 
-            URL.revokeObjectURL(url);
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 0);
           }}
         >
           {language === "it" ? "Esporta CSV" : "Export CSV"}

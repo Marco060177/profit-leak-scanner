@@ -108,7 +108,7 @@ export default function ProductsPage() {
     ? rows.filter((row) => row.losing)
     : rows;
 
-  const sortedRiskRows = [...visibleRows]
+  const allSortedRiskRows = [...visibleRows]
     .sort((a, b) => {
       const scoreA = productRiskScore(a);
       const scoreB = productRiskScore(b);
@@ -118,8 +118,9 @@ export default function ProductsPage() {
       }
 
       return b.revenue - a.revenue;
-    })
-    .slice(0, visibleLimit);
+    });
+
+  const sortedRiskRows = allSortedRiskRows.slice(0, visibleLimit);
 
   const riskLabel = (row: Row) => {
     if (language === "it") {
@@ -958,6 +959,7 @@ export default function ProductsPage() {
 
         <ProductRiskTable
           sortedRiskRows={sortedRiskRows}
+          exportRows={allSortedRiskRows}
           onlyLosing={onlyLosing}
           setOnlyLosing={setOnlyLosing}
           period={period}
@@ -965,6 +967,7 @@ export default function ProductsPage() {
           riskColor={riskColor}
           riskBackground={riskBackground}
           shopHandle={shopHandle}
+          currencyCode={currencyCode}
         />
       </div>
     </div>
