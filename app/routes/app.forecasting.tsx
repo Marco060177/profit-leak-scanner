@@ -324,6 +324,7 @@ export default function ForecastingPage() {
     forecastPeriod,
     currencyCode,
     economicSnapshot,
+    shopHandle,
   } =
     useLoaderData() as LoaderData & {
       assumptions: Assumptions;
@@ -728,6 +729,121 @@ export default function ForecastingPage() {
             : "Cost growth remains controlled in the selected scenario.",
         ];
 
+  const exportForecastCsv = () => {
+    type CsvValue = string | number;
+
+    const round = (value: number, digits = 2) => {
+      const factor = 10 ** digits;
+      return Math.round((safeNumber(value) + Number.EPSILON) * factor) / factor;
+    };
+
+    const csvCell = (value: CsvValue) => {
+      if (typeof value === "number") {
+        return Number.isFinite(value) ? String(value) : "0";
+      }
+
+      const protectedValue = /^[=+\-@]/.test(value) ? `'${value}` : value;
+      return `"${protectedValue.replace(/"/g, '""')}"`;
+    };
+
+    const scenarioLabels: Record<ScenarioKey, string> = {
+      worst: language === "it" ? "Negativo" : "Worst case",
+      expected: language === "it" ? "Realistico" : "Expected case",
+      best: language === "it" ? "Positivo" : "Best case",
+      custom: language === "it" ? "Personalizzato" : "Custom",
+    };
+
+    const comparisonLabels: Record<Exclude<ScenarioKey, "custom">, string> = {
+      worst: language === "it" ? "Negativo" : "Worst case",
+      expected: language === "it" ? "Realistico" : "Expected case",
+      best: language === "it" ? "Positivo" : "Best case",
+    };
+
+    const rowsToExport: CsvValue[][] = [
+      ["MarginLab Profit Forecasting"],
+      [],
+      [language === "it" ? "METADATI" : "METADATA"],
+      [language === "it" ? "Voce" : "Field", language === "it" ? "Valore" : "Value"],
+      ["Store", shopHandle ?? ""],
+      [language === "it" ? "Data esportazione" : "Export date", new Date().toISOString()],
+      [language === "it" ? "Periodo osservato (giorni)" : "Observed period (days)", periodDays],
+      [language === "it" ? "Orizzonte previsione (mesi)" : "Forecast horizon (months)", horizon],
+      [language === "it" ? "Valuta" : "Currency", currencyCode],
+      [language === "it" ? "Lingua" : "Language", language.toUpperCase()],
+      [language === "it" ? "Scenario selezionato" : "Selected scenario", scenarioLabels[selectedScenario]],
+      ["Data Confidence", round(dataConfidence)],
+      [],
+      [language === "it" ? "BASELINE MENSILE OSSERVATA" : "OBSERVED MONTHLY BASELINE"],
+      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Ricavi mensili" : "Monthly revenue", round(monthlyRevenue)],
+      ["COGS", round(monthlyCogs)],
+      [language === "it" ? "Profitto lordo mensile" : "Monthly gross profit", round(monthlyGrossProfit)],
+      [language === "it" ? "Costi fissi mensili" : "Monthly fixed costs", round(monthlyFixedCosts)],
+      [language === "it" ? "Commissioni variabili mensili" : "Monthly variable fees", round(currentMonthlyVariableFees)],
+      [language === "it" ? "Riserva fiscale mensile" : "Monthly tax reserve", round(currentMonthlyTaxReserve)],
+      [language === "it" ? "Profitto netto mensile" : "Monthly net profit", round(currentMonthlyNetProfit)],
+      [language === "it" ? "Margine netto attuale (%)" : "Current net margin (%)", round(currentNetMargin)],
+      [language === "it" ? "Opportunita mensile recuperabile" : "Monthly recoverable opportunity", round(monthlyRecoverableProfit)],
+      [language === "it" ? "Prodotti con opportunita" : "Products with opportunity", impactedProducts],
+      [],
+      [language === "it" ? "IPOTESI DELLO SCENARIO" : "SCENARIO ASSUMPTIONS"],
+      [language === "it" ? "Ipotesi" : "Assumption", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Crescita mensile ricavi (%)" : "Monthly revenue growth (%)", round(monthlyRevenueGrowth)],
+      [language === "it" ? "Miglioramento margine (punti %)" : "Margin improvement (percentage points)", round(marginImprovement)],
+      [language === "it" ? "Crescita mensile costi (%)" : "Monthly cost growth (%)", round(monthlyCostGrowth)],
+      [language === "it" ? "Recupero opportunita (%)" : "Opportunity recovery (%)", round(recoveryCapture)],
+      [language === "it" ? "Obiettivo profitto mensile" : "Monthly profit goal", round(profitGoal)],
+      [language === "it" ? "Spesa pubblicitaria mensile" : "Monthly advertising", round(assumptions.monthlyAds)],
+      [language === "it" ? "Spedizioni mensili" : "Monthly shipping", round(assumptions.monthlyShipping)],
+      [language === "it" ? "Costi operativi mensili" : "Monthly operating costs", round(assumptions.monthlyOperating)],
+      [language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)", round(assumptions.paymentFeePct)],
+      [language === "it" ? "Commissioni transazione (%)" : "Transaction fees (%)", round(assumptions.transactionFeePct)],
+      [language === "it" ? "Riserva fiscale (%)" : "Tax reserve (%)", round(assumptions.taxReservePct)],
+      [],
+      [language === "it" ? "RISULTATI DELLA PREVISIONE" : "FORECAST RESULTS"],
+      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
+      [language === "it" ? "Ricavi totali previsti" : "Total projected revenue", round(totalProjectedRevenue)],
+      [language === "it" ? "Profitto netto totale previsto" : "Total projected net profit", round(totalProjectedNetProfit)],
+      [language === "it" ? "Margine netto medio (%)" : "Average net margin (%)", round(averageProjectedNetMargin)],
+      [language === "it" ? "Profitto netto al mese finale" : "Final-month net profit", round(finalPoint.netProfit)],
+      [language === "it" ? "Margine netto al mese finale (%)" : "Final-month net margin (%)", round(finalPoint.netMargin)],
+      [language === "it" ? "Profitto aggiuntivo cumulativo" : "Cumulative profit lift", round(finalPoint.cumulativeLift)],
+      [language === "it" ? "Mese migliore" : "Best month", bestMonth.month],
+      [language === "it" ? "Profitto nel mese migliore" : "Best-month net profit", round(bestMonth.netProfit)],
+      [language === "it" ? "Primo mese obiettivo" : "First goal month", firstGoalMonth ?? (language === "it" ? "Oltre l'orizzonte" : "Beyond horizon")],
+      [language === "it" ? "Salute prevista" : "Forecast health", health],
+      [language === "it" ? "Leva principale" : "Strongest lever", strongestLever],
+      [],
+      [language === "it" ? "DETTAGLIO MENSILE" : "MONTHLY DETAIL"],
+      [language === "it" ? "Mese" : "Month", language === "it" ? "Ricavi" : "Revenue", language === "it" ? "Profitto lordo" : "Gross profit", language === "it" ? "Profitto netto" : "Net profit", language === "it" ? "Margine netto (%)" : "Net margin (%)", language === "it" ? "Profitto netto cumulativo" : "Cumulative net profit", language === "it" ? "Incremento cumulativo" : "Cumulative lift"],
+      ...forecast.map((item) => [item.month, round(item.revenue), round(item.grossProfit), round(item.netProfit), round(item.netMargin), round(item.cumulativeNetProfit), round(item.cumulativeLift)] as CsvValue[]),
+      [],
+      [language === "it" ? "CONFRONTO SCENARI" : "SCENARIO COMPARISON"],
+      [language === "it" ? "Scenario" : "Scenario", language === "it" ? "Profitto netto mese finale" : "Final-month net profit", language === "it" ? "Margine netto finale (%)" : "Final net margin (%)", language === "it" ? "Profitto netto cumulativo" : "Cumulative net profit", language === "it" ? "Differenza cumulativa dalla baseline" : "Cumulative difference from baseline"],
+      ...scenarioComparison.map((item) => [comparisonLabels[item.key], round(item.finalNetProfit), round(item.finalNetMargin), round(item.cumulativeNetProfit), round(item.differenceFromCurrent)] as CsvValue[]),
+      [],
+      [language === "it" ? "RACCOMANDAZIONE" : "RECOMMENDATION"],
+      [recommendation],
+      [],
+      [language === "it" ? "AZIONI CONSIGLIATE" : "RECOMMENDED ACTIONS"],
+      [language === "it" ? "Priorita" : "Priority", language === "it" ? "Azione" : "Action"],
+      ...actions.map((action, index) => [index + 1, action] as CsvValue[]),
+      [],
+      [language === "it" ? "Nota: questa previsione e uno scenario decisionale basato sui dati e sulle ipotesi correnti, non un risultato garantito. Gli scenari alternativi non sono additivi." : "Note: this forecast is a decision scenario based on current data and assumptions, not a guaranteed outcome. Alternative scenarios are non-additive."],
+    ];
+
+    const csv = `\uFEFF${rowsToExport.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${shopHandle || "store"}-forecast-${scenarioLabels[selectedScenario].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${horizon}m.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -1111,37 +1227,62 @@ export default function ForecastingPage() {
                 <div
                   style={{
                     display: "flex",
-                    padding: 4,
-                    borderRadius: 14,
-                    background: "rgba(255,255,255,0.045)",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    gap: 10,
+                    alignItems: "center",
+                    flexWrap: "wrap",
                   }}
                 >
-                  {[3, 6, 12].map((months) => (
-                    <button
-                      key={months}
-                      type="button"
-                      onClick={() => setHorizon(months)}
-                      style={{
-                        minWidth: 48,
-                        padding: "9px 11px",
-                        borderRadius: 10,
-                        cursor: "pointer",
-                        border: 0,
-                        background:
-                          horizon === months
-                            ? "rgba(255,115,80,0.22)"
-                            : "transparent",
-                        color:
-                          horizon === months
-                            ? "#ffffff"
-                            : "rgba(255,255,255,0.52)",
-                        fontWeight: 950,
-                      }}
-                    >
-                      {months}M
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    onClick={exportForecastCsv}
+                    style={{
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      cursor: "pointer",
+                      border: "1px solid rgba(74,222,128,0.28)",
+                      background: "rgba(34,197,94,0.10)",
+                      color: "#bbf7d0",
+                      fontWeight: 900,
+                    }}
+                  >
+                    {language === "it" ? "Esporta previsione CSV" : "Export forecast CSV"}
+                  </button>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      padding: 4,
+                      borderRadius: 14,
+                      background: "rgba(255,255,255,0.045)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {[3, 6, 12].map((months) => (
+                      <button
+                        key={months}
+                        type="button"
+                        onClick={() => setHorizon(months)}
+                        style={{
+                          minWidth: 48,
+                          padding: "9px 11px",
+                          borderRadius: 10,
+                          cursor: "pointer",
+                          border: 0,
+                          background:
+                            horizon === months
+                              ? "rgba(255,115,80,0.22)"
+                              : "transparent",
+                          color:
+                            horizon === months
+                              ? "#ffffff"
+                              : "rgba(255,255,255,0.52)",
+                          fontWeight: 950,
+                        }}
+                      >
+                        {months}M
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
