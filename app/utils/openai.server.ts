@@ -12,6 +12,14 @@ export const openai = new OpenAI({
 
 export type SupportedLanguage = "en" | "it";
 
+type OfficialEconomicSnapshot = {
+  currencyCode: string;
+  monthlyOpportunity: number;
+  confidenceScore: number;
+  confidenceLevel: string;
+  cogsCoveragePct: number;
+};
+
 function getLanguageName(language: SupportedLanguage) {
   return language === "it" ? "Italian" : "English";
 }
@@ -34,9 +42,92 @@ function getReportSectionNames(language: SupportedLanguage) {
   };
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeDeterministicReport({
+  text,
+  language,
+  snapshot,
+}: {
+  text: string;
+  language: SupportedLanguage;
+  snapshot: OfficialEconomicSnapshot;
+}) {
+  const sections = getReportSectionNames(language);
+  const headingPattern = new RegExp(
+    `^(${[
+      sections.storeHealth,
+      sections.mainRisks,
+      sections.whatToCheckFirst,
+      sections.profitOpportunity,
+    ]
+      .map(escapeRegExp)
+      .join("|")})\\s*$`,
+    "m",
+  );
+  const parts = text.split(headingPattern);
+
+  if (parts.length < 9) {
+    return text;
+  }
+
+  const amount = new Intl.NumberFormat(
+    language === "it" ? "it-IT" : "en-US",
+    {
+      style: "currency",
+      currency: snapshot.currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(snapshot.monthlyOpportunity);
+
+  const confidenceLine =
+    language === "it"
+      ? `- Confidenza dei dati: ${snapshot.confidenceScore}/100 (${snapshot.confidenceLevel}). Copertura COGS: ${snapshot.cogsCoveragePct}%.`
+      : `- Data confidence: ${snapshot.confidenceScore}/100 (${snapshot.confidenceLevel}). COGS coverage: ${snapshot.cogsCoveragePct}%.`;
+  const opportunityLine =
+    language === "it"
+      ? `- Opportunità mensile totale stimata dello store: ${amount}.`
+      : `- Estimated total monthly store opportunity: ${amount}.`;
+
+  const confidenceTerms =
+    /(?:confidenza|confidence|copertura\s+cogs|cogs\s+coverage)/i;
+  const monetaryValue =
+    /(?:[$€£¥]|\b(?:USD|EUR|GBP|CAD|AUD|JPY)\b|\d+[.,]\d{2})/i;
+
+  for (let index = 1; index < parts.length; index += 2) {
+    const heading = parts[index];
+    const body = parts[index + 1] ?? "";
+    let lines = body
+      .split("\n")
+      .filter((line) => !confidenceTerms.test(line));
+
+    if (heading === sections.storeHealth) {
+      lines = ["", confidenceLine, ...lines.filter((line) => line.trim())];
+    }
+
+    if (heading === sections.profitOpportunity) {
+      lines = [
+        "",
+        opportunityLine,
+        ...lines.filter(
+          (line) => line.trim() && !monetaryValue.test(line),
+        ),
+      ];
+    }
+
+    parts[index + 1] = `${lines.join("\n").trimEnd()}\n\n`;
+  }
+
+  return parts.join("").trim();
+}
+
 export async function generateAiMarginAnalysis(input: {
   storeSummary: string;
   language: SupportedLanguage;
+  economicSnapshot: OfficialEconomicSnapshot;
 }) {
   if (!openaiApiKey) {
     return {
@@ -107,6 +198,9 @@ CONTENT RULES
 - Use only the supplied store data.
 - Do not invent numbers, costs, events, products or assumptions.
 - Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly opportunity.
+- The value written after "Monthly opportunity:" in the OFFICIAL ECONOMIC SNAPSHOT is the one and only aggregate profit-opportunity amount allowed in the report.
+- Copy that monthly-opportunity value exactly when discussing the total opportunity. Do not calculate, infer, reconstruct or substitute another total from product margins, target prices, event descriptions or other metrics.
+- Product-level scenarios may be discussed qualitatively, but must not be added to the official monthly opportunity or presented as an alternative aggregate opportunity.
 - Never add loss, exposure and opportunity into one combined total.
 - Never describe exposure as a confirmed loss or opportunity as realized profit.
 - Use Profit Monitor events for severity, priority, recommended action and destination; do not independently re-rank them.
@@ -145,7 +239,11 @@ ${input.storeSummary}
   });
 
   return {
-    text: response.output_text.trim(),
+    text: normalizeDeterministicReport({
+      text: response.output_text.trim(),
+      language: input.language,
+      snapshot: input.economicSnapshot,
+    }),
   };
 }
 

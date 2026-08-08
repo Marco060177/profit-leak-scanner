@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file.
+// Learn more about it in the Prisma documentation: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
@@ -31,29 +31,85 @@ model Session {
 }
 
 model ProfitAssumptions {
-  id   String @id @default(cuid())
-  shop String @unique
-
-  monthlyAds       Float @default(0)
-  monthlyShipping  Float @default(0)
-  monthlyOperating Float @default(0)
-
-  paymentFeePct     Float @default(0)
-  transactionFeePct Float @default(0)
-  taxReservePct     Float @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  shop              String   @unique
+  monthlyAds        Float    @default(0)
+  monthlyShipping   Float    @default(0)
+  monthlyOperating  Float    @default(0)
+  paymentFeePct     Float    @default(0)
+  transactionFeePct Float    @default(0)
+  taxReservePct     Float    @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model AiUsage {
-  id       String @id @default(cuid())
-  shop     String
-  month    String
-  requests Int    @default(0)
-
+  id        String   @id @default(cuid())
+  shop      String
+  month     String
+  requests  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([shop, month])
+}
+
+model ProfitMonitorSnapshot {
+  id          String   @id @default(cuid())
+  shop        String
+  periodDays  Int
+  fingerprint String
+  payloadJson String
+  capturedAt  DateTime @default(now())
+
+  @@unique([shop, periodDays, fingerprint])
+  @@index([shop, periodDays, capturedAt])
+}
+
+model ProfitMonitorAlert {
+  id                String                    @id @default(cuid())
+  shop              String
+  periodDays        Int
+  alertKey          String
+  alertType         String
+  productId         String?
+  status            String                    @default("new")
+  isRead            Boolean                   @default(false)
+  severity          String
+  category          String
+  title             String
+  description       String
+  monthlyImpact     Float                     @default(0)
+  economicKind      String
+  priority          Int                       @default(0)
+  actionLabel       String
+  route             String
+  businessAction    String
+  effort            String
+  estimatedMinutes  Int                       @default(0)
+  recommendedModule String
+  productTitle      String?
+  metadataJson      String?
+  firstSeenAt       DateTime                  @default(now())
+  lastSeenAt        DateTime                  @default(now())
+  acknowledgedAt    DateTime?
+  resolvedAt        DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  events            ProfitMonitorAlertEvent[]
+
+  @@unique([shop, periodDays, alertKey])
+  @@index([shop, periodDays, status])
+}
+
+model ProfitMonitorAlertEvent {
+  id         String             @id @default(cuid())
+  alertId    String
+  fromStatus String?
+  toStatus   String
+  source     String
+  createdAt  DateTime           @default(now())
+  alert      ProfitMonitorAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([alertId, createdAt])
 }

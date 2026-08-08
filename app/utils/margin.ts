@@ -154,13 +154,22 @@ export function money(
   n: number,
   currencyCode = "USD",
   locale = "en-US",
-  digits = 2,
+  _digits = 2,
 ) {
-  return formatMoney(n, { currencyCode, locale, digits });
+  return formatMoney(n, {
+    currencyCode,
+    locale,
+  });
 }
 
-export function pct(n: number, locale = "en-US", digits = 1) {
-  return formatPercent(n, { locale, digits });
+export function pct(
+  n: number,
+  locale = "en-US",
+  _digits = 1,
+) {
+  return formatPercent(n, {
+    locale,
+  });
 }
 
 export function toYYYYMMDD(d: Date) {
