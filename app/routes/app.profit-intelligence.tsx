@@ -56,6 +56,8 @@ export default function ProfitIntelligencePage() {
     rows,
     marginDeterioration,
     currencyCode,
+    period,
+    shopHandle,
   } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
@@ -256,12 +258,173 @@ export default function ProfitIntelligencePage() {
         ? "#f59e0b"
         : "#22c55e";
 
+  const exportProfitIntelligenceCsv = () => {
+    const csvCell = (value: string | number | boolean | null | undefined) => {
+      if (value === null || value === undefined) return "";
+
+      const text = String(value);
+      const excelSafe = /^[=+\-@]/.test(text) ? `'${text}` : text;
+
+      return `"${excelSafe.replace(/"/g, '""')}"`;
+    };
+
+    const line = (values: Array<string | number | boolean | null | undefined>) =>
+      values.map(csvCell).join(",");
+
+    const yes = language === "it" ? "Sì" : "Yes";
+    const no = language === "it" ? "No" : "No";
+
+    const metadata = language === "it"
+      ? [
+          ["Report", "Profit Intelligence"],
+          ["Store", shopHandle],
+          ["Periodo (giorni)", period],
+          ["Valuta", currencyCode],
+          ["Lingua", "Italiano"],
+          ["Generato il", new Date().toLocaleString(locale)],
+        ]
+      : [
+          ["Report", "Profit Intelligence"],
+          ["Store", shopHandle],
+          ["Period (days)", period],
+          ["Currency", currencyCode],
+          ["Language", "English"],
+          ["Generated at", new Date().toLocaleString(locale)],
+        ];
+
+    const summaryRows = language === "it"
+      ? [
+          ["Ricavi", summary.revenue],
+          ["COGS", summary.cogs],
+          ["Profitto", summary.profit],
+          ["Margine %", summary.marginPct],
+          ["Sconti", summary.discounts],
+          ["Rimborsi", summary.refunds],
+          ["Spedizione", summary.shipping],
+          ["Imposte registrate", summary.taxes],
+          ["Perdita totale", summary.totalLeak],
+          ["Prodotti in perdita", summary.losingCount],
+          ["Prodotti senza costo", summary.missingCostCount],
+          ["Margine precedente %", summary.previousMarginPct],
+          ["Variazione margine (punti)", summary.marginDelta],
+          ["Variazione ricavi %", summary.revenueDeltaPct],
+          ["Indice di redditività", intelligenceScore],
+          ["Dipendenza ricavi top 3 %", top3RevenueShare],
+          ["Dipendenza profitti top 3 %", top3ProfitShare],
+          ["Qualità dei margini", profitQualityLevelLabel],
+        ]
+      : [
+          ["Revenue", summary.revenue],
+          ["COGS", summary.cogs],
+          ["Profit", summary.profit],
+          ["Margin %", summary.marginPct],
+          ["Discounts", summary.discounts],
+          ["Refunds", summary.refunds],
+          ["Shipping", summary.shipping],
+          ["Recorded taxes", summary.taxes],
+          ["Total leak", summary.totalLeak],
+          ["Losing products", summary.losingCount],
+          ["Products missing cost", summary.missingCostCount],
+          ["Previous margin %", summary.previousMarginPct],
+          ["Margin change (points)", summary.marginDelta],
+          ["Revenue change %", summary.revenueDeltaPct],
+          ["Profit Intelligence Score", intelligenceScore],
+          ["Top 3 revenue dependency %", top3RevenueShare],
+          ["Top 3 profit dependency %", top3ProfitShare],
+          ["Margin quality", profitQualityLevelLabel],
+        ];
+
+    const productHeaders = language === "it"
+      ? [
+          "Prodotto", "ID prodotto", "Quantità", "Ricavi", "COGS",
+          "Sconti", "Rimborsi", "Profitto", "Margine %",
+          "Margine precedente %", "Variazione margine (punti)",
+          "Quota ricavi %", "Quota profitti %", "Prezzo medio",
+          "Costo medio", "Prezzo break-even", "Prezzo target",
+          "Aumento target", "In perdita", "Margine basso",
+          "Costo mancante", "Azione consigliata",
+        ]
+      : [
+          "Product", "Product ID", "Quantity", "Revenue", "COGS",
+          "Discounts", "Refunds", "Profit", "Margin %",
+          "Previous margin %", "Margin change (points)",
+          "Revenue share %", "Profit share %", "Average price",
+          "Average cost", "Break-even price", "Target price",
+          "Target increase", "Losing", "Low margin", "Missing cost",
+          "Recommended action",
+        ];
+
+    const productRows = rows.map((row) => [
+      row.productTitle,
+      row.productId,
+      row.qty,
+      row.revenue,
+      row.cogs,
+      row.discounts,
+      row.refunds,
+      row.profit,
+      row.marginPct,
+      row.previousMarginPct,
+      row.productMarginDelta,
+      row.revenueSharePct ?? (row.revenue / totalRevenue) * 100,
+      row.profitSharePct ?? (row.profit / totalProfitBase) * 100,
+      row.avgPrice,
+      row.avgCost,
+      row.breakEvenPrice,
+      row.targetPrice,
+      row.targetDelta,
+      row.losing ? yes : no,
+      row.lowMargin ? yes : no,
+      row.missingCost ? yes : no,
+      row.missingCost
+        ? language === "it"
+          ? "Inserisci il costo del prodotto in Shopify"
+          : "Add the product cost in Shopify"
+        : row.suggestion,
+    ]);
+
+    const csv = [
+      ...metadata.map(line),
+      "",
+      line([language === "it" ? "RIEPILOGO ECONOMICO" : "ECONOMIC SUMMARY"]),
+      line([language === "it" ? "Metrica" : "Metric", language === "it" ? "Valore" : "Value"]),
+      ...summaryRows.map(line),
+      "",
+      line([language === "it" ? "DETTAGLIO PRODOTTI" : "PRODUCT DETAIL"]),
+      line(productHeaders),
+      ...productRows.map(line),
+    ].join("\r\n");
+
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const safeShop = (shopHandle || "store").replace(/[^a-z0-9-]/gi, "-");
+
+    anchor.href = url;
+    anchor.download = `${safeShop}-profit-intelligence-${period}d.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="profit" navigate={navigate} />
 
-        <div className="hero-header">
+        <div
+          className="hero-header"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 20,
+            flexWrap: "wrap",
+          }}
+        >
           <div>
             <div className="eyebrow">
               {language === "it"
@@ -281,6 +444,30 @@ export default function ProfitIntelligencePage() {
                 : "Understand revenue concentration, profit dependency and margin quality across your Shopify business."}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={exportProfitIntelligenceCsv}
+            style={{
+              minHeight: 44,
+              padding: "0 18px",
+              borderRadius: 12,
+              border: "1px solid rgba(255,115,60,0.42)",
+              background:
+                "linear-gradient(180deg, rgba(255,115,60,0.18), rgba(255,90,54,0.10))",
+              color: "#fff7ed",
+              fontSize: 13,
+              fontWeight: 900,
+              letterSpacing: "0.02em",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              boxShadow: "0 12px 30px rgba(0,0,0,0.24)",
+            }}
+          >
+            {language === "it"
+              ? "Esporta Profit Intelligence CSV"
+              : "Export Profit Intelligence CSV"}
+          </button>
         </div>
 
         <div className="hero-score-card" style={{ marginBottom: 28 }}>
