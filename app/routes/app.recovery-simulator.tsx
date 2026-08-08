@@ -98,6 +98,10 @@ function safeNumber(value: number) {
   return Number.isFinite(value) ? value : 0;
 }
 
+function roundCurrency(value: number) {
+  return Math.round((safeNumber(value) + Number.EPSILON) * 100) / 100;
+}
+
 export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
@@ -214,7 +218,9 @@ export default function RecoverySimulatorPage() {
 
       setScenario(nextScenario);
       setSimulatedPrice(
-        selectedProduct.avgPrice * (1 + config.priceChangePct / 100),
+        roundCurrency(
+          selectedProduct.avgPrice * (1 + config.priceChangePct / 100),
+        ),
       );
       setCostReductionPct(config.costReductionPct);
       setSalesChangePct(config.salesChangePct);
@@ -230,7 +236,9 @@ export default function RecoverySimulatorPage() {
 
     setScenario("balanced");
     setSimulatedPrice(
-      selectedProduct.avgPrice * (1 + balanced.priceChangePct / 100),
+      roundCurrency(
+        selectedProduct.avgPrice * (1 + balanced.priceChangePct / 100),
+      ),
     );
     setCostReductionPct(balanced.costReductionPct);
     setSalesChangePct(balanced.salesChangePct);
@@ -245,7 +253,7 @@ export default function RecoverySimulatorPage() {
     }
 
     setScenario("custom");
-    setSimulatedPrice(pendingScenario.simulatedPrice);
+    setSimulatedPrice(roundCurrency(pendingScenario.simulatedPrice));
     setCostReductionPct(pendingScenario.costReductionPct);
     setSalesChangePct(pendingScenario.salesChangePct);
     setPendingScenario(null);
@@ -605,7 +613,7 @@ export default function RecoverySimulatorPage() {
 
   const handleManualPriceChange = (value: number) => {
     setScenario("custom");
-    setSimulatedPrice(value);
+    setSimulatedPrice(roundCurrency(value));
   };
 
   const handleManualCostChange = (value: number) => {
@@ -636,7 +644,9 @@ export default function RecoverySimulatorPage() {
     );
 
     setScenario("custom");
-    setSimulatedPrice(currentPrice * (1 + suggestedPriceIncrease / 100));
+    setSimulatedPrice(
+      roundCurrency(currentPrice * (1 + suggestedPriceIncrease / 100)),
+    );
     setCostReductionPct(suggestedCostReduction);
     setSalesChangePct(-Math.round(suggestedPriceIncrease * 0.35 * 10) / 10);
     setSaveMessage(
@@ -678,7 +688,7 @@ export default function RecoverySimulatorPage() {
 
     if (saved.productId === selectedProduct.productId) {
       setScenario("custom");
-      setSimulatedPrice(saved.simulatedPrice);
+      setSimulatedPrice(roundCurrency(saved.simulatedPrice));
       setCostReductionPct(saved.costReductionPct);
       setSalesChangePct(saved.salesChangePct);
     } else {
