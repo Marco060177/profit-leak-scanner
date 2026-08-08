@@ -36,8 +36,8 @@ export async function loader({ request }: { request: Request }) {
       shop: session.shop,
     },
   })) ?? {
-    paymentFeePct: 2.9,
-    transactionFeePct: 0.5,
+    paymentFeePct: 0,
+    transactionFeePct: 0,
     taxReservePct: 0,
   };
 
@@ -302,7 +302,7 @@ export default function RecoverySimulatorPage() {
   const variableFeeRate = clamp(
     (safeNumber(loaderData.assumptions.paymentFeePct) +
       safeNumber(loaderData.assumptions.transactionFeePct)) /
-      100,
+    100,
     0,
     1,
   );
@@ -327,6 +327,17 @@ export default function RecoverySimulatorPage() {
     simulatedMonthlyProfitBeforeFees - simulatedMonthlyFees;
   const recoveredMonthlyProfit = simulatedMonthlyProfit - currentMonthlyProfit;
   const recoveredAnnualProfit = recoveredMonthlyProfit * 12;
+  const taxReserveRate = clamp(
+    safeNumber(loaderData.assumptions.taxReservePct) / 100,
+    0,
+    1,
+  );
+  const taxReserveMonthly =
+    Math.max(0, recoveredMonthlyProfit) * taxReserveRate;
+  const taxReserveAnnual = taxReserveMonthly * 12;
+  const netRecoveredMonthlyProfit =
+    recoveredMonthlyProfit - taxReserveMonthly;
+  const netRecoveredAnnualProfit = netRecoveredMonthlyProfit * 12;
   const marginDelta = simulatedMarginPct - currentMarginPct;
   const profitDeltaPct =
     Math.abs(currentMonthlyProfit) > 0
@@ -371,13 +382,29 @@ export default function RecoverySimulatorPage() {
           : "Variable fee impact",
       value: feeImpactMonthly * 12,
     },
+    {
+      key: "tax-reserve",
+      label:
+        language === "it"
+          ? `Riserva fiscale (${formatStorePercent(
+            taxReserveRate * 100,
+            "it-IT",
+            1,
+          )})`
+          : `Tax reserve (${formatStorePercent(
+            taxReserveRate * 100,
+            "en-US",
+            1,
+          )})`,
+      value: -taxReserveAnnual,
+    },
   ];
 
   const commercialRiskScore = clamp(
     Math.round(
       Math.max(0, priceChangePct) * 6 +
-        Math.max(0, -salesChangePct) * 4 +
-        (priceChangePct > 8 ? 12 : 0),
+      Math.max(0, -salesChangePct) * 4 +
+      (priceChangePct > 8 ? 12 : 0),
     ),
     0,
     100,
@@ -403,7 +430,7 @@ export default function RecoverySimulatorPage() {
 
   const timeline = [1, 3, 6, 12].map((month) => ({
     month,
-    value: recoveredMonthlyProfit * month,
+    value: netRecoveredMonthlyProfit * month,
   }));
   const priceMin = Math.max(0.01, currentPrice * 0.7);
   const priceMax = Math.max(currentPrice * 1.5, currentPrice + 1);
@@ -412,9 +439,9 @@ export default function RecoverySimulatorPage() {
   const dataConfidenceScore = clamp(
     Math.round(
       (currentCost > 0 ? 40 : 0) +
-        (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
-        (selectedProduct.revenue > 0 ? 20 : 0) +
-        (!selectedProduct.missingCost ? 10 : 0),
+      (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
+      (selectedProduct.revenue > 0 ? 20 : 0) +
+      (!selectedProduct.missingCost ? 10 : 0),
     ),
     0,
     100,
@@ -481,68 +508,68 @@ export default function RecoverySimulatorPage() {
     if (simulatedMonthlyProfit <= currentMonthlyProfit) {
       return language === "it"
         ? `Questo scenario riduce il profitto mensile stimato. La variazione delle vendite non compensa il nuovo equilibrio tra prezzo e costo. Riduci l'ipotesi di calo delle vendite oppure aumenta il prezzo sopra ${money(
-            Math.max(currentPrice, breakEvenPrice),
-            2,
-          )}.`
+          Math.max(currentPrice, breakEvenPrice),
+          2,
+        )}.`
         : `This scenario lowers estimated monthly profit. The sales change does not compensate for the new price and cost balance. Reduce the assumed sales decline or move the price above ${money(
-            Math.max(currentPrice, breakEvenPrice),
-            2,
-          )}.`;
+          Math.max(currentPrice, breakEvenPrice),
+          2,
+        )}.`;
     }
 
     if (costReductionPct >= 4 && priceIncreasePct < 4) {
       return language === "it"
         ? `La leva più efficace in questo scenario è il costo. Una riduzione del ${pct(
-            costReductionPct,
-          )} porta il margine dal ${pct(currentMarginPct)} al ${pct(
-            simulatedMarginPct,
-          )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
+          costReductionPct,
+        )} porta il margine dal ${pct(currentMarginPct)} al ${pct(
+          simulatedMarginPct,
+        )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
         : `Cost reduction is the strongest lever in this scenario. A ${pct(
-            costReductionPct,
-          )} reduction moves margin from ${pct(currentMarginPct)} to ${pct(
-            simulatedMarginPct,
-          )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
+          costReductionPct,
+        )} reduction moves margin from ${pct(currentMarginPct)} to ${pct(
+          simulatedMarginPct,
+        )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
     }
 
     if (priceIncreasePct >= 8) {
       return language === "it"
         ? `Portare il prezzo a ${money(
-            simulatedPrice,
-            2,
-          )} genera un impatto importante, ma l'aumento del ${pct(
-            priceIncreasePct,
-          )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
+          simulatedPrice,
+          2,
+        )} genera un impatto importante, ma l'aumento del ${pct(
+          priceIncreasePct,
+        )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
         : `Moving the price to ${money(
-            simulatedPrice,
-            2,
-          )} creates a meaningful impact, but the ${pct(
-            priceIncreasePct,
-          )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
+          simulatedPrice,
+          2,
+        )} creates a meaningful impact, but the ${pct(
+          priceIncreasePct,
+        )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
     }
 
     return language === "it"
       ? `Portare il prezzo a ${money(
-          simulatedPrice,
-          2,
-        )} e ridurre il costo del ${pct(
-          costReductionPct,
-        )} aumenta il margine dal ${pct(currentMarginPct)} al ${pct(
-          simulatedMarginPct,
-        )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
-          recoveredAnnualProfit,
-          0,
-        )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
+        simulatedPrice,
+        2,
+      )} e ridurre il costo del ${pct(
+        costReductionPct,
+      )} aumenta il margine dal ${pct(currentMarginPct)} al ${pct(
+        simulatedMarginPct,
+      )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
+        netRecoveredAnnualProfit,
+        0,
+      )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
       : `Moving the price to ${money(
-          simulatedPrice,
-          2,
-        )} and reducing cost by ${pct(
-          costReductionPct,
-        )} increases margin from ${pct(currentMarginPct)} to ${pct(
-          simulatedMarginPct,
-        )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
-          recoveredAnnualProfit,
-          0,
-        )} per year. This is a credible balance between profitability and commercial risk.`;
+        simulatedPrice,
+        2,
+      )} and reducing cost by ${pct(
+        costReductionPct,
+      )} increases margin from ${pct(currentMarginPct)} to ${pct(
+        simulatedMarginPct,
+      )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
+        netRecoveredAnnualProfit,
+        0,
+      )} per year. This is a credible balance between profitability and commercial risk.`;
   })();
 
   const suggestedActions = [
@@ -633,7 +660,7 @@ export default function RecoverySimulatorPage() {
       costReductionPct,
       salesChangePct,
       monthlyProfit: simulatedMonthlyProfit,
-      annualRecovery: recoveredAnnualProfit,
+      annualRecovery: netRecoveredAnnualProfit,
       marginPct: simulatedMarginPct,
       createdAt: new Date().toISOString(),
     };
@@ -1507,21 +1534,25 @@ export default function RecoverySimulatorPage() {
                 },
                 {
                   label:
-                    language === "it" ? "Recupero mensile" : "Monthly recovery",
-                  value: formatSignedMoney(recoveredMonthlyProfit, 0),
+                    language === "it"
+                      ? "Recupero mensile netto"
+                      : "Net monthly recovery",
+                  value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
                   note:
                     language === "it" ? "Impatto stimato" : "Estimated impact",
-                  positive: recoveredMonthlyProfit >= 0,
+                  positive: netRecoveredMonthlyProfit >= 0,
                 },
                 {
                   label:
-                    language === "it" ? "Recupero annuale" : "Annual recovery",
-                  value: formatSignedMoney(recoveredAnnualProfit, 0),
+                    language === "it"
+                      ? "Recupero annuale netto"
+                      : "Net annual recovery",
+                  value: formatSignedMoney(netRecoveredAnnualProfit, 0),
                   note:
                     language === "it"
                       ? "Proiezione 12 mesi"
                       : "12-month projection",
-                  positive: recoveredAnnualProfit >= 0,
+                  positive: netRecoveredAnnualProfit >= 0,
                 },
               ].map((item) => (
                 <div
@@ -1901,13 +1932,16 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  <span>{language === "it" ? "Totale" : "Total"}</span>
+                  <span>
+                    {language === "it" ? "Totale netto" : "Net total"}
+                  </span>
                   <span
                     style={{
-                      color: recoveredAnnualProfit >= 0 ? "#4ade80" : "#f87171",
+                      color:
+                        netRecoveredAnnualProfit >= 0 ? "#4ade80" : "#f87171",
                     }}
                   >
-                    {formatSignedMoney(recoveredAnnualProfit, 0)}
+                    {formatSignedMoney(netRecoveredAnnualProfit, 0)}
                   </span>
                 </div>
               </div>
@@ -2203,18 +2237,19 @@ export default function RecoverySimulatorPage() {
                 {language === "it" ? "Impatto annuale" : "Annual impact"}
               </div>
               <div
-                key={`annual-${Math.round(recoveredAnnualProfit)}`}
+                key={`annual-${Math.round(netRecoveredAnnualProfit)}`}
                 className="recovery-annual-value"
                 style={{
                   marginTop: 15,
-                  color: recoveredAnnualProfit >= 0 ? "#22c55e" : "#f87171",
+                  color:
+                    netRecoveredAnnualProfit >= 0 ? "#22c55e" : "#f87171",
                   fontSize: 48,
                   lineHeight: 1,
                   letterSpacing: "-0.05em",
                   fontWeight: 950,
                 }}
               >
-                {formatSignedMoney(recoveredAnnualProfit, 0)}
+                {formatSignedMoney(netRecoveredAnnualProfit, 0)}
               </div>
               <div
                 style={{
@@ -2225,20 +2260,20 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 {language === "it"
-                  ? "Profitto stimato recuperato ogni anno mantenendo questo scenario."
-                  : "Estimated profit recovered every year if this scenario is maintained."}
+                  ? `Profitto netto stimato dopo la riserva fiscale del ${pct(taxReserveRate * 100)}.`
+                  : `Estimated net profit after the ${pct(taxReserveRate * 100)} tax reserve.`}
               </div>
 
-              {recoveredAnnualProfit > 0 && (
+              {netRecoveredAnnualProfit > 0 && (
                 <div
-                  key={`unlock-${Math.round(recoveredAnnualProfit)}`}
+                  key={`unlock-${Math.round(netRecoveredAnnualProfit)}`}
                   className="recovery-unlocked-badge"
                 >
                   <span>↗</span>
                   <span>
                     {language === "it"
-                      ? `${formatSignedMoney(recoveredAnnualProfit, 0)} di profitto annuale sbloccato`
-                      : `${formatSignedMoney(recoveredAnnualProfit, 0)} annual profit unlocked`}
+                      ? `${formatSignedMoney(netRecoveredAnnualProfit, 0)} di profitto annuale netto sbloccato`
+                      : `${formatSignedMoney(netRecoveredAnnualProfit, 0)} net annual profit unlocked`}
                   </span>
                 </div>
               )}
@@ -2421,7 +2456,7 @@ export default function RecoverySimulatorPage() {
             }}
           >
             {language === "it"
-              ? `Anteprimaa Growth. Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
+              ? `Anteprima Growth. Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
               : `Growth preview. Estimates use Shopify data from the last ${periodDays} days and are normalized to a monthly basis. The simulator does not automatically change prices or costs.`}
           </div>
         </div>
