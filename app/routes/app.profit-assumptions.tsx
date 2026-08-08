@@ -100,6 +100,18 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function roundCsvNumber(value: number, digits = 2) {
+  const factor = 10 ** digits;
+  return Math.round((value + Number.EPSILON) * factor) / factor;
+}
+
+function csvCell(value: string | number) {
+  const text = String(value);
+  const protectedText =
+    typeof value === "string" && /^[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${protectedText.replace(/"/g, '""')}"`;
+}
+
 function KpiCard({
   label,
   value,
@@ -287,8 +299,9 @@ export default function ProfitAssumptionsPage() {
   const language = getStoredLanguage();
   const saveFetcher = useFetcher<{ ok: boolean }>();
 
-  const { summary, assumptions, currencyCode, period } =
+  const { summary, assumptions, currencyCode, period, shopHandle } =
     useLoaderData() as LoaderData & {
+      shopHandle?: string;
       assumptions: {
         monthlyAds: number;
         monthlyShipping: number;
@@ -514,6 +527,178 @@ export default function ProfitAssumptionsPage() {
             largestCost.value * 0.1,
           )} and annual profit by about ${money(largestCost.value * 1.2)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
+
+  const exportBusinessModelCsv = () => {
+    const labels =
+      language === "it"
+        ? {
+            section: "Sezione",
+            metric: "Voce",
+            value: "Valore",
+            unit: "Unità",
+            nature: "Natura",
+            note: "Nota",
+            metadata: "Metadati",
+            observed: "Baseline osservata",
+            assumptions: "Ipotesi del modello",
+            costStructure: "Struttura dei costi stimata",
+            results: "Risultati stimati",
+            scenarios: "Simulazioni rapide",
+            guidance: "Indicazione strategica",
+            observedNature: "Osservato",
+            assumptionNature: "Ipotesi",
+            estimateNature: "Stima",
+            simulationNature: "Simulazione",
+            textNature: "Qualitativo",
+            amount: "Importo",
+            percentage: "Percentuale",
+            score: "Punteggio",
+            text: "Testo",
+            generatedAt: "Generato il",
+            store: "Store",
+            period: "Periodo analizzato",
+            currency: "Valuta",
+            language: "Lingua",
+            days: "giorni",
+            revenue: "Ricavi",
+            cogs: "COGS",
+            grossProfit: "Profitto lordo",
+            grossMargin: "Margine lordo",
+            monthlyAds: "Pubblicità mensile",
+            monthlyShipping: "Spedizioni mensili",
+            monthlyOperating: "Costi operativi mensili",
+            paymentFeePct: "Commissione di pagamento",
+            transactionFeePct: "Commissione sulle transazioni",
+            taxReservePct: "Accantonamento fiscale",
+            fixedCosts: "Costi fissi",
+            variableCosts: "Commissioni e riserva",
+            totalCosts: "Costi stimati totali",
+            annualCosts: "Costi stimati annuali",
+            paymentFees: "Commissioni di pagamento stimate",
+            transactionFees: "Commissioni sulle transazioni stimate",
+            taxReserve: "Accantonamento fiscale stimato",
+            netProfit: "Profitto netto stimato",
+            netMargin: "Margine netto stimato",
+            annualNetProfit: "Profitto netto annuale",
+            breakEven: "Ricavi mensili di pareggio",
+            profitAfterFees: "Profitto dopo commissioni",
+            modelHealth: "Salute del modello",
+            mainCost: "Costo principale",
+            recommendation: "Raccomandazione",
+            simulationNote:
+              "Scenario alternativo; non sommare alle altre simulazioni.",
+            estimateNote:
+              "Stima basata sulla baseline del periodo e sulle ipotesi inserite; non è un risultato osservato.",
+          }
+        : {
+            section: "Section",
+            metric: "Metric",
+            value: "Value",
+            unit: "Unit",
+            nature: "Nature",
+            note: "Note",
+            metadata: "Metadata",
+            observed: "Observed baseline",
+            assumptions: "Model assumptions",
+            costStructure: "Estimated cost structure",
+            results: "Estimated results",
+            scenarios: "Quick what-if scenarios",
+            guidance: "Strategic guidance",
+            observedNature: "Observed",
+            assumptionNature: "Assumption",
+            estimateNature: "Estimate",
+            simulationNature: "Simulation",
+            textNature: "Qualitative",
+            amount: "Amount",
+            percentage: "Percentage",
+            score: "Score",
+            text: "Text",
+            generatedAt: "Generated at",
+            store: "Store",
+            period: "Analysis period",
+            currency: "Currency",
+            language: "Language",
+            days: "days",
+            revenue: "Revenue",
+            cogs: "COGS",
+            grossProfit: "Gross profit",
+            grossMargin: "Gross margin",
+            monthlyAds: "Monthly advertising",
+            monthlyShipping: "Monthly shipping",
+            monthlyOperating: "Monthly operating costs",
+            paymentFeePct: "Payment processing fee",
+            transactionFeePct: "Transaction fee",
+            taxReservePct: "Tax reserve",
+            fixedCosts: "Fixed costs",
+            variableCosts: "Fees and reserve",
+            totalCosts: "Total estimated costs",
+            annualCosts: "Annual estimated costs",
+            paymentFees: "Estimated payment fees",
+            transactionFees: "Estimated transaction fees",
+            taxReserve: "Estimated tax reserve",
+            netProfit: "Estimated net profit",
+            netMargin: "Estimated net margin",
+            annualNetProfit: "Annual net profit",
+            breakEven: "Monthly break-even revenue",
+            profitAfterFees: "Profit after fees",
+            modelHealth: "Model health",
+            mainCost: "Largest cost",
+            recommendation: "Recommendation",
+            simulationNote:
+              "Alternative scenario; do not add to the other simulations.",
+            estimateNote:
+              "Estimate based on the period baseline and entered assumptions; it is not an observed result.",
+          };
+
+    const rows: Array<Array<string | number>> = [
+      [labels.section, labels.metric, labels.value, labels.unit, labels.nature, labels.note],
+      [labels.metadata, labels.generatedAt, new Date().toISOString(), "ISO 8601", labels.textNature, ""],
+      [labels.metadata, labels.store, shopHandle ?? "", "", labels.textNature, ""],
+      [labels.metadata, labels.period, periodDays, labels.days, labels.observedNature, ""],
+      [labels.metadata, labels.currency, currencyCode, "ISO 4217", labels.textNature, ""],
+      [labels.metadata, labels.language, language, "", labels.textNature, ""],
+      [labels.observed, labels.revenue, roundCsvNumber(summary.revenue), currencyCode, labels.observedNature, ""],
+      [labels.observed, labels.cogs, roundCsvNumber(summary.cogs), currencyCode, labels.observedNature, ""],
+      [labels.observed, labels.grossProfit, roundCsvNumber(summary.profit), currencyCode, labels.observedNature, ""],
+      [labels.observed, labels.grossMargin, roundCsvNumber(summary.marginPct), "%", labels.observedNature, ""],
+      [labels.assumptions, labels.monthlyAds, roundCsvNumber(monthlyAds), currencyCode, labels.assumptionNature, ""],
+      [labels.assumptions, labels.monthlyShipping, roundCsvNumber(monthlyShipping), currencyCode, labels.assumptionNature, ""],
+      [labels.assumptions, labels.monthlyOperating, roundCsvNumber(monthlyOperating), currencyCode, labels.assumptionNature, ""],
+      [labels.assumptions, labels.paymentFeePct, roundCsvNumber(paymentFeePct), "%", labels.assumptionNature, ""],
+      [labels.assumptions, labels.transactionFeePct, roundCsvNumber(transactionFeePct), "%", labels.assumptionNature, ""],
+      [labels.assumptions, labels.taxReservePct, roundCsvNumber(taxReservePct), "%", labels.assumptionNature, ""],
+      [labels.costStructure, labels.fixedCosts, roundCsvNumber(totalFixedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.paymentFees, roundCsvNumber(estimatedPaymentFees), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.transactionFees, roundCsvNumber(estimatedTransactionFees), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.taxReserve, roundCsvNumber(estimatedTaxReserve), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.variableCosts, roundCsvNumber(totalVariableCosts), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.totalCosts, roundCsvNumber(totalEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.annualCosts, roundCsvNumber(annualEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.netProfit, roundCsvNumber(estimatedNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.netMargin, roundCsvNumber(estimatedNetMargin), "%", labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.annualNetProfit, roundCsvNumber(annualNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.breakEven, roundCsvNumber(breakEvenRevenue), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.profitAfterFees, roundCsvNumber(profitAfterFees), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.modelHealth, healthScore, "/100", labels.estimateNature, healthLabel],
+      ...costItems.map((item) => [labels.costStructure, item.label, roundCsvNumber(item.value), currencyCode, labels.estimateNature, labels.estimateNote]),
+      ...whatIfScenarios.map((scenario) => [labels.scenarios, scenario.label, roundCsvNumber(scenario.impact), `${currencyCode}/month`, labels.simulationNature, labels.simulationNote]),
+      ...whatIfScenarios.map((scenario) => [labels.scenarios, `${scenario.label} — 12 months`, roundCsvNumber(scenario.impact * 12), currencyCode, labels.simulationNature, labels.simulationNote]),
+      [labels.guidance, labels.mainCost, largestCost?.label ?? "", labels.text, labels.textNature, ""],
+      [labels.guidance, labels.recommendation, advice, labels.text, labels.textNature, ""],
+    ];
+
+    const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `marginlab-business-model-${shopHandle ?? "store"}-${date}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="dashboard-shell">
@@ -897,18 +1082,31 @@ export default function ProfitAssumptionsPage() {
               border: "1px solid rgba(34,197,94,0.22)",
             }}
           >
-            <div
-              style={{
-                color: "#4ade80",
-                fontSize: 11,
-                fontWeight: 950,
-                textTransform: "uppercase",
-                letterSpacing: "0.13em",
-              }}
-            >
-              {language === "it"
-                ? "CONTO ECONOMICO STIMATO"
-                : "ESTIMATED PROFIT MODEL"}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+              <div
+                style={{
+                  color: "#4ade80",
+                  fontSize: 11,
+                  fontWeight: 950,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.13em",
+                }}
+              >
+                {language === "it"
+                  ? "CONTO ECONOMICO STIMATO"
+                  : "ESTIMATED PROFIT MODEL"}
+              </div>
+
+              <button
+                type="button"
+                onClick={exportBusinessModelCsv}
+                className="secondary-button"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                {language === "it"
+                  ? "Esporta modello CSV"
+                  : "Export model CSV"}
+              </button>
             </div>
 
             <div
