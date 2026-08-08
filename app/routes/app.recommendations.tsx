@@ -723,6 +723,7 @@ export default function RecommendationsPage() {
             value: "Valore",
             monthlyOpportunity: "Opportunità mensile stimata",
             annualOpportunity: "Opportunità annuale stimata",
+            actionCenterScore: "Action Center Score",
             confidence: "Data Confidence",
             totalActions: "Azioni totali",
             completedActions: "Azioni completate",
@@ -739,7 +740,8 @@ export default function RecommendationsPage() {
               "Stato operativo",
               "Fase",
               "Priorità",
-              "Impatto mensile stimato",
+              "Natura economica",
+              "Importo economico",
               "Difficoltà",
               "Tempo stimato (minuti)",
               "Data Confidence %",
@@ -750,6 +752,12 @@ export default function RecommendationsPage() {
             ],
             completed: "Completata",
             pending: "Da completare",
+            economicKinds: {
+              loss: "Perdita",
+              opportunity: "Opportunità",
+              exposure: "Esposizione",
+              qualitative: "Qualitativo",
+            },
           }
         : {
             report: "Report",
@@ -763,6 +771,7 @@ export default function RecommendationsPage() {
             value: "Value",
             monthlyOpportunity: "Estimated monthly opportunity",
             annualOpportunity: "Estimated annual opportunity",
+            actionCenterScore: "Action Center Score",
             confidence: "Data Confidence",
             totalActions: "Total actions",
             completedActions: "Completed actions",
@@ -779,7 +788,8 @@ export default function RecommendationsPage() {
               "Business status",
               "Stage",
               "Priority",
-              "Estimated monthly impact",
+              "Economic kind",
+              "Economic amount",
               "Difficulty",
               "Estimated time (minutes)",
               "Data Confidence %",
@@ -790,6 +800,12 @@ export default function RecommendationsPage() {
             ],
             completed: "Completed",
             pending: "Pending",
+            economicKinds: {
+              loss: "Loss",
+              opportunity: "Opportunity",
+              exposure: "Exposure",
+              qualitative: "Qualitative",
+            },
           };
 
     const lines = [
@@ -804,6 +820,7 @@ export default function RecommendationsPage() {
       csvRow([labels.metric, labels.value]),
       csvRow([labels.monthlyOpportunity, headlineMonthlyOpportunity]),
       csvRow([labels.annualOpportunity, annualOpportunity]),
+      csvRow([labels.actionCenterScore, actionCenterScore]),
       csvRow([labels.confidence, confidenceScore]),
       csvRow([labels.totalActions, queueAlerts.length]),
       csvRow([labels.completedActions, completedAlerts.length]),
@@ -827,6 +844,7 @@ export default function RecommendationsPage() {
           getStatusStyle(alert.businessAction, language).label,
           stageLabels[getActionStage(alert)],
           alert.priority,
+          labels.economicKinds[alert.economicKind],
           alert.monthlyImpact,
           getEffortLabel(alert.effort, language),
           alert.estimatedMinutes,
