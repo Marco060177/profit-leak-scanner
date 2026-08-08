@@ -375,8 +375,15 @@ export default function ProfitAssumptionsPage() {
   const estimatedNetMargin =
     summary.revenue > 0 ? (estimatedNetProfit / summary.revenue) * 100 : 0;
 
-  const annualNetProfit = estimatedNetProfit * annualizationMultiplier;
-  const annualEstimatedCosts = totalEstimatedCosts * annualizationMultiplier;
+  const displayedEstimatedNetProfit = roundCsvNumber(estimatedNetProfit);
+  const displayedTotalEstimatedCosts = roundCsvNumber(totalEstimatedCosts);
+
+  const annualNetProfit = roundCsvNumber(
+    displayedEstimatedNetProfit * annualizationMultiplier,
+  );
+  const annualEstimatedCosts = roundCsvNumber(
+    displayedTotalEstimatedCosts * annualizationMultiplier,
+  );
 
   const grossMarginRate =
     summary.revenue > 0 ? summary.profit / summary.revenue : 0;
@@ -443,6 +450,13 @@ export default function ProfitAssumptionsPage() {
   const maxCost = Math.max(1, ...costItems.map((item) => item.value));
 
   const largestCost = [...costItems].sort((a, b) => b.value - a.value)[0];
+
+  const largestCostMonthlySaving = largestCost
+    ? roundCsvNumber(largestCost.value * 0.1)
+    : 0;
+  const largestCostAnnualSaving = roundCsvNumber(
+    largestCostMonthlySaving * 12,
+  );
 
   const whatIfScenarios = [
     {
@@ -516,16 +530,16 @@ export default function ProfitAssumptionsPage() {
             (largestCost.value / totalEstimatedCosts) * 100,
             0,
           )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
-            largestCost.value * 0.1,
-          )} e quello annuale di circa ${money(largestCost.value * 1.2)}.`
+            largestCostMonthlySaving,
+          )} e quello annuale di circa ${money(largestCostAnnualSaving)}.`
         : "Inserisci i costi principali per ottenere una raccomandazione economica più affidabile."
       : largestCost && totalEstimatedCosts > 0
         ? `${largestCost.label} represents approximately ${pct(
             (largestCost.value / totalEstimatedCosts) * 100,
             0,
           )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
-            largestCost.value * 0.1,
-          )} and annual profit by about ${money(largestCost.value * 1.2)}.`
+            largestCostMonthlySaving,
+          )} and annual profit by about ${money(largestCostAnnualSaving)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
 
   const exportBusinessModelCsv = () => {
