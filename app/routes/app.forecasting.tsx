@@ -380,13 +380,24 @@ export default function ForecastingPage() {
 
   const variableFeePct =
     safeNumber(assumptions.paymentFeePct) +
-    safeNumber(assumptions.transactionFeePct) +
-    safeNumber(assumptions.taxReservePct);
+    safeNumber(assumptions.transactionFeePct);
+
+  const taxReserveRate = clamp(
+    safeNumber(assumptions.taxReservePct) / 100,
+    0,
+    1,
+  );
 
   const currentMonthlyVariableFees = monthlyRevenue * (variableFeePct / 100);
 
-  const currentMonthlyNetProfit =
+  const currentMonthlyProfitBeforeTaxReserve =
     monthlyGrossProfit - monthlyFixedCosts - currentMonthlyVariableFees;
+
+  const currentMonthlyTaxReserve =
+    Math.max(0, currentMonthlyProfitBeforeTaxReserve) * taxReserveRate;
+
+  const currentMonthlyNetProfit =
+    currentMonthlyProfitBeforeTaxReserve - currentMonthlyTaxReserve;
 
   const currentNetMargin =
     monthlyRevenue > 0 ? (currentMonthlyNetProfit / monthlyRevenue) * 100 : 0;
@@ -466,7 +477,9 @@ export default function ForecastingPage() {
 
       const fixedCosts = monthlyFixedCosts * costGrowthFactor;
       const variableFees = revenue * (variableFeePct / 100);
-      const netProfit = grossProfit - fixedCosts - variableFees;
+      const profitBeforeTaxReserve = grossProfit - fixedCosts - variableFees;
+      const taxReserve = Math.max(0, profitBeforeTaxReserve) * taxReserveRate;
+      const netProfit = profitBeforeTaxReserve - taxReserve;
 
       const netMargin = revenue > 0 ? (netProfit / revenue) * 100 : 0;
 
@@ -496,6 +509,7 @@ export default function ForecastingPage() {
     monthlyRevenue,
     monthlyRevenueGrowth,
     recoveryCapture,
+    taxReserveRate,
     variableFeePct,
   ]);
 
@@ -544,7 +558,9 @@ export default function ForecastingPage() {
         monthlyFixedCosts * Math.pow(1 + inputs.monthlyCostGrowth / 100, month);
       const variableFees = revenue * (variableFeePct / 100);
 
-      finalNetProfit = grossProfit - fixedCosts - variableFees;
+      const profitBeforeTaxReserve = grossProfit - fixedCosts - variableFees;
+      const taxReserve = Math.max(0, profitBeforeTaxReserve) * taxReserveRate;
+      finalNetProfit = profitBeforeTaxReserve - taxReserve;
       finalNetMargin = revenue > 0 ? (finalNetProfit / revenue) * 100 : 0;
       cumulativeNetProfit += finalNetProfit;
     }
