@@ -2421,7 +2421,7 @@ export default function RecoverySimulatorPage() {
             }}
           >
             {language === "it"
-              ? `Anteprima Growth. Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
+              ? `Anteprimaa Growth. Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
               : `Growth preview. Estimates use Shopify data from the last ${periodDays} days and are normalized to a monthly basis. The simulator does not automatically change prices or costs.`}
           </div>
         </div>
