@@ -4,6 +4,7 @@ export type FormattingOptions = {
   currencyCode?: string;
   locale?: string;
   timeZone?: string;
+  digits?: number;
 };
 
 const DEFAULT_CURRENCY = "USD";
@@ -22,20 +23,21 @@ export function formatMoney(
     options.currencyCode?.trim().toUpperCase() || DEFAULT_CURRENCY;
 
   const locale = options.locale || DEFAULT_LOCALE;
+  const digits = options.digits ?? 2;
 
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",
       currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(Number.isFinite(value) ? value : 0);
   } catch {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
       currency: DEFAULT_CURRENCY,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
     }).format(Number.isFinite(value) ? value : 0);
   }
 }
@@ -88,11 +90,12 @@ export function formatPercent(
   options: FormattingOptions = {},
 ) {
   const locale = options.locale || DEFAULT_LOCALE;
+  const digits = options.digits ?? 1;
 
   return new Intl.NumberFormat(locale, {
     style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
   }).format((Number.isFinite(value) ? value : 0) / 100);
 }
 
@@ -122,6 +125,7 @@ export function formatDateTime(
   options: FormattingOptions = {},
 ) {
   const locale = options.locale || DEFAULT_LOCALE;
+
   const timeZone = options.timeZone || DEFAULT_TIME_ZONE;
 
   const date = value instanceof Date ? value : new Date(value);

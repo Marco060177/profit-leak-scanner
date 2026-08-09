@@ -11,7 +11,7 @@ import {
 import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-
+import { jsPDF } from "jspdf";
 import {
   generateAiMarginAnalysis,
   generateAiAnswer,
@@ -25,6 +25,86 @@ import {
 } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
+
+function downloadAiReportPdf(reportText: string, language: Language) {
+  const pdf = new jsPDF({
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  });
+  const title =
+    language === "it"
+      ? "MarginLab - Report AI"
+      : "MarginLab - AI Report";
+  const pdfSafeText = reportText
+    .trim()
+    .replace(/[–—]/g, "-")
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/[•●]/g, "-")
+    .replace(/→/g, "->");
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const marginX = 18;
+  const contentWidth = pageWidth - marginX * 2;
+  const bodyStartY = 39;
+  const bodyEndY = pageHeight - 18;
+  const lineHeight = 5.4;
+  const locale = language === "it" ? "it-IT" : "en-US";
+  const reportDate = new Date().toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  const lines = pdf.splitTextToSize(pdfSafeText, contentWidth) as string[];
+  const linesPerPage = Math.max(
+    1,
+    Math.floor((bodyEndY - bodyStartY) / lineHeight),
+  );
+  const totalPages = Math.max(1, Math.ceil(lines.length / linesPerPage));
+
+  for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+    if (pageIndex > 0) pdf.addPage();
+
+    pdf.setFillColor(10, 15, 24);
+    pdf.rect(0, 0, pageWidth, 31, "F");
+    pdf.setTextColor(255, 122, 82);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(18);
+    pdf.text(title, marginX, 16);
+
+    pdf.setTextColor(190, 198, 210);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(9);
+    pdf.text(reportDate, marginX, 23);
+
+    pdf.setTextColor(35, 42, 52);
+    pdf.setFontSize(10.5);
+    const pageLines = lines.slice(
+      pageIndex * linesPerPage,
+      (pageIndex + 1) * linesPerPage,
+    );
+    pdf.text(pageLines, marginX, bodyStartY, {
+      lineHeightFactor: 1.45,
+    });
+
+    pdf.setDrawColor(225, 229, 235);
+    pdf.line(marginX, pageHeight - 13, pageWidth - marginX, pageHeight - 13);
+    pdf.setTextColor(120, 128, 140);
+    pdf.setFontSize(8);
+    pdf.text(
+      language === "it"
+        ? `MarginLab · Pagina ${pageIndex + 1} di ${totalPages}`
+        : `MarginLab · Page ${pageIndex + 1} of ${totalPages}`,
+      pageWidth - marginX,
+      pageHeight - 8,
+      { align: "right" },
+    );
+  }
+
+  pdf.save(`marginlab-ai-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
 
 type SelectedQuestion =
   | "profitRisk"
@@ -2157,21 +2237,42 @@ Rules:
             </div>
 
             {showAiReport && aiFetcher.data?.text && (
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: 22,
-                  borderRadius: 19,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "rgba(255,255,255,0.84)",
-                  fontSize: 14,
-                  lineHeight: 1.85,
-                  fontWeight: 720,
-                  whiteSpace: "pre-wrap",
-                }}
-              >
-                {aiFetcher.data.text}
+              <div style={{ marginTop: 20 }}>
+                <div
+                  style={{
+                    padding: 22,
+                    borderRadius: 19,
+                    background: "rgba(255,255,255,0.035)",
+                    border: "1px solid rgba(34,197,94,0.20)",
+                    color: "rgba(255,255,255,0.84)",
+                    fontSize: 14,
+                    lineHeight: 1.85,
+                    fontWeight: 720,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {aiFetcher.data.text}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: "flex",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={() =>
+                      downloadAiReportPdf(String(aiFetcher.data?.text), language)
+                    }
+                  >
+                    {language === "it"
+                      ? "Scarica report PDF ↓"
+                      : "Download PDF report ↓"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

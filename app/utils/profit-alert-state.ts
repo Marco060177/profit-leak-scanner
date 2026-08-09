@@ -84,7 +84,6 @@ export function syncProfitAlertStates(
 ): ProfitAlertStateMap {
   const currentStates = getStoredProfitAlertStates();
   const now = getCurrentTimestamp();
-
   const activeIds = new Set(activeAlertIds);
   const nextStates: ProfitAlertStateMap = {
     ...currentStates,
@@ -101,7 +100,6 @@ export function syncProfitAlertStates(
         firstSeenAt: now,
         lastSeenAt: now,
       };
-
       continue;
     }
 
@@ -120,10 +118,7 @@ export function syncProfitAlertStates(
   }
 
   for (const [alertId, state] of Object.entries(currentStates)) {
-    if (
-      !activeIds.has(alertId) &&
-      state.status !== "resolved"
-    ) {
+    if (!activeIds.has(alertId) && state.status !== "resolved") {
       nextStates[alertId] = {
         ...state,
         status: "resolved",
@@ -134,7 +129,6 @@ export function syncProfitAlertStates(
   }
 
   saveProfitAlertStates(nextStates);
-
   return nextStates;
 }
 
@@ -153,15 +147,11 @@ export function markProfitAlertAsRead(
     [alertId]: {
       ...existing,
       isRead: true,
-      status:
-        existing.status === "new"
-          ? "active"
-          : existing.status,
+      status: existing.status === "new" ? "active" : existing.status,
     },
   };
 
   saveProfitAlertStates(nextStates);
-
   return nextStates;
 }
 
@@ -186,7 +176,6 @@ export function acknowledgeProfitAlert(
   };
 
   saveProfitAlertStates(nextStates);
-
   return nextStates;
 }
 
@@ -212,7 +201,6 @@ export function restoreProfitAlert(
   };
 
   saveProfitAlertStates(nextStates);
-
   return nextStates;
 }
 
@@ -225,16 +213,12 @@ export function markAllProfitAlertsAsRead(): ProfitAlertStateMap {
       {
         ...state,
         isRead: true,
-        status:
-          state.status === "new"
-            ? "active"
-            : state.status,
+        status: state.status === "new" ? "active" : state.status,
       },
     ]),
   ) as ProfitAlertStateMap;
 
   saveProfitAlertStates(nextStates);
-
   return nextStates;
 }
 
@@ -242,9 +226,7 @@ export function getUnreadProfitAlertCount(
   states: ProfitAlertStateMap,
 ) {
   return Object.values(states).filter(
-    (state) =>
-      !state.isRead &&
-      state.status !== "resolved",
+    (state) => !state.isRead && state.status !== "resolved",
   ).length;
 }
 
@@ -256,10 +238,7 @@ export function getProfitAlertStatusCounts(
       counts.total += 1;
       counts[state.status] += 1;
 
-      if (
-        !state.isRead &&
-        state.status !== "resolved"
-      ) {
+      if (!state.isRead && state.status !== "resolved") {
         counts.unread += 1;
       }
 
