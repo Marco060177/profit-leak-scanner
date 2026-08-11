@@ -3,6 +3,7 @@ import type { LoaderData, Row, TrendPoint } from "~/utils/margin";
 import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
 import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
+import { getBillingStatus } from "~/utils/billing.server";
 
 type OrderEdge = { node?: any };
 
@@ -404,28 +405,30 @@ export async function loadMarginDashboardData({
   const previousQueryString =
     `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 
-  const appDataResponse = await admin.graphql(`
-    #graphql
-    query MarginLabAppData {
-      shop {
-        currencyCode
-        ianaTimezone
-      }
-
-      appInstallation {
-        activeSubscriptions {
-          id
-          name
-          status
+  const [appDataResponse, billing] = await Promise.all([
+    admin.graphql(`
+      #graphql
+      query MarginLabAppData {
+        shop {
+          currencyCode
+          ianaTimezone
         }
       }
-    }
-  `);
+    `),
+    getBillingStatus(admin),
+  ]);
 
   const appDataJson = await appDataResponse.json();
-  const activeSubscriptions =
-    appDataJson?.data?.appInstallation?.activeSubscriptions ?? [];
-  const billingActive = activeSubscriptions.length > 0;
+
+  if (appDataJson?.errors?.length) {
+    throw new Error(
+      `Unable to load Shopify app data: ${appDataJson.errors
+        .map((error: any) => error?.message ?? "Unknown GraphQL error")
+        .join("; ")}`,
+    );
+  }
+
+  const billingActive = billing.active;
   const currencyCode = appDataJson?.data?.shop?.currencyCode || "USD";
   const timeZone = appDataJson?.data?.shop?.ianaTimezone || "UTC";
 

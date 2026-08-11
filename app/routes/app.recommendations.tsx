@@ -1,8 +1,12 @@
 import * as React from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { redirect, useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import {
+  getBillingStatus,
+  hasGrowthAccess,
+} from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
@@ -47,6 +51,12 @@ export const loader = async ({
     throw new Response("Auth/scopes not ready. Reinstall the app.", {
       status: 401,
     });
+  }
+
+  const billing = await getBillingStatus(admin);
+
+  if (!hasGrowthAccess(billing)) {
+    throw redirect("/app/billing");
   }
 
   return loadMarginDashboardData({
