@@ -6,6 +6,10 @@ import prisma from "~/db.server";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import {
+  getBillingStatus,
+  hasGrowthAccess,
+} from "~/utils/billing.server";
+import {
   type LoaderData,
   money as formatStoreMoney,
   pct as formatStorePercent,
@@ -24,6 +28,9 @@ export async function loader({ request }: { request: Request }) {
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
+  const billing = await getBillingStatus(admin);
+  const growthAccess = hasGrowthAccess(billing);
+
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
@@ -31,18 +38,26 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions = (await prisma.profitAssumptions.findUnique({
-    where: {
-      shop: session.shop,
-    },
-  })) ?? {
-    paymentFeePct: 0,
-    transactionFeePct: 0,
-    taxReservePct: 0,
-  };
+  const assumptions = growthAccess
+    ? (await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      }
+    : {
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
+    billing,
+    growthAccess,
     assumptions: {
       paymentFeePct: assumptions.paymentFeePct,
       transactionFeePct: assumptions.transactionFeePct,
@@ -106,6 +121,7 @@ export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
   const loaderData = useLoaderData() as LoaderData & {
+    growthAccess: boolean;
     assumptions: {
       paymentFeePct: number;
       transactionFeePct: number;
@@ -113,7 +129,7 @@ export default function RecoverySimulatorPage() {
     };
   };
 
-  const { rows, currencyCode } = loaderData;
+  const { rows, currencyCode, growthAccess } = loaderData;
 
   const periodValue = Number(loaderData.period ?? 30);
   const periodDays =
@@ -922,9 +938,13 @@ export default function RecoverySimulatorPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it"
-                ? "Anteprima del piano Growth"
-                : "Growth Plan Preview"}
+              {growthAccess
+                ? language === "it"
+                  ? "Piano Growth attivo"
+                  : "Growth Plan Active"
+                : language === "it"
+                  ? "Anteprima del piano Growth"
+                  : "Growth Plan Preview"}
             </div>
 
             <div className="eyebrow">
@@ -946,15 +966,113 @@ export default function RecoverySimulatorPage() {
             </div>
           </div>
 
-          <button
-            className="primary-button recovery-growth-button"
-            onClick={() => navigate("/app/billing")}
-          >
-            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-          </button>
+          {!growthAccess && (
+            <button
+              className="primary-button recovery-growth-button"
+              onClick={() => navigate("/app/billing")}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          )}
         </div>
 
-        <div className="panel">
+        <div
+          className="panel"
+          style={{
+            position: "relative",
+            ...(growthAccess ? {} : { overflow: "hidden" }),
+          }}
+        >
+          {!growthAccess && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 50,
+                display: "grid",
+                placeItems: "start center",
+                paddingTop: 150,
+                background:
+                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.9))",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              <div
+                style={{
+                  width: "min(560px, calc(100% - 40px))",
+                  padding: 26,
+                  borderRadius: 24,
+                  textAlign: "center",
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.3)",
+                  boxShadow: "0 24px 70px rgba(0,0,0,0.42)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ff9a70",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#f8fafc",
+                    fontSize: 24,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Recovery Simulator è incluso nel piano Growth"
+                    : "Recovery Simulator is included with Growth"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Passa a Growth per simulare prezzo, costo e volume, confrontare scenari ed esportare le decisioni."
+                    : "Upgrade to Growth to simulate price, cost and volume, compare scenarios and export decisions."}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button recovery-growth-button"
+                  onClick={() => navigate("/app/billing")}
+                  style={{ marginTop: 18 }}
+                >
+                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div
+            aria-hidden={!growthAccess}
+            style={
+              growthAccess
+                ? undefined
+                : {
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
+            }
+          >
           <div style={{ ...cardStyle, padding: 22 }}>
             <div
               style={{
@@ -2602,9 +2720,14 @@ export default function RecoverySimulatorPage() {
               fontWeight: 700,
             }}
           >
-            {language === "it"
-              ? `Anteprima Growth. Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
-              : `Growth preview. Estimates use Shopify data from the last ${periodDays} days and are normalized to a monthly basis. The simulator does not automatically change prices or costs.`}
+            {growthAccess
+              ? language === "it"
+                ? `Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
+                : `Estimates use Shopify data from the last ${periodDays} days and are normalized to a monthly basis. The simulator does not automatically change prices or costs.`
+              : language === "it"
+                ? "Anteprima Growth. Passa a Growth per utilizzare il simulatore completo."
+                : "Growth preview. Upgrade to Growth to use the full simulator."}
+          </div>
           </div>
         </div>
       </div>
