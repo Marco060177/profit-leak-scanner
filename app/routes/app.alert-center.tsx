@@ -1296,8 +1296,8 @@ export default function AlertCenterPage() {
                   ? "Piano Growth attivo"
                   : "Growth Plan Active"
                 : language === "it"
-                  ? "Anteprima Growth"
-                  : "Growth Preview"}
+                  ? "Funzione Growth"
+                  : "Growth Feature"}
             </div>
 
             <div className="eyebrow">ALERT CENTER</div>
@@ -1340,68 +1340,102 @@ export default function AlertCenterPage() {
           )}
         </div>
 
-        {!growthAccess && (
+        <div
+          style={{
+            position: "relative",
+            ...(growthAccess ? {} : { overflow: "hidden", borderRadius: 30 }),
+          }}
+        >
+          {!growthAccess && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 80,
+                display: "grid",
+                placeItems: "start center",
+                paddingTop: 150,
+                background:
+                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.92))",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              <div
+                style={{
+                  width: "min(560px, calc(100% - 40px))",
+                  padding: 26,
+                  borderRadius: 24,
+                  textAlign: "center",
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.99), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.30)",
+                  boxShadow: "0 24px 70px rgba(0,0,0,0.44)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ff9a70",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#f8fafc",
+                    fontSize: 24,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Alert Center è incluso nel piano Growth"
+                    : "Alert Center is included with Growth"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Passa a Growth per gestire gli alert, segnare le priorità, mantenere lo storico ed esportare il monitoraggio."
+                    : "Upgrade to Growth to manage alerts, track priorities, keep alert history and export monitoring data."}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate("/app/billing")}
+                  style={{ marginTop: 18 }}
+                >
+                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div
-            style={{
-              marginBottom: 24,
-              padding: 22,
-              borderRadius: 20,
-              textAlign: "center",
-              background:
-                "linear-gradient(180deg, rgba(255,115,80,0.10), rgba(7,12,21,0.98))",
-              border: "1px solid rgba(255,115,60,0.28)",
-            }}
+            aria-hidden={!growthAccess}
+            style={
+              growthAccess
+                ? undefined
+                : {
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
+            }
           >
-            <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 8,
-                color: "#f8fafc",
-                fontSize: 21,
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Alert Center è incluso nel piano Growth"
-                : "Alert Center is included with Growth"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 7,
-                color: "rgba(255,255,255,0.58)",
-                fontSize: 12,
-                lineHeight: 1.55,
-                fontWeight: 730,
-              }}
-            >
-              {language === "it"
-                ? "Puoi vedere l'anteprima dei segnali, ma lettura, presa in carico, storico ed export richiedono Growth."
-                : "You can preview the signals, but read state, acknowledgement, history and export require Growth."}
-            </div>
-
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-              style={{ marginTop: 14 }}
-            >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-            </button>
-          </div>
-        )}
-
         <section
           style={{
             marginBottom: 25,
@@ -1803,6 +1837,8 @@ export default function AlertCenterPage() {
           {language === "it"
             ? "Gli alert vengono generati usando i dati Shopify del periodo selezionato. Gli impatti economici sono stime e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
             : "Alerts are generated using Shopify data from the selected period. Financial impacts are estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
+        </div>
+          </div>
         </div>
       </div>
     </div>
