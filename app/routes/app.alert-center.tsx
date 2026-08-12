@@ -3,6 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
@@ -50,6 +51,9 @@ export const loader = async ({ request }: { request: Request }) => {
     });
   }
 
+  const billing = await getBillingStatus(admin);
+  const growthAccess = hasGrowthAccess(billing);
+
   const data = await loadMarginDashboardData({
     admin,
     session,
@@ -64,22 +68,40 @@ export const loader = async ({ request }: { request: Request }) => {
     currencyCode: data.currencyCode,
   });
 
-  const alertStates = await syncProfitMonitor({
-    shop: session.shop,
-    period,
-    alerts,
-    snapshot: {
-      summary: data.summary,
-      economicSnapshot: data.economicSnapshot,
-      alertIds: alerts.map((alert) => alert.id),
-    },
-  });
+  const alertStates = growthAccess
+    ? await syncProfitMonitor({
+        shop: session.shop,
+        period,
+        alerts,
+        snapshot: {
+          summary: data.summary,
+          economicSnapshot: data.economicSnapshot,
+          alertIds: alerts.map((alert) => alert.id),
+        },
+      })
+    : {};
 
-  return { ...data, alertStates };
+  return {
+    ...data,
+    billing,
+    growthAccess,
+    alertStates,
+  };
 };
 
 export const action = async ({ request }: { request: Request }) => {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+
+  const billing = await getBillingStatus(admin);
+
+  if (!hasGrowthAccess(billing)) {
+    return {
+      ok: false,
+      growthRequired: true,
+      alertStates: {},
+    };
+  }
+
   const formData = await request.formData();
   const intent = String(formData.get("intent") ?? "");
 
@@ -684,6 +706,7 @@ export default function AlertCenterPage() {
     currencyCode,
     economicSnapshot,
     shopHandle,
+    growthAccess,
     alertStates: initialAlertStates,
   } = useLoaderData<typeof loader>();
 
@@ -719,6 +742,8 @@ export default function AlertCenterPage() {
   }, [alertStateFetcher.data]);
 
   React.useEffect(() => {
+    if (!growthAccess) return;
+
     const marker = `marginlab_profit_alert_db_migrated_${period}`;
 
     if (window.sessionStorage.getItem(marker)) return;
@@ -736,7 +761,7 @@ export default function AlertCenterPage() {
       },
       { method: "post" },
     );
-  }, [migrationFetcher, period]);
+  }, [growthAccess, migrationFetcher, period]);
 
   React.useEffect(() => {
     if (migrationFetcher.data?.alertStates) {
@@ -745,6 +770,11 @@ export default function AlertCenterPage() {
   }, [migrationFetcher.data]);
 
   const submitAlertState = (intent: string, alertId?: string) => {
+    if (!growthAccess) {
+      navigate("/app/billing");
+      return;
+    }
+
     alertStateFetcher.submit(
       {
         intent,
@@ -862,6 +892,11 @@ export default function AlertCenterPage() {
             };
 
   const handleOpenAlert = (alert: ProfitAlert) => {
+    if (!growthAccess) {
+      navigate("/app/billing");
+      return;
+    }
+
     setAlertStates((states) => ({
       ...states,
       [alert.id]: {
@@ -881,6 +916,11 @@ export default function AlertCenterPage() {
   };
 
   const handleAcknowledge = (alertId: string) => {
+    if (!growthAccess) {
+      navigate("/app/billing");
+      return;
+    }
+
     const now = new Date().toISOString();
     setAlertStates((states) => ({
       ...states,
@@ -898,6 +938,11 @@ export default function AlertCenterPage() {
   };
 
   const handleMarkAllRead = () => {
+    if (!growthAccess) {
+      navigate("/app/billing");
+      return;
+    }
+
     setAlertStates(
       (states) =>
         Object.fromEntries(
@@ -915,6 +960,11 @@ export default function AlertCenterPage() {
   };
 
   const handleExportCsv = () => {
+    if (!growthAccess) {
+      navigate("/app/billing");
+      return;
+    }
+
     const round2 = (value: number) =>
       Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
 
@@ -1241,9 +1291,13 @@ export default function AlertCenterPage() {
             <div className="alert-pill">
               <span className="alert-dot" />
 
-              {language === "it"
-                ? "Monitoraggio redditività"
-                : "Profitability monitoring"}
+              {growthAccess
+                ? language === "it"
+                  ? "Piano Growth attivo"
+                  : "Growth Plan Active"
+                : language === "it"
+                  ? "Anteprima Growth"
+                  : "Growth Preview"}
             </div>
 
             <div className="eyebrow">ALERT CENTER</div>
@@ -1261,18 +1315,92 @@ export default function AlertCenterPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="apply-button"
-            onClick={handleMarkAllRead}
-            disabled={lifecycleCounts.unread === 0}
+          {growthAccess ? (
+            <button
+              type="button"
+              className="apply-button"
+              onClick={handleMarkAllRead}
+              disabled={lifecycleCounts.unread === 0}
+              style={{
+                opacity: lifecycleCounts.unread === 0 ? 0.55 : 1,
+              }}
+            >
+              {language === "it"
+                ? "Segna tutti come letti"
+                : "Mark all as read"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          )}
+        </div>
+
+        {!growthAccess && (
+          <div
             style={{
-              opacity: lifecycleCounts.unread === 0 ? 0.55 : 1,
+              marginBottom: 24,
+              padding: 22,
+              borderRadius: 20,
+              textAlign: "center",
+              background:
+                "linear-gradient(180deg, rgba(255,115,80,0.10), rgba(7,12,21,0.98))",
+              border: "1px solid rgba(255,115,60,0.28)",
             }}
           >
-            {language === "it" ? "Segna tutti come letti" : "Mark all as read"}
-          </button>
-        </div>
+            <div
+              style={{
+                color: "#ff9a70",
+                fontSize: 11,
+                fontWeight: 950,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 8,
+                color: "#f8fafc",
+                fontSize: 21,
+                fontWeight: 950,
+              }}
+            >
+              {language === "it"
+                ? "Alert Center è incluso nel piano Growth"
+                : "Alert Center is included with Growth"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 7,
+                color: "rgba(255,255,255,0.58)",
+                fontSize: 12,
+                lineHeight: 1.55,
+                fontWeight: 730,
+              }}
+            >
+              {language === "it"
+                ? "Puoi vedere l'anteprima dei segnali, ma lettura, presa in carico, storico ed export richiedono Growth."
+                : "You can preview the signals, but read state, acknowledgement, history and export require Growth."}
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+              style={{ marginTop: 14 }}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          </div>
+        )}
 
         <section
           style={{
@@ -1552,6 +1680,7 @@ export default function AlertCenterPage() {
                 <input
                   type="checkbox"
                   checked={showAcknowledged}
+                  disabled={!growthAccess}
                   onChange={(event) =>
                     setShowAcknowledged(event.target.checked)
                   }
