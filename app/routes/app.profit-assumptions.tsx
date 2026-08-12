@@ -4,6 +4,7 @@ import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   type LoaderData,
   money as formatStoreMoney,
@@ -20,6 +21,9 @@ export async function loader({ request }: { request: Request }) {
   const locale = url.searchParams.get("lang") === "it" ? "it-IT" : "en-US";
   const period = url.searchParams.get("period") ?? "30";
 
+  const billing = await getBillingStatus(admin);
+  const growthAccess = hasGrowthAccess(billing);
+
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
@@ -27,27 +31,46 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions = (await prisma.profitAssumptions.findUnique({
-    where: {
-      shop: session.shop,
-    },
-  })) ?? {
-    monthlyAds: 500,
-    monthlyShipping: 300,
-    monthlyOperating: 200,
-    paymentFeePct: 2.9,
-    transactionFeePct: 0.5,
-    taxReservePct: 0,
-  };
+  const assumptions = growthAccess
+    ? (await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        monthlyAds: 500,
+        monthlyShipping: 300,
+        monthlyOperating: 200,
+        paymentFeePct: 2.9,
+        transactionFeePct: 0.5,
+        taxReservePct: 0,
+      }
+    : {
+        monthlyAds: 500,
+        monthlyShipping: 300,
+        monthlyOperating: 200,
+        paymentFeePct: 2.9,
+        transactionFeePct: 0.5,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
+    billing,
+    growthAccess,
     assumptions,
   };
 }
 
 export async function action({ request }: { request: Request }) {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+
+  const billing = await getBillingStatus(admin);
+  if (!hasGrowthAccess(billing)) {
+    return {
+      ok: false,
+      error: "growth_required",
+    };
+  }
 
   const formData = await request.formData();
 
@@ -297,11 +320,18 @@ function FieldCard({
 export default function ProfitAssumptionsPage() {
   const navigate = useNavigate();
   const language = getStoredLanguage();
-  const saveFetcher = useFetcher<{ ok: boolean }>();
+  const saveFetcher = useFetcher<{ ok: boolean; error?: string }>();
 
-  const { summary, assumptions, currencyCode, period, shopHandle } =
-    useLoaderData() as LoaderData & {
+  const {
+    summary,
+    assumptions,
+    currencyCode,
+    period,
+    shopHandle,
+    growthAccess,
+  } = useLoaderData() as LoaderData & {
       shopHandle?: string;
+      growthAccess: boolean;
       assumptions: {
         monthlyAds: number;
         monthlyShipping: number;
@@ -723,7 +753,13 @@ export default function ProfitAssumptionsPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it" ? "Funzione Growth" : "Growth Feature"}
+              {growthAccess
+                ? language === "it"
+                  ? "Piano Growth attivo"
+                  : "Growth Plan Active"
+                : language === "it"
+                  ? "Funzione Growth"
+                  : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -745,18 +781,116 @@ export default function ProfitAssumptionsPage() {
             </div>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={() => navigate("/app/billing")}
-            style={{
-              boxShadow:
-                "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
-            }}
-          >
-            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-          </button>
+          {!growthAccess && (
+            <button
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+              style={{
+                boxShadow:
+                  "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
+              }}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          )}
         </div>
 
+        <div
+          style={{
+            position: "relative",
+            ...(growthAccess ? {} : { overflow: "hidden", borderRadius: 24 }),
+          }}
+        >
+          {!growthAccess && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 50,
+                display: "grid",
+                placeItems: "start center",
+                paddingTop: 120,
+                background:
+                  "linear-gradient(180deg, rgba(5,9,16,0.22), rgba(5,9,16,0.78) 22%, rgba(5,9,16,0.92))",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              <div
+                style={{
+                  width: "min(560px, calc(100% - 40px))",
+                  padding: 26,
+                  borderRadius: 24,
+                  textAlign: "center",
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.30)",
+                  boxShadow: "0 24px 70px rgba(0,0,0,0.42)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ff9a70",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#f8fafc",
+                    fontSize: 24,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Business Model Studio è incluso nel piano Growth"
+                    : "Business Model Studio is included with Growth"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Passa a Growth per salvare costi, commissioni e riserve e alimentare le stime economiche delle funzioni Growth."
+                    : "Upgrade to Growth to save costs, fees and reserves and power the financial estimates used across Growth."}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate("/app/billing")}
+                  style={{ marginTop: 18 }}
+                >
+                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div
+            aria-hidden={!growthAccess}
+            style={
+              growthAccess
+                ? undefined
+                : {
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
+            }
+          >
         <div
           style={{
             display: "grid",
@@ -1834,6 +1968,8 @@ export default function ProfitAssumptionsPage() {
           {language === "it"
             ? "I valori inseriti manualmente vengono salvati e alimentano le stime di profitto netto utilizzate dalle funzioni Growth."
             : "Manually entered values are saved and power the net-profit estimates used by Growth features."}
+        </div>
+          </div>
         </div>
       </div>
     </div>
