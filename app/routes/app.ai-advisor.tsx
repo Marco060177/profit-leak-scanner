@@ -11,6 +11,7 @@ import {
 import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { jsPDF } from "jspdf";
 import {
   generateAiMarginAnalysis,
@@ -262,6 +263,9 @@ export async function loader({ request }: { request: Request }) {
       ? "it-IT"
       : "en-US";
 
+  const billing = await getBillingStatus(admin);
+  const growthAccess = hasGrowthAccess(billing);
+
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
@@ -269,25 +273,30 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions =
-    (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? null;
+  const assumptions = growthAccess
+    ? (await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? null
+    : null;
 
   const month = getUsageMonth();
-  const usage = await prisma.aiUsage.findUnique({
-    where: {
-      shop_month: {
-        shop: session.shop,
-        month,
-      },
-    },
-  });
+  const usage = growthAccess
+    ? await prisma.aiUsage.findUnique({
+        where: {
+          shop_month: {
+            shop: session.shop,
+            month,
+          },
+        },
+      })
+    : null;
 
   return {
     ...dashboardData,
+    billing,
+    growthAccess,
     assumptions,
     aiUsage: {
       used: usage?.requests ?? 0,
@@ -298,6 +307,15 @@ export async function loader({ request }: { request: Request }) {
 
 export async function action({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
+
+  const billing = await getBillingStatus(admin);
+
+  if (!hasGrowthAccess(billing)) {
+    return {
+      text: "",
+      growthRequired: true,
+    };
+  }
 
   const formData = await request.formData();
 
@@ -449,10 +467,12 @@ export default function AiAdvisorPage() {
   const aiFetcher = useFetcher<{
     text: string;
     quotaExceeded?: boolean;
+    growthRequired?: boolean;
   }>();
   const askFetcher = useFetcher<{
     text: string;
     quotaExceeded?: boolean;
+    growthRequired?: boolean;
   }>();
 
   const [question, setQuestion] = React.useState("");
@@ -460,8 +480,16 @@ export default function AiAdvisorPage() {
     React.useState<SelectedQuestion>("profitRisk");
   const [showAiReport, setShowAiReport] = React.useState(false);
 
-  const { summary, rows, assumptions, period, currencyCode, aiUsage } =
-    useLoaderData() as LoaderData & {
+  const {
+    summary,
+    rows,
+    assumptions,
+    period,
+    currencyCode,
+    aiUsage,
+    growthAccess,
+  } = useLoaderData() as LoaderData & {
+      growthAccess: boolean;
       assumptions: {
         monthlyAds: number;
         monthlyShipping: number;
@@ -1318,7 +1346,13 @@ Rules:
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it" ? "Funzione Growth" : "Growth Feature"}
+              {growthAccess
+                ? language === "it"
+                  ? "Piano Growth attivo"
+                  : "Growth Plan Active"
+                : language === "it"
+                  ? "Funzione Growth"
+                  : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -1338,17 +1372,81 @@ Rules:
             </div>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={() => navigate("/app/billing")}
+          {!growthAccess && (
+            <button
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+              style={{
+                boxShadow:
+                  "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
+              }}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          )}
+        </div>
+
+        {!growthAccess && (
+          <div
             style={{
-              boxShadow:
-                "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
+              marginBottom: 24,
+              padding: 22,
+              borderRadius: 20,
+              background:
+                "linear-gradient(180deg, rgba(255,115,80,0.10), rgba(7,12,21,0.98))",
+              border: "1px solid rgba(255,115,60,0.28)",
+              textAlign: "center",
             }}
           >
-            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-          </button>
-        </div>
+            <div
+              style={{
+                color: "#ff9a70",
+                fontSize: 11,
+                fontWeight: 950,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 8,
+                color: "#f8fafc",
+                fontSize: 21,
+                fontWeight: 950,
+              }}
+            >
+              {language === "it"
+                ? "Profit Copilot richiede il piano Growth"
+                : "Profit Copilot requires the Growth plan"}
+            </div>
+
+            <div
+              style={{
+                marginTop: 7,
+                color: "rgba(255,255,255,0.58)",
+                fontSize: 12,
+                lineHeight: 1.55,
+                fontWeight: 730,
+              }}
+            >
+              {language === "it"
+                ? "Puoi vedere l'anteprima della pagina, ma le funzioni AI sono bloccate finché Growth non è attivo."
+                : "You can preview the page, but AI features remain locked until Growth is active."}
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+              style={{ marginTop: 14 }}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          </div>
+        )}
 
         <div
           style={{
@@ -2210,7 +2308,7 @@ Rules:
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={aiFetcher.state !== "idle"}
+                  disabled={!growthAccess || aiFetcher.state !== "idle"}
                 >
                   {aiFetcher.state !== "idle"
                     ? language === "it"
@@ -2339,6 +2437,11 @@ Rules:
                   key={presetQuestion.id}
                   type="button"
                   onClick={() => {
+                    if (!growthAccess) {
+                      navigate("/app/billing");
+                      return;
+                    }
+
                     setSelectedQuestion(
                       presetQuestion.id as SelectedQuestion,
                     );
@@ -2416,7 +2519,7 @@ Rules:
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={askFetcher.state !== "idle" || !question.trim()}
+                  disabled={!growthAccess || askFetcher.state !== "idle" || !question.trim()}
                 >
                   {askFetcher.state !== "idle"
                     ? language === "it"
