@@ -309,7 +309,6 @@ export async function action({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const billing = await getBillingStatus(admin);
-
   if (!hasGrowthAccess(billing)) {
     return {
       text: "",
@@ -1386,68 +1385,102 @@ Rules:
           )}
         </div>
 
-        {!growthAccess && (
+        <div
+          style={{
+            position: "relative",
+            ...(growthAccess ? {} : { overflow: "hidden", borderRadius: 30 }),
+          }}
+        >
+          {!growthAccess && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 80,
+                display: "grid",
+                placeItems: "start center",
+                paddingTop: 140,
+                background:
+                  "linear-gradient(180deg, rgba(5,9,16,0.24), rgba(5,9,16,0.78) 22%, rgba(5,9,16,0.93))",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              <div
+                style={{
+                  width: "min(580px, calc(100% - 40px))",
+                  padding: 28,
+                  borderRadius: 24,
+                  textAlign: "center",
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.99), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.30)",
+                  boxShadow: "0 24px 70px rgba(0,0,0,0.44)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ff9a70",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#f8fafc",
+                    fontSize: 25,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Profit Copilot è incluso nel piano Growth"
+                    : "Profit Copilot is included with Growth"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Passa a Growth per ottenere briefing AI, analisi approfondite e risposte basate sui dati reali di redditività dello store."
+                    : "Upgrade to Growth for AI briefings, deep analysis and answers grounded in your store's real profitability data."}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate("/app/billing")}
+                  style={{ marginTop: 18 }}
+                >
+                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div
-            style={{
-              marginBottom: 24,
-              padding: 22,
-              borderRadius: 20,
-              background:
-                "linear-gradient(180deg, rgba(255,115,80,0.10), rgba(7,12,21,0.98))",
-              border: "1px solid rgba(255,115,60,0.28)",
-              textAlign: "center",
-            }}
+            aria-hidden={!growthAccess}
+            style={
+              growthAccess
+                ? undefined
+                : {
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
+            }
           >
-            <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 8,
-                color: "#f8fafc",
-                fontSize: 21,
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Profit Copilot richiede il piano Growth"
-                : "Profit Copilot requires the Growth plan"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 7,
-                color: "rgba(255,255,255,0.58)",
-                fontSize: 12,
-                lineHeight: 1.55,
-                fontWeight: 730,
-              }}
-            >
-              {language === "it"
-                ? "Puoi vedere l'anteprima della pagina, ma le funzioni AI sono bloccate finché Growth non è attivo."
-                : "You can preview the page, but AI features remain locked until Growth is active."}
-            </div>
-
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-              style={{ marginTop: 14 }}
-            >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-            </button>
-          </div>
-        )}
-
         <div
           style={{
             borderRadius: 30,
@@ -2308,7 +2341,7 @@ Rules:
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={!growthAccess || aiFetcher.state !== "idle"}
+                  disabled={aiFetcher.state !== "idle"}
                 >
                   {aiFetcher.state !== "idle"
                     ? language === "it"
@@ -2437,11 +2470,6 @@ Rules:
                   key={presetQuestion.id}
                   type="button"
                   onClick={() => {
-                    if (!growthAccess) {
-                      navigate("/app/billing");
-                      return;
-                    }
-
                     setSelectedQuestion(
                       presetQuestion.id as SelectedQuestion,
                     );
@@ -2519,7 +2547,7 @@ Rules:
                 <button
                   type="submit"
                   className="primary-button"
-                  disabled={!growthAccess || askFetcher.state !== "idle" || !question.trim()}
+                  disabled={askFetcher.state !== "idle" || !question.trim()}
                 >
                   {askFetcher.state !== "idle"
                     ? language === "it"
@@ -2568,6 +2596,8 @@ Rules:
             {language === "it"
               ? "Profit Copilot utilizza esclusivamente i dati Shopify, le ipotesi di costo e i segnali di redditività disponibili. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
               : "Profit Copilot uses only available Shopify data, saved cost assumptions and profitability signals. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
+          </div>
+          </div>
           </div>
         </div>
       </div>
