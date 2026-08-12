@@ -5,6 +5,7 @@ import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   type LoaderData,
   money as formatStoreMoney,
@@ -66,6 +67,9 @@ export async function loader({ request }: { request: Request }) {
   const forecastPeriod =
     Number.isFinite(parsedPeriod) && parsedPeriod > 0 ? parsedPeriod : 30;
 
+  const billing = await getBillingStatus(admin);
+  const growthAccess = hasGrowthAccess(billing);
+
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
@@ -73,21 +77,32 @@ export async function loader({ request }: { request: Request }) {
     locale,
   });
 
-  const assumptions = (await prisma.profitAssumptions.findUnique({
-    where: {
-      shop: session.shop,
-    },
-  })) ?? {
-    monthlyAds: 0,
-    monthlyShipping: 0,
-    monthlyOperating: 0,
-    paymentFeePct: 0,
-    transactionFeePct: 0,
-    taxReservePct: 0,
-  };
+  const assumptions = growthAccess
+    ? (await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        monthlyAds: 0,
+        monthlyShipping: 0,
+        monthlyOperating: 0,
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      }
+    : {
+        monthlyAds: 0,
+        monthlyShipping: 0,
+        monthlyOperating: 0,
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
+    billing,
+    growthAccess,
     assumptions,
     forecastPeriod,
   };
@@ -329,8 +344,10 @@ export default function ForecastingPage() {
     currencyCode,
     economicSnapshot,
     shopHandle,
+    growthAccess,
   } =
     useLoaderData() as LoaderData & {
+      growthAccess: boolean;
       assumptions: Assumptions;
       forecastPeriod: number;
     };
@@ -883,7 +900,13 @@ export default function ForecastingPage() {
           <div>
             <div className="alert-pill">
               <span className="alert-dot" />
-              {language === "it" ? "Funzione Growth" : "Growth Feature"}
+              {growthAccess
+                ? language === "it"
+                  ? "Piano Growth attivo"
+                  : "Growth Plan Active"
+                : language === "it"
+                  ? "Funzione Growth"
+                  : "Growth Feature"}
             </div>
 
             <div className="eyebrow">
@@ -905,19 +928,117 @@ export default function ForecastingPage() {
             </div>
           </div>
 
-          <button
-            className="primary-button"
-            onClick={() => navigate("/app/billing")}
-            style={{
-              boxShadow:
-                "0 12px 30px rgba(255,115,80,0.28), 0 0 28px rgba(255,115,80,0.16)",
-            }}
-          >
-            {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
-          </button>
+          {!growthAccess && (
+            <button
+              className="primary-button"
+              onClick={() => navigate("/app/billing")}
+              style={{
+                boxShadow:
+                  "0 12px 30px rgba(255,115,80,0.28), 0 0 28px rgba(255,115,80,0.16)",
+              }}
+            >
+              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+            </button>
+          )}
         </div>
 
-        <div className="panel">
+        <div
+          className="panel"
+          style={{
+            position: "relative",
+            ...(growthAccess ? {} : { overflow: "hidden" }),
+          }}
+        >
+          {!growthAccess && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 50,
+                display: "grid",
+                placeItems: "start center",
+                paddingTop: 150,
+                background:
+                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.9))",
+                backdropFilter: "blur(2px)",
+              }}
+            >
+              <div
+                style={{
+                  width: "min(560px, calc(100% - 40px))",
+                  padding: 26,
+                  borderRadius: 24,
+                  textAlign: "center",
+                  background:
+                    "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.3)",
+                  boxShadow: "0 24px 70px rgba(0,0,0,0.42)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "#ff9a70",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "#f8fafc",
+                    fontSize: 24,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Profit Forecasting è incluso nel piano Growth"
+                    : "Profit Forecasting is included with Growth"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Passa a Growth per costruire scenari, modificare le leve, confrontare le previsioni ed esportare i risultati."
+                    : "Upgrade to Growth to build scenarios, adjust levers, compare forecasts and export results."}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate("/app/billing")}
+                  style={{ marginTop: 18 }}
+                >
+                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div
+            aria-hidden={!growthAccess}
+            style={
+              growthAccess
+                ? undefined
+                : {
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
+            }
+          >
           <div
             style={{
               display: "grid",
@@ -2023,6 +2144,7 @@ export default function ForecastingPage() {
             {language === "it"
               ? `Le previsioni sono costruite sui dati Shopify degli ultimi ${periodDays} giorni, normalizzati su base mensile, sulle ipotesi di costo salvate e sulle opportunità di recupero individuate. Sono scenari decisionali, non risultati garantiti.`
               : `Forecasts are built from the last ${periodDays} days of Shopify data, normalized monthly, saved cost assumptions and identified recovery opportunities. They are decision scenarios, not guaranteed outcomes.`}
+          </div>
           </div>
         </div>
       </div>
