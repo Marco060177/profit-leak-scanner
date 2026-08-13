@@ -113,3 +113,22 @@ model ProfitMonitorAlertEvent {
 
   @@index([alertId, createdAt])
 }
+
+model StoreTaxProfile {
+  id                   String   @id @default(cuid())
+  shop                 String   @unique
+  countryCode          String
+  regime               String   @default("UNCONFIGURED")
+
+  defaultVatRatePct    Float    @default(22)
+
+  pricesIncludeVat     Boolean  @default(true)
+  costsIncludeVat      Boolean  @default(true)
+  recoverInputVat      Boolean  @default(true)
+
+  shippingIncludeVat   Boolean  @default(true)
+  shippingVatRatePct   Float    @default(22)
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}

@@ -4,7 +4,7 @@ import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
 import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
-import { buildTaxContext } from "~/utils/tax-profile.server";
+import { getStoreTaxContext } from "~/utils/tax-profile.server";
 
 
 type OrderEdge = { node?: any };
@@ -438,7 +438,10 @@ export async function loadMarginDashboardData({
   const timeZone = appDataJson?.data?.shop?.ianaTimezone || "UTC";
   const shopCountryCode =
     appDataJson?.data?.shop?.billingAddress?.countryCodeV2 || "";
-  const taxContext = buildTaxContext(shopCountryCode);
+  const taxContext = await getStoreTaxContext({
+    shop: session.shop,
+    shopCountryCode,
+  });
   console.log("[MarginLab Tax Context]", {
     shopCountryCode: taxContext.shopCountryCode,
     effectiveCountryCode: taxContext.effectiveCountryCode,

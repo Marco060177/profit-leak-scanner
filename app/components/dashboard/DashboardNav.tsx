@@ -21,6 +21,7 @@ type NavId =
   | "recovery-simulator"
   | "forecasting"
   | "profit-assumptions"
+  | "tax-profile"
   | "billing";
 
 type Props = {
@@ -165,6 +166,7 @@ export default function DashboardNav({
           "Previsioni di profitto",
         businessModelStudio:
           "Business Model Studio",
+        taxProfile: "Profilo fiscale",
         growthDescription:
           "Strumenti avanzati per aumentare il profitto",
       }
@@ -179,6 +181,7 @@ export default function DashboardNav({
         profitForecast: "Profit Forecast",
         businessModelStudio:
           "Business Model Studio",
+        taxProfile: "Tax Profile",
         growthDescription:
           "Advanced tools to increase profit",
       };
@@ -617,6 +620,41 @@ export default function DashboardNav({
                 : "Explore Growth Plan →"}
             </button>
           </div>
+        </div>
+
+        <div
+          className={
+            active === "tax-profile"
+              ? "nav-tab active"
+              : "nav-tab"
+          }
+          onClick={() =>
+            openPage(
+              "tax-profile",
+              "/app/tax-profile",
+            )
+          }
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              display: "inline-grid",
+              placeItems: "center",
+              width: 17,
+              height: 17,
+              fontSize: 12,
+              lineHeight: 1,
+              color: "#ff9a70",
+            }}
+          >
+            ◇
+          </span>
+          <span>{labels.taxProfile}</span>
         </div>
 
         <div
