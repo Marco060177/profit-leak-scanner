@@ -39,13 +39,24 @@ export default function DashboardNav({
   const [growthOpen, setGrowthOpen] =
     React.useState(false);
 
+  const [moreOpen, setMoreOpen] =
+    React.useState(false);
+
   const [unreadAlertCount, setUnreadAlertCount] =
     React.useState(0);
 
   const growthMenuRef =
     React.useRef<HTMLDivElement | null>(null);
 
+  const moreMenuRef =
+    React.useRef<HTMLDivElement | null>(null);
+
   const closeTimerRef =
+    React.useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    );
+
+  const moreCloseTimerRef =
     React.useRef<ReturnType<typeof setTimeout> | null>(
       null,
     );
@@ -66,6 +77,25 @@ export default function DashboardNav({
 
     closeTimerRef.current = setTimeout(() => {
       setGrowthOpen(false);
+    }, 220);
+  };
+
+  const openMoreMenu = () => {
+    if (moreCloseTimerRef.current) {
+      clearTimeout(moreCloseTimerRef.current);
+      moreCloseTimerRef.current = null;
+    }
+
+    setMoreOpen(true);
+  };
+
+  const scheduleMoreMenuClose = () => {
+    if (moreCloseTimerRef.current) {
+      clearTimeout(moreCloseTimerRef.current);
+    }
+
+    moreCloseTimerRef.current = setTimeout(() => {
+      setMoreOpen(false);
     }, 220);
   };
 
@@ -135,6 +165,15 @@ export default function DashboardNav({
       ) {
         setGrowthOpen(false);
       }
+
+      if (
+        moreMenuRef.current &&
+        !moreMenuRef.current.contains(
+          event.target as Node,
+        )
+      ) {
+        setMoreOpen(false);
+      }
     };
 
     document.addEventListener(
@@ -167,6 +206,7 @@ export default function DashboardNav({
         businessModelStudio:
           "Business Model Studio",
         taxProfile: "Profilo fiscale",
+        more: "Altro",
         growthDescription:
           "Strumenti avanzati per aumentare il profitto",
       }
@@ -182,6 +222,7 @@ export default function DashboardNav({
         businessModelStudio:
           "Business Model Studio",
         taxProfile: "Tax Profile",
+        more: "More",
         growthDescription:
           "Advanced tools to increase profit",
       };
@@ -208,6 +249,7 @@ export default function DashboardNav({
     path: string,
   ) => {
     setGrowthOpen(false);
+    setMoreOpen(false);
 
     if (active !== id) {
       navigate(path);
@@ -230,14 +272,19 @@ export default function DashboardNav({
       label: t.nav.profitIntelligence,
       path: "/app/profit-intelligence",
     },
-    {
-      id: "alert-center",
-      label: labels.alerts,
-      path: "/app/alert-center",
-    },
   ] as const;
 
   const growthItems = [
+    {
+      id: "alert-center",
+      label: labels.alerts,
+      description:
+        language === "it"
+          ? "Monitoraggio, priorità e alert di profitto"
+          : "Profit monitoring, priorities and alerts",
+      path: "/app/alert-center",
+      icon: "♢",
+    },
     {
       id: "ai-advisor",
       label: labels.profitCopilot,
@@ -305,81 +352,21 @@ export default function DashboardNav({
       </div>
 
       <div className="nav-tabs">
-        {mainItems.map((item) => {
-          const isAlertCenter =
-            item.id === "alert-center";
-
-          return (
-            <div
-              key={item.id}
-              className={
-                active === item.id
-                  ? "nav-tab active"
-                  : "nav-tab"
-              }
-              onClick={() =>
-                openPage(item.id, item.path)
-              }
-              style={
-                isAlertCenter
-                  ? {
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 7,
-                    position: "relative",
-                  }
-                  : undefined
-              }
-            >
-              {isAlertCenter && (
-                <span
-                  aria-hidden="true"
-                  style={{
-                    display: "inline-grid",
-                    placeItems: "center",
-                    width: 17,
-                    height: 17,
-                    fontSize: 13,
-                    lineHeight: 1,
-                  }}
-                >
-                  ♢
-                </span>
-              )}
-
-              <span>{item.label}</span>
-
-              {isAlertCenter &&
-                unreadAlertCount > 0 && (
-                  <span
-                    aria-label={`${unreadAlertCount} unread alerts`}
-                    style={{
-                      minWidth: 18,
-                      height: 18,
-                      padding: "0 5px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderRadius: 999,
-                      background: "#ff7346",
-                      border:
-                        "1px solid rgba(255,255,255,0.18)",
-                      color: "#ffffff",
-                      boxShadow:
-                        "0 0 14px rgba(255,115,70,0.30)",
-                      fontSize: 9,
-                      lineHeight: 1,
-                      fontWeight: 950,
-                    }}
-                  >
-                    {unreadAlertCount > 99
-                      ? "99+"
-                      : unreadAlertCount}
-                  </span>
-                )}
-            </div>
-          );
-        })}
+        {mainItems.map((item) => (
+          <div
+            key={item.id}
+            className={
+              active === item.id
+                ? "nav-tab active"
+                : "nav-tab"
+            }
+            onClick={() =>
+              openPage(item.id, item.path)
+            }
+          >
+            {item.label}
+          </div>
+        ))}
 
         <div
           ref={growthMenuRef}
@@ -565,6 +552,8 @@ export default function DashboardNav({
                   <div style={{ minWidth: 0 }}>
                     <div
                       style={{
+                        display: "flex",
+                        alignItems: "center",
                         color: itemActive
                           ? "#ffffff"
                           : "rgba(255,255,255,0.82)",
@@ -572,7 +561,37 @@ export default function DashboardNav({
                         fontWeight: 900,
                       }}
                     >
-                      {item.label}
+                      <span>{item.label}</span>
+
+                      {item.id === "alert-center" &&
+                        unreadAlertCount > 0 && (
+                          <span
+                            aria-label={`${unreadAlertCount} unread alerts`}
+                            style={{
+                              marginLeft: 7,
+                              minWidth: 18,
+                              height: 18,
+                              padding: "0 5px",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              borderRadius: 999,
+                              background: "#ff7346",
+                              border:
+                                "1px solid rgba(255,255,255,0.18)",
+                              color: "#ffffff",
+                              boxShadow:
+                                "0 0 14px rgba(255,115,70,0.30)",
+                              fontSize: 9,
+                              lineHeight: 1,
+                              fontWeight: 950,
+                            }}
+                          >
+                            {unreadAlertCount > 99
+                              ? "99+"
+                              : unreadAlertCount}
+                          </span>
+                        )}
                     </div>
 
                     <div
@@ -623,54 +642,229 @@ export default function DashboardNav({
         </div>
 
         <div
-          className={
-            active === "tax-profile"
-              ? "nav-tab active"
-              : "nav-tab"
-          }
-          onClick={() =>
-            openPage(
-              "tax-profile",
-              "/app/tax-profile",
-            )
-          }
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 7,
-          }}
+          ref={moreMenuRef}
+          style={{ position: "relative" }}
+          onMouseEnter={openMoreMenu}
+          onMouseLeave={scheduleMoreMenuClose}
         >
-          <span
-            aria-hidden="true"
+          <button
+            type="button"
+            className={
+              active === "tax-profile" || active === "billing"
+                ? "nav-tab active"
+                : "nav-tab"
+            }
+            onClick={() =>
+              setMoreOpen((current) => !current)
+            }
+            aria-expanded={moreOpen}
+            aria-haspopup="menu"
             style={{
-              display: "inline-grid",
-              placeItems: "center",
-              width: 17,
-              height: 17,
-              fontSize: 12,
-              lineHeight: 1,
-              color: "#ff9a70",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              font: "inherit",
             }}
           >
-            ◇
-          </span>
-          <span>{labels.taxProfile}</span>
-        </div>
+            <span>{labels.more}</span>
+            <span
+              style={{
+                display: "inline-block",
+                fontSize: 10,
+                transform: moreOpen
+                  ? "rotate(180deg)"
+                  : "rotate(0deg)",
+                transition: "transform 160ms ease",
+              }}
+            >
+              ▼
+            </span>
+          </button>
 
-        <div
-          className={
-            active === "billing"
-              ? "nav-tab active"
-              : "nav-tab"
-          }
-          onClick={() =>
-            openPage(
-              "billing",
-              "/app/billing",
-            )
-          }
-        >
-          {t.nav.billing}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "100%",
+              right: 0,
+              width: 250,
+              height: 10,
+              pointerEvents: moreOpen ? "auto" : "none",
+            }}
+          />
+
+          <div
+            role="menu"
+            style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              right: 0,
+              width: 250,
+              padding: 10,
+              borderRadius: 18,
+              background:
+                "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.99), rgba(8,13,22,0.99))",
+              border:
+                "1px solid rgba(255,115,60,0.24)",
+              boxShadow:
+                "0 26px 70px rgba(0,0,0,0.52)",
+              opacity: moreOpen ? 1 : 0,
+              visibility: moreOpen ? "visible" : "hidden",
+              pointerEvents: moreOpen ? "auto" : "none",
+              transform: moreOpen
+                ? "translateY(0)"
+                : "translateY(-7px)",
+              transition:
+                "opacity 150ms ease, transform 150ms ease, visibility 150ms ease",
+              zIndex: 100,
+            }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() =>
+                openPage("tax-profile", "/app/tax-profile")
+              }
+              style={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: "34px minmax(0,1fr)",
+                gap: 10,
+                alignItems: "center",
+                padding: "11px 12px",
+                borderRadius: 14,
+                border:
+                  active === "tax-profile"
+                    ? "1px solid rgba(255,115,60,0.24)"
+                    : "1px solid transparent",
+                background:
+                  active === "tax-profile"
+                    ? "rgba(255,115,60,0.12)"
+                    : "transparent",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: 11,
+                  color: "#ff9a70",
+                  background: "rgba(255,115,60,0.09)",
+                  border:
+                    "1px solid rgba(255,115,60,0.16)",
+                  fontSize: 13,
+                  fontWeight: 950,
+                }}
+              >
+                ◇
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    color:
+                      active === "tax-profile"
+                        ? "#ffffff"
+                        : "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {labels.taxProfile}
+                </div>
+                <div
+                  style={{
+                    marginTop: 3,
+                    color: "rgba(255,255,255,0.42)",
+                    fontSize: 10,
+                    lineHeight: 1.35,
+                    fontWeight: 700,
+                  }}
+                >
+                  {language === "it"
+                    ? "Regime IVA e impostazioni fiscali"
+                    : "VAT regime and tax settings"}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() =>
+                openPage("billing", "/app/billing")
+              }
+              style={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: "34px minmax(0,1fr)",
+                gap: 10,
+                alignItems: "center",
+                padding: "11px 12px",
+                borderRadius: 14,
+                border:
+                  active === "billing"
+                    ? "1px solid rgba(255,115,60,0.24)"
+                    : "1px solid transparent",
+                background:
+                  active === "billing"
+                    ? "rgba(255,115,60,0.12)"
+                    : "transparent",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: 11,
+                  color: "#ff9a70",
+                  background: "rgba(255,115,60,0.09)",
+                  border:
+                    "1px solid rgba(255,115,60,0.16)",
+                  fontSize: 13,
+                  fontWeight: 950,
+                }}
+              >
+                $
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    color:
+                      active === "billing"
+                        ? "#ffffff"
+                        : "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {t.nav.billing}
+                </div>
+                <div
+                  style={{
+                    marginTop: 3,
+                    color: "rgba(255,255,255,0.42)",
+                    fontSize: 10,
+                    lineHeight: 1.35,
+                    fontWeight: 700,
+                  }}
+                >
+                  {language === "it"
+                    ? "Piani e abbonamento Shopify"
+                    : "Plans and Shopify subscription"}
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
 
         <div
