@@ -5,6 +5,7 @@ import { formatMoney } from "~/utils/formatting";
 import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
+import { calculateVatEconomics } from "~/utils/vat-engine";
 
 
 type OrderEdge = { node?: any };
@@ -482,6 +483,8 @@ export async function loadMarginDashboardData({
       const cogs = Math.max(0, product.grossCogs - product.refundedCogs);
       const profit = revenue - cogs;
       const marginPct = revenue > 0 ? (profit / revenue) * 100 : 0;
+
+
       const previousMarginPct = previousMargins.get(key) ?? null;
       const productMarginDelta =
         previousMarginPct === null ? null : marginPct - previousMarginPct;
@@ -563,6 +566,18 @@ export async function loadMarginDashboardData({
   const totalCogs = current.productCogs;
   const totalProfit = totalRevenue - totalCogs;
   const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
+
+  const vatEconomics =
+    taxContext.isItalianStore && taxContext.configured
+      ? calculateVatEconomics({
+        grossRevenue: totalRevenue,
+        grossCost: totalCogs,
+        vatRatePct: taxContext.defaultVatRatePct,
+        revenueIncludesVat: taxContext.pricesIncludeVat,
+        costIncludesVat: taxContext.costsIncludeVat,
+        recoverInputVat: taxContext.recoverInputVat,
+      })
+      : null;
 
   const previousRevenue = previous.netProductRevenue;
   const previousProfit = previousRevenue - previous.productCogs;
@@ -735,6 +750,7 @@ export async function loadMarginDashboardData({
   return {
     ...loaderData,
     taxContext,
+    vatEconomics,
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,
       rows: loaderData.rows,

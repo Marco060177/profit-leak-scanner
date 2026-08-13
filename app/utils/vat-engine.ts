@@ -127,13 +127,3 @@ export function calculateVatEconomics({
   };
 }
 
-const test = calculateVatEconomics({
-  grossRevenue: 122,
-  grossCost: 61,
-  vatRatePct: 22,
-  revenueIncludesVat: true,
-  costIncludesVat: true,
-  recoverInputVat: true,
-});
-
-console.log("[VAT ENGINE TEST]", test);
