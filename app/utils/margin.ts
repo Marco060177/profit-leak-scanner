@@ -148,6 +148,24 @@ export type LoaderData = {
   timeZone: string;
   analysisContext?: AnalysisContext;
   economicSnapshot?: EconomicSnapshot;
+  taxContext?: {
+    shopCountryCode: string;
+    effectiveCountryCode: string;
+    isItalianStore: boolean;
+    profile:
+    | "UNCONFIGURED"
+    | "NOT_APPLICABLE"
+    | "ITALY_STANDARD"
+    | "ITALY_FORFETTARIO"
+    | "ITALY_EXEMPT";
+    defaultVatRatePct: number;
+    pricesIncludeVat: boolean;
+    costsIncludeVat: boolean;
+    recoverInputVat: boolean;
+    shippingIncludeVat: boolean;
+    shippingVatRatePct: number;
+    configured: boolean;
+  };
 };
 
 export function money(

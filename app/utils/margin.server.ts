@@ -734,6 +734,7 @@ export async function loadMarginDashboardData({
 
   return {
     ...loaderData,
+    taxContext,
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,
       rows: loaderData.rows,

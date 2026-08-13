@@ -348,6 +348,7 @@ export default function DashboardV2() {
     timeZone,
     analysisContext,
     alerts,
+    taxContext,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -395,17 +396,17 @@ export default function DashboardV2() {
   const analysisSteps =
     language === "it"
       ? [
-          "Analisi ordini Shopify...",
-          "Controllo costi prodotto...",
-          "Ricerca perdite di margine...",
-          "Analisi completata...",
-        ]
+        "Analisi ordini Shopify...",
+        "Controllo costi prodotto...",
+        "Ricerca perdite di margine...",
+        "Analisi completata...",
+      ]
       : [
-          "Scanning Shopify orders...",
-          "Checking product costs...",
-          "Detecting pricing leaks...",
-          "Analysis complete...",
-        ];
+        "Scanning Shopify orders...",
+        "Checking product costs...",
+        "Detecting pricing leaks...",
+        "Analysis complete...",
+      ];
 
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
 
@@ -537,59 +538,59 @@ export default function DashboardV2() {
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-          icon: "⚠️",
-          issue:
-            language === "it"
-              ? "Prodotti venduti sotto costo"
-              : "Products selling below cost",
-          severity: language === "it" ? "Alta" : "High",
-          loss: money(visualLeak),
-        }
+        icon: "⚠️",
+        issue:
+          language === "it"
+            ? "Prodotti venduti sotto costo"
+            : "Products selling below cost",
+        severity: language === "it" ? "Alta" : "High",
+        loss: money(visualLeak),
+      }
       : null,
 
     visualMissingCostCount > 0
       ? {
-          icon: "📦",
-          issue:
-            language === "it"
-              ? "Prodotti senza costo"
-              : "Products missing cost data",
-          severity: language === "it" ? "Moderata" : "Moderate",
-          loss:
-            language === "it"
-              ? `${visualMissingCostCount} prodotti`
-              : `${visualMissingCostCount} products`,
-        }
+        icon: "📦",
+        issue:
+          language === "it"
+            ? "Prodotti senza costo"
+            : "Products missing cost data",
+        severity: language === "it" ? "Moderata" : "Moderate",
+        loss:
+          language === "it"
+            ? `${visualMissingCostCount} prodotti`
+            : `${visualMissingCostCount} products`,
+      }
       : null,
 
     lowMarginCount > 0
       ? {
-          icon: "🏷️",
-          issue:
-            language === "it"
-              ? "Prodotti a basso margine rilevati"
-              : "Low-margin products detected",
-          severity: language === "it" ? "Moderata" : "Moderate",
-          loss:
-            language === "it"
-              ? `${lowMarginCount} prodotti`
-              : `${lowMarginCount} products`,
-        }
+        icon: "🏷️",
+        issue:
+          language === "it"
+            ? "Prodotti a basso margine rilevati"
+            : "Low-margin products detected",
+        severity: language === "it" ? "Moderata" : "Moderate",
+        loss:
+          language === "it"
+            ? `${lowMarginCount} prodotti`
+            : `${lowMarginCount} products`,
+      }
       : null,
 
     productsAtRisk > 0
       ? {
-          icon: "🔥",
-          issue:
-            language === "it"
-              ? "Prodotti da controllare"
-              : "Products requiring margin review",
-          severity: language === "it" ? "Minore" : "Low",
-          loss:
-            language === "it"
-              ? `${productsAtRisk} a rischio`
-              : `${productsAtRisk} at risk`,
-        }
+        icon: "🔥",
+        issue:
+          language === "it"
+            ? "Prodotti da controllare"
+            : "Products requiring margin review",
+        severity: language === "it" ? "Minore" : "Low",
+        loss:
+          language === "it"
+            ? `${productsAtRisk} a rischio`
+            : `${productsAtRisk} at risk`,
+      }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -624,36 +625,36 @@ export default function DashboardV2() {
   const contributionInsights = [
     riskyRevenueShare > 25
       ? {
-          title:
-            "High-risk products are driving a significant share of revenue",
-          value: `${pct(riskyRevenueShare)} of revenue`,
-          description:
-            "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
-          severity: "Critical",
-          confidence: "High confidence",
-        }
+        title:
+          "High-risk products are driving a significant share of revenue",
+        value: `${pct(riskyRevenueShare)} of revenue`,
+        description:
+          "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
+        severity: "Critical",
+        confidence: "High confidence",
+      }
       : null,
 
     topRevenueShare > 50
       ? {
-          title: "Revenue is concentrated in a small group of products",
-          value: `${pct(topRevenueShare)} from top 3 products`,
-          description:
-            "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
-          severity: "High",
-          confidence: "High confidence",
-        }
+        title: "Revenue is concentrated in a small group of products",
+        value: `${pct(topRevenueShare)} from top 3 products`,
+        description:
+          "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
+        severity: "High",
+        confidence: "High confidence",
+      }
       : null,
 
     weakTopProducts.length > 0
       ? {
-          title: "Top-selling products show weak contribution quality",
-          value: `${weakTopProducts.length} top products at risk`,
-          description:
-            "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
-          severity: "Medium",
-          confidence: "Moderate confidence",
-        }
+        title: "Top-selling products show weak contribution quality",
+        value: `${weakTopProducts.length} top products at risk`,
+        description:
+          "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
+        severity: "Medium",
+        confidence: "Moderate confidence",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -681,15 +682,15 @@ export default function DashboardV2() {
   const worstProduct =
     sourceRows.length > 0
       ? ([...sourceRows]
-          .filter((row) => row.profit < 0)
-          .sort((a, b) => a.profit - b.profit)[0] ?? null)
+        .filter((row) => row.profit < 0)
+        .sort((a, b) => a.profit - b.profit)[0] ?? null)
       : null;
 
   const bestProduct =
     sourceRows.length > 0
       ? ([...sourceRows]
-          .filter((row) => !row.missingCost)
-          .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
+        .filter((row) => !row.missingCost)
+        .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
       : null;
 
   const recoverableProfit = sourceRows.reduce((acc, row) => {
@@ -706,41 +707,40 @@ export default function DashboardV2() {
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-          title: `Fix ${
-            sourceRows.filter((row) => row.losing).length
+        title: `Fix ${sourceRows.filter((row) => row.losing).length
           } underpriced products selling below cost`,
-          impact: `${money(visualLeak)} potential recovery`,
-          confidence: "High confidence",
-          actionLabel: "Review pricing",
-          actionLink: "#products-section",
-        }
+        impact: `${money(visualLeak)} potential recovery`,
+        confidence: "High confidence",
+        actionLabel: "Review pricing",
+        actionLink: "#products-section",
+      }
       : null,
     summary.missingCostCount > 0
       ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-          actionLabel: "Update costs",
-          actionLink: "#products-section",
-        }
+        title: "Update missing product costs in Shopify",
+        impact: `${summary.missingCostCount} products affected`,
+        confidence: "Critical issue",
+        actionLabel: "Update costs",
+        actionLink: "#products-section",
+      }
       : null,
     lowMarginCount > 0
       ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-          actionLabel: "Analyze products",
-          actionLink: "#products-section",
-        }
+        title: "Review low-margin products below 10%",
+        impact: `${lowMarginCount} products need attention`,
+        confidence: "Medium confidence",
+        actionLabel: "Analyze products",
+        actionLink: "#products-section",
+      }
       : null,
     rows.length > 0
       ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-          actionLabel: "Review",
-          actionLink: "#products-section",
-        }
+        title: "Review target prices for worst-performing products",
+        impact: "20% margin target available",
+        confidence: "Rule-based insight",
+        actionLabel: "Review",
+        actionLink: "#products-section",
+      }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -753,119 +753,119 @@ export default function DashboardV2() {
   const insights = [
     hasWeakBestSeller
       ? {
-          eyebrow:
-            getStoredLanguage() === "it"
-              ? "INSIGHT CRITICO"
-              : "CRITICAL INSIGHT",
-          title:
-            getStoredLanguage() === "it"
-              ? "Il tuo prodotto più venduto potrebbe ridurre la redditività"
-              : "Your best-selling product may be reducing profitability",
-          badge: getStoredLanguage() === "it" ? "Margine basso" : "Low margin",
-          description: (
-            <>
-              <strong>{weakBestSeller.productTitle}</strong>{" "}
-              {getStoredLanguage() === "it" ? "ha generato" : "generated"}{" "}
-              <strong>{money(weakBestSeller.revenue)}</strong>{" "}
-              {getStoredLanguage() === "it"
-                ? "di ricavi con solo"
-                : "revenue with only"}{" "}
-              <strong>{pct(weakBestSellerMargin)}</strong>{" "}
-              {getStoredLanguage() === "it"
-                ? "di margine. Questo prodotto potrebbe ridurre la redditività complessiva del negozio."
-                : "margin. This product may be reducing your overall store profitability."}
-            </>
-          ),
-        }
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "INSIGHT CRITICO"
+            : "CRITICAL INSIGHT",
+        title:
+          getStoredLanguage() === "it"
+            ? "Il tuo prodotto più venduto potrebbe ridurre la redditività"
+            : "Your best-selling product may be reducing profitability",
+        badge: getStoredLanguage() === "it" ? "Margine basso" : "Low margin",
+        description: (
+          <>
+            <strong>{weakBestSeller.productTitle}</strong>{" "}
+            {getStoredLanguage() === "it" ? "ha generato" : "generated"}{" "}
+            <strong>{money(weakBestSeller.revenue)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di ricavi con solo"
+              : "revenue with only"}{" "}
+            <strong>{pct(weakBestSellerMargin)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di margine. Questo prodotto potrebbe ridurre la redditività complessiva del negozio."
+              : "margin. This product may be reducing your overall store profitability."}
+          </>
+        ),
+      }
       : null,
 
     marginDelta < -3
       ? {
-          eyebrow:
-            getStoredLanguage() === "it"
-              ? "PEGGIORAMENTO MARGINE"
-              : "MARGIN DETERIORATION",
-          title:
-            getStoredLanguage() === "it"
-              ? "La redditività del negozio sta diminuendo"
-              : "Store profitability is decreasing",
-          badge: pct(marginDelta),
-          description: (
-            <>
-              {getStoredLanguage() === "it"
-                ? "Il margine del negozio è sceso da"
-                : "Your store margin dropped from"}{" "}
-              <strong>{pct(summary.previousMarginPct)}</strong>{" "}
-              {getStoredLanguage() === "it" ? "a" : "to"}{" "}
-              <strong>{pct(summary.marginPct)}</strong>{" "}
-              {getStoredLanguage() === "it"
-                ? "rispetto al periodo precedente. Controlla prezzi, sconti e costi prodotto per evitare ulteriore erosione dei margini."
-                : "compared to the previous period. Review pricing, discounts and product costs to avoid further margin erosion."}
-            </>
-          ),
-        }
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "PEGGIORAMENTO MARGINE"
+            : "MARGIN DETERIORATION",
+        title:
+          getStoredLanguage() === "it"
+            ? "La redditività del negozio sta diminuendo"
+            : "Store profitability is decreasing",
+        badge: pct(marginDelta),
+        description: (
+          <>
+            {getStoredLanguage() === "it"
+              ? "Il margine del negozio è sceso da"
+              : "Your store margin dropped from"}{" "}
+            <strong>{pct(summary.previousMarginPct)}</strong>{" "}
+            {getStoredLanguage() === "it" ? "a" : "to"}{" "}
+            <strong>{pct(summary.marginPct)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "rispetto al periodo precedente. Controlla prezzi, sconti e costi prodotto per evitare ulteriore erosione dei margini."
+              : "compared to the previous period. Review pricing, discounts and product costs to avoid further margin erosion."}
+          </>
+        ),
+      }
       : null,
 
     hasRecoveryOpportunity
       ? {
-          eyebrow:
-            getStoredLanguage() === "it"
-              ? "OPPORTUNITÀ DI RECUPERO"
-              : "RECOVERY OPPORTUNITY",
-          title:
-            getStoredLanguage() === "it"
-              ? "MarginLab ha rilevato opportunità di profitto recuperabile"
-              : "MarginLab detected recoverable profit opportunities",
-          badge: money(recoverableProfit),
-          description: (
-            <>
-              {getStoredLanguage() === "it"
-                ? "Profit Leak Scanner ha rilevato"
-                : "Profit Leak Scanner detected"}{" "}
-              <strong>
-                {recoveryProducts.length}{" "}
-                {getStoredLanguage() === "it" ? "prodotti" : "products"}
-              </strong>{" "}
-              {getStoredLanguage() === "it"
-                ? "con gap di prezzo. Adeguare i prezzi verso i margini target potrebbe recuperare circa"
-                : "with pricing gaps. Adjusting prices toward target margins could recover approximately"}{" "}
-              <strong>{money(recoverableProfit)}</strong>{" "}
-              {getStoredLanguage() === "it"
-                ? "di profitto aggiuntivo."
-                : "in additional profit."}
-            </>
-          ),
-        }
+        eyebrow:
+          getStoredLanguage() === "it"
+            ? "OPPORTUNITÀ DI RECUPERO"
+            : "RECOVERY OPPORTUNITY",
+        title:
+          getStoredLanguage() === "it"
+            ? "MarginLab ha rilevato opportunità di profitto recuperabile"
+            : "MarginLab detected recoverable profit opportunities",
+        badge: money(recoverableProfit),
+        description: (
+          <>
+            {getStoredLanguage() === "it"
+              ? "Profit Leak Scanner ha rilevato"
+              : "Profit Leak Scanner detected"}{" "}
+            <strong>
+              {recoveryProducts.length}{" "}
+              {getStoredLanguage() === "it" ? "prodotti" : "products"}
+            </strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "con gap di prezzo. Adeguare i prezzi verso i margini target potrebbe recuperare circa"
+              : "with pricing gaps. Adjusting prices toward target margins could recover approximately"}{" "}
+            <strong>{money(recoverableProfit)}</strong>{" "}
+            {getStoredLanguage() === "it"
+              ? "di profitto aggiuntivo."
+              : "in additional profit."}
+          </>
+        ),
+      }
       : null,
 
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
-          eyebrow:
-            getStoredLanguage() === "it" ? "AVVISO CRESCITA" : "GROWTH WARNING",
-          title:
-            getStoredLanguage() === "it"
-              ? "La crescita dei ricavi sta superando la crescita dei margini"
-              : "Revenue growth is outpacing margin growth",
-          badge:
-            getStoredLanguage() === "it"
-              ? `${pct(summary.revenueDeltaPct)} ricavi`
-              : `${pct(summary.revenueDeltaPct)} revenue`,
-          description: (
-            <>
-              {getStoredLanguage() === "it"
-                ? "I ricavi del negozio sono aumentati del"
-                : "Store revenue increased by"}{" "}
-              <strong>{pct(summary.revenueDeltaPct)}</strong>
-              {getStoredLanguage() === "it"
-                ? ", ma il margine è sceso del"
-                : ", but margin dropped by"}{" "}
-              <strong>{pct(Math.abs(summary.marginDelta))}</strong>
-              {getStoredLanguage() === "it"
-                ? ". Una crescita rapida con margini in calo può indicare sconti aggressivi, costi in aumento o bestseller sottoprezzati."
-                : ". Rapid growth combined with weakening margins may indicate aggressive discounts, rising costs or underpriced best sellers."}
-            </>
-          ),
-        }
+        eyebrow:
+          getStoredLanguage() === "it" ? "AVVISO CRESCITA" : "GROWTH WARNING",
+        title:
+          getStoredLanguage() === "it"
+            ? "La crescita dei ricavi sta superando la crescita dei margini"
+            : "Revenue growth is outpacing margin growth",
+        badge:
+          getStoredLanguage() === "it"
+            ? `${pct(summary.revenueDeltaPct)} ricavi`
+            : `${pct(summary.revenueDeltaPct)} revenue`,
+        description: (
+          <>
+            {getStoredLanguage() === "it"
+              ? "I ricavi del negozio sono aumentati del"
+              : "Store revenue increased by"}{" "}
+            <strong>{pct(summary.revenueDeltaPct)}</strong>
+            {getStoredLanguage() === "it"
+              ? ", ma il margine è sceso del"
+              : ", but margin dropped by"}{" "}
+            <strong>{pct(Math.abs(summary.marginDelta))}</strong>
+            {getStoredLanguage() === "it"
+              ? ". Una crescita rapida con margini in calo può indicare sconti aggressivi, costi in aumento o bestseller sottoprezzati."
+              : ". Rapid growth combined with weakening margins may indicate aggressive discounts, rising costs or underpriced best sellers."}
+          </>
+        ),
+      }
       : null,
   ].filter(Boolean);
 
@@ -991,22 +991,98 @@ export default function DashboardV2() {
           setAnalysisText={setAnalysisText}
         />
 
-        {/* {!billingActive ? (
-              <div className="billing-banner">
-                <div>
-                  <strong>Margin Intelligence preview mode</strong>
-
-                  <span>
-                    Activate your plan to unlock full margin analysis, product
-                    risk detection, pricing insights and recovery opportunities.
-                  </span>
-                </div>
-
-                <button onClick={() => navigate("/app/billing")}>
-                  Activate plan
-                </button>
+        {taxContext?.isItalianStore && !taxContext?.configured ? (
+          <div
+            style={{
+              marginBottom: 24,
+              padding: 20,
+              borderRadius: 20,
+              background:
+                "linear-gradient(135deg, rgba(255,115,60,0.12), rgba(8,13,22,0.96))",
+              border: "1px solid rgba(255,115,60,0.24)",
+              boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 18,
+              flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  color: "#ff9a70",
+                  fontSize: 10,
+                  fontWeight: 950,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.11em",
+                }}
+              >
+                {language === "it"
+                  ? "PROFILO FISCALE"
+                  : "TAX PROFILE"}
               </div>
-            ) : null} */}
+
+              <div
+                style={{
+                  marginTop: 7,
+                  color: "#f8fafc",
+                  fontSize: 18,
+                  fontWeight: 950,
+                }}
+              >
+                {language === "it"
+                  ? "Completa il profilo fiscale"
+                  : "Complete your Tax Profile"}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  color: "rgba(226,232,240,0.62)",
+                  fontSize: 12,
+                  lineHeight: 1.55,
+                  fontWeight: 720,
+                  maxWidth: 760,
+                }}
+              >
+                {language === "it"
+                  ? "Il tuo store può utilizzare l’analisi di redditività con trattamento IVA. Configura regime, prezzi, costi e spedizioni."
+                  : "Your store is eligible for tax-aware profitability analysis. Configure VAT treatment for prices, costs and shipping."}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate("/app/tax-profile")}
+              style={{
+                whiteSpace: "nowrap",
+              }}
+            >
+              {language === "it"
+                ? "Configura Tax Profile →"
+                : "Configure Tax Profile →"}
+            </button>
+          </div>
+        ) : null}
+
+        {/* {!billingActive ? (
+          <div className="billing-banner">
+            <div>
+              <strong>Margin Intelligence preview mode</strong>
+
+              <span>
+                Activate your plan to unlock full margin analysis, product
+                risk detection, pricing insights and recovery opportunities.
+              </span>
+            </div>
+
+            <button onClick={() => navigate("/app/billing")}>
+              Activate plan
+            </button>
+          </div>
+        ) : null} */}
 
         <ScoreCard
           assessment={marginAssessment}
@@ -1046,16 +1122,14 @@ export default function DashboardV2() {
               value: String(sourceRows.length),
               note:
                 getStoredLanguage() === "it"
-                  ? `${
-                      sourceRows.filter(
-                        (row) => row.losing || row.lowMargin || row.missingCost,
-                      ).length
-                    } a rischio`
-                  : `${
-                      sourceRows.filter(
-                        (row) => row.losing || row.lowMargin || row.missingCost,
-                      ).length
-                    } at risk`,
+                  ? `${sourceRows.filter(
+                    (row) => row.losing || row.lowMargin || row.missingCost,
+                  ).length
+                  } a rischio`
+                  : `${sourceRows.filter(
+                    (row) => row.losing || row.lowMargin || row.missingCost,
+                  ).length
+                  } at risk`,
               icon: "◈",
               tone: "warning",
             },
@@ -1151,7 +1225,7 @@ export default function DashboardV2() {
               value: pct(
                 sourceRows.length > 0
                   ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
-                      sourceRows.length
+                  sourceRows.length
                   : 0,
               ),
               note:
