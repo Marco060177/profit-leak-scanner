@@ -349,6 +349,7 @@ export default function DashboardV2() {
     analysisContext,
     alerts,
     taxContext,
+    vatEconomics,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -1065,6 +1066,215 @@ export default function DashboardV2() {
                 : "Configure Tax Profile →"}
             </button>
           </div>
+        ) : null}
+
+        {taxContext?.isItalianStore &&
+          taxContext?.configured &&
+          vatEconomics ? (
+          <section
+            className="panel"
+            style={{
+              marginBottom: 24,
+              padding: 22,
+              borderRadius: 22,
+              background:
+                "radial-gradient(circle at top left, rgba(34,197,94,0.08), transparent 35%), linear-gradient(180deg, rgba(16,23,37,0.96), rgba(7,12,21,0.98))",
+              border: "1px solid rgba(34,197,94,0.20)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 18,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    color: "#4ade80",
+                    fontSize: 10,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.11em",
+                  }}
+                >
+                  {language === "it"
+                    ? "ANALISI IVA · ANTEPRIMA"
+                    : "VAT ANALYSIS · PREVIEW"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Impatto IVA sulla redditività"
+                    : "VAT impact on profitability"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    color: "rgba(226,232,240,0.55)",
+                    fontSize: 11,
+                    lineHeight: 1.55,
+                    fontWeight: 720,
+                  }}
+                >
+                  {language === "it"
+                    ? "Confronto sperimentale basato sul Tax Profile configurato. I KPI principali di MarginLab non sono ancora stati modificati."
+                    : "Experimental comparison based on the configured Tax Profile. MarginLab's primary KPIs have not been changed yet."}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: "8px 11px",
+                  borderRadius: 999,
+                  background: "rgba(34,197,94,0.09)",
+                  border: "1px solid rgba(34,197,94,0.20)",
+                  color: "#4ade80",
+                  fontSize: 10,
+                  fontWeight: 900,
+                }}
+              >
+                {taxContext.defaultVatRatePct}% VAT
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+                gap: 12,
+                marginTop: 18,
+              }}
+            >
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it"
+                    ? "Profitto prima IVA"
+                    : "Profit before VAT adjustment"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#f8fafc",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(vatEconomics.grossMarginBeforeVat)}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background: "rgba(34,197,94,0.055)",
+                  border: "1px solid rgba(34,197,94,0.16)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it"
+                    ? "Profitto reale stimato"
+                    : "Estimated real profit"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#4ade80",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(vatEconomics.realProfit)}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 4,
+                    color: "rgba(226,232,240,0.48)",
+                    fontSize: 10,
+                    fontWeight: 750,
+                  }}
+                >
+                  {pct(vatEconomics.realMarginPct)}{" "}
+                  {language === "it" ? "margine" : "margin"}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background: "rgba(255,115,60,0.045)",
+                  border: "1px solid rgba(255,115,60,0.16)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it"
+                    ? "Impatto IVA sul profitto"
+                    : "VAT impact on profit"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    color:
+                      vatEconomics.vatImpactOnProfit < 0
+                        ? "#ff9a70"
+                        : "#4ade80",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(vatEconomics.vatImpactOnProfit)}
+                </div>
+              </div>
+            </div>
+          </section>
         ) : null}
 
         {/* {!billingActive ? (
