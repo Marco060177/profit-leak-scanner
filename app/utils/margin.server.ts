@@ -437,8 +437,14 @@ export async function loadMarginDashboardData({
   const currencyCode = appDataJson?.data?.shop?.currencyCode || "USD";
   const timeZone = appDataJson?.data?.shop?.ianaTimezone || "UTC";
   const shopCountryCode =
-  appDataJson?.data?.shop?.billingAddress?.countryCodeV2 || "";
+    appDataJson?.data?.shop?.billingAddress?.countryCodeV2 || "";
   const taxContext = buildTaxContext(shopCountryCode);
+  console.log("[MarginLab Tax Context]", {
+    shopCountryCode: taxContext.shopCountryCode,
+    effectiveCountryCode: taxContext.effectiveCountryCode,
+    isItalianStore: taxContext.isItalianStore,
+    profile: taxContext.profile,
+  });
 
   const storeMoney = (value: number) =>
     formatMoney(value, { currencyCode, locale, timeZone });
