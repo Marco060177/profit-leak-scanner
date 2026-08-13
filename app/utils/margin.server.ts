@@ -579,9 +579,15 @@ export async function loadMarginDashboardData({
       })
       : null;
 
-  console.log("[MarginLab VAT Economics]", {
+  console.log("[VAT VALIDATION]", {
     isItalianStore: taxContext.isItalianStore,
     configured: taxContext.configured,
+    totalRevenue,
+    totalCogs,
+    defaultVatRatePct: taxContext.defaultVatRatePct,
+    pricesIncludeVat: taxContext.pricesIncludeVat,
+    costsIncludeVat: taxContext.costsIncludeVat,
+    recoverInputVat: taxContext.recoverInputVat,
     vatEconomics,
   });
 
