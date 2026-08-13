@@ -4,6 +4,8 @@ import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
 import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
+import { buildTaxContext } from "~/utils/tax-profile.server";
+
 
 type OrderEdge = { node?: any };
 
@@ -407,14 +409,17 @@ export async function loadMarginDashboardData({
 
   const [appDataResponse, billing] = await Promise.all([
     admin.graphql(`
-      #graphql
-      query MarginLabAppData {
-        shop {
-          currencyCode
-          ianaTimezone
+    #graphql
+    query MarginLabAppData {
+      shop {
+        currencyCode
+        ianaTimezone
+        billingAddress {
+          countryCodeV2
         }
       }
-    `),
+    }
+  `),
     getBillingStatus(admin),
   ]);
 
@@ -431,6 +436,9 @@ export async function loadMarginDashboardData({
   const billingActive = billing.active;
   const currencyCode = appDataJson?.data?.shop?.currencyCode || "USD";
   const timeZone = appDataJson?.data?.shop?.ianaTimezone || "UTC";
+  const shopCountryCode =
+  appDataJson?.data?.shop?.billingAddress?.countryCodeV2 || "";
+  const taxContext = buildTaxContext(shopCountryCode);
 
   const storeMoney = (value: number) =>
     formatMoney(value, { currencyCode, locale, timeZone });
@@ -664,9 +672,9 @@ export async function loadMarginDashboardData({
       refundRatePct:
         current.grossProductSales - current.discounts > 0
           ?
-            (current.productRefunds /
-              (current.grossProductSales - current.discounts)) *
-            100
+          (current.productRefunds /
+            (current.grossProductSales - current.discounts)) *
+          100
           : 0,
       losingProductRevenue,
       lowMarginProductRevenue,
