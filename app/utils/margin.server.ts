@@ -579,6 +579,12 @@ export async function loadMarginDashboardData({
       })
       : null;
 
+  console.log("[MarginLab VAT Economics]", {
+    isItalianStore: taxContext.isItalianStore,
+    configured: taxContext.configured,
+    vatEconomics,
+  });
+
   const previousRevenue = previous.netProductRevenue;
   const previousProfit = previousRevenue - previous.productCogs;
   const previousMarginPct =
