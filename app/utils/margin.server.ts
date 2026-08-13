@@ -64,22 +64,23 @@ const ORDERS_QUERY = `#graphql
       }
 
       edges {
-        node {
-          id
-          name
-          processedAt
+  node {
+    id
+    name
+    processedAt
+    taxesIncluded
 
-          totalShippingPriceSet {
-            shopMoney {
-              amount
-            }
-          }
+    totalShippingPriceSet {
+      shopMoney {
+        amount
+      }
+    }
 
-          totalTaxSet {
-            shopMoney {
-              amount
-            }
-          }
+    totalTaxSet {
+      shopMoney {
+        amount
+      }
+    }
 
           refunds {
             refundLineItems(first: 100) {
@@ -240,6 +241,11 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
 
   for (const edge of orderEdges) {
     const order = edge?.node;
+    console.log("[SHOPIFY TAX BASIS]", {
+      order: order?.name,
+      taxesIncluded: order?.taxesIncluded,
+      totalTax: amount(order?.totalTaxSet?.shopMoney?.amount),
+    });
     const processedAt = String(order?.processedAt ?? "");
     const day = String(order?.processedAt ?? "").slice(0, 10);
 
