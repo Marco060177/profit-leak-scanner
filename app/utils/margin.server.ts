@@ -7,6 +7,7 @@ import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
 import { calculateVatEconomics } from "~/utils/vat-engine";
 import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
+import { calculateTaxAwareEconomics } from "~/utils/tax-economics-engine";
 
 type OrderEdge = { node?: any };
 
@@ -642,10 +643,14 @@ export async function loadMarginDashboardData({
     taxContext,
   });
 
-  console.log("[TAX TREATMENT]", {
-    taxAwarePeriod,
+  const taxAwareEconomics = calculateTaxAwareEconomics({
+    revenue: current.netProductRevenue,
+    cogs: current.productCogs,
+    taxContext,
     taxTreatment,
   });
+
+
 
   const previousMargins = new Map<string, number>();
 
@@ -765,7 +770,10 @@ export async function loadMarginDashboardData({
       })
       : null;
 
-
+  console.log("[TAX ECONOMICS COMPARISON]", {
+    oldVatEconomics: vatEconomics,
+    taxAwareEconomics,
+  });
 
   const previousRevenue = previous.netProductRevenue;
   const previousProfit = previousRevenue - previous.productCogs;
@@ -940,6 +948,7 @@ export async function loadMarginDashboardData({
     taxContext,
     taxAwarePeriod,
     taxTreatment,
+    taxAwareEconomics,
     vatEconomics,
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,

@@ -173,6 +173,69 @@ export type LoaderData = {
 
   analysisContext?: AnalysisContext;
   taxAwarePeriod?: TaxAwarePeriodData;
+
+  taxTreatment?: {
+    source:
+    | "shopify_actual_tax"
+    | "shopify_zero_tax"
+    | "tax_profile_fallback"
+    | "insufficient_data";
+
+    confidence:
+    | "none"
+    | "low"
+    | "medium"
+    | "high";
+
+    hasActualTax: boolean;
+    shouldUseShopifyTax: boolean;
+    shouldUseTaxProfileFallback: boolean;
+
+    actualCollectedTax: number;
+
+    taxableLineCount: number;
+    taxedLineCount: number;
+    nonTaxableLineCount: number;
+
+    taxExemptOrderCount: number;
+    taxesIncludedOrderCount: number;
+    taxesExcludedOrderCount: number;
+
+    reasons: string[];
+  };
+
+  taxAwareEconomics?: {
+    source:
+    | "shopify_actual_tax"
+    | "shopify_zero_tax"
+    | "tax_profile_fallback"
+    | "insufficient_data";
+
+    confidence:
+    | "none"
+    | "low"
+    | "medium"
+    | "high";
+
+    grossRevenue: number;
+    outputVat: number;
+    netRevenue: number;
+
+    grossCogs: number;
+    inputVat: number;
+    recoverableInputVat: number;
+    nonRecoverableInputVat: number;
+    economicCogs: number;
+
+    profitBeforeTaxAdjustment: number;
+    realProfit: number;
+    realMarginPct: number;
+
+    vatImpactOnProfit: number;
+
+    reasons: string[];
+  };
+
   economicSnapshot?: EconomicSnapshot;
 
   taxContext?: {
@@ -180,11 +243,11 @@ export type LoaderData = {
     effectiveCountryCode: string;
     isItalianStore: boolean;
     profile:
-      | "UNCONFIGURED"
-      | "NOT_APPLICABLE"
-      | "ITALY_STANDARD"
-      | "ITALY_FORFETTARIO"
-      | "ITALY_EXEMPT";
+    | "UNCONFIGURED"
+    | "NOT_APPLICABLE"
+    | "ITALY_STANDARD"
+    | "ITALY_FORFETTARIO"
+    | "ITALY_EXEMPT";
     defaultVatRatePct: number;
     pricesIncludeVat: boolean;
     costsIncludeVat: boolean;
