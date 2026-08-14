@@ -252,6 +252,7 @@ export type LoaderData = {
     pricesIncludeVat: boolean;
     costsIncludeVat: boolean;
     recoverInputVat: boolean;
+    inputVatRecoveryPct: number;
     shippingIncludeVat: boolean;
     shippingVatRatePct: number;
     configured: boolean;
