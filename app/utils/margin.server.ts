@@ -52,7 +52,7 @@ type PeriodAggregate = {
 const ORDERS_QUERY = `#graphql
   query MarginLabOrders($q: String!, $after: String) {
     orders(
-      first: 100
+      first: 50
       after: $after
       sortKey: PROCESSED_AT
       reverse: true
