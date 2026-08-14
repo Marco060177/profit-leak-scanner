@@ -64,23 +64,23 @@ const ORDERS_QUERY = `#graphql
       }
 
       edges {
-  node {
-    id
-    name
-    processedAt
-    taxesIncluded
+        node {
+          id
+          name
+          processedAt
+          taxesIncluded
 
-    totalShippingPriceSet {
-      shopMoney {
-        amount
-      }
-    }
+          totalShippingPriceSet {
+            shopMoney {
+              amount
+            }
+          }
 
-    totalTaxSet {
-      shopMoney {
-        amount
-      }
-    }
+          totalTaxSet {
+            shopMoney {
+              amount
+            }
+          }
 
           refunds {
             refundLineItems(first: 100) {
@@ -120,6 +120,18 @@ const ORDERS_QUERY = `#graphql
               node {
                 id
                 quantity
+                taxable
+
+                taxLines {
+                  title
+                  rate
+
+                  priceSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+                }
 
                 discountedTotalSet {
                   shopMoney {
@@ -168,8 +180,8 @@ function amount(value: unknown) {
 }
 
 function productKey(product: any, lineItemId: string) {
-  if (product?.id) return `product:${product.id}`;
-  return `line:${lineItemId || "unknown"}`;
+  if (product?.id) return `product: ${product.id}`;
+  return `line:${lineItemId || "unknown"} `;
 }
 
 function getOrCreateProduct(
@@ -210,7 +222,8 @@ async function fetchAllOrders(admin: any, query: string) {
       throw new Error(
         `Unable to load Shopify orders: ${json.errors
           .map((error: any) => error?.message ?? "Unknown GraphQL error")
-          .join("; ")}`,
+          .join("; ")
+        } `,
       );
     }
 
@@ -281,6 +294,12 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
 
     for (const lineEdge of order?.lineItems?.edges ?? []) {
       const line = lineEdge?.node;
+      console.log("[SHOPIFY LINE TAX]", {
+        order: order?.name,
+        product: line?.variant?.product?.title,
+        taxable: line?.taxable,
+        taxLines: line?.taxLines ?? [],
+      });
       const lineItemId = String(line?.id ?? "");
       const product = line?.variant?.product;
       const key = productKey(product, lineItemId);
@@ -410,23 +429,23 @@ export async function loadMarginDashboardData({
   const fromYYYYMMDD = toYYYYMMDD(fromDate);
   const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
 
-  const queryString = `processed_at:>=${fromYYYYMMDD}`;
+  const queryString = `processed_at:>= ${fromYYYYMMDD} `;
   const previousQueryString =
-    `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
+    `processed_at:>= ${previousFromYYYYMMDD} processed_at: <${fromYYYYMMDD}`;
 
   const [appDataResponse, billing] = await Promise.all([
     admin.graphql(`
-    #graphql
+#graphql
     query MarginLabAppData {
       shop {
-        currencyCode
-        ianaTimezone
+    currencyCode
+    ianaTimezone
         billingAddress {
-          countryCodeV2
-        }
-      }
+      countryCodeV2
     }
-  `),
+  }
+}
+`),
     getBillingStatus(admin),
   ]);
 
@@ -436,7 +455,8 @@ export async function loadMarginDashboardData({
     throw new Error(
       `Unable to load Shopify app data: ${appDataJson.errors
         .map((error: any) => error?.message ?? "Unknown GraphQL error")
-        .join("; ")}`,
+        .join("; ")
+      } `,
     );
   }
 
