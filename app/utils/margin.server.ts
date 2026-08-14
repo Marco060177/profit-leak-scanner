@@ -115,7 +115,7 @@ const ORDERS_QUERY = `#graphql
             }
           }
 
-          lineItems(first: 250) {
+          lineItems(first: 200) {
             edges {
               node {
                 id
