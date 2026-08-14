@@ -440,9 +440,9 @@ export async function loadMarginDashboardData({
   const fromYYYYMMDD = toYYYYMMDD(fromDate);
   const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
 
-  const queryString = `processed_at:>= ${fromYYYYMMDD} `;
+  const queryString = `processed_at:>=${fromYYYYMMDD}`;
   const previousQueryString =
-    `processed_at:>= ${previousFromYYYYMMDD} processed_at: <${fromYYYYMMDD}`;
+    `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 
   const [appDataResponse, billing] = await Promise.all([
     admin.graphql(`
