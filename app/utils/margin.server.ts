@@ -212,9 +212,20 @@ async function fetchAllOrders(admin: any, query: string) {
   let after: string | null = null;
 
   do {
-    const response: Response = await admin.graphql(ORDERS_QUERY, {
-      variables: { q: query, after },
-    });
+    let response: Response;
+
+    try {
+      response = await admin.graphql(ORDERS_QUERY, {
+        variables: { q: query, after },
+      });
+    } catch (error: any) {
+      console.error(
+        "[SHOPIFY GRAPHQL ERROR]",
+        JSON.stringify(error?.graphQLErrors ?? error, null, 2),
+      );
+
+      throw error;
+    }
 
     const json = await response.json();
 
