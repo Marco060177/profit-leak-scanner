@@ -120,15 +120,16 @@ model StoreTaxProfile {
   countryCode          String
   regime               String   @default("UNCONFIGURED")
 
-  defaultVatRatePct    Float    @default(22)
+  defaultVatRatePct     Float    @default(22)
 
-  pricesIncludeVat     Boolean  @default(true)
-  costsIncludeVat      Boolean  @default(true)
-  recoverInputVat      Boolean  @default(true)
+  pricesIncludeVat      Boolean  @default(true)
+  costsIncludeVat       Boolean  @default(true)
+  recoverInputVat       Boolean  @default(true)
+  inputVatRecoveryPct   Float    @default(100)
 
-  shippingIncludeVat   Boolean  @default(true)
-  shippingVatRatePct   Float    @default(22)
+  shippingIncludeVat    Boolean  @default(true)
+  shippingVatRatePct    Float    @default(22)
 
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 }

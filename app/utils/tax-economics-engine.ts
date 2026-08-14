@@ -11,16 +11,16 @@ export type TaxEconomicsInput = {
 
 export type TaxEconomicsResult = {
   source:
-    | "shopify_actual_tax"
-    | "shopify_zero_tax"
-    | "tax_profile_fallback"
-    | "insufficient_data";
+  | "shopify_actual_tax"
+  | "shopify_zero_tax"
+  | "tax_profile_fallback"
+  | "insufficient_data";
 
   confidence:
-    | "none"
-    | "low"
-    | "medium"
-    | "high";
+  | "none"
+  | "low"
+  | "medium"
+  | "high";
 
   grossRevenue: number;
   outputVat: number;
@@ -96,12 +96,19 @@ function calculateInputVat({
    * forfettario and exempt currently treat input VAT
    * as non-recoverable economic cost.
    */
-  const inputVatRecoverable =
-    taxContext.profile === "ITALY_STANDARD" &&
-    taxContext.recoverInputVat;
+  const recoveryPct =
+    taxContext.profile === "ITALY_STANDARD"
+      ? Math.min(
+        100,
+        Math.max(
+          0,
+          taxContext.inputVatRecoveryPct,
+        ),
+      )
+      : 0;
 
   const recoverableInputVat =
-    inputVatRecoverable ? inputVat : 0;
+    inputVat * (recoveryPct / 100);
 
   const nonRecoverableInputVat =
     inputVat - recoverableInputVat;

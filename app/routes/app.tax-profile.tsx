@@ -45,7 +45,7 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const response = await admin.graphql(SHOP_QUERY);
-  const json = await response.json();
+  const json = (await response.json()) as any;
 
   if (json?.errors?.length) {
     throw new Error(
@@ -73,7 +73,7 @@ export async function action({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const response = await admin.graphql(SHOP_QUERY);
-  const json = await response.json();
+  const json = (await response.json()) as any;
 
   if (json?.errors?.length) {
     return Response.json(
@@ -117,7 +117,11 @@ export async function action({ request }: { request: Request }) {
   );
   let pricesIncludeVat = parseBoolean(formData.get("pricesIncludeVat"));
   const costsIncludeVat = parseBoolean(formData.get("costsIncludeVat"));
-  let recoverInputVat = parseBoolean(formData.get("recoverInputVat"));
+  let inputVatRecoveryPct = parseRate(
+    formData.get("inputVatRecoveryPct"),
+    100,
+  );
+  let recoverInputVat = inputVatRecoveryPct > 0;
   let shippingIncludeVat = parseBoolean(formData.get("shippingIncludeVat"));
   let shippingVatRatePct = parseRate(
     formData.get("shippingVatRatePct"),
@@ -128,6 +132,7 @@ export async function action({ request }: { request: Request }) {
     defaultVatRatePct = 0;
     pricesIncludeVat = false;
     recoverInputVat = false;
+    inputVatRecoveryPct = 0;
     shippingIncludeVat = false;
     shippingVatRatePct = 0;
   }
@@ -135,6 +140,8 @@ export async function action({ request }: { request: Request }) {
   if (regime === "ITALY_EXEMPT") {
     defaultVatRatePct = 0;
     pricesIncludeVat = false;
+    recoverInputVat = false;
+    inputVatRecoveryPct = 0;
     shippingIncludeVat = false;
     shippingVatRatePct = 0;
   }
@@ -147,6 +154,7 @@ export async function action({ request }: { request: Request }) {
     pricesIncludeVat,
     costsIncludeVat,
     recoverInputVat,
+    inputVatRecoveryPct,
     shippingIncludeVat,
     shippingVatRatePct,
   });
@@ -254,9 +262,10 @@ export default function TaxProfilePage() {
   const [costsIncludeVat, setCostsIncludeVat] = React.useState(
     taxContext.costsIncludeVat,
   );
-  const [recoverInputVat, setRecoverInputVat] = React.useState(
-    taxContext.recoverInputVat,
+  const [inputVatRecoveryPct, setInputVatRecoveryPct] = React.useState(
+    taxContext.inputVatRecoveryPct,
   );
+  const recoverInputVat = inputVatRecoveryPct > 0;
   const [shippingIncludeVat, setShippingIncludeVat] = React.useState(
     taxContext.shippingIncludeVat,
   );
@@ -277,7 +286,7 @@ export default function TaxProfilePage() {
     if (regime === "ITALY_FORFETTARIO") {
       setDefaultVatRatePct(0);
       setPricesIncludeVat(false);
-      setRecoverInputVat(false);
+      setInputVatRecoveryPct(0);
       setShippingIncludeVat(false);
       setShippingVatRatePct(0);
       return;
@@ -285,6 +294,7 @@ export default function TaxProfilePage() {
 
     setDefaultVatRatePct(0);
     setPricesIncludeVat(false);
+    setInputVatRecoveryPct(0);
     setShippingIncludeVat(false);
     setShippingVatRatePct(0);
   }, [regime]);
@@ -390,7 +400,7 @@ export default function TaxProfilePage() {
                 </div>
                 <div style={styles.countryText}>
                   {taxContext.shopCountryCode !==
-                  taxContext.effectiveCountryCode
+                    taxContext.effectiveCountryCode
                     ? language === "it"
                       ? `Ambiente test · Shopify rileva ${taxContext.shopCountryCode || "—"}`
                       : `Test environment · Shopify reports ${taxContext.shopCountryCode || "—"}`
@@ -480,6 +490,11 @@ export default function TaxProfilePage() {
               type="hidden"
               name="recoverInputVat"
               value={String(recoverInputVat)}
+            />
+            <input
+              type="hidden"
+              name="inputVatRecoveryPct"
+              value={inputVatRecoveryPct}
             />
             <input
               type="hidden"
@@ -629,20 +644,156 @@ export default function TaxProfilePage() {
                       }
                     />
 
-                    <Toggle
-                      checked={recoverInputVat}
-                      onChange={setRecoverInputVat}
-                      label={
-                        language === "it"
-                          ? "IVA sui costi recuperabile"
-                          : "Input VAT recoverable"
-                      }
-                      description={
-                        language === "it"
-                          ? "Consente al motore economico di scorporare l'IVA recuperabile dai costi."
-                          : "Allows the economic engine to remove recoverable input VAT from costs."
-                      }
-                    />
+                    <div style={styles.recoveryCard}>
+                      <div>
+                        <div style={styles.fieldLabel}>
+                          {language === "it"
+                            ? "Detraibilità IVA sugli acquisti"
+                            : "Input VAT recovery"}
+                        </div>
+                        <div style={styles.fieldText}>
+                          {language === "it"
+                            ? "Definisci quanta IVA sui costi può essere recuperata economicamente."
+                            : "Define how much input VAT can be economically recovered from costs."}
+                        </div>
+                      </div>
+
+                      <div style={styles.recoveryOptions}>
+                        <button
+                          type="button"
+                          onClick={() => setInputVatRecoveryPct(0)}
+                          style={{
+                            ...styles.recoveryOption,
+                            ...(inputVatRecoveryPct === 0
+                              ? styles.recoveryOptionSelected
+                              : {}),
+                          }}
+                        >
+                          <div style={styles.recoveryOptionTitle}>
+                            {language === "it" ? "Nessuna" : "None"}
+                          </div>
+                          <div style={styles.recoveryOptionValue}>0%</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setInputVatRecoveryPct(100)}
+                          style={{
+                            ...styles.recoveryOption,
+                            ...(inputVatRecoveryPct === 100
+                              ? styles.recoveryOptionSelected
+                              : {}),
+                          }}
+                        >
+                          <div style={styles.recoveryOptionTitle}>
+                            {language === "it" ? "Completa" : "Full"}
+                          </div>
+                          <div style={styles.recoveryOptionValue}>100%</div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setInputVatRecoveryPct((current) =>
+                              current > 0 && current < 100 ? current : 50,
+                            )
+                          }
+                          style={{
+                            ...styles.recoveryOption,
+                            ...(inputVatRecoveryPct > 0 &&
+                            inputVatRecoveryPct < 100
+                              ? styles.recoveryOptionSelected
+                              : {}),
+                          }}
+                        >
+                          <div style={styles.recoveryOptionTitle}>
+                            {language === "it" ? "Parziale" : "Partial"}
+                          </div>
+                          <div style={styles.recoveryOptionValue}>
+                            {inputVatRecoveryPct > 0 &&
+                            inputVatRecoveryPct < 100
+                              ? `${inputVatRecoveryPct}%`
+                              : "—"}
+                          </div>
+                        </button>
+                      </div>
+
+                      {inputVatRecoveryPct > 0 &&
+                        inputVatRecoveryPct < 100 && (
+                          <div style={styles.partialRecoveryPanel}>
+                            <div>
+                              <div style={styles.fieldLabel}>
+                                {language === "it"
+                                  ? "Percentuale detraibile"
+                                  : "Recoverable percentage"}
+                              </div>
+                              <div style={styles.fieldText}>
+                                {language === "it"
+                                  ? "Inserisci la percentuale effettivamente recuperabile."
+                                  : "Enter the percentage that is actually recoverable."}
+                              </div>
+                            </div>
+
+                            <div style={styles.partialRecoveryControl}>
+                              <input
+                                type="range"
+                                min={1}
+                                max={99}
+                                step={1}
+                                value={inputVatRecoveryPct}
+                                onChange={(event) =>
+                                  setInputVatRecoveryPct(
+                                    Math.min(
+                                      99,
+                                      Math.max(
+                                        1,
+                                        Number(event.target.value) || 1,
+                                      ),
+                                    ),
+                                  )
+                                }
+                                style={styles.recoveryRange}
+                              />
+
+                              <input
+                                type="number"
+                                min={1}
+                                max={99}
+                                step={1}
+                                value={inputVatRecoveryPct}
+                                onChange={(event) =>
+                                  setInputVatRecoveryPct(
+                                    Math.min(
+                                      99,
+                                      Math.max(
+                                        1,
+                                        Number(event.target.value) || 1,
+                                      ),
+                                    ),
+                                  )
+                                }
+                                style={styles.recoveryInput}
+                              />
+
+                              <div style={styles.recoveryPercent}>%</div>
+                            </div>
+                          </div>
+                        )}
+
+                      <div style={styles.recoverySummary}>
+                        {language === "it"
+                          ? inputVatRecoveryPct === 0
+                            ? "L'IVA sugli acquisti resta interamente nel costo economico."
+                            : inputVatRecoveryPct === 100
+                              ? "L'IVA sugli acquisti viene considerata interamente recuperabile."
+                              : `MarginLab considera recuperabile il ${inputVatRecoveryPct}% dell'IVA sugli acquisti.`
+                          : inputVatRecoveryPct === 0
+                            ? "Input VAT remains fully included in economic cost."
+                            : inputVatRecoveryPct === 100
+                              ? "Input VAT is treated as fully recoverable."
+                              : `MarginLab treats ${inputVatRecoveryPct}% of input VAT as recoverable.`}
+                      </div>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -1126,6 +1277,87 @@ const styles: Record<string, React.CSSProperties> = {
     gridTemplateColumns: "repeat(3,minmax(0,1fr))",
     gap: 12,
     marginTop: 14,
+  },
+  recoveryCard: {
+    gridColumn: "1 / -1",
+    padding: 18,
+    borderRadius: 18,
+    background:
+      "linear-gradient(180deg, rgba(34,197,94,0.055), rgba(255,255,255,0.025))",
+    border: "1px solid rgba(34,197,94,0.16)",
+  },
+  recoveryOptions: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+    gap: 10,
+    marginTop: 15,
+  },
+  recoveryOption: {
+    padding: "13px 14px",
+    borderRadius: 14,
+    cursor: "pointer",
+    textAlign: "left",
+    color: "#f8fafc",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
+  },
+  recoveryOptionSelected: {
+    background: "rgba(34,197,94,0.08)",
+    border: "1px solid rgba(34,197,94,0.30)",
+  },
+  recoveryOptionTitle: {
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  recoveryOptionValue: {
+    marginTop: 6,
+    color: "#4ade80",
+    fontSize: 15,
+    fontWeight: 950,
+  },
+  partialRecoveryPanel: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: 18,
+    alignItems: "center",
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 14,
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.065)",
+  },
+  partialRecoveryControl: {
+    display: "flex",
+    alignItems: "center",
+    gap: 9,
+    minWidth: 310,
+  },
+  recoveryRange: {
+    width: 190,
+    cursor: "pointer",
+    accentColor: "#4ade80",
+  },
+  recoveryInput: {
+    width: 74,
+    padding: "9px 10px",
+    borderRadius: 11,
+    background: "rgba(4,8,15,0.72)",
+    border: "1px solid rgba(34,197,94,0.22)",
+    color: "#f8fafc",
+    fontWeight: 900,
+    outline: "none",
+  },
+  recoveryPercent: {
+    color: "#4ade80",
+    fontSize: 13,
+    fontWeight: 950,
+  },
+  recoverySummary: {
+    marginTop: 12,
+    color: "rgba(255,255,255,0.52)",
+    fontSize: 10,
+    lineHeight: 1.55,
+    fontWeight: 720,
   },
   shippingGrid: {
     display: "grid",
