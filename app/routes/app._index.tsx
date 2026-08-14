@@ -349,7 +349,7 @@ export default function DashboardV2() {
     analysisContext,
     alerts,
     taxContext,
-    vatEconomics,
+    
     taxAwareEconomics,
   } = useLoaderData<typeof loader>();
 

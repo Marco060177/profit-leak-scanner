@@ -5,7 +5,7 @@ import { formatMoney } from "~/utils/formatting";
 import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
-import { calculateVatEconomics } from "~/utils/vat-engine";
+
 import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
 import { calculateTaxAwareEconomics } from "~/utils/tax-economics-engine";
 
@@ -760,17 +760,7 @@ export async function loadMarginDashboardData({
   const totalProfit = totalRevenue - totalCogs;
   const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-  const vatEconomics =
-    taxContext.isItalianStore && taxContext.configured
-      ? calculateVatEconomics({
-        grossRevenue: totalRevenue,
-        grossCost: totalCogs,
-        vatRatePct: taxContext.defaultVatRatePct,
-        revenueIncludesVat: taxContext.pricesIncludeVat,
-        costIncludesVat: taxContext.costsIncludeVat,
-        recoverInputVat: taxContext.recoverInputVat,
-      })
-      : null;
+  
 
 
 
@@ -948,7 +938,7 @@ export async function loadMarginDashboardData({
     taxAwarePeriod,
     taxTreatment,
     taxAwareEconomics,
-    vatEconomics,
+    
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,
       rows: loaderData.rows,

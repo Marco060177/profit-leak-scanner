@@ -258,24 +258,7 @@ export type LoaderData = {
     configured: boolean;
   };
 
-  vatEconomics?: {
-    grossRevenue: number;
-    revenueVat: number;
-    netRevenue: number;
-
-    grossCost: number;
-    inputVat: number;
-    recoverableInputVat: number;
-    nonRecoverableInputVat: number;
-    netCost: number;
-    economicCost: number;
-
-    grossMarginBeforeVat: number;
-    realProfit: number;
-    realMarginPct: number;
-
-    vatImpactOnProfit: number;
-  } | null;
+  
 };
 
 export function money(
