@@ -650,7 +650,46 @@ export async function loadMarginDashboardData({
     taxTreatment,
   });
 
+  const taxRegimeValidation = (
+    [
+      {
+        profile: "ITALY_STANDARD" as const,
+        recoverInputVat: true,
+      },
+      {
+        profile: "ITALY_FORFETTARIO" as const,
+        recoverInputVat: false,
+      },
+      {
+        profile: "ITALY_EXEMPT" as const,
+        recoverInputVat: false,
+      },
+    ]
+  ).map(({ profile, recoverInputVat }) => {
+    const testTaxContext = {
+      ...taxContext,
+      profile,
+      configured: true,
+      isItalianStore: true,
+      costsIncludeVat: true,
+      recoverInputVat,
+    };
 
+    return {
+      profile,
+      result: calculateTaxAwareEconomics({
+        revenue: current.netProductRevenue,
+        cogs: current.productCogs,
+        taxContext: testTaxContext,
+        taxTreatment,
+      }),
+    };
+  });
+
+  console.log(
+    "[TAX REGIME VALIDATION]",
+    taxRegimeValidation,
+  );
 
   const previousMargins = new Map<string, number>();
 
@@ -770,10 +809,7 @@ export async function loadMarginDashboardData({
       })
       : null;
 
-  console.log("[TAX ECONOMICS COMPARISON]", {
-    oldVatEconomics: vatEconomics,
-    taxAwareEconomics,
-  });
+
 
   const previousRevenue = previous.netProductRevenue;
   const previousProfit = previousRevenue - previous.productCogs;
