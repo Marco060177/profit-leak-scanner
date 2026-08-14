@@ -46,6 +46,13 @@ type PeriodAggregate = {
   shippingTaxAmount: number;
   refundedTaxAmount: number;
 
+  includedProductTaxAmount: number;
+  excludedProductTaxAmount: number;
+  includedShippingTaxAmount: number;
+  excludedShippingTaxAmount: number;
+  includedRefundedTaxAmount: number;
+  excludedRefundedTaxAmount: number;
+
   taxableLineCount: number;
   nonTaxableLineCount: number;
   taxedLineCount: number;
@@ -307,6 +314,13 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
   let shippingTaxAmount = 0;
   let refundedTaxAmount = 0;
 
+  let includedProductTaxAmount = 0;
+  let excludedProductTaxAmount = 0;
+  let includedShippingTaxAmount = 0;
+  let excludedShippingTaxAmount = 0;
+  let includedRefundedTaxAmount = 0;
+  let excludedRefundedTaxAmount = 0;
+
   let taxableLineCount = 0;
   let nonTaxableLineCount = 0;
   let taxedLineCount = 0;
@@ -375,6 +389,12 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       );
 
       shippingTaxAmount += shippingLineTax;
+
+      if (order?.taxesIncluded === true) {
+        includedShippingTaxAmount += shippingLineTax;
+      } else {
+        excludedShippingTaxAmount += shippingLineTax;
+      }
     }
 
     for (const lineEdge of order?.lineItems?.edges ?? []) {
@@ -393,6 +413,12 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       );
 
       productTaxAmount += lineTaxAmount;
+
+      if (order?.taxesIncluded === true) {
+        includedProductTaxAmount += lineTaxAmount;
+      } else {
+        excludedProductTaxAmount += lineTaxAmount;
+      }
 
       if (lineTaxAmount > 0) {
         taxedLineCount += 1;
@@ -480,6 +506,13 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
 
         productRefunds += refundSubtotal;
         refundedTaxAmount += refundTax;
+
+        if (order?.taxesIncluded === true) {
+          includedRefundedTaxAmount += refundTax;
+        } else {
+          excludedRefundedTaxAmount += refundTax;
+        }
+
         refundedCogs += refundCogs;
 
         if (day) {
@@ -503,6 +536,13 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     productTaxAmount,
     shippingTaxAmount,
     refundedTaxAmount,
+
+    includedProductTaxAmount,
+    excludedProductTaxAmount,
+    includedShippingTaxAmount,
+    excludedShippingTaxAmount,
+    includedRefundedTaxAmount,
+    excludedRefundedTaxAmount,
 
     taxableLineCount,
     nonTaxableLineCount,
@@ -603,6 +643,13 @@ export async function loadMarginDashboardData({
     productTaxAmount: current.productTaxAmount,
     shippingTaxAmount: current.shippingTaxAmount,
     refundedTaxAmount: current.refundedTaxAmount,
+
+    includedProductTaxAmount: current.includedProductTaxAmount,
+    excludedProductTaxAmount: current.excludedProductTaxAmount,
+    includedShippingTaxAmount: current.includedShippingTaxAmount,
+    excludedShippingTaxAmount: current.excludedShippingTaxAmount,
+    includedRefundedTaxAmount: current.includedRefundedTaxAmount,
+    excludedRefundedTaxAmount: current.excludedRefundedTaxAmount,
 
     netCollectedTax: Math.max(
       0,

@@ -156,6 +156,13 @@ export type TaxAwarePeriodData = {
   hasTaxableProducts: boolean;
   hasTaxExemptOrders: boolean;
 
+  includedProductTaxAmount: number;
+  excludedProductTaxAmount: number;
+  includedShippingTaxAmount: number;
+  excludedShippingTaxAmount: number;
+  includedRefundedTaxAmount: number;
+  excludedRefundedTaxAmount: number;
+
   taxDataCoverage: "none" | "partial" | "complete";
 };
 
@@ -201,6 +208,13 @@ export type LoaderData = {
     taxesIncludedOrderCount: number;
     taxesExcludedOrderCount: number;
 
+    includedProductTaxAmount: number;
+    excludedProductTaxAmount: number;
+    includedShippingTaxAmount: number;
+    excludedShippingTaxAmount: number;
+    includedRefundedTaxAmount: number;
+    excludedRefundedTaxAmount: number;
+
     reasons: string[];
   };
 
@@ -233,6 +247,10 @@ export type LoaderData = {
 
     vatImpactOnProfit: number;
 
+    includedProductVatAdjustment: number;
+    excludedProductVat: number;
+    shippingVat: number;
+
     reasons: string[];
   };
 
@@ -258,7 +276,7 @@ export type LoaderData = {
     configured: boolean;
   };
 
-  
+
 };
 
 export function money(

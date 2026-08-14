@@ -11,19 +11,24 @@ export type TaxEconomicsInput = {
 
 export type TaxEconomicsResult = {
   source:
-  | "shopify_actual_tax"
-  | "shopify_zero_tax"
-  | "tax_profile_fallback"
-  | "insufficient_data";
+    | "shopify_actual_tax"
+    | "shopify_zero_tax"
+    | "tax_profile_fallback"
+    | "insufficient_data";
 
   confidence:
-  | "none"
-  | "low"
-  | "medium"
-  | "high";
+    | "none"
+    | "low"
+    | "medium"
+    | "high";
 
   grossRevenue: number;
+
   outputVat: number;
+  includedProductVatAdjustment: number;
+  excludedProductVat: number;
+  shippingVat: number;
+
   netRevenue: number;
 
   grossCogs: number;
@@ -91,20 +96,9 @@ function calculateInputVat({
     taxContext.defaultVatRatePct,
   );
 
-  /*
-   * Special regimes:
-   * forfettario and exempt currently treat input VAT
-   * as non-recoverable economic cost.
-   */
   const recoveryPct =
     taxContext.profile === "ITALY_STANDARD"
-      ? Math.min(
-        100,
-        Math.max(
-          0,
-          taxContext.inputVatRecoveryPct,
-        ),
-      )
+      ? safeRate(taxContext.inputVatRecoveryPct)
       : 0;
 
   const recoverableInputVat =
@@ -113,7 +107,8 @@ function calculateInputVat({
   const nonRecoverableInputVat =
     inputVat - recoverableInputVat;
 
-  const netCost = cost - inputVat;
+  const netCost =
+    cost - inputVat;
 
   const economicCogs =
     netCost + nonRecoverableInputVat;
@@ -138,51 +133,67 @@ export function calculateTaxAwareEconomics({
   const reasons = [...taxTreatment.reasons];
 
   let outputVat = 0;
+  let includedProductVatAdjustment = 0;
+  let excludedProductVat = 0;
+  let shippingVat = 0;
   let netRevenue = grossRevenue;
 
-  /*
-   * 1. Shopify actually applied tax.
-   *
-   * We trust the real transaction tax amount.
-   */
   if (taxTreatment.source === "shopify_actual_tax") {
-    outputVat = finite(
-      taxTreatment.actualCollectedTax,
+    const netIncludedProductTax = Math.max(
+      0,
+      finite(taxTreatment.includedProductTaxAmount) -
+        finite(taxTreatment.includedRefundedTaxAmount),
     );
 
-    /*
-     * If Shopify reports taxes included, the product
-     * revenue contains the tax and it must be removed.
-     *
-     * If taxes are excluded, the current product revenue
-     * is already pre-tax, therefore we do not subtract
-     * the tax from product revenue.
-     */
-    if (taxTreatment.taxesIncludedOrderCount > 0) {
-      netRevenue = Math.max(
-        0,
-        grossRevenue - outputVat,
-      );
+    const netExcludedProductTax = Math.max(
+      0,
+      finite(taxTreatment.excludedProductTaxAmount) -
+        finite(taxTreatment.excludedRefundedTaxAmount),
+    );
 
-      reasons.push(
-        "SHOPIFY_INCLUDED_TAX_REMOVED_FROM_REVENUE",
-      );
-    } else {
-      netRevenue = grossRevenue;
+    const totalShippingTax =
+      finite(taxTreatment.includedShippingTaxAmount) +
+      finite(taxTreatment.excludedShippingTaxAmount);
 
+    outputVat = Math.max(
+      0,
+      netIncludedProductTax +
+        netExcludedProductTax +
+        totalShippingTax,
+    );
+
+    includedProductVatAdjustment =
+      netIncludedProductTax;
+
+    excludedProductVat =
+      netExcludedProductTax;
+
+    shippingVat =
+      totalShippingTax;
+
+    netRevenue = Math.max(
+      0,
+      grossRevenue - includedProductVatAdjustment,
+    );
+
+    if (includedProductVatAdjustment > 0) {
       reasons.push(
-        "SHOPIFY_EXCLUDED_TAX_REVENUE_ALREADY_PRE_TAX",
+        "SHOPIFY_INCLUDED_PRODUCT_TAX_REMOVED_FROM_REVENUE",
       );
     }
-  }
 
-  /*
-   * 2. Shopify confirms zero tax.
-   *
-   * Never manufacture VAT just because the Tax Profile
-   * contains a 22% default rate.
-   */
-  else if (
+    if (excludedProductVat > 0) {
+      reasons.push(
+        "SHOPIFY_EXCLUDED_PRODUCT_TAX_LEFT_OUTSIDE_REVENUE",
+      );
+    }
+
+    if (shippingVat > 0) {
+      reasons.push(
+        "SHOPIFY_SHIPPING_TAX_TRACKED_SEPARATELY",
+      );
+    }
+  } else if (
     taxTreatment.source === "shopify_zero_tax"
   ) {
     outputVat = 0;
@@ -191,15 +202,7 @@ export function calculateTaxAwareEconomics({
     reasons.push(
       "NO_OUTPUT_VAT_APPLIED_BY_SHOPIFY",
     );
-  }
-
-  /*
-   * 3. Tax Profile fallback.
-   *
-   * This is intentionally conservative and should only
-   * be used where the resolver explicitly permits it.
-   */
-  else if (
+  } else if (
     taxTreatment.source === "tax_profile_fallback" &&
     taxTreatment.shouldUseTaxProfileFallback &&
     taxContext.configured &&
@@ -209,12 +212,17 @@ export function calculateTaxAwareEconomics({
       taxContext.profile === "ITALY_STANDARD" &&
       taxContext.pricesIncludeVat
     ) {
-      outputVat = extractVatFromGross(
-        grossRevenue,
-        taxContext.defaultVatRatePct,
-      );
+      includedProductVatAdjustment =
+        extractVatFromGross(
+          grossRevenue,
+          taxContext.defaultVatRatePct,
+        );
 
-      netRevenue = grossRevenue - outputVat;
+      outputVat =
+        includedProductVatAdjustment;
+
+      netRevenue =
+        grossRevenue - includedProductVatAdjustment;
 
       reasons.push(
         "OUTPUT_VAT_ESTIMATED_FROM_TAX_PROFILE",
@@ -227,14 +235,7 @@ export function calculateTaxAwareEconomics({
         "NO_OUTPUT_VAT_ESTIMATION_APPLIED",
       );
     }
-  }
-
-  /*
-   * 4. Insufficient data.
-   *
-   * Revenue is left untouched.
-   */
-  else {
+  } else {
     outputVat = 0;
     netRevenue = grossRevenue;
 
@@ -272,7 +273,12 @@ export function calculateTaxAwareEconomics({
     confidence: taxTreatment.confidence,
 
     grossRevenue,
+
     outputVat,
+    includedProductVatAdjustment,
+    excludedProductVat,
+    shippingVat,
+
     netRevenue,
 
     grossCogs,
