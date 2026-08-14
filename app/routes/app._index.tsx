@@ -350,6 +350,7 @@ export default function DashboardV2() {
     alerts,
     taxContext,
     vatEconomics,
+    taxAwareEconomics,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -1070,7 +1071,7 @@ export default function DashboardV2() {
 
         {taxContext?.isItalianStore &&
           taxContext?.configured &&
-          vatEconomics ? (
+          taxAwareEconomics ? (
           <section
             className="panel"
             style={{
@@ -1115,8 +1116,8 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Impatto IVA sulla redditività"
-                    : "VAT impact on profitability"}
+                    ? "Impatto fiscale sulla redditività"
+                    : "Tax impact on profitability"}
                 </div>
 
                 <div
@@ -1129,8 +1130,8 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Confronto sperimentale basato sul Tax Profile configurato. I KPI principali di MarginLab non sono ancora stati modificati."
-                    : "Experimental comparison based on the configured Tax Profile. MarginLab's primary KPIs have not been changed yet."}
+                    ? "Analisi tax-aware basata sui dati fiscali Shopify e sul Tax Profile configurato per i costi. I KPI principali di MarginLab non sono ancora stati modificati."
+                    : "Tax-aware analysis based on Shopify tax data and the configured Tax Profile for costs. MarginLab's primary KPIs have not been changed yet."}
                 </div>
               </div>
 
@@ -1145,7 +1146,15 @@ export default function DashboardV2() {
                   fontWeight: 900,
                 }}
               >
-                {taxContext.defaultVatRatePct}% VAT
+                {taxAwareEconomics.source === "shopify_actual_tax"
+                  ? language === "it"
+                    ? "IVA Shopify rilevata"
+                    : "Shopify tax detected"
+                  : taxAwareEconomics.source === "shopify_zero_tax"
+                    ? language === "it"
+                      ? "Nessuna IVA applicata"
+                      : "No tax applied"
+                    : `${taxContext.defaultVatRatePct}% VAT`}
               </div>
             </div>
 
@@ -1175,8 +1184,8 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Profitto prima IVA"
-                    : "Profit before VAT adjustment"}
+                    ? "Profitto prima della normalizzazione fiscale"
+                    : "Profit before tax normalization"}
                 </div>
 
                 <div
@@ -1187,7 +1196,7 @@ export default function DashboardV2() {
                     fontWeight: 950,
                   }}
                 >
-                  {money(vatEconomics.grossMarginBeforeVat)}
+                  {money(taxAwareEconomics.profitBeforeTaxAdjustment)}
                 </div>
               </div>
 
@@ -1209,19 +1218,22 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Profitto reale stimato"
-                    : "Estimated real profit"}
+                    ? "Profitto economico stimato"
+                    : "Estimated economic profit"}
                 </div>
 
                 <div
                   style={{
                     marginTop: 8,
-                    color: "#4ade80",
+                    color:
+                      taxAwareEconomics.realProfit >= 0
+                        ? "#4ade80"
+                        : "#ff9a70",
                     fontSize: 25,
                     fontWeight: 950,
                   }}
                 >
-                  {money(vatEconomics.realProfit)}
+                  {money(taxAwareEconomics.realProfit)}
                 </div>
 
                 <div
@@ -1232,7 +1244,7 @@ export default function DashboardV2() {
                     fontWeight: 750,
                   }}
                 >
-                  {pct(vatEconomics.realMarginPct)}{" "}
+                  {pct(taxAwareEconomics.realMarginPct)}{" "}
                   {language === "it" ? "margine" : "margin"}
                 </div>
               </div>
@@ -1241,8 +1253,14 @@ export default function DashboardV2() {
                 style={{
                   padding: 17,
                   borderRadius: 17,
-                  background: "rgba(255,115,60,0.045)",
-                  border: "1px solid rgba(255,115,60,0.16)",
+                  background:
+                    taxAwareEconomics.vatImpactOnProfit < 0
+                      ? "rgba(255,115,60,0.045)"
+                      : "rgba(34,197,94,0.045)",
+                  border:
+                    taxAwareEconomics.vatImpactOnProfit < 0
+                      ? "1px solid rgba(255,115,60,0.16)"
+                      : "1px solid rgba(34,197,94,0.16)",
                 }}
               >
                 <div
@@ -1255,23 +1273,85 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Impatto IVA sul profitto"
-                    : "VAT impact on profit"}
+                    ? "Impatto normalizzazione fiscale"
+                    : "Tax normalization impact"}
                 </div>
 
                 <div
                   style={{
                     marginTop: 8,
                     color:
-                      vatEconomics.vatImpactOnProfit < 0
+                      taxAwareEconomics.vatImpactOnProfit < 0
                         ? "#ff9a70"
                         : "#4ade80",
                     fontSize: 25,
                     fontWeight: 950,
                   }}
                 >
-                  {money(vatEconomics.vatImpactOnProfit)}
+                  {money(taxAwareEconomics.vatImpactOnProfit)}
                 </div>
+
+                <div
+                  style={{
+                    marginTop: 4,
+                    color: "rgba(226,232,240,0.48)",
+                    fontSize: 10,
+                    fontWeight: 750,
+                  }}
+                >
+                  {taxAwareEconomics.source === "shopify_zero_tax"
+                    ? language === "it"
+                      ? "Nessuna IVA vendite rilevata da Shopify"
+                      : "No sales tax detected by Shopify"
+                    : language === "it"
+                      ? "Dopo il trattamento fiscale"
+                      : "After tax treatment"}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                marginTop: 14,
+              }}
+            >
+              <div
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(226,232,240,0.60)",
+                  fontSize: 9,
+                  fontWeight: 850,
+                }}
+              >
+                {language === "it" ? "IVA acquisti recuperabile" : "Input VAT recovery"}
+                {" · "}
+                {taxContext.inputVatRecoveryPct}%
+              </div>
+
+              <div
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(226,232,240,0.60)",
+                  fontSize: 9,
+                  fontWeight: 850,
+                }}
+              >
+                {language === "it" ? "Affidabilità" : "Confidence"}
+                {" · "}
+                {taxAwareEconomics.confidence === "high"
+                  ? language === "it"
+                    ? "Alta"
+                    : "High"
+                  : taxAwareEconomics.confidence}
               </div>
             </div>
           </section>
