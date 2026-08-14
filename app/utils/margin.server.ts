@@ -697,9 +697,12 @@ export async function loadMarginDashboardData({
     taxTreatment,
   });
 
-  
+  const economicRevenue = taxAwareEconomics.netRevenue;
+  const economicCogs = taxAwareEconomics.economicCogs;
+  const economicProfit = taxAwareEconomics.realProfit;
+  const economicMarginPct = taxAwareEconomics.realMarginPct;
 
-  
+
 
   const previousMargins = new Map<string, number>();
 
@@ -807,7 +810,7 @@ export async function loadMarginDashboardData({
   const totalProfit = totalRevenue - totalCogs;
   const marginPct = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-  
+
 
 
 
@@ -936,6 +939,10 @@ export async function loadMarginDashboardData({
       lowMarginProductRevenue,
       missingCostRevenue,
       revenueCoveragePct,
+      economicRevenue,
+      economicCogs,
+      economicProfit,
+      economicMarginPct,
     },
     rows,
     marginDeterioration,
@@ -985,7 +992,7 @@ export async function loadMarginDashboardData({
     taxAwarePeriod,
     taxTreatment,
     taxAwareEconomics,
-    
+
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,
       rows: loaderData.rows,

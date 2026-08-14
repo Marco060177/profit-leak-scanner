@@ -361,6 +361,21 @@ export default function DashboardV2() {
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
+  const economicRevenue =
+    summary.economicRevenue ?? summary.revenue;
+
+  const economicCogs =
+    summary.economicCogs ?? summary.cogs;
+
+  const economicProfit =
+    summary.economicProfit ?? summary.profit;
+
+  const economicMarginPct =
+    summary.economicMarginPct ?? summary.marginPct;
+
+  const economicAdjustment =
+    economicProfit - summary.profit;
+
   const marginAssessment = React.useMemo(
     () =>
       buildMarginAssessment({
@@ -1069,293 +1084,6 @@ export default function DashboardV2() {
           </div>
         ) : null}
 
-        {taxContext?.isItalianStore &&
-          taxContext?.configured &&
-          taxAwareEconomics ? (
-          <section
-            className="panel"
-            style={{
-              marginBottom: 24,
-              padding: 22,
-              borderRadius: 22,
-              background:
-                "radial-gradient(circle at top left, rgba(34,197,94,0.08), transparent 35%), linear-gradient(180deg, rgba(16,23,37,0.96), rgba(7,12,21,0.98))",
-              border: "1px solid rgba(34,197,94,0.20)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                gap: 18,
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    color: "#4ade80",
-                    fontSize: 10,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.11em",
-                  }}
-                >
-                  {language === "it"
-                    ? "ANALISI IVA · ANTEPRIMA"
-                    : "VAT ANALYSIS · PREVIEW"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 7,
-                    color: "#f8fafc",
-                    fontSize: 20,
-                    fontWeight: 950,
-                  }}
-                >
-                  {language === "it"
-                    ? "Impatto fiscale sulla redditività"
-                    : "Tax impact on profitability"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    color: "rgba(226,232,240,0.55)",
-                    fontSize: 11,
-                    lineHeight: 1.55,
-                    fontWeight: 720,
-                  }}
-                >
-                  {language === "it"
-                    ? "Analisi tax-aware basata sui dati fiscali Shopify e sul Tax Profile configurato per i costi. I KPI principali di MarginLab non sono ancora stati modificati."
-                    : "Tax-aware analysis based on Shopify tax data and the configured Tax Profile for costs. MarginLab's primary KPIs have not been changed yet."}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "8px 11px",
-                  borderRadius: 999,
-                  background: "rgba(34,197,94,0.09)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "#4ade80",
-                  fontSize: 10,
-                  fontWeight: 900,
-                }}
-              >
-                {taxAwareEconomics.source === "shopify_actual_tax"
-                  ? language === "it"
-                    ? "IVA Shopify rilevata"
-                    : "Shopify tax detected"
-                  : taxAwareEconomics.source === "shopify_zero_tax"
-                    ? language === "it"
-                      ? "Nessuna IVA applicata"
-                      : "No tax applied"
-                    : `${taxContext.defaultVatRatePct}% VAT`}
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3,minmax(0,1fr))",
-                gap: 12,
-                marginTop: 18,
-              }}
-            >
-              <div
-                style={{
-                  padding: 17,
-                  borderRadius: 17,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(226,232,240,0.46)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {language === "it"
-                    ? "Profitto prima della normalizzazione fiscale"
-                    : "Profit before tax normalization"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 8,
-                    color: "#f8fafc",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {money(taxAwareEconomics.profitBeforeTaxAdjustment)}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 17,
-                  borderRadius: 17,
-                  background: "rgba(34,197,94,0.055)",
-                  border: "1px solid rgba(34,197,94,0.16)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(226,232,240,0.46)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {language === "it"
-                    ? "Profitto economico stimato"
-                    : "Estimated economic profit"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 8,
-                    color:
-                      taxAwareEconomics.realProfit >= 0
-                        ? "#4ade80"
-                        : "#ff9a70",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {money(taxAwareEconomics.realProfit)}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 4,
-                    color: "rgba(226,232,240,0.48)",
-                    fontSize: 10,
-                    fontWeight: 750,
-                  }}
-                >
-                  {pct(taxAwareEconomics.realMarginPct)}{" "}
-                  {language === "it" ? "margine" : "margin"}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: 17,
-                  borderRadius: 17,
-                  background:
-                    taxAwareEconomics.vatImpactOnProfit < 0
-                      ? "rgba(255,115,60,0.045)"
-                      : "rgba(34,197,94,0.045)",
-                  border:
-                    taxAwareEconomics.vatImpactOnProfit < 0
-                      ? "1px solid rgba(255,115,60,0.16)"
-                      : "1px solid rgba(34,197,94,0.16)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "rgba(226,232,240,0.46)",
-                    fontSize: 9,
-                    fontWeight: 950,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                  }}
-                >
-                  {language === "it"
-                    ? "Impatto normalizzazione fiscale"
-                    : "Tax normalization impact"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 8,
-                    color:
-                      taxAwareEconomics.vatImpactOnProfit < 0
-                        ? "#ff9a70"
-                        : "#4ade80",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {money(taxAwareEconomics.vatImpactOnProfit)}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 4,
-                    color: "rgba(226,232,240,0.48)",
-                    fontSize: 10,
-                    fontWeight: 750,
-                  }}
-                >
-                  {taxAwareEconomics.source === "shopify_zero_tax"
-                    ? language === "it"
-                      ? "Nessuna IVA vendite rilevata da Shopify"
-                      : "No sales tax detected by Shopify"
-                    : language === "it"
-                      ? "Dopo il trattamento fiscale"
-                      : "After tax treatment"}
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                marginTop: 14,
-              }}
-            >
-              <div
-                style={{
-                  padding: "7px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(226,232,240,0.60)",
-                  fontSize: 9,
-                  fontWeight: 850,
-                }}
-              >
-                {language === "it" ? "IVA acquisti recuperabile" : "Input VAT recovery"}
-                {" · "}
-                {taxContext.inputVatRecoveryPct}%
-              </div>
-
-              <div
-                style={{
-                  padding: "7px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(226,232,240,0.60)",
-                  fontSize: 9,
-                  fontWeight: 850,
-                }}
-              >
-                {language === "it" ? "Affidabilità" : "Confidence"}
-                {" · "}
-                {taxAwareEconomics.confidence === "high"
-                  ? language === "it"
-                    ? "Alta"
-                    : "High"
-                  : taxAwareEconomics.confidence}
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         {/* {!billingActive ? (
           <div className="billing-banner">
@@ -1391,58 +1119,55 @@ export default function DashboardV2() {
           items={[
             {
               label:
-                getStoredLanguage() === "it"
-                  ? "Ricavi analizzati"
-                  : "Revenue scanned",
-              value: money(
-                sourceRows.reduce((acc, row) => acc + row.revenue, 0),
-              ),
+                language === "it"
+                  ? "Ricavi economici"
+                  : "Economic revenue",
+              value: money(economicRevenue),
               note:
-                getStoredLanguage() === "it"
-                  ? `Ultimi ${period} giorni`
-                  : `Last ${period} days`,
+                language === "it"
+                  ? `Base tax-aware · ultimi ${period} giorni`
+                  : `Tax-aware basis · last ${period} days`,
               icon: "¤",
               tone: "positive",
             },
             {
               label:
-                getStoredLanguage() === "it"
+                language === "it"
+                  ? "Profitto economico"
+                  : "Economic profit",
+              value: money(economicProfit),
+              note:
+                language === "it"
+                  ? `${pct(economicMarginPct)} margine economico`
+                  : `${pct(economicMarginPct)} economic margin`,
+              icon: "+",
+              tone: economicProfit >= 0 ? "positive" : "danger",
+            },
+            {
+              label:
+                language === "it"
+                  ? "Margine economico"
+                  : "Economic margin",
+              value: pct(economicMarginPct),
+              note:
+                language === "it"
+                  ? `${money(economicAdjustment)} vs profitto prodotto`
+                  : `${money(economicAdjustment)} vs product profit`,
+              icon: "%",
+              tone: economicMarginPct >= 20 ? "positive" : "warning",
+            },
+            {
+              label:
+                language === "it"
                   ? "Prodotti analizzati"
                   : "Products analyzed",
               value: String(sourceRows.length),
               note:
-                getStoredLanguage() === "it"
-                  ? `${sourceRows.filter(
-                    (row) => row.losing || row.lowMargin || row.missingCost,
-                  ).length
-                  } a rischio`
-                  : `${sourceRows.filter(
-                    (row) => row.losing || row.lowMargin || row.missingCost,
-                  ).length
-                  } at risk`,
+                language === "it"
+                  ? `${visualProductsAtRisk} da controllare`
+                  : `${visualProductsAtRisk} require review`,
               icon: "◈",
-              tone: "warning",
-            },
-            {
-              label:
-                getStoredLanguage() === "it"
-                  ? "Prodotti a basso margine"
-                  : "Low margin products",
-              value: String(sourceRows.filter((row) => row.lowMargin).length),
-              note: getStoredLanguage() === "it" ? "Sotto il 10%" : "Below 10%",
-              icon: "↓",
-              tone: "warning",
-            },
-            {
-              label:
-                getStoredLanguage() === "it"
-                  ? "Costi mancanti"
-                  : "Missing costs",
-              value: String(sourceRows.filter((row) => row.missingCost).length),
-              note:
-                getStoredLanguage() === "it" ? "Da correggere" : "Fix required",
-              icon: "⚠",
-              tone: "danger",
+              tone: visualProductsAtRisk > 0 ? "warning" : "positive",
             },
           ]}
         />
@@ -1452,19 +1177,19 @@ export default function DashboardV2() {
           items={[
             {
               label:
-                getStoredLanguage() === "it"
-                  ? "Perdita Principale"
-                  : "Biggest Profit Leak",
+                language === "it"
+                  ? "Perdita principale"
+                  : "Biggest profit leak",
               value: worstProduct
                 ? worstProduct.productTitle
-                : getStoredLanguage() === "it"
+                : language === "it"
                   ? "Nessuna perdita rilevata"
                   : "No losses detected",
               note: worstProduct
-                ? getStoredLanguage() === "it"
+                ? language === "it"
                   ? `${money(Math.abs(worstProduct.profit))} perdita stimata`
                   : `${money(Math.abs(worstProduct.profit))} estimated loss`
-                : getStoredLanguage() === "it"
+                : language === "it"
                   ? "Tutti i prodotti sono profittevoli"
                   : "All products are profitable",
               icon: worstProduct ? "↓" : "✓",
@@ -1472,58 +1197,42 @@ export default function DashboardV2() {
             },
             {
               label:
-                getStoredLanguage() === "it"
-                  ? "Miglior Margine"
-                  : "Best Margin Product",
-              value: bestProduct
-                ? bestProduct.productTitle
-                : getStoredLanguage() === "it"
-                  ? "Nessun dato"
-                  : "No data",
-              note: bestProduct
-                ? bestProduct.missingCost
-                  ? getStoredLanguage() === "it"
-                    ? "Costo mancante"
-                    : "Missing cost data"
-                  : getStoredLanguage() === "it"
-                    ? `${pct(bestProduct.marginPct)} margine`
-                    : `${pct(bestProduct.marginPct)} margin`
-                : getStoredLanguage() === "it"
-                  ? "Nessun prodotto disponibile"
-                  : "No products available",
-              icon: "↑",
-              tone: "positive",
-            },
-            {
-              label:
-                getStoredLanguage() === "it"
-                  ? "Profitto Recuperabile"
-                  : "Recoverable Profit",
-              value: money(recoverableProfit),
+                language === "it"
+                  ? "Prodotti a basso margine"
+                  : "Low margin products",
+              value: String(sourceRows.filter((row) => row.lowMargin).length),
               note:
-                getStoredLanguage() === "it"
-                  ? "Potenziale recupero margine"
-                  : "Potential margin recovery",
-              icon: "+",
+                language === "it"
+                  ? "Margine prodotto sotto il 10%"
+                  : "Product margin below 10%",
+              icon: "↓",
               tone: "warning",
             },
             {
               label:
-                getStoredLanguage() === "it"
-                  ? "MARGINE MEDIO PRODOTTO"
-                  : "AVERAGE PRODUCT MARGIN",
-              value: pct(
-                sourceRows.length > 0
-                  ? sourceRows.reduce((acc, row) => acc + row.marginPct, 0) /
-                  sourceRows.length
-                  : 0,
-              ),
+                language === "it"
+                  ? "Costi mancanti"
+                  : "Missing costs",
+              value: String(visualMissingCostCount),
               note:
-                getStoredLanguage() === "it"
-                  ? "Su tutti i prodotti analizzati"
-                  : "Across analyzed products",
-              icon: "%",
-              tone: "positive",
+                language === "it"
+                  ? "Da correggere per una lettura affidabile"
+                  : "Fix required for reliable analysis",
+              icon: "⚠",
+              tone: visualMissingCostCount > 0 ? "danger" : "positive",
+            },
+            {
+              label:
+                language === "it"
+                  ? "Profitto recuperabile"
+                  : "Recoverable profit",
+              value: money(recoverableProfit),
+              note:
+                language === "it"
+                  ? "Potenziale recupero da pricing"
+                  : "Potential pricing recovery",
+              icon: "+",
+              tone: "warning",
             },
           ]}
         />
@@ -1535,6 +1244,303 @@ export default function DashboardV2() {
           profitPoints={profitPoints}
           visualMarginPct={visualMarginPct}
         />
+
+        {taxContext?.isItalianStore &&
+          taxContext?.configured &&
+          taxAwareEconomics ? (
+          <section
+            className="panel"
+            style={{
+              marginTop: 24,
+              marginBottom: 24,
+              padding: 22,
+              borderRadius: 22,
+              background:
+                "radial-gradient(circle at top left, rgba(34,197,94,0.08), transparent 35%), linear-gradient(180deg, rgba(16,23,37,0.96), rgba(7,12,21,0.98))",
+              border: "1px solid rgba(34,197,94,0.20)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 18,
+                flexWrap: "wrap",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    color: "#4ade80",
+                    fontSize: 10,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.11em",
+                  }}
+                >
+                  {language === "it"
+                    ? "BASE DI REDDITIVITÀ"
+                    : "PROFITABILITY BASIS"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 7,
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Normalizzazione fiscale e dei costi"
+                    : "Tax & cost normalization"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 6,
+                    color: "rgba(226,232,240,0.55)",
+                    fontSize: 11,
+                    lineHeight: 1.55,
+                    fontWeight: 720,
+                    maxWidth: 820,
+                  }}
+                >
+                  {language === "it"
+                    ? "Questa sezione spiega come MarginLab passa dal profitto prodotto osservato al profitto economico tax-aware, utilizzando i dati fiscali Shopify per le vendite e il Tax Profile configurato per i costi."
+                    : "This section explains how MarginLab moves from observed product profit to tax-aware economic profit, using Shopify tax data for sales and the configured Tax Profile for costs."}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: "8px 11px",
+                  borderRadius: 999,
+                  background: "rgba(34,197,94,0.09)",
+                  border: "1px solid rgba(34,197,94,0.20)",
+                  color: "#4ade80",
+                  fontSize: 10,
+                  fontWeight: 900,
+                }}
+              >
+                {taxAwareEconomics.source === "shopify_actual_tax"
+                  ? language === "it"
+                    ? "Imposte Shopify rilevate"
+                    : "Shopify tax detected"
+                  : taxAwareEconomics.source === "shopify_zero_tax"
+                    ? language === "it"
+                      ? "Nessuna imposta applicata"
+                      : "No tax applied"
+                    : `${taxContext.defaultVatRatePct}% VAT`}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3,minmax(0,1fr))",
+                gap: 12,
+                marginTop: 18,
+              }}
+            >
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it"
+                    ? "Profitto prima della normalizzazione"
+                    : "Profit before normalization"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#f8fafc",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(taxAwareEconomics.profitBeforeTaxAdjustment)}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background: "rgba(34,197,94,0.055)",
+                  border: "1px solid rgba(34,197,94,0.16)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it" ? "Profitto economico" : "Economic profit"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    color:
+                      taxAwareEconomics.realProfit >= 0
+                        ? "#4ade80"
+                        : "#ff9a70",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(taxAwareEconomics.realProfit)}
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    color: "rgba(226,232,240,0.48)",
+                    fontSize: 10,
+                    fontWeight: 750,
+                  }}
+                >
+                  {pct(taxAwareEconomics.realMarginPct)}{" "}
+                  {language === "it" ? "margine economico" : "economic margin"}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: 17,
+                  borderRadius: 17,
+                  background:
+                    taxAwareEconomics.vatImpactOnProfit < 0
+                      ? "rgba(255,115,60,0.045)"
+                      : "rgba(34,197,94,0.045)",
+                  border:
+                    taxAwareEconomics.vatImpactOnProfit < 0
+                      ? "1px solid rgba(255,115,60,0.16)"
+                      : "1px solid rgba(34,197,94,0.16)",
+                }}
+              >
+                <div
+                  style={{
+                    color: "rgba(226,232,240,0.46)",
+                    fontSize: 9,
+                    fontWeight: 950,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {language === "it"
+                    ? "Impatto della normalizzazione"
+                    : "Normalization impact"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    color:
+                      taxAwareEconomics.vatImpactOnProfit < 0
+                        ? "#ff9a70"
+                        : "#4ade80",
+                    fontSize: 25,
+                    fontWeight: 950,
+                  }}
+                >
+                  {money(taxAwareEconomics.vatImpactOnProfit)}
+                </div>
+                <div
+                  style={{
+                    marginTop: 4,
+                    color: "rgba(226,232,240,0.48)",
+                    fontSize: 10,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? "Differenza rispetto al profitto prodotto osservato"
+                    : "Difference versus observed product profit"}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                flexWrap: "wrap",
+                marginTop: 14,
+              }}
+            >
+              <div
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(226,232,240,0.60)",
+                  fontSize: 9,
+                  fontWeight: 850,
+                }}
+              >
+                {language === "it"
+                  ? "IVA acquisti recuperabile"
+                  : "Input VAT recovery"}
+                {" · "}
+                {taxContext.inputVatRecoveryPct}%
+              </div>
+
+              <div
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(226,232,240,0.60)",
+                  fontSize: 9,
+                  fontWeight: 850,
+                }}
+              >
+                {language === "it" ? "Affidabilità" : "Confidence"}
+                {" · "}
+                {taxAwareEconomics.confidence === "high"
+                  ? language === "it"
+                    ? "Alta"
+                    : "High"
+                  : taxAwareEconomics.confidence}
+              </div>
+
+              <div
+                style={{
+                  padding: "7px 10px",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  color: "rgba(226,232,240,0.60)",
+                  fontSize: 9,
+                  fontWeight: 850,
+                }}
+              >
+                {language === "it" ? "COGS economici" : "Economic COGS"}
+                {" · "}
+                {money(taxAwareEconomics.economicCogs)}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section
           className="panel"
