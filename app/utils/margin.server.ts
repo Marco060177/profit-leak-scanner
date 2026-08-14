@@ -6,7 +6,7 @@ import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
 import { calculateVatEconomics } from "~/utils/vat-engine";
-
+import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
 
 type OrderEdge = { node?: any };
 
@@ -41,6 +41,17 @@ type PeriodAggregate = {
   productRefunds: number;
   shippingRevenue: number;
   taxes: number;
+  productTaxAmount: number;
+  shippingTaxAmount: number;
+  refundedTaxAmount: number;
+
+  taxableLineCount: number;
+  nonTaxableLineCount: number;
+  taxedLineCount: number;
+
+  taxExemptOrderCount: number;
+  taxesIncludedOrderCount: number;
+  taxesExcludedOrderCount: number;
   netProductRevenue: number;
   productCogs: number;
   orderCount: number;
@@ -69,6 +80,7 @@ const ORDERS_QUERY = `#graphql
           name
           processedAt
           taxesIncluded
+          taxExempt
 
           totalShippingPriceSet {
             shopMoney {
@@ -82,6 +94,31 @@ const ORDERS_QUERY = `#graphql
             }
           }
 
+          shippingLines(first: 10) {
+            edges {
+              node {
+                title
+
+                discountedPriceSet {
+                  shopMoney {
+                    amount
+                  }
+                }
+
+                taxLines {
+                  title
+                  rate
+
+                  priceSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+                }
+              }
+            }
+          }
+
           refunds {
             refundLineItems(first: 100) {
               edges {
@@ -89,6 +126,12 @@ const ORDERS_QUERY = `#graphql
                   quantity
 
                   subtotalSet {
+                    shopMoney {
+                      amount
+                    }
+                  }
+
+                  totalTaxSet {
                     shopMoney {
                       amount
                     }
@@ -180,8 +223,8 @@ function amount(value: unknown) {
 }
 
 function productKey(product: any, lineItemId: string) {
-  if (product?.id) return `product: ${product.id}`;
-  return `line:${lineItemId || "unknown"} `;
+  if (product?.id) return `product:${product.id}`;
+  return `line:${lineItemId || "unknown"}`;
 }
 
 function getOrCreateProduct(
@@ -258,6 +301,19 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
   let productRefunds = 0;
   let shippingRevenue = 0;
   let taxes = 0;
+
+  let productTaxAmount = 0;
+  let shippingTaxAmount = 0;
+  let refundedTaxAmount = 0;
+
+  let taxableLineCount = 0;
+  let nonTaxableLineCount = 0;
+  let taxedLineCount = 0;
+
+  let taxExemptOrderCount = 0;
+  let taxesIncludedOrderCount = 0;
+  let taxesExcludedOrderCount = 0;
+
   let grossCogs = 0;
   let refundedCogs = 0;
   let firstOrderAt: string | null = null;
@@ -265,11 +321,16 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
 
   for (const edge of orderEdges) {
     const order = edge?.node;
-    console.log("[SHOPIFY TAX BASIS]", {
-      order: order?.name,
-      taxesIncluded: order?.taxesIncluded,
-      totalTax: amount(order?.totalTaxSet?.shopMoney?.amount),
-    });
+    if (order?.taxExempt === true) {
+      taxExemptOrderCount += 1;
+    }
+
+    if (order?.taxesIncluded === true) {
+      taxesIncludedOrderCount += 1;
+    } else {
+      taxesExcludedOrderCount += 1;
+    }
+
     const processedAt = String(order?.processedAt ?? "");
     const day = String(order?.processedAt ?? "").slice(0, 10);
 
@@ -303,14 +364,39 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       byDay[day].shippingRevenue += orderShippingRevenue;
     }
 
+    for (const shippingEdge of order?.shippingLines?.edges ?? []) {
+      const shippingLine = shippingEdge?.node;
+
+      const shippingLineTax = (shippingLine?.taxLines ?? []).reduce(
+        (sum: number, taxLine: any) =>
+          sum + amount(taxLine?.priceSet?.shopMoney?.amount),
+        0,
+      );
+
+      shippingTaxAmount += shippingLineTax;
+    }
+
     for (const lineEdge of order?.lineItems?.edges ?? []) {
       const line = lineEdge?.node;
-      console.log("[SHOPIFY LINE TAX]", {
-        order: order?.name,
-        product: line?.variant?.product?.title,
-        taxable: line?.taxable,
-        taxLines: line?.taxLines ?? [],
-      });
+
+      if (line?.taxable === true) {
+        taxableLineCount += 1;
+      } else {
+        nonTaxableLineCount += 1;
+      }
+
+      const lineTaxAmount = (line?.taxLines ?? []).reduce(
+        (sum: number, taxLine: any) =>
+          sum + amount(taxLine?.priceSet?.shopMoney?.amount),
+        0,
+      );
+
+      productTaxAmount += lineTaxAmount;
+
+      if (lineTaxAmount > 0) {
+        taxedLineCount += 1;
+      }
+
       const lineItemId = String(line?.id ?? "");
       const product = line?.variant?.product;
       const key = productKey(product, lineItemId);
@@ -379,6 +465,9 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
         const refundSubtotal = amount(
           refundLine?.subtotalSet?.shopMoney?.amount,
         );
+        const refundTax = amount(
+          refundLine?.totalTaxSet?.shopMoney?.amount,
+        );
         const costRaw = line?.variant?.inventoryItem?.unitCost?.amount;
         const hasCost = costRaw !== null && costRaw !== undefined;
         const refundCogs = amount(costRaw) * refundedQuantity;
@@ -389,6 +478,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
         aggregate.missingCost ||= !hasCost;
 
         productRefunds += refundSubtotal;
+        refundedTaxAmount += refundTax;
         refundedCogs += refundCogs;
 
         if (day) {
@@ -408,6 +498,19 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     productRefunds,
     shippingRevenue,
     taxes,
+
+    productTaxAmount,
+    shippingTaxAmount,
+    refundedTaxAmount,
+
+    taxableLineCount,
+    nonTaxableLineCount,
+    taxedLineCount,
+
+    taxExemptOrderCount,
+    taxesIncludedOrderCount,
+    taxesExcludedOrderCount,
+
     netProductRevenue: grossProductSales - discounts - productRefunds,
     productCogs: Math.max(0, grossCogs - refundedCogs),
     orderCount: orderEdges.length,
@@ -480,12 +583,7 @@ export async function loadMarginDashboardData({
     shop: session.shop,
     shopCountryCode,
   });
-  console.log("[MarginLab Tax Context]", {
-    shopCountryCode: taxContext.shopCountryCode,
-    effectiveCountryCode: taxContext.effectiveCountryCode,
-    isItalianStore: taxContext.isItalianStore,
-    profile: taxContext.profile,
-  });
+
 
   const storeMoney = (value: number) =>
     formatMoney(value, { currencyCode, locale, timeZone });
@@ -497,6 +595,57 @@ export async function loadMarginDashboardData({
 
   const current = aggregatePeriod(currentOrderEdges);
   const previous = aggregatePeriod(previousOrderEdges);
+
+  const taxAwarePeriod = {
+    totalShopifyTax: current.taxes,
+
+    productTaxAmount: current.productTaxAmount,
+    shippingTaxAmount: current.shippingTaxAmount,
+    refundedTaxAmount: current.refundedTaxAmount,
+
+    netCollectedTax: Math.max(
+      0,
+      current.productTaxAmount +
+      current.shippingTaxAmount -
+      current.refundedTaxAmount,
+    ),
+
+    taxableLineCount: current.taxableLineCount,
+    nonTaxableLineCount: current.nonTaxableLineCount,
+    taxedLineCount: current.taxedLineCount,
+
+    taxExemptOrderCount: current.taxExemptOrderCount,
+    taxesIncludedOrderCount: current.taxesIncludedOrderCount,
+    taxesExcludedOrderCount: current.taxesExcludedOrderCount,
+
+    hasActualShopifyTax:
+      current.taxes > 0 ||
+      current.productTaxAmount > 0 ||
+      current.shippingTaxAmount > 0,
+
+    hasTaxableProducts: current.taxableLineCount > 0,
+
+    hasTaxExemptOrders: current.taxExemptOrderCount > 0,
+
+    taxDataCoverage:
+      current.orderCount === 0
+        ? "none"
+        : current.taxableLineCount +
+          current.nonTaxableLineCount >
+          0
+          ? "complete"
+          : "partial",
+  } as const;
+
+  const taxTreatment = resolveTaxTreatment({
+    taxAwarePeriod,
+    taxContext,
+  });
+
+  console.log("[TAX TREATMENT]", {
+    taxAwarePeriod,
+    taxTreatment,
+  });
 
   const previousMargins = new Map<string, number>();
 
@@ -616,17 +765,7 @@ export async function loadMarginDashboardData({
       })
       : null;
 
-  console.log("[VAT VALIDATION]", {
-    isItalianStore: taxContext.isItalianStore,
-    configured: taxContext.configured,
-    totalRevenue,
-    totalCogs,
-    defaultVatRatePct: taxContext.defaultVatRatePct,
-    pricesIncludeVat: taxContext.pricesIncludeVat,
-    costsIncludeVat: taxContext.costsIncludeVat,
-    recoverInputVat: taxContext.recoverInputVat,
-    vatEconomics,
-  });
+
 
   const previousRevenue = previous.netProductRevenue;
   const previousProfit = previousRevenue - previous.productCogs;
@@ -799,6 +938,8 @@ export async function loadMarginDashboardData({
   return {
     ...loaderData,
     taxContext,
+    taxAwarePeriod,
+    taxTreatment,
     vatEconomics,
     economicSnapshot: buildEconomicSnapshot({
       summary: loaderData.summary,

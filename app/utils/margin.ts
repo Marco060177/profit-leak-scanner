@@ -135,6 +135,30 @@ export type AnalysisContext = {
   comparisonAvailable: boolean;
 };
 
+export type TaxAwarePeriodData = {
+  totalShopifyTax: number;
+
+  productTaxAmount: number;
+  shippingTaxAmount: number;
+  refundedTaxAmount: number;
+
+  netCollectedTax: number;
+
+  taxableLineCount: number;
+  nonTaxableLineCount: number;
+  taxedLineCount: number;
+
+  taxExemptOrderCount: number;
+  taxesIncludedOrderCount: number;
+  taxesExcludedOrderCount: number;
+
+  hasActualShopifyTax: boolean;
+  hasTaxableProducts: boolean;
+  hasTaxExemptOrders: boolean;
+
+  taxDataCoverage: "none" | "partial" | "complete";
+};
+
 export type LoaderData = {
   summary: Summary;
   rows: Row[];
@@ -146,18 +170,21 @@ export type LoaderData = {
   shopHandle: string;
   currencyCode: string;
   timeZone: string;
+
   analysisContext?: AnalysisContext;
+  taxAwarePeriod?: TaxAwarePeriodData;
   economicSnapshot?: EconomicSnapshot;
+
   taxContext?: {
     shopCountryCode: string;
     effectiveCountryCode: string;
     isItalianStore: boolean;
     profile:
-    | "UNCONFIGURED"
-    | "NOT_APPLICABLE"
-    | "ITALY_STANDARD"
-    | "ITALY_FORFETTARIO"
-    | "ITALY_EXEMPT";
+      | "UNCONFIGURED"
+      | "NOT_APPLICABLE"
+      | "ITALY_STANDARD"
+      | "ITALY_FORFETTARIO"
+      | "ITALY_EXEMPT";
     defaultVatRatePct: number;
     pricesIncludeVat: boolean;
     costsIncludeVat: boolean;
@@ -166,6 +193,7 @@ export type LoaderData = {
     shippingVatRatePct: number;
     configured: boolean;
   };
+
   vatEconomics?: {
     grossRevenue: number;
     revenueVat: number;
