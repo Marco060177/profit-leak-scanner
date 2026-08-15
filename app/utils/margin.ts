@@ -147,6 +147,40 @@ export type TaxSystem =
   | "SALES_TAX"
   | "UNKNOWN";
 
+export type TaxProfile =
+  | "UNCONFIGURED"
+  | "NOT_APPLICABLE"
+  | "ITALY_STANDARD"
+  | "ITALY_FORFETTARIO"
+  | "ITALY_EXEMPT"
+  | "UK_VAT_STANDARD"
+  | "UK_VAT_EXEMPT"
+  | "UK_VAT_UNREGISTERED"
+  | "CANADA_GST_HST_REGISTERED"
+  | "CANADA_GST_HST_EXEMPT"
+  | "CANADA_GST_HST_UNREGISTERED"
+  | "AUSTRALIA_GST_REGISTERED"
+  | "AUSTRALIA_GST_FREE"
+  | "AUSTRALIA_GST_UNREGISTERED"
+  | "GERMANY_VAT_STANDARD"
+  | "GERMANY_VAT_EXEMPT"
+  | "GERMANY_VAT_UNREGISTERED"
+  | "FRANCE_VAT_STANDARD"
+  | "FRANCE_VAT_EXEMPT"
+  | "FRANCE_VAT_UNREGISTERED"
+  | "SPAIN_VAT_STANDARD"
+  | "SPAIN_VAT_EXEMPT"
+  | "SPAIN_VAT_UNREGISTERED"
+  | "NETHERLANDS_VAT_STANDARD"
+  | "NETHERLANDS_VAT_EXEMPT"
+  | "NETHERLANDS_VAT_UNREGISTERED"
+  | "IRELAND_VAT_STANDARD"
+  | "IRELAND_VAT_EXEMPT"
+  | "IRELAND_VAT_UNREGISTERED"
+  | "NEW_ZEALAND_GST_REGISTERED"
+  | "NEW_ZEALAND_GST_EXEMPT"
+  | "NEW_ZEALAND_GST_UNREGISTERED";
+
 export type TaxAwarePeriodData = {
   totalShopifyTax: number;
 
@@ -280,12 +314,7 @@ export type LoaderData = {
     // UI checks are migrated to the international architecture.
     isItalianStore: boolean;
 
-    profile:
-      | "UNCONFIGURED"
-      | "NOT_APPLICABLE"
-      | "ITALY_STANDARD"
-      | "ITALY_FORFETTARIO"
-      | "ITALY_EXEMPT";
+    profile: TaxProfile;
 
     defaultVatRatePct: number;
     pricesIncludeVat: boolean;
