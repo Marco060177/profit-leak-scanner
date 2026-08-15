@@ -21,7 +21,25 @@ export type TaxProfile =
   | "CANADA_GST_HST_UNREGISTERED"
   | "AUSTRALIA_GST_REGISTERED"
   | "AUSTRALIA_GST_FREE"
-  | "AUSTRALIA_GST_UNREGISTERED";
+  | "AUSTRALIA_GST_UNREGISTERED"
+  | "GERMANY_VAT_STANDARD"
+  | "GERMANY_VAT_EXEMPT"
+  | "GERMANY_VAT_UNREGISTERED"
+  | "FRANCE_VAT_STANDARD"
+  | "FRANCE_VAT_EXEMPT"
+  | "FRANCE_VAT_UNREGISTERED"
+  | "SPAIN_VAT_STANDARD"
+  | "SPAIN_VAT_EXEMPT"
+  | "SPAIN_VAT_UNREGISTERED"
+  | "NETHERLANDS_VAT_STANDARD"
+  | "NETHERLANDS_VAT_EXEMPT"
+  | "NETHERLANDS_VAT_UNREGISTERED"
+  | "IRELAND_VAT_STANDARD"
+  | "IRELAND_VAT_EXEMPT"
+  | "IRELAND_VAT_UNREGISTERED"
+  | "NEW_ZEALAND_GST_REGISTERED"
+  | "NEW_ZEALAND_GST_EXEMPT"
+  | "NEW_ZEALAND_GST_UNREGISTERED";
 
 export type CountryTaxCapabilities = {
   countryCode: string;
@@ -83,36 +101,213 @@ function clampPct(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
-function isItalianProfile(profile: TaxProfile) {
-  return (
-    profile === "ITALY_STANDARD" ||
-    profile === "ITALY_FORFETTARIO" ||
-    profile === "ITALY_EXEMPT"
-  );
-}
+type AdvancedCountryConfig = {
+  countryCode: string;
+  taxSystem: TaxSystem;
+  standardProfile: TaxProfile;
+  profiles: readonly TaxProfile[];
+  defaultVatRatePct: number;
+  pricesIncludeVat: boolean;
+  costsIncludeVat: boolean;
+  recoverInputVat: boolean;
+  inputVatRecoveryPct: number;
+  shippingIncludeVat: boolean;
+  shippingVatRatePct: number;
+};
 
-function isUkProfile(profile: TaxProfile) {
-  return (
-    profile === "UK_VAT_STANDARD" ||
-    profile === "UK_VAT_EXEMPT" ||
-    profile === "UK_VAT_UNREGISTERED"
-  );
-}
+const ADVANCED_COUNTRY_CONFIGS: Record<
+  string,
+  AdvancedCountryConfig
+> = {
+  IT: {
+    countryCode: "IT",
+    taxSystem: "VAT",
+    standardProfile: "ITALY_STANDARD",
+    profiles: [
+      "ITALY_STANDARD",
+      "ITALY_FORFETTARIO",
+      "ITALY_EXEMPT",
+    ],
+    defaultVatRatePct: 22,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 22,
+  },
 
-function isCanadaProfile(profile: TaxProfile) {
-  return (
-    profile === "CANADA_GST_HST_REGISTERED" ||
-    profile === "CANADA_GST_HST_EXEMPT" ||
-    profile === "CANADA_GST_HST_UNREGISTERED"
-  );
-}
+  GB: {
+    countryCode: "GB",
+    taxSystem: "VAT",
+    standardProfile: "UK_VAT_STANDARD",
+    profiles: [
+      "UK_VAT_STANDARD",
+      "UK_VAT_EXEMPT",
+      "UK_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 20,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 20,
+  },
 
-function isAustraliaProfile(profile: TaxProfile) {
-  return (
-    profile === "AUSTRALIA_GST_REGISTERED" ||
-    profile === "AUSTRALIA_GST_FREE" ||
-    profile === "AUSTRALIA_GST_UNREGISTERED"
-  );
+  CA: {
+    countryCode: "CA",
+    taxSystem: "GST_HST",
+    standardProfile: "CANADA_GST_HST_REGISTERED",
+    profiles: [
+      "CANADA_GST_HST_REGISTERED",
+      "CANADA_GST_HST_EXEMPT",
+      "CANADA_GST_HST_UNREGISTERED",
+    ],
+    // Federal GST baseline only. Actual Shopify tax lines remain
+    // authoritative for HST and provincial place-of-supply outcomes.
+    defaultVatRatePct: 5,
+    pricesIncludeVat: false,
+    costsIncludeVat: false,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: false,
+    shippingVatRatePct: 5,
+  },
+
+  AU: {
+    countryCode: "AU",
+    taxSystem: "GST",
+    standardProfile: "AUSTRALIA_GST_REGISTERED",
+    profiles: [
+      "AUSTRALIA_GST_REGISTERED",
+      "AUSTRALIA_GST_FREE",
+      "AUSTRALIA_GST_UNREGISTERED",
+    ],
+    defaultVatRatePct: 10,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 10,
+  },
+
+  DE: {
+    countryCode: "DE",
+    taxSystem: "VAT",
+    standardProfile: "GERMANY_VAT_STANDARD",
+    profiles: [
+      "GERMANY_VAT_STANDARD",
+      "GERMANY_VAT_EXEMPT",
+      "GERMANY_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 19,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 19,
+  },
+
+  FR: {
+    countryCode: "FR",
+    taxSystem: "VAT",
+    standardProfile: "FRANCE_VAT_STANDARD",
+    profiles: [
+      "FRANCE_VAT_STANDARD",
+      "FRANCE_VAT_EXEMPT",
+      "FRANCE_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 20,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 20,
+  },
+
+  ES: {
+    countryCode: "ES",
+    taxSystem: "VAT",
+    standardProfile: "SPAIN_VAT_STANDARD",
+    profiles: [
+      "SPAIN_VAT_STANDARD",
+      "SPAIN_VAT_EXEMPT",
+      "SPAIN_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 21,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 21,
+  },
+
+  NL: {
+    countryCode: "NL",
+    taxSystem: "VAT",
+    standardProfile: "NETHERLANDS_VAT_STANDARD",
+    profiles: [
+      "NETHERLANDS_VAT_STANDARD",
+      "NETHERLANDS_VAT_EXEMPT",
+      "NETHERLANDS_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 21,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 21,
+  },
+
+  IE: {
+    countryCode: "IE",
+    taxSystem: "VAT",
+    standardProfile: "IRELAND_VAT_STANDARD",
+    profiles: [
+      "IRELAND_VAT_STANDARD",
+      "IRELAND_VAT_EXEMPT",
+      "IRELAND_VAT_UNREGISTERED",
+    ],
+    defaultVatRatePct: 23,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 23,
+  },
+
+  NZ: {
+    countryCode: "NZ",
+    taxSystem: "GST",
+    standardProfile: "NEW_ZEALAND_GST_REGISTERED",
+    profiles: [
+      "NEW_ZEALAND_GST_REGISTERED",
+      "NEW_ZEALAND_GST_EXEMPT",
+      "NEW_ZEALAND_GST_UNREGISTERED",
+    ],
+    defaultVatRatePct: 15,
+    pricesIncludeVat: true,
+    costsIncludeVat: true,
+    recoverInputVat: true,
+    inputVatRecoveryPct: 100,
+    shippingIncludeVat: true,
+    shippingVatRatePct: 15,
+  },
+};
+
+function getAdvancedCountryConfig(
+  countryCode: string,
+) {
+  return ADVANCED_COUNTRY_CONFIGS[
+    normalizeCountryCode(countryCode)
+  ];
 }
 
 function profileMatchesCountry({
@@ -122,101 +317,58 @@ function profileMatchesCountry({
   profile: TaxProfile;
   countryCode: string;
 }) {
-  if (countryCode === "IT") {
-    return isItalianProfile(profile);
-  }
+  const config =
+    getAdvancedCountryConfig(countryCode);
 
-  if (countryCode === "GB") {
-    return isUkProfile(profile);
-  }
-
-  if (countryCode === "CA") {
-    return isCanadaProfile(profile);
-  }
-
-  if (countryCode === "AU") {
-    return isAustraliaProfile(profile);
-  }
-
-  return false;
+  return config
+    ? config.profiles.includes(profile)
+    : false;
 }
 
 function profileAllowsInputTaxRecovery(
   profile: TaxProfile,
 ) {
-  return (
-    profile === "ITALY_STANDARD" ||
-    profile === "UK_VAT_STANDARD" ||
-    profile === "CANADA_GST_HST_REGISTERED" ||
-    profile === "AUSTRALIA_GST_REGISTERED"
+  return Object.values(
+    ADVANCED_COUNTRY_CONFIGS,
+  ).some(
+    (config) =>
+      config.standardProfile === profile,
   );
 }
 
 function getAdvancedCountryDefaults(
   countryCode: string,
 ) {
-  if (countryCode === "IT") {
-    return {
-      defaultVatRatePct: 22,
-      pricesIncludeVat: true,
-      costsIncludeVat: true,
-      recoverInputVat: true,
-      inputVatRecoveryPct: 100,
-      shippingIncludeVat: true,
-      shippingVatRatePct: 22,
-    };
-  }
+  const config =
+    getAdvancedCountryConfig(countryCode);
 
-  if (countryCode === "GB") {
+  if (!config) {
     return {
-      defaultVatRatePct: 20,
-      pricesIncludeVat: true,
-      costsIncludeVat: true,
-      recoverInputVat: true,
-      inputVatRecoveryPct: 100,
-      shippingIncludeVat: true,
-      shippingVatRatePct: 20,
-    };
-  }
-
-  if (countryCode === "CA") {
-    return {
-      // Canada is destination/place-of-supply sensitive.
-      // 5% is the federal GST baseline only; actual Shopify tax lines
-      // remain authoritative when HST or provincial taxes apply.
-      defaultVatRatePct: 5,
+      defaultVatRatePct: 0,
       pricesIncludeVat: false,
       costsIncludeVat: false,
-      recoverInputVat: true,
-      inputVatRecoveryPct: 100,
+      recoverInputVat: false,
+      inputVatRecoveryPct: 0,
       shippingIncludeVat: false,
-      shippingVatRatePct: 5,
-    };
-  }
-
-  if (countryCode === "AU") {
-    return {
-      // Australia applies 10% GST to most taxable sales.
-      // Consumer prices are generally GST-inclusive, while actual
-      // Shopify tax lines remain authoritative whenever available.
-      defaultVatRatePct: 10,
-      pricesIncludeVat: true,
-      costsIncludeVat: true,
-      recoverInputVat: true,
-      inputVatRecoveryPct: 100,
-      shippingIncludeVat: true,
-      shippingVatRatePct: 10,
+      shippingVatRatePct: 0,
     };
   }
 
   return {
-    defaultVatRatePct: 0,
-    pricesIncludeVat: false,
-    costsIncludeVat: false,
-    recoverInputVat: false,
-    inputVatRecoveryPct: 0,
-    shippingIncludeVat: false,
-    shippingVatRatePct: 0,
+    defaultVatRatePct:
+      config.defaultVatRatePct,
+    pricesIncludeVat:
+      config.pricesIncludeVat,
+    costsIncludeVat:
+      config.costsIncludeVat,
+    recoverInputVat:
+      config.recoverInputVat,
+    inputVatRecoveryPct:
+      config.inputVatRecoveryPct,
+    shippingIncludeVat:
+      config.shippingIncludeVat,
+    shippingVatRatePct:
+      config.shippingVatRatePct,
   };
 }
 
@@ -274,10 +426,7 @@ export function getCountryTaxCapabilities(
     taxSystem,
 
     advancedProfileAvailable:
-      code === "IT" ||
-      code === "GB" ||
-      code === "CA" ||
-      code === "AU",
+      Boolean(getAdvancedCountryConfig(code)),
 
     supportsRecoverableInputTaxModel:
       taxSystem === "VAT" ||
