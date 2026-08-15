@@ -537,9 +537,7 @@ function AlertCard({
             }}
           >
             {alert.monthlyImpact > 0
-              ? `${
-                  economicKind === "opportunity" ? "+" : ""
-                }${money(alert.monthlyImpact)}`
+              ? money(alert.monthlyImpact)
               : language === "it"
                 ? "Segnale qualitativo"
                 : "Qualitative signal"}
@@ -566,8 +564,8 @@ function AlertCard({
                     : "Estimated monthly exposure"
                   : economicKind === "opportunity"
                     ? language === "it"
-                      ? "Opportunità mensile stimata"
-                      : "Estimated monthly opportunity"
+                      ? "Gap mensile stimato verso il target"
+                      : "Estimated monthly profit gap to target"
                     : language === "it"
                       ? "Valore mensile indicativo"
                       : "Indicative monthly value"
@@ -723,8 +721,9 @@ export default function AlertCenterPage() {
         rows,
         language,
         period,
+        currencyCode,
       }),
-    [summary, rows, language, period],
+    [summary, rows, language, period, currencyCode],
   );
 
   const [alertStates, setAlertStates] =
@@ -1000,13 +999,13 @@ export default function AlertCenterPage() {
     const economicKindLabel = (kind: ProfitAlert["economicKind"]) => {
       if (language === "it") {
         if (kind === "loss") return "Perdita";
-        if (kind === "opportunity") return "Opportunità";
+        if (kind === "opportunity") return "Gap verso il target";
         if (kind === "exposure") return "Esposizione";
         return "Qualitativo";
       }
 
       if (kind === "loss") return "Loss";
-      if (kind === "opportunity") return "Opportunity";
+      if (kind === "opportunity") return "Profit gap to target";
       if (kind === "exposure") return "Exposure";
       return "Qualitative";
     };
@@ -1039,7 +1038,7 @@ export default function AlertCenterPage() {
             monthlyLoss: "Perdita mensile stimata",
             monthlyExposure: "Esposizione ricavi per costi mancanti",
             monthlyOpportunity:
-              "Opportunità mensile ufficiale (non cumulabile)",
+              "Gap mensile stimato verso il target (non cumulabile)",
             confidence: "Affidabilità dati",
             cogsCoverage: "Copertura COGS",
             alerts: "DETTAGLIO ALERT",
@@ -1090,7 +1089,8 @@ export default function AlertCenterPage() {
             information: "Information",
             monthlyLoss: "Estimated monthly loss",
             monthlyExposure: "Missing-cost revenue exposure",
-            monthlyOpportunity: "Official monthly opportunity (non-additive)",
+            monthlyOpportunity:
+              "Estimated monthly profit gap to target (non-additive)",
             confidence: "Data confidence",
             cogsCoverage: "COGS coverage",
             alerts: "ALERT DETAILS",
@@ -1312,6 +1312,26 @@ export default function AlertCenterPage() {
               {language === "it"
                 ? "MarginLab controlla margini, costi, rimborsi e opportunità. Qui trovi soltanto i segnali che possono influenzare realmente la redditività dello store."
                 : "MarginLab monitors margins, costs, refunds and opportunities. Here you only see signals that can materially affect store profitability."}
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "inline-flex",
+                padding: "7px 11px",
+                borderRadius: 999,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                color: "#4ade80",
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it"
+                ? "Base economica tax-aware"
+                : "Tax-aware economic basis"}
             </div>
           </div>
 
@@ -1585,8 +1605,8 @@ export default function AlertCenterPage() {
                 }}
               >
                 {language === "it"
-                  ? "Perdita · esposizione · opportunità. Valori distinti e non sommabili."
-                  : "Loss · exposure · opportunity. Separate, non-additive values."}
+                  ? "Perdita · esposizione · gap verso il target. Valori distinti e non sommabili."
+                  : "Loss · exposure · profit gap to target. Separate, non-additive values."}
               </div>
 
               <div
@@ -1835,8 +1855,8 @@ export default function AlertCenterPage() {
           }}
         >
           {language === "it"
-            ? "Gli alert vengono generati usando i dati Shopify del periodo selezionato. Gli impatti economici sono stime e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-            : "Alerts are generated using Shopify data from the selected period. Financial impacts are estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
+            ? "Gli alert vengono generati usando la base economica tax-aware costruita sui dati Shopify del periodo selezionato. Perdita, esposizione e gap verso il target sono stime distinte e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
+            : "Alerts are generated using the tax-aware economic basis built from Shopify data for the selected period. Loss, exposure and profit gap to target are separate estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
         </div>
           </div>
         </div>
