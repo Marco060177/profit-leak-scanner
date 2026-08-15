@@ -349,8 +349,9 @@ export default function DashboardV2() {
     analysisContext,
     alerts,
     taxContext,
-    
+
     taxAwareEconomics,
+    economicSnapshot,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -735,23 +736,22 @@ export default function DashboardV2() {
         .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
       : null;
 
-  const recoverableProfit = sourceRows.reduce((acc, row) => {
-    return acc + (row.targetDelta > 0 ? row.targetDelta * row.qty : 0);
-  }, 0);
+  const profitGapToTarget =
+  economicSnapshot?.totals.monthlyOpportunity ?? 0;
 
   const recoveryProducts = sourceRows.filter(
     (row) => row.targetDelta > 0 && row.qty > 0,
   );
 
   const hasRecoveryOpportunity =
-    recoveryProducts.length > 0 && recoverableProfit > 0;
+    recoveryProducts.length > 0 && profitGapToTarget > 0;
 
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
         title: `Fix ${sourceRows.filter((row) => row.losing).length
           } underpriced products selling below cost`,
-        impact: `${money(visualLeak)} potential recovery`,
+        impact: `${money(visualLeak)} estimated loss`,
         confidence: "High confidence",
         actionLabel: "Review pricing",
         actionLink: "#products-section",
@@ -856,9 +856,9 @@ export default function DashboardV2() {
             : "RECOVERY OPPORTUNITY",
         title:
           getStoredLanguage() === "it"
-            ? "MarginLab ha rilevato opportunità di profitto recuperabile"
-            : "MarginLab detected recoverable profit opportunities",
-        badge: money(recoverableProfit),
+            ? "MarginLab ha rilevato un gap di profitto verso il target"
+            : "MarginLab detected a profit gap to target",
+        badge: money(profitGapToTarget),
         description: (
           <>
             {getStoredLanguage() === "it"
@@ -869,12 +869,12 @@ export default function DashboardV2() {
               {getStoredLanguage() === "it" ? "prodotti" : "products"}
             </strong>{" "}
             {getStoredLanguage() === "it"
-              ? "con gap di prezzo. Adeguare i prezzi verso i margini target potrebbe recuperare circa"
-              : "with pricing gaps. Adjusting prices toward target margins could recover approximately"}{" "}
-            <strong>{money(recoverableProfit)}</strong>{" "}
+              ? "con gap di prezzo. Il gap mensile stimato verso il target è"
+              : "with pricing gaps. The estimated monthly profit gap to target is"}{" "}
+            <strong>{money(profitGapToTarget)}</strong>{" "}
             {getStoredLanguage() === "it"
-              ? "di profitto aggiuntivo."
-              : "in additional profit."}
+              ? ". È una stima modellata, non profitto garantito o già recuperato."
+              : ". This is a modeled estimate, not guaranteed or already recovered profit."}
           </>
         ),
       }
@@ -1249,13 +1249,13 @@ export default function DashboardV2() {
             {
               label:
                 language === "it"
-                  ? "Profitto recuperabile"
-                  : "Recoverable profit",
-              value: money(recoverableProfit),
+                  ? "Gap di profitto al target"
+                  : "Profit gap to target",
+              value: money(profitGapToTarget),
               note:
                 language === "it"
-                  ? "Potenziale recupero da pricing"
-                  : "Potential pricing recovery",
+                  ? "Stima modellata verso il margine target"
+                  : "Modeled estimate toward target margin",
               icon: "+",
               tone: "warning",
             },
@@ -1623,8 +1623,8 @@ export default function DashboardV2() {
               }}
             >
               {language === "it"
-                ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il profitto recuperabile stimato nel periodo è ${money(recoverableProfit)}.`
-                : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated recoverable profit for the period is ${money(recoverableProfit)}.`}
+                ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il gap mensile stimato verso il target è ${money(profitGapToTarget)}.`
+                : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated monthly profit gap to target is ${money(profitGapToTarget)}.`}
             </div>
 
             <div
