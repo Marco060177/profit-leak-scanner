@@ -1,4 +1,5 @@
 import type { TaxAwarePeriodData } from "~/utils/margin";
+import type { TaxContext } from "~/utils/tax-profile.server";
 
 export type TaxResolutionConfidence =
   | "none"
@@ -42,25 +43,7 @@ export type TaxTreatmentResolution = {
 
 export type ResolveTaxTreatmentInput = {
   taxAwarePeriod?: TaxAwarePeriodData | null;
-
-  taxContext?: {
-    configured: boolean;
-    isItalianStore: boolean;
-    profile:
-      | "UNCONFIGURED"
-      | "NOT_APPLICABLE"
-      | "ITALY_STANDARD"
-      | "ITALY_FORFETTARIO"
-      | "ITALY_EXEMPT";
-
-    defaultVatRatePct: number;
-    pricesIncludeVat: boolean;
-    costsIncludeVat: boolean;
-    recoverInputVat: boolean;
-    inputVatRecoveryPct: number;
-    shippingIncludeVat: boolean;
-    shippingVatRatePct: number;
-  } | null;
+  taxContext?: TaxContext | null;
 };
 
 function finite(value: number | null | undefined) {
@@ -75,9 +58,11 @@ function emptyResolution(
   return {
     source,
     confidence,
+
     hasActualTax: false,
     shouldUseShopifyTax: false,
     shouldUseTaxProfileFallback: false,
+
     actualCollectedTax: 0,
 
     includedProductTaxAmount: 0,
@@ -118,18 +103,23 @@ export function resolveTaxTreatment({
   const includedProductTaxAmount = finite(
     taxAwarePeriod.includedProductTaxAmount,
   );
+
   const excludedProductTaxAmount = finite(
     taxAwarePeriod.excludedProductTaxAmount,
   );
+
   const includedShippingTaxAmount = finite(
     taxAwarePeriod.includedShippingTaxAmount,
   );
+
   const excludedShippingTaxAmount = finite(
     taxAwarePeriod.excludedShippingTaxAmount,
   );
+
   const includedRefundedTaxAmount = finite(
     taxAwarePeriod.includedRefundedTaxAmount,
   );
+
   const excludedRefundedTaxAmount = finite(
     taxAwarePeriod.excludedRefundedTaxAmount,
   );
@@ -146,13 +136,23 @@ export function resolveTaxTreatment({
     includedRefundedTaxAmount,
     excludedRefundedTaxAmount,
 
-    taxableLineCount: taxAwarePeriod.taxableLineCount,
-    taxedLineCount: taxAwarePeriod.taxedLineCount,
-    nonTaxableLineCount: taxAwarePeriod.nonTaxableLineCount,
+    taxableLineCount:
+      taxAwarePeriod.taxableLineCount,
 
-    taxExemptOrderCount: taxAwarePeriod.taxExemptOrderCount,
-    taxesIncludedOrderCount: taxAwarePeriod.taxesIncludedOrderCount,
-    taxesExcludedOrderCount: taxAwarePeriod.taxesExcludedOrderCount,
+    taxedLineCount:
+      taxAwarePeriod.taxedLineCount,
+
+    nonTaxableLineCount:
+      taxAwarePeriod.nonTaxableLineCount,
+
+    taxExemptOrderCount:
+      taxAwarePeriod.taxExemptOrderCount,
+
+    taxesIncludedOrderCount:
+      taxAwarePeriod.taxesIncludedOrderCount,
+
+    taxesExcludedOrderCount:
+      taxAwarePeriod.taxesExcludedOrderCount,
   };
 
   const hasActualTax =
@@ -165,8 +165,22 @@ export function resolveTaxTreatment({
   const hasTaxableProducts =
     taxAwarePeriod.taxableLineCount > 0;
 
+  /*
+   * GLOBAL PATH 1
+   * Shopify has real transaction-level tax data.
+   *
+   * This path is country-agnostic:
+   * VAT, GST, GST/HST and sales-tax stores all use the
+   * actual tax data Shopify recorded on the orders.
+   */
   if (hasActualTax) {
     reasons.push("SHOPIFY_ACTUAL_TAX_AVAILABLE");
+
+    if (taxContext?.taxSystem) {
+      reasons.push(
+        `TAX_SYSTEM_${taxContext.taxSystem}`,
+      );
+    }
 
     if (
       includedProductTaxAmount > 0 ||
@@ -193,14 +207,23 @@ export function resolveTaxTreatment({
     return {
       source: "shopify_actual_tax",
       confidence: "high",
+
       hasActualTax: true,
       shouldUseShopifyTax: true,
       shouldUseTaxProfileFallback: false,
+
       ...base,
       reasons,
     };
   }
 
+  /*
+   * GLOBAL PATH 2
+   * Shopify reports taxable products but no tax was
+   * actually applied to the analyzed transactions.
+   *
+   * Never manufacture tax from a country default here.
+   */
   if (
     hasTaxableProducts &&
     taxAwarePeriod.taxedLineCount === 0 &&
@@ -210,6 +233,12 @@ export function resolveTaxTreatment({
       "TAXABLE_PRODUCTS_WITHOUT_ACTUAL_SHOPIFY_TAX",
     );
 
+    if (taxContext?.taxSystem) {
+      reasons.push(
+        `TAX_SYSTEM_${taxContext.taxSystem}`,
+      );
+    }
+
     if (taxAwarePeriod.taxExemptOrderCount > 0) {
       reasons.push("TAX_EXEMPT_ORDERS_PRESENT");
     }
@@ -217,44 +246,89 @@ export function resolveTaxTreatment({
     return {
       source: "shopify_zero_tax",
       confidence: "high",
+
       hasActualTax: false,
       shouldUseShopifyTax: true,
       shouldUseTaxProfileFallback: false,
+
       ...base,
       reasons,
     };
   }
 
+  /*
+   * ADVANCED COUNTRY PROFILE FALLBACK
+   *
+   * This is no longer tied to Italy.
+   * A fallback is allowed only when MarginLab explicitly
+   * supports an advanced profile for that jurisdiction
+   * and the merchant has configured it.
+   *
+   * Today Italy is the first advanced profile, but the
+   * resolver itself is already country-agnostic.
+   */
   if (
     taxContext?.configured &&
-    taxContext.isItalianStore
+    taxContext.advancedProfileAvailable &&
+    taxContext.profile !== "UNCONFIGURED" &&
+    taxContext.profile !== "NOT_APPLICABLE"
   ) {
     reasons.push("SHOPIFY_TAX_DATA_INCOMPLETE");
-    reasons.push("TAX_PROFILE_AVAILABLE");
+    reasons.push("ADVANCED_TAX_PROFILE_AVAILABLE");
+
+    if (taxContext.taxSystem) {
+      reasons.push(
+        `TAX_SYSTEM_${taxContext.taxSystem}`,
+      );
+    }
 
     return {
       source: "tax_profile_fallback",
       confidence: "medium",
+
       hasActualTax: false,
       shouldUseShopifyTax: false,
       shouldUseTaxProfileFallback: true,
+
       ...base,
       reasons,
     };
   }
 
+  /*
+   * GLOBAL SAFE FALLBACK
+   *
+   * If Shopify does not provide enough tax evidence and
+   * MarginLab has no advanced profile for the store's
+   * jurisdiction, revenue must remain untouched.
+   */
   reasons.push("INSUFFICIENT_TAX_DATA");
 
-  if (!taxContext?.configured) {
+  if (taxContext?.taxSystem) {
+    reasons.push(
+      `TAX_SYSTEM_${taxContext.taxSystem}`,
+    );
+  }
+
+  if (!taxContext) {
+    reasons.push("TAX_CONTEXT_MISSING");
+  } else if (
+    taxContext.advancedProfileAvailable &&
+    !taxContext.configured
+  ) {
     reasons.push("TAX_PROFILE_NOT_CONFIGURED");
+  } else if (!taxContext.advancedProfileAvailable) {
+    reasons.push("ADVANCED_TAX_PROFILE_NOT_AVAILABLE");
   }
 
   return {
     source: "insufficient_data",
     confidence: "low",
+
     hasActualTax: false,
     shouldUseShopifyTax: false,
     shouldUseTaxProfileFallback: false,
+
     ...base,
     reasons,
   };

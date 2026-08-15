@@ -24,6 +24,13 @@ export type TaxEconomicsResult = {
 
   grossRevenue: number;
 
+  /**
+   * Legacy VAT-named output fields are intentionally retained for
+   * compatibility with the current MarginLab UI and LoaderData types.
+   *
+   * Semantically these values now represent transaction tax generally:
+   * VAT, GST, GST/HST or sales tax depending on the store jurisdiction.
+   */
   outputVat: number;
   includedProductVatAdjustment: number;
   excludedProductVat: number;
@@ -32,6 +39,12 @@ export type TaxEconomicsResult = {
   netRevenue: number;
 
   grossCogs: number;
+
+  /**
+   * These fields also retain their VAT names for compatibility.
+   * They represent recoverable/non-recoverable input tax only when an
+   * advanced country profile explicitly supports that economic model.
+   */
   inputVat: number;
   recoverableInputVat: number;
   nonRecoverableInputVat: number;
@@ -55,12 +68,12 @@ function safeRate(value: number | null | undefined) {
   return Math.min(100, Math.max(0, parsed));
 }
 
-function extractVatFromGross(
+function extractTaxFromGross(
   grossAmount: number,
-  vatRatePct: number,
+  taxRatePct: number,
 ) {
   const amount = finite(grossAmount);
-  const rate = safeRate(vatRatePct);
+  const rate = safeRate(taxRatePct);
 
   if (amount <= 0 || rate <= 0) {
     return 0;
@@ -69,7 +82,53 @@ function extractVatFromGross(
   return amount - amount / (1 + rate / 100);
 }
 
-function calculateInputVat({
+function canUseRecoverableInputTaxModel(
+  taxContext: TaxContext,
+) {
+  if (
+    !taxContext.configured ||
+    !taxContext.advancedProfileAvailable ||
+    !taxContext.supportsRecoverableInputTaxModel ||
+    !taxContext.costsIncludeVat
+  ) {
+    return false;
+  }
+
+  return (
+    taxContext.taxSystem === "VAT" ||
+    taxContext.taxSystem === "GST" ||
+    taxContext.taxSystem === "GST_HST"
+  );
+}
+
+function canEstimateIncludedOutputTax(
+  taxContext: TaxContext,
+) {
+  if (
+    !taxContext.configured ||
+    !taxContext.advancedProfileAvailable ||
+    !taxContext.pricesIncludeVat ||
+    safeRate(taxContext.defaultVatRatePct) <= 0
+  ) {
+    return false;
+  }
+
+  /**
+   * MarginLab may estimate tax embedded in gross prices only for
+   * tax families that support tax-inclusive price normalization.
+   *
+   * US SALES_TAX is deliberately excluded. When Shopify does not
+   * provide enough US transaction tax evidence, MarginLab must not
+   * manufacture sales tax from a country default.
+   */
+  return (
+    taxContext.taxSystem === "VAT" ||
+    taxContext.taxSystem === "GST" ||
+    taxContext.taxSystem === "GST_HST"
+  );
+}
+
+function calculateInputTax({
   grossCost,
   taxContext,
 }: {
@@ -78,46 +137,53 @@ function calculateInputVat({
 }) {
   const cost = finite(grossCost);
 
-  if (
-    !taxContext.configured ||
-    !taxContext.isItalianStore ||
-    !taxContext.costsIncludeVat
-  ) {
+  if (!canUseRecoverableInputTaxModel(taxContext)) {
     return {
       inputVat: 0,
       recoverableInputVat: 0,
       nonRecoverableInputVat: 0,
       economicCogs: cost,
+      reasons: [
+        taxContext.taxSystem === "SALES_TAX"
+          ? "INPUT_TAX_RECOVERY_NOT_USED_FOR_SALES_TAX"
+          : taxContext.advancedProfileAvailable
+            ? "INPUT_TAX_MODEL_NOT_ENABLED_BY_PROFILE"
+            : "ADVANCED_INPUT_TAX_PROFILE_NOT_AVAILABLE",
+      ],
     };
   }
 
-  const inputVat = extractVatFromGross(
+  const inputTax = extractTaxFromGross(
     cost,
     taxContext.defaultVatRatePct,
   );
 
   const recoveryPct =
-    taxContext.profile === "ITALY_STANDARD"
+    taxContext.recoverInputVat
       ? safeRate(taxContext.inputVatRecoveryPct)
       : 0;
 
-  const recoverableInputVat =
-    inputVat * (recoveryPct / 100);
+  const recoverableInputTax =
+    inputTax * (recoveryPct / 100);
 
-  const nonRecoverableInputVat =
-    inputVat - recoverableInputVat;
+  const nonRecoverableInputTax =
+    inputTax - recoverableInputTax;
 
   const netCost =
-    cost - inputVat;
+    cost - inputTax;
 
   const economicCogs =
-    netCost + nonRecoverableInputVat;
+    netCost + nonRecoverableInputTax;
 
   return {
-    inputVat,
-    recoverableInputVat,
-    nonRecoverableInputVat,
+    inputVat: inputTax,
+    recoverableInputVat: recoverableInputTax,
+    nonRecoverableInputVat: nonRecoverableInputTax,
     economicCogs,
+    reasons: [
+      "ADVANCED_INPUT_TAX_PROFILE_APPLIED",
+      `TAX_SYSTEM_${taxContext.taxSystem}`,
+    ],
   };
 }
 
@@ -138,6 +204,14 @@ export function calculateTaxAwareEconomics({
   let shippingVat = 0;
   let netRevenue = grossRevenue;
 
+  /*
+   * GLOBAL PATH 1
+   * Shopify actually applied transaction tax.
+   *
+   * This logic is country-agnostic: MarginLab trusts the
+   * real Shopify tax lines rather than reconstructing tax
+   * from a country rate.
+   */
   if (taxTreatment.source === "shopify_actual_tax") {
     const netIncludedProductTax = Math.max(
       0,
@@ -171,6 +245,16 @@ export function calculateTaxAwareEconomics({
     shippingVat =
       totalShippingTax;
 
+    /**
+     * Only tax embedded in product prices is removed from
+     * product revenue.
+     *
+     * Tax added on top of product prices is outside the
+     * current product-revenue base and must not be removed.
+     *
+     * Shipping tax remains separate because this engine
+     * currently receives product revenue, not shipping revenue.
+     */
     netRevenue = Math.max(
       0,
       grossRevenue - includedProductVatAdjustment,
@@ -193,27 +277,41 @@ export function calculateTaxAwareEconomics({
         "SHOPIFY_SHIPPING_TAX_TRACKED_SEPARATELY",
       );
     }
-  } else if (
+  }
+
+  /*
+   * GLOBAL PATH 2
+   * Shopify confirms that taxable products were present but
+   * no transaction tax was actually applied.
+   *
+   * Never manufacture tax from a country default.
+   */
+  else if (
     taxTreatment.source === "shopify_zero_tax"
   ) {
     outputVat = 0;
     netRevenue = grossRevenue;
 
     reasons.push(
-      "NO_OUTPUT_VAT_APPLIED_BY_SHOPIFY",
+      "NO_OUTPUT_TAX_APPLIED_BY_SHOPIFY",
     );
-  } else if (
+  }
+
+  /*
+   * ADVANCED COUNTRY PROFILE FALLBACK
+   *
+   * This is now tax-family based rather than Italy-specific.
+   * The fallback is permitted only when the resolver explicitly
+   * allows it and the country profile supports included-tax
+   * normalization.
+   */
+  else if (
     taxTreatment.source === "tax_profile_fallback" &&
-    taxTreatment.shouldUseTaxProfileFallback &&
-    taxContext.configured &&
-    taxContext.isItalianStore
+    taxTreatment.shouldUseTaxProfileFallback
   ) {
-    if (
-      taxContext.profile === "ITALY_STANDARD" &&
-      taxContext.pricesIncludeVat
-    ) {
+    if (canEstimateIncludedOutputTax(taxContext)) {
       includedProductVatAdjustment =
-        extractVatFromGross(
+        extractTaxFromGross(
           grossRevenue,
           taxContext.defaultVatRatePct,
         );
@@ -225,17 +323,27 @@ export function calculateTaxAwareEconomics({
         grossRevenue - includedProductVatAdjustment;
 
       reasons.push(
-        "OUTPUT_VAT_ESTIMATED_FROM_TAX_PROFILE",
+        "OUTPUT_TAX_ESTIMATED_FROM_ADVANCED_PROFILE",
       );
     } else {
       outputVat = 0;
       netRevenue = grossRevenue;
 
       reasons.push(
-        "NO_OUTPUT_VAT_ESTIMATION_APPLIED",
+        taxContext.taxSystem === "SALES_TAX"
+          ? "SALES_TAX_FALLBACK_NOT_ESTIMATED"
+          : "NO_OUTPUT_TAX_ESTIMATION_APPLIED",
       );
     }
-  } else {
+  }
+
+  /*
+   * GLOBAL SAFE FALLBACK
+   *
+   * If MarginLab cannot prove or safely estimate tax treatment,
+   * revenue remains untouched.
+   */
+  else {
     outputVat = 0;
     netRevenue = grossRevenue;
 
@@ -249,10 +357,13 @@ export function calculateTaxAwareEconomics({
     recoverableInputVat,
     nonRecoverableInputVat,
     economicCogs,
-  } = calculateInputVat({
+    reasons: inputTaxReasons,
+  } = calculateInputTax({
     grossCost: grossCogs,
     taxContext,
   });
+
+  reasons.push(...inputTaxReasons);
 
   const profitBeforeTaxAdjustment =
     grossRevenue - grossCogs;

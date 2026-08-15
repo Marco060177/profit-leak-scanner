@@ -376,6 +376,31 @@ export default function DashboardV2() {
   const economicAdjustment =
     economicProfit - summary.profit;
 
+  const taxSystemLabel =
+    taxContext?.taxSystem === "GST_HST"
+      ? "GST/HST"
+      : taxContext?.taxSystem === "SALES_TAX"
+        ? language === "it"
+          ? "Sales Tax"
+          : "Sales Tax"
+        : taxContext?.taxSystem ?? "Tax";
+
+  const shouldShowAdvancedTaxSetup =
+    Boolean(
+      taxContext?.advancedProfileAvailable &&
+      !taxContext?.configured,
+    );
+
+  const shouldShowTaxBasis =
+    Boolean(taxContext && taxAwareEconomics);
+
+  const shouldShowInputTaxRecovery =
+    Boolean(
+      taxContext?.supportsRecoverableInputTaxModel &&
+      taxContext?.advancedProfileAvailable &&
+      taxContext?.configured,
+    );
+
   const marginAssessment = React.useMemo(
     () =>
       buildMarginAssessment({
@@ -1008,7 +1033,7 @@ export default function DashboardV2() {
           setAnalysisText={setAnalysisText}
         />
 
-        {taxContext?.isItalianStore && !taxContext?.configured ? (
+        {shouldShowAdvancedTaxSetup ? (
           <div
             style={{
               marginBottom: 24,
@@ -1036,8 +1061,8 @@ export default function DashboardV2() {
                 }}
               >
                 {language === "it"
-                  ? "PROFILO FISCALE"
-                  : "TAX PROFILE"}
+                  ? "PROFILO FISCALE AVANZATO"
+                  : "ADVANCED TAX PROFILE"}
               </div>
 
               <div
@@ -1049,8 +1074,8 @@ export default function DashboardV2() {
                 }}
               >
                 {language === "it"
-                  ? "Completa il profilo fiscale"
-                  : "Complete your Tax Profile"}
+                  ? "Completa il profilo fiscale avanzato"
+                  : "Complete your advanced Tax Profile"}
               </div>
 
               <div
@@ -1064,8 +1089,8 @@ export default function DashboardV2() {
                 }}
               >
                 {language === "it"
-                  ? "Il tuo store può utilizzare l’analisi di redditività con trattamento IVA. Configura regime, prezzi, costi e spedizioni."
-                  : "Your store is eligible for tax-aware profitability analysis. Configure VAT treatment for prices, costs and shipping."}
+                  ? `MarginLab ha rilevato un profilo ${taxSystemLabel} avanzato disponibile per questo store. Configura il trattamento fiscale di prezzi, costi e spedizioni per migliorare la precisione del profitto economico.`
+                  : `MarginLab detected an advanced ${taxSystemLabel} profile available for this store. Configure tax treatment for prices, costs and shipping to improve economic profit accuracy.`}
               </div>
             </div>
 
@@ -1078,8 +1103,8 @@ export default function DashboardV2() {
               }}
             >
               {language === "it"
-                ? "Configura Tax Profile →"
-                : "Configure Tax Profile →"}
+                ? "Configura profilo fiscale →"
+                : "Configure tax profile →"}
             </button>
           </div>
         ) : null}
@@ -1245,9 +1270,7 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
-        {taxContext?.isItalianStore &&
-          taxContext?.configured &&
-          taxAwareEconomics ? (
+        {taxContext && taxAwareEconomics ? (
           <section
             className="panel"
             style={{
@@ -1308,8 +1331,8 @@ export default function DashboardV2() {
                   }}
                 >
                   {language === "it"
-                    ? "Questa sezione spiega come MarginLab passa dal profitto prodotto osservato al profitto economico tax-aware, utilizzando i dati fiscali Shopify per le vendite e il Tax Profile configurato per i costi."
-                    : "This section explains how MarginLab moves from observed product profit to tax-aware economic profit, using Shopify tax data for sales and the configured Tax Profile for costs."}
+                    ? `Questa sezione spiega come MarginLab passa dal profitto prodotto osservato al profitto economico tax-aware, utilizzando i dati fiscali Shopify e, quando disponibile, un profilo ${taxSystemLabel} avanzato per i costi.`
+                    : `This section explains how MarginLab moves from observed product profit to tax-aware economic profit, using Shopify tax data and, when available, an advanced ${taxSystemLabel} profile for costs.`}
                 </div>
               </div>
 
@@ -1326,13 +1349,19 @@ export default function DashboardV2() {
               >
                 {taxAwareEconomics.source === "shopify_actual_tax"
                   ? language === "it"
-                    ? "Imposte Shopify rilevate"
-                    : "Shopify tax detected"
+                    ? `${taxSystemLabel} Shopify rilevata`
+                    : `Shopify ${taxSystemLabel} detected`
                   : taxAwareEconomics.source === "shopify_zero_tax"
                     ? language === "it"
-                      ? "Nessuna imposta applicata"
-                      : "No tax applied"
-                    : `${taxContext.defaultVatRatePct}% VAT`}
+                      ? `Nessuna ${taxSystemLabel} applicata`
+                      : `No ${taxSystemLabel} applied`
+                    : taxAwareEconomics.source === "tax_profile_fallback"
+                      ? language === "it"
+                        ? `${taxSystemLabel} da profilo avanzato`
+                        : `${taxSystemLabel} from advanced profile`
+                      : language === "it"
+                        ? "Trattamento fiscale prudenziale"
+                        : "Conservative tax treatment"}
               </div>
             </div>
 
@@ -1485,23 +1514,41 @@ export default function DashboardV2() {
                 marginTop: 14,
               }}
             >
-              <div
-                style={{
-                  padding: "7px 10px",
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  color: "rgba(226,232,240,0.60)",
-                  fontSize: 9,
-                  fontWeight: 850,
-                }}
-              >
-                {language === "it"
-                  ? "IVA acquisti recuperabile"
-                  : "Input VAT recovery"}
-                {" · "}
-                {taxContext.inputVatRecoveryPct}%
-              </div>
+              {shouldShowInputTaxRecovery ? (
+                <div
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    color: "rgba(226,232,240,0.60)",
+                    fontSize: 9,
+                    fontWeight: 850,
+                  }}
+                >
+                  {language === "it"
+                    ? "Imposta acquisti recuperabile"
+                    : "Recoverable input tax"}
+                  {" · "}
+                  {taxContext.inputVatRecoveryPct}%
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: "7px 10px",
+                    borderRadius: 999,
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                    color: "rgba(226,232,240,0.60)",
+                    fontSize: 9,
+                    fontWeight: 850,
+                  }}
+                >
+                  {language === "it" ? "Sistema fiscale" : "Tax system"}
+                  {" · "}
+                  {taxSystemLabel}
+                </div>
+              )}
 
               <div
                 style={{

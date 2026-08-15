@@ -140,6 +140,13 @@ export type AnalysisContext = {
   comparisonAvailable: boolean;
 };
 
+export type TaxSystem =
+  | "VAT"
+  | "GST"
+  | "GST_HST"
+  | "SALES_TAX"
+  | "UNKNOWN";
+
 export type TaxAwarePeriodData = {
   totalShopifyTax: number;
 
@@ -188,16 +195,16 @@ export type LoaderData = {
 
   taxTreatment?: {
     source:
-    | "shopify_actual_tax"
-    | "shopify_zero_tax"
-    | "tax_profile_fallback"
-    | "insufficient_data";
+      | "shopify_actual_tax"
+      | "shopify_zero_tax"
+      | "tax_profile_fallback"
+      | "insufficient_data";
 
     confidence:
-    | "none"
-    | "low"
-    | "medium"
-    | "high";
+      | "none"
+      | "low"
+      | "medium"
+      | "high";
 
     hasActualTax: boolean;
     shouldUseShopifyTax: boolean;
@@ -225,16 +232,16 @@ export type LoaderData = {
 
   taxAwareEconomics?: {
     source:
-    | "shopify_actual_tax"
-    | "shopify_zero_tax"
-    | "tax_profile_fallback"
-    | "insufficient_data";
+      | "shopify_actual_tax"
+      | "shopify_zero_tax"
+      | "tax_profile_fallback"
+      | "insufficient_data";
 
     confidence:
-    | "none"
-    | "low"
-    | "medium"
-    | "high";
+      | "none"
+      | "low"
+      | "medium"
+      | "high";
 
     grossRevenue: number;
     outputVat: number;
@@ -264,13 +271,22 @@ export type LoaderData = {
   taxContext?: {
     shopCountryCode: string;
     effectiveCountryCode: string;
+
+    taxSystem: TaxSystem;
+    advancedProfileAvailable: boolean;
+    supportsRecoverableInputTaxModel: boolean;
+
+    // Temporary compatibility field while Italy-specific
+    // UI checks are migrated to the international architecture.
     isItalianStore: boolean;
+
     profile:
-    | "UNCONFIGURED"
-    | "NOT_APPLICABLE"
-    | "ITALY_STANDARD"
-    | "ITALY_FORFETTARIO"
-    | "ITALY_EXEMPT";
+      | "UNCONFIGURED"
+      | "NOT_APPLICABLE"
+      | "ITALY_STANDARD"
+      | "ITALY_FORFETTARIO"
+      | "ITALY_EXEMPT";
+
     defaultVatRatePct: number;
     pricesIncludeVat: boolean;
     costsIncludeVat: boolean;
@@ -280,8 +296,6 @@ export type LoaderData = {
     shippingVatRatePct: number;
     configured: boolean;
   };
-
-
 };
 
 export function money(
