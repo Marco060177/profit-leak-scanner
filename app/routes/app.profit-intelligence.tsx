@@ -58,6 +58,8 @@ export default function ProfitIntelligencePage() {
     currencyCode,
     period,
     shopHandle,
+    taxContext,
+    taxAwareEconomics,
   } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
@@ -83,6 +85,27 @@ export default function ProfitIntelligencePage() {
     .filter((row) => row.discounts > 0)
     .sort((a, b) => b.discounts - a.discounts)
     .slice(0, 5);
+
+  // Store-level economic basis. These values are produced centrally by the
+  // tax-aware engine. Product-level rows intentionally remain unchanged
+  // until MarginLab has a dedicated per-product tax allocation model.
+  const economicRevenue =
+    summary.economicRevenue ?? taxAwareEconomics?.netRevenue ?? summary.revenue;
+  const economicCogs =
+    summary.economicCogs ?? taxAwareEconomics?.economicCogs ?? summary.cogs;
+  const economicProfit =
+    summary.economicProfit ?? taxAwareEconomics?.realProfit ?? summary.profit;
+  const economicMarginPct =
+    summary.economicMarginPct ?? taxAwareEconomics?.realMarginPct ?? summary.marginPct;
+
+  const hasEconomicNormalization = Boolean(taxAwareEconomics);
+
+  const taxSystemLabel =
+    taxContext?.taxSystem === "GST_HST"
+      ? "GST/HST"
+      : taxContext?.taxSystem === "SALES_TAX"
+        ? "Sales Tax"
+        : taxContext?.taxSystem ?? "—";
 
   const totalRevenue = Math.max(summary.revenue, 1);
 
@@ -303,10 +326,15 @@ export default function ProfitIntelligencePage() {
 
     const summaryRows = language === "it"
       ? [
-          ["Ricavi", round2(summary.revenue)],
-          ["COGS", round2(summary.cogs)],
-          ["Profitto", round2(summary.profit)],
-          ["Margine %", round2(summary.marginPct)],
+          ["Ricavi economici", round2(economicRevenue)],
+          ["COGS economici", round2(economicCogs)],
+          ["Profitto economico", round2(economicProfit)],
+          ["Margine economico %", round2(economicMarginPct)],
+          ["Sistema fiscale", taxSystemLabel],
+          ["Ricavi prodotto (base analitica)", round2(summary.revenue)],
+          ["COGS prodotto", round2(summary.cogs)],
+          ["Profitto prodotto", round2(summary.profit)],
+          ["Margine prodotto %", round2(summary.marginPct)],
           ["Sconti", round2(summary.discounts)],
           ["Rimborsi", round2(summary.refunds)],
           ["Spedizione", round2(summary.shipping)],
@@ -323,10 +351,15 @@ export default function ProfitIntelligencePage() {
           ["Qualità dei margini", profitQualityLevelLabel],
         ]
       : [
-          ["Revenue", round2(summary.revenue)],
-          ["COGS", round2(summary.cogs)],
-          ["Profit", round2(summary.profit)],
-          ["Margin %", round2(summary.marginPct)],
+          ["Economic revenue", round2(economicRevenue)],
+          ["Economic COGS", round2(economicCogs)],
+          ["Economic profit", round2(economicProfit)],
+          ["Economic margin %", round2(economicMarginPct)],
+          ["Tax system", taxSystemLabel],
+          ["Product revenue (analytics basis)", round2(summary.revenue)],
+          ["Product COGS", round2(summary.cogs)],
+          ["Product profit", round2(summary.profit)],
+          ["Product margin %", round2(summary.marginPct)],
           ["Discounts", round2(summary.discounts)],
           ["Refunds", round2(summary.refunds)],
           ["Shipping", round2(summary.shipping)],
@@ -477,6 +510,113 @@ export default function ProfitIntelligencePage() {
               ? "Esporta Profit Intelligence CSV"
               : "Export Profit Intelligence CSV"}
           </button>
+        </div>
+
+        <div
+          className="panel"
+          style={{
+            marginBottom: 28,
+            border: "1px solid rgba(34,197,94,0.18)",
+            background:
+              "radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 34%), linear-gradient(180deg, rgba(15,23,42,0.96), rgba(8,13,22,0.98))",
+          }}
+        >
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">
+                {language === "it"
+                  ? "BASE ECONOMICA DELLO STORE"
+                  : "STORE ECONOMIC BASIS"}
+              </div>
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Redditività normalizzata"
+                  : "Normalized profitability"}
+              </h2>
+              <div
+                style={{
+                  marginTop: 8,
+                  color: "rgba(255,255,255,0.58)",
+                  lineHeight: 1.6,
+                  maxWidth: 760,
+                }}
+              >
+                {language === "it"
+                  ? "Vista store-level basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti restano separate e non ricevono allocazioni fiscali stimate per prodotto."
+                  : "Store-level view from MarginLab's central economic engine. Product analytics below remain separate and do not receive estimated per-product tax allocations."}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "9px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(34,197,94,0.22)",
+                background: "rgba(34,197,94,0.08)",
+                color: "#86efac",
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {hasEconomicNormalization
+                ? `${taxSystemLabel} · ${language === "it" ? "motore attivo" : "engine active"}`
+                : language === "it"
+                  ? "Fallback disponibile"
+                  : "Fallback available"}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              gap: 16,
+              marginTop: 24,
+            }}
+          >
+            {[
+              [language === "it" ? "Ricavi economici" : "Economic revenue", money(economicRevenue)],
+              [language === "it" ? "COGS economici" : "Economic COGS", money(economicCogs)],
+              [language === "it" ? "Profitto economico" : "Economic profit", money(economicProfit)],
+              [language === "it" ? "Margine economico" : "Economic margin", pct(economicMarginPct)],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                style={{
+                  padding: 18,
+                  borderRadius: 18,
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.44)",
+                  }}
+                >
+                  {label}
+                </div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontSize: 25,
+                    fontWeight: 950,
+                    color: "#f3f4f6",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="hero-score-card" style={{ marginBottom: 28 }}>
