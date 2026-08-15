@@ -15,7 +15,10 @@ type SupportedRegime =
   | "ITALY_EXEMPT"
   | "UK_VAT_STANDARD"
   | "UK_VAT_EXEMPT"
-  | "UK_VAT_UNREGISTERED";
+  | "UK_VAT_UNREGISTERED"
+  | "CANADA_GST_HST_REGISTERED"
+  | "CANADA_GST_HST_EXEMPT"
+  | "CANADA_GST_HST_UNREGISTERED";
 
 type RegimeOption = {
   id: SupportedRegime;
@@ -51,24 +54,37 @@ function isSupportedRegime(value: string): value is SupportedRegime {
     value === "ITALY_EXEMPT" ||
     value === "UK_VAT_STANDARD" ||
     value === "UK_VAT_EXEMPT" ||
-    value === "UK_VAT_UNREGISTERED"
+    value === "UK_VAT_UNREGISTERED" ||
+    value === "CANADA_GST_HST_REGISTERED" ||
+    value === "CANADA_GST_HST_EXEMPT" ||
+    value === "CANADA_GST_HST_UNREGISTERED"
   );
 }
 
 function isStandardRecoverableRegime(regime: SupportedRegime) {
-  return regime === "ITALY_STANDARD" || regime === "UK_VAT_STANDARD";
+  return (
+    regime === "ITALY_STANDARD" ||
+    regime === "UK_VAT_STANDARD" ||
+    regime === "CANADA_GST_HST_REGISTERED"
+  );
 }
 
 function getDefaultStandardRegime(countryCode: string): SupportedRegime {
-  return countryCode === "GB" ? "UK_VAT_STANDARD" : "ITALY_STANDARD";
+  if (countryCode === "GB") return "UK_VAT_STANDARD";
+  if (countryCode === "CA") return "CANADA_GST_HST_REGISTERED";
+  return "ITALY_STANDARD";
 }
 
 function getDefaultRateForCountry(countryCode: string) {
-  return countryCode === "GB" ? 20 : 22;
+  if (countryCode === "GB") return 20;
+  if (countryCode === "CA") return 5;
+  return 22;
 }
 
 function getRateOptionsForCountry(countryCode: string) {
-  return countryCode === "GB" ? [0, 5, 20] : [4, 5, 10, 22];
+  if (countryCode === "GB") return [0, 5, 20];
+  if (countryCode === "CA") return [0, 5, 13, 14, 15];
+  return [4, 5, 10, 22];
 }
 
 function getCountryName(
@@ -175,7 +191,9 @@ export async function action({ request }: { request: Request }) {
     (context.effectiveCountryCode === "IT" &&
       regime.startsWith("ITALY_")) ||
     (context.effectiveCountryCode === "GB" &&
-      regime.startsWith("UK_"));
+      regime.startsWith("UK_")) ||
+    (context.effectiveCountryCode === "CA" &&
+      regime.startsWith("CANADA_"));
 
   if (!regimeMatchesCountry) {
     return Response.json(
@@ -352,7 +370,9 @@ export default function TaxProfilePage() {
     (countryCode === "IT" &&
       profileFromContext.startsWith("ITALY_")) ||
     (countryCode === "GB" &&
-      profileFromContext.startsWith("UK_"));
+      profileFromContext.startsWith("UK_")) ||
+    (countryCode === "CA" &&
+      profileFromContext.startsWith("CANADA_"));
 
   const initialRegime =
     profileMatchesCurrentCountry
@@ -413,7 +433,55 @@ export default function TaxProfilePage() {
         : taxContext.taxSystem;
 
   const regimes: RegimeOption[] =
-    countryCode === "GB"
+    countryCode === "CA"
+      ? [
+          {
+            id: "CANADA_GST_HST_REGISTERED",
+            title:
+              language === "it"
+                ? "Registrato GST/HST"
+                : "GST/HST registered",
+            subtitle:
+              language === "it"
+                ? "Store registrato GST/HST"
+                : "GST/HST-registered store",
+            detail:
+              language === "it"
+                ? "Configura la base fiscale dello store e la recuperabilità dell'imposta sugli acquisti. Le tax line Shopify restano prioritarie per l'aliquota effettiva."
+                : "Configure the store tax basis and input-tax recovery. Shopify tax lines remain authoritative for the actual rate applied.",
+          },
+          {
+            id: "CANADA_GST_HST_EXEMPT",
+            title:
+              language === "it"
+                ? "Attività esente GST/HST"
+                : "GST/HST-exempt activity",
+            subtitle:
+              language === "it"
+                ? "Vendite trattate come esenti"
+                : "Sales treated as GST/HST exempt",
+            detail:
+              language === "it"
+                ? "Preset senza output GST/HST e senza recupero dell'imposta sugli acquisti nel fallback MarginLab."
+                : "Preset with no output GST/HST and no input-tax recovery in the MarginLab fallback.",
+          },
+          {
+            id: "CANADA_GST_HST_UNREGISTERED",
+            title:
+              language === "it"
+                ? "Non registrato GST/HST"
+                : "Not GST/HST registered",
+            subtitle:
+              language === "it"
+                ? "Nessun addebito GST/HST"
+                : "No GST/HST charged",
+            detail:
+              language === "it"
+                ? "Per merchant che non addebitano GST/HST sulle vendite analizzate."
+                : "For merchants that do not charge GST/HST on analyzed sales.",
+          },
+        ]
+      : countryCode === "GB"
       ? [
           {
             id: "UK_VAT_STANDARD",
@@ -815,6 +883,13 @@ export default function TaxProfilePage() {
 
               {standardRegime ? (
                 <>
+                  {countryCode === "CA" && (
+                    <div style={styles.notice}>
+                      {language === "it"
+                        ? "In Canada l'aliquota effettiva può variare in base al luogo della fornitura e alla provincia. Il 5% è usato solo come baseline di fallback: quando Shopify fornisce tax line reali, MarginLab usa quelle come fonte prioritaria."
+                        : "In Canada, the actual rate can vary by place of supply and province. The 5% rate is only a fallback baseline: when Shopify provides actual tax lines, MarginLab treats them as authoritative."}
+                    </div>
+                  )}
                   <div style={styles.rateRow}>
                     <div>
                       <div style={styles.fieldLabel}>

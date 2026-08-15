@@ -15,7 +15,10 @@ export type TaxProfile =
   | "ITALY_EXEMPT"
   | "UK_VAT_STANDARD"
   | "UK_VAT_EXEMPT"
-  | "UK_VAT_UNREGISTERED";
+  | "UK_VAT_UNREGISTERED"
+  | "CANADA_GST_HST_REGISTERED"
+  | "CANADA_GST_HST_EXEMPT"
+  | "CANADA_GST_HST_UNREGISTERED";
 
 export type CountryTaxCapabilities = {
   countryCode: string;
@@ -93,6 +96,14 @@ function isUkProfile(profile: TaxProfile) {
   );
 }
 
+function isCanadaProfile(profile: TaxProfile) {
+  return (
+    profile === "CANADA_GST_HST_REGISTERED" ||
+    profile === "CANADA_GST_HST_EXEMPT" ||
+    profile === "CANADA_GST_HST_UNREGISTERED"
+  );
+}
+
 function profileMatchesCountry({
   profile,
   countryCode,
@@ -108,6 +119,10 @@ function profileMatchesCountry({
     return isUkProfile(profile);
   }
 
+  if (countryCode === "CA") {
+    return isCanadaProfile(profile);
+  }
+
   return false;
 }
 
@@ -116,7 +131,8 @@ function profileAllowsInputTaxRecovery(
 ) {
   return (
     profile === "ITALY_STANDARD" ||
-    profile === "UK_VAT_STANDARD"
+    profile === "UK_VAT_STANDARD" ||
+    profile === "CANADA_GST_HST_REGISTERED"
   );
 }
 
@@ -144,6 +160,21 @@ function getAdvancedCountryDefaults(
       inputVatRecoveryPct: 100,
       shippingIncludeVat: true,
       shippingVatRatePct: 20,
+    };
+  }
+
+  if (countryCode === "CA") {
+    return {
+      // Canada is destination/place-of-supply sensitive.
+      // 5% is the federal GST baseline only; actual Shopify tax lines
+      // remain authoritative when HST or provincial taxes apply.
+      defaultVatRatePct: 5,
+      pricesIncludeVat: false,
+      costsIncludeVat: false,
+      recoverInputVat: true,
+      inputVatRecoveryPct: 100,
+      shippingIncludeVat: false,
+      shippingVatRatePct: 5,
     };
   }
 
@@ -212,7 +243,9 @@ export function getCountryTaxCapabilities(
     taxSystem,
 
     advancedProfileAvailable:
-      code === "IT" || code === "GB",
+      code === "IT" ||
+      code === "GB" ||
+      code === "CA",
 
     supportsRecoverableInputTaxModel:
       taxSystem === "VAT" ||
