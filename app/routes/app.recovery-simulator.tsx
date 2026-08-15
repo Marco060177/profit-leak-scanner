@@ -131,6 +131,47 @@ export default function RecoverySimulatorPage() {
 
   const { rows, currencyCode, growthAccess } = loaderData;
 
+  const economicProducts = React.useMemo(
+    () =>
+      rows.map((row) => {
+        const qty = Math.max(0, safeNumber(row.qty));
+
+        const economicRevenue =
+          row.economicRevenue ?? row.revenue;
+        const economicCogs =
+          row.economicCogs ?? row.cogs;
+        const economicProfit =
+          row.economicProfit ?? row.profit;
+        const economicMarginPct =
+          row.economicMarginPct ?? row.marginPct;
+
+        const economicAvgPrice =
+          qty > 0
+            ? economicRevenue / qty
+            : row.avgPrice;
+
+        const economicAvgCost =
+          qty > 0
+            ? economicCogs / qty
+            : row.avgCost;
+
+        return {
+          ...row,
+          economicRevenue,
+          economicCogs,
+          economicProfit,
+          economicMarginPct,
+          avgPrice: economicAvgPrice,
+          avgCost: economicAvgCost,
+          revenue: economicRevenue,
+          cogs: economicCogs,
+          profit: economicProfit,
+          marginPct: economicMarginPct,
+        };
+      }),
+    [rows],
+  );
+
   const periodValue = Number(loaderData.period ?? 30);
   const periodDays =
     Number.isFinite(periodValue) && periodValue > 0 ? periodValue : 30;
@@ -138,10 +179,10 @@ export default function RecoverySimulatorPage() {
 
   const availableProducts = React.useMemo(
     () =>
-      rows
+      economicProducts
         .filter((row) => row.avgPrice > 0 && row.qty > 0)
         .sort((a, b) => b.revenue - a.revenue),
-    [rows],
+    [economicProducts],
   );
 
   const [selectedProductId, setSelectedProductId] = React.useState(
@@ -319,10 +360,29 @@ export default function RecoverySimulatorPage() {
   const currentCost = safeNumber(selectedProduct.avgCost);
   const currentPeriodQty = safeNumber(selectedProduct.qty);
   const currentMonthlyQty = currentPeriodQty * monthlyMultiplier;
-  const currentUnitProfit = currentPrice - currentCost;
-  const currentMarginPct =
-    currentPrice > 0 ? (currentUnitProfit / currentPrice) * 100 : 0;
-  const currentMonthlyRevenue = currentPrice * currentMonthlyQty;
+
+  const currentPeriodEconomicRevenue = safeNumber(
+    selectedProduct.economicRevenue ?? selectedProduct.revenue,
+  );
+  const currentPeriodEconomicCogs = safeNumber(
+    selectedProduct.economicCogs ?? selectedProduct.cogs,
+  );
+  const currentPeriodEconomicProfit = safeNumber(
+    selectedProduct.economicProfit ?? selectedProduct.profit,
+  );
+
+  const currentUnitProfit =
+    currentPeriodQty > 0
+      ? currentPeriodEconomicProfit / currentPeriodQty
+      : currentPrice - currentCost;
+
+  const currentMarginPct = safeNumber(
+    selectedProduct.economicMarginPct ??
+      selectedProduct.marginPct,
+  );
+
+  const currentMonthlyRevenue =
+    currentPeriodEconomicRevenue * monthlyMultiplier;
   const variableFeeRate = clamp(
     (safeNumber(loaderData.assumptions.paymentFeePct) +
       safeNumber(loaderData.assumptions.transactionFeePct)) /
@@ -330,7 +390,8 @@ export default function RecoverySimulatorPage() {
     0,
     1,
   );
-  const currentMonthlyProfitBeforeFees = currentUnitProfit * currentMonthlyQty;
+  const currentMonthlyProfitBeforeFees =
+    currentPeriodEconomicProfit * monthlyMultiplier;
   const currentMonthlyFees = currentMonthlyRevenue * variableFeeRate;
   const currentMonthlyProfit =
     currentMonthlyProfitBeforeFees - currentMonthlyFees;
@@ -370,17 +431,22 @@ export default function RecoverySimulatorPage() {
         ? 100
         : 0;
 
-  const breakEvenPrice = simulatedCost;
+  const breakEvenPrice =
+    variableFeeRate < 1
+      ? simulatedCost / (1 - variableFeeRate)
+      : simulatedCost;
   const priceChangePct =
     currentPrice > 0
       ? ((simulatedPrice - currentPrice) / currentPrice) * 100
       : 0;
 
   const priceRecoveryMonthly =
-    (simulatedPrice - currentPrice) * currentMonthlyQty;
-  const costRecoveryMonthly = (currentCost - simulatedCost) * currentMonthlyQty;
+    (simulatedPrice - currentPrice) * simulatedMonthlyQty;
+  const costRecoveryMonthly =
+    (currentCost - simulatedCost) * simulatedMonthlyQty;
   const volumeRecoveryMonthly =
-    (simulatedMonthlyQty - currentMonthlyQty) * simulatedUnitProfit;
+    (simulatedMonthlyQty - currentMonthlyQty) *
+    (currentPrice - currentCost);
   const feeImpactMonthly = currentMonthlyFees - simulatedMonthlyFees;
   const recoveryBreakdown = [
     {
@@ -410,12 +476,12 @@ export default function RecoverySimulatorPage() {
       key: "tax-reserve",
       label:
         language === "it"
-          ? `Riserva fiscale (${formatStorePercent(
+          ? `Riserva fiscale gestionale (${formatStorePercent(
             taxReserveRate * 100,
             "it-IT",
             1,
           )})`
-          : `Tax reserve (${formatStorePercent(
+          : `Business-model tax reserve (${formatStorePercent(
             taxReserveRate * 100,
             "en-US",
             1,
@@ -764,7 +830,7 @@ export default function RecoverySimulatorPage() {
       [language === "it" ? "Lingua" : "Language", language.toUpperCase()],
       [language === "it" ? "Scenario" : "Scenario", scenarioLabel],
       [],
-      [language === "it" ? "PRODOTTO E BASELINE" : "PRODUCT AND BASELINE"],
+      [language === "it" ? "PRODOTTO E BASELINE ECONOMICA" : "PRODUCT AND ECONOMIC BASELINE"],
       [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
       [language === "it" ? "Prodotto" : "Product", selectedProduct.productTitle],
       ["Product ID", selectedProduct.productId],
@@ -772,9 +838,9 @@ export default function RecoverySimulatorPage() {
       [language === "it" ? "Costo attuale" : "Current cost", round(currentCost)],
       [language === "it" ? "Unità nel periodo" : "Units in observed period", round(currentPeriodQty)],
       [language === "it" ? "Unità mensili normalizzate" : "Normalized monthly units", round(currentMonthlyQty)],
-      [language === "it" ? "Ricavi mensili attuali" : "Current monthly revenue", round(currentMonthlyRevenue)],
-      [language === "it" ? "Profitto mensile attuale" : "Current monthly profit", round(currentMonthlyProfit)],
-      [language === "it" ? "Margine attuale (%)" : "Current margin (%)", round(currentMarginPct)],
+      [language === "it" ? "Ricavi economici mensili attuali" : "Current monthly economic revenue", round(currentMonthlyRevenue)],
+      [language === "it" ? "Profitto economico mensile attuale" : "Current monthly economic profit", round(currentMonthlyProfit)],
+      [language === "it" ? "Margine economico attuale (%)" : "Current economic margin (%)", round(currentMarginPct)],
       [],
       [language === "it" ? "IPOTESI DELLO SCENARIO" : "SCENARIO ASSUMPTIONS"],
       [language === "it" ? "Voce" : "Assumption", language === "it" ? "Valore" : "Value"],
@@ -784,7 +850,7 @@ export default function RecoverySimulatorPage() {
       [language === "it" ? "Variazione vendite (%)" : "Sales change (%)", round(salesChangePct)],
       [language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)", round(loaderData.assumptions.paymentFeePct)],
       [language === "it" ? "Commissioni transazione (%)" : "Transaction fees (%)", round(loaderData.assumptions.transactionFeePct)],
-      [language === "it" ? "Riserva fiscale (%)" : "Tax reserve (%)", round(loaderData.assumptions.taxReservePct)],
+      [language === "it" ? "Riserva fiscale gestionale (%)" : "Business-model tax reserve (%)", round(loaderData.assumptions.taxReservePct)],
       [],
       [language === "it" ? "RISULTATO SIMULATO" : "SIMULATED RESULT"],
       [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
@@ -963,6 +1029,26 @@ export default function RecoverySimulatorPage() {
               {language === "it"
                 ? "Modifica prezzo, costo e volume di vendita. MarginLab mostra subito l’impatto sul margine, sul profitto mensile e sul risultato annuale."
                 : "Adjust price, cost and sales volume. MarginLab instantly shows the impact on margin, monthly profit and annual results."}
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "inline-flex",
+                padding: "7px 11px",
+                borderRadius: 999,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                color: "#4ade80",
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it"
+                ? "Base economica tax-aware"
+                : "Tax-aware economic basis"}
             </div>
           </div>
 
@@ -1198,7 +1284,9 @@ export default function RecoverySimulatorPage() {
           >
             <div style={cardStyle}>
               <div style={mutedLabelStyle}>
-                {language === "it" ? "Situazione attuale" : "Current situation"}
+                {language === "it"
+                  ? "Baseline economica attuale"
+                  : "Current economic baseline"}
               </div>
 
               <div
@@ -1306,8 +1394,8 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   {language === "it"
-                    ? "Sotto questo valore il prodotto non copre il costo unitario."
-                    : "Below this value, the product does not cover its unit cost."}
+                    ? "Sotto questo valore il prodotto non copre il costo economico unitario e le commissioni variabili impostate."
+                    : "Below this value, the product does not cover its economic unit cost and configured variable fees."}
                 </div>
               </div>
             </div>
@@ -1713,8 +1801,8 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 {language === "it"
-                  ? "La proposta usa margine, costo e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
-                  : "The proposal uses the product's margin, cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
+                  ? "La proposta usa margine economico, costo economico e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
+                  : "The proposal uses the product's economic margin, economic cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
               </div>
             </div>
             <button
@@ -2722,8 +2810,8 @@ export default function RecoverySimulatorPage() {
           >
             {growthAccess
               ? language === "it"
-                ? `Le stime sono calcolate sui dati Shopify degli ultimi ${periodDays} giorni e normalizzate su base mensile. Il simulatore non modifica automaticamente prezzi o costi.`
-                : `Estimates use Shopify data from the last ${periodDays} days and are normalized to a monthly basis. The simulator does not automatically change prices or costs.`
+                ? `Le stime partono dalla base economica tax-aware costruita sui dati Shopify degli ultimi ${periodDays} giorni e sono normalizzate su base mensile. La riserva fiscale gestionale resta un'ipotesi separata del Business Model Studio. Il simulatore non modifica automaticamente prezzi o costi.`
+                : `Estimates start from the tax-aware economic basis built from Shopify data over the last ${periodDays} days and are normalized to a monthly basis. The business-model tax reserve remains a separate Business Model Studio assumption. The simulator does not automatically change prices or costs.`
               : language === "it"
                 ? "Anteprima Growth. Passa a Growth per utilizzare il simulatore completo."
                 : "Growth preview. Upgrade to Growth to use the full simulator."}
