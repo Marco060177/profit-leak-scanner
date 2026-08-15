@@ -87,6 +87,8 @@ export default function ProductsPage() {
     [locale],
   );
 
+  const targetMarginPct = 20;
+
   const economicRows = React.useMemo<Row[]>(
     () =>
       rows.map((row) => {
@@ -236,7 +238,7 @@ export default function ProductsPage() {
   const highPct = (highProducts / totalProducts) * 100;
   const healthyPct = (healthyProducts / totalProducts) * 100;
 
-  const targetMarginPct = 20;
+  
 
   const revenueAtRisk = economicRows
     .filter((row) => row.revenue > 0)
