@@ -12,7 +12,10 @@ export type TaxProfile =
   | "NOT_APPLICABLE"
   | "ITALY_STANDARD"
   | "ITALY_FORFETTARIO"
-  | "ITALY_EXEMPT";
+  | "ITALY_EXEMPT"
+  | "UK_VAT_STANDARD"
+  | "UK_VAT_EXEMPT"
+  | "UK_VAT_UNREGISTERED";
 
 export type CountryTaxCapabilities = {
   countryCode: string;
@@ -29,13 +32,10 @@ export type TaxContext = {
   advancedProfileAvailable: boolean;
   supportsRecoverableInputTaxModel: boolean;
 
-  // Temporary compatibility flag while the rest of MarginLab
-  // is migrated away from Italy-specific checks.
   isItalianStore: boolean;
 
   profile: TaxProfile;
 
-  // Legacy VAT-named fields retained during the international migration.
   defaultVatRatePct: number;
 
   pricesIncludeVat: boolean;
@@ -51,33 +51,8 @@ export type TaxContext = {
 };
 
 const EU_VAT_COUNTRIES = new Set([
-  "AT",
-  "BE",
-  "BG",
-  "HR",
-  "CY",
-  "CZ",
-  "DE",
-  "DK",
-  "EE",
-  "ES",
-  "FI",
-  "FR",
-  "GR",
-  "HU",
-  "IE",
-  "IT",
-  "LT",
-  "LU",
-  "LV",
-  "MT",
-  "NL",
-  "PL",
-  "PT",
-  "RO",
-  "SE",
-  "SI",
-  "SK",
+  "AT","BE","BG","HR","CY","CZ","DE","DK","EE","ES","FI","FR","GR","HU",
+  "IE","IT","LT","LU","LV","MT","NL","PL","PT","RO","SE","SI","SK",
 ]);
 
 const VAT_COUNTRIES = new Set([
@@ -102,10 +77,94 @@ function clampPct(value: number) {
   return Math.min(100, Math.max(0, value));
 }
 
-export function getEffectiveCountryCode(shopCountryCode: string) {
-  const testCountry = process.env.MARGINLAB_TEST_COUNTRY
-    ?.trim()
-    .toUpperCase();
+function isItalianProfile(profile: TaxProfile) {
+  return (
+    profile === "ITALY_STANDARD" ||
+    profile === "ITALY_FORFETTARIO" ||
+    profile === "ITALY_EXEMPT"
+  );
+}
+
+function isUkProfile(profile: TaxProfile) {
+  return (
+    profile === "UK_VAT_STANDARD" ||
+    profile === "UK_VAT_EXEMPT" ||
+    profile === "UK_VAT_UNREGISTERED"
+  );
+}
+
+function profileMatchesCountry({
+  profile,
+  countryCode,
+}: {
+  profile: TaxProfile;
+  countryCode: string;
+}) {
+  if (countryCode === "IT") {
+    return isItalianProfile(profile);
+  }
+
+  if (countryCode === "GB") {
+    return isUkProfile(profile);
+  }
+
+  return false;
+}
+
+function profileAllowsInputTaxRecovery(
+  profile: TaxProfile,
+) {
+  return (
+    profile === "ITALY_STANDARD" ||
+    profile === "UK_VAT_STANDARD"
+  );
+}
+
+function getAdvancedCountryDefaults(
+  countryCode: string,
+) {
+  if (countryCode === "IT") {
+    return {
+      defaultVatRatePct: 22,
+      pricesIncludeVat: true,
+      costsIncludeVat: true,
+      recoverInputVat: true,
+      inputVatRecoveryPct: 100,
+      shippingIncludeVat: true,
+      shippingVatRatePct: 22,
+    };
+  }
+
+  if (countryCode === "GB") {
+    return {
+      defaultVatRatePct: 20,
+      pricesIncludeVat: true,
+      costsIncludeVat: true,
+      recoverInputVat: true,
+      inputVatRecoveryPct: 100,
+      shippingIncludeVat: true,
+      shippingVatRatePct: 20,
+    };
+  }
+
+  return {
+    defaultVatRatePct: 0,
+    pricesIncludeVat: false,
+    costsIncludeVat: false,
+    recoverInputVat: false,
+    inputVatRecoveryPct: 0,
+    shippingIncludeVat: false,
+    shippingVatRatePct: 0,
+  };
+}
+
+export function getEffectiveCountryCode(
+  shopCountryCode: string,
+) {
+  const testCountry =
+    process.env.MARGINLAB_TEST_COUNTRY
+      ?.trim()
+      .toUpperCase();
 
   if (testCountry) {
     return testCountry;
@@ -152,11 +211,9 @@ export function getCountryTaxCapabilities(
     countryCode: code,
     taxSystem,
 
-    // Italy remains the first fully configurable advanced profile.
-    advancedProfileAvailable: code === "IT",
+    advancedProfileAvailable:
+      code === "IT" || code === "GB",
 
-    // This is only a model capability flag, not a legal determination
-    // for a specific merchant.
     supportsRecoverableInputTaxModel:
       taxSystem === "VAT" ||
       taxSystem === "GST" ||
@@ -187,8 +244,6 @@ function buildGlobalFallbackContext({
     isItalianStore: false,
     profile: "NOT_APPLICABLE",
 
-    // No country-specific assumptions are manufactured here.
-    // The global engine can still use actual Shopify tax data.
     defaultVatRatePct: 0,
 
     pricesIncludeVat: false,
@@ -204,34 +259,34 @@ function buildGlobalFallbackContext({
   };
 }
 
-function buildUnconfiguredItalyContext({
+function buildUnconfiguredAdvancedContext({
   shopCountryCode,
   effectiveCountryCode,
 }: {
   shopCountryCode: string;
   effectiveCountryCode: string;
 }): TaxContext {
+  const capabilities =
+    getCountryTaxCapabilities(effectiveCountryCode);
+
+  const defaults =
+    getAdvancedCountryDefaults(effectiveCountryCode);
+
   return {
     shopCountryCode,
     effectiveCountryCode,
 
-    taxSystem: "VAT",
+    taxSystem: capabilities.taxSystem,
     advancedProfileAvailable: true,
-    supportsRecoverableInputTaxModel: true,
+    supportsRecoverableInputTaxModel:
+      capabilities.supportsRecoverableInputTaxModel,
 
-    isItalianStore: true,
+    isItalianStore:
+      effectiveCountryCode === "IT",
+
     profile: "UNCONFIGURED",
 
-    defaultVatRatePct: 22,
-
-    pricesIncludeVat: true,
-    costsIncludeVat: true,
-
-    recoverInputVat: true,
-    inputVatRecoveryPct: 100,
-
-    shippingIncludeVat: true,
-    shippingVatRatePct: 22,
+    ...defaults,
 
     configured: false,
   };
@@ -256,7 +311,7 @@ export async function getStoreTaxContext({
   const isItalianStore =
     effectiveCountryCode === "IT";
 
-  if (!isItalianStore) {
+  if (!capabilities.advancedProfileAvailable) {
     return buildGlobalFallbackContext({
       shopCountryCode: normalizedShopCountryCode,
       effectiveCountryCode,
@@ -269,7 +324,7 @@ export async function getStoreTaxContext({
     });
 
   if (!savedProfile) {
-    return buildUnconfiguredItalyContext({
+    return buildUnconfiguredAdvancedContext({
       shopCountryCode: normalizedShopCountryCode,
       effectiveCountryCode,
     });
@@ -278,14 +333,25 @@ export async function getStoreTaxContext({
   const profile =
     savedProfile.regime as TaxProfile;
 
+  if (
+    !profileMatchesCountry({
+      profile,
+      countryCode: effectiveCountryCode,
+    })
+  ) {
+    return buildUnconfiguredAdvancedContext({
+      shopCountryCode: normalizedShopCountryCode,
+      effectiveCountryCode,
+    });
+  }
+
   const storedRecoveryPct =
     clampPct(savedProfile.inputVatRecoveryPct);
 
   const inputVatRecoveryPct =
-    profile === "ITALY_STANDARD"
-      ? savedProfile.recoverInputVat
-        ? storedRecoveryPct
-        : 0
+    profileAllowsInputTaxRecovery(profile) &&
+    savedProfile.recoverInputVat
+      ? storedRecoveryPct
       : 0;
 
   return {
@@ -298,11 +364,11 @@ export async function getStoreTaxContext({
     supportsRecoverableInputTaxModel:
       capabilities.supportsRecoverableInputTaxModel,
 
-    isItalianStore: true,
+    isItalianStore,
     profile,
 
     defaultVatRatePct:
-      savedProfile.defaultVatRatePct,
+      clampPct(savedProfile.defaultVatRatePct),
 
     pricesIncludeVat:
       savedProfile.pricesIncludeVat,
@@ -319,7 +385,7 @@ export async function getStoreTaxContext({
       savedProfile.shippingIncludeVat,
 
     shippingVatRatePct:
-      savedProfile.shippingVatRatePct,
+      clampPct(savedProfile.shippingVatRatePct),
 
     configured:
       profile !== "UNCONFIGURED",
@@ -359,11 +425,14 @@ export async function saveStoreTaxProfile({
   const normalizedCountryCode =
     normalizeCountryCode(countryCode);
 
-  // The persisted advanced profile is still Italy-specific.
-  // Do not silently write Italian regimes for another jurisdiction.
-  if (normalizedCountryCode !== "IT") {
+  if (
+    !profileMatchesCountry({
+      profile: regime,
+      countryCode: normalizedCountryCode,
+    })
+  ) {
     throw new Error(
-      `Advanced tax profile persistence is not available for ${normalizedCountryCode || "this jurisdiction"} yet.`,
+      `Tax profile ${regime} is not valid for ${normalizedCountryCode || "this jurisdiction"}.`,
     );
   }
 
@@ -374,10 +443,9 @@ export async function saveStoreTaxProfile({
     clampPct(shippingVatRatePct);
 
   const normalizedRecoveryPct =
-    regime === "ITALY_STANDARD"
-      ? recoverInputVat
-        ? clampPct(inputVatRecoveryPct)
-        : 0
+    profileAllowsInputTaxRecovery(regime) &&
+    recoverInputVat
+      ? clampPct(inputVatRecoveryPct)
       : 0;
 
   const normalizedRecoverInputVat =

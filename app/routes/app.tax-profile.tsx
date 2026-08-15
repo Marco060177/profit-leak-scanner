@@ -6,12 +6,23 @@ import { getStoredLanguage } from "~/utils/i18n";
 import {
   getStoreTaxContext,
   saveStoreTaxProfile,
+  type TaxProfile,
 } from "~/utils/tax-profile.server";
 
 type SupportedRegime =
   | "ITALY_STANDARD"
   | "ITALY_FORFETTARIO"
-  | "ITALY_EXEMPT";
+  | "ITALY_EXEMPT"
+  | "UK_VAT_STANDARD"
+  | "UK_VAT_EXEMPT"
+  | "UK_VAT_UNREGISTERED";
+
+type RegimeOption = {
+  id: SupportedRegime;
+  title: string;
+  subtitle: string;
+  detail: string;
+};
 
 const SHOP_QUERY = `#graphql
   query MarginLabTaxProfileShop {
@@ -37,8 +48,54 @@ function isSupportedRegime(value: string): value is SupportedRegime {
   return (
     value === "ITALY_STANDARD" ||
     value === "ITALY_FORFETTARIO" ||
-    value === "ITALY_EXEMPT"
+    value === "ITALY_EXEMPT" ||
+    value === "UK_VAT_STANDARD" ||
+    value === "UK_VAT_EXEMPT" ||
+    value === "UK_VAT_UNREGISTERED"
   );
+}
+
+function isStandardRecoverableRegime(regime: SupportedRegime) {
+  return regime === "ITALY_STANDARD" || regime === "UK_VAT_STANDARD";
+}
+
+function getDefaultStandardRegime(countryCode: string): SupportedRegime {
+  return countryCode === "GB" ? "UK_VAT_STANDARD" : "ITALY_STANDARD";
+}
+
+function getDefaultRateForCountry(countryCode: string) {
+  return countryCode === "GB" ? 20 : 22;
+}
+
+function getRateOptionsForCountry(countryCode: string) {
+  return countryCode === "GB" ? [0, 5, 20] : [4, 5, 10, 22];
+}
+
+function getCountryName(
+  countryCode: string,
+  language: "it" | "en",
+) {
+  if (countryCode === "IT") {
+    return language === "it" ? "Italia" : "Italy";
+  }
+
+  if (countryCode === "GB") {
+    return language === "it" ? "Regno Unito" : "United Kingdom";
+  }
+
+  if (countryCode === "US") {
+    return language === "it" ? "Stati Uniti" : "United States";
+  }
+
+  if (countryCode === "CA") {
+    return "Canada";
+  }
+
+  if (countryCode === "AU") {
+    return language === "it" ? "Australia" : "Australia";
+  }
+
+  return countryCode || (language === "it" ? "Sconosciuto" : "Unknown");
 }
 
 export async function loader({ request }: { request: Request }) {
@@ -77,7 +134,10 @@ export async function action({ request }: { request: Request }) {
 
   if (json?.errors?.length) {
     return Response.json(
-      { ok: false, error: "Unable to verify the Shopify tax jurisdiction." },
+      {
+        ok: false,
+        error: "Unable to verify the Shopify tax jurisdiction.",
+      },
       { status: 400 },
     );
   }
@@ -90,12 +150,12 @@ export async function action({ request }: { request: Request }) {
     shopCountryCode,
   });
 
-  if (!context.isItalianStore) {
+  if (!context.advancedProfileAvailable) {
     return Response.json(
       {
         ok: false,
         error:
-          "Tax Profile configuration is not available for this jurisdiction yet.",
+          "Advanced Tax Profile configuration is not available for this jurisdiction yet.",
       },
       { status: 400 },
     );
@@ -111,33 +171,54 @@ export async function action({ request }: { request: Request }) {
     );
   }
 
+  const regimeMatchesCountry =
+    (context.effectiveCountryCode === "IT" &&
+      regime.startsWith("ITALY_")) ||
+    (context.effectiveCountryCode === "GB" &&
+      regime.startsWith("UK_"));
+
+  if (!regimeMatchesCountry) {
+    return Response.json(
+      {
+        ok: false,
+        error:
+          "The selected tax regime does not match the store jurisdiction.",
+      },
+      { status: 400 },
+    );
+  }
+
+  const countryDefaultRate =
+    getDefaultRateForCountry(context.effectiveCountryCode);
+
   let defaultVatRatePct = parseRate(
     formData.get("defaultVatRatePct"),
-    22,
+    countryDefaultRate,
   );
-  let pricesIncludeVat = parseBoolean(formData.get("pricesIncludeVat"));
-  const costsIncludeVat = parseBoolean(formData.get("costsIncludeVat"));
+
+  let pricesIncludeVat =
+    parseBoolean(formData.get("pricesIncludeVat"));
+
+  const costsIncludeVat =
+    parseBoolean(formData.get("costsIncludeVat"));
+
   let inputVatRecoveryPct = parseRate(
     formData.get("inputVatRecoveryPct"),
     100,
   );
-  let recoverInputVat = inputVatRecoveryPct > 0;
-  let shippingIncludeVat = parseBoolean(formData.get("shippingIncludeVat"));
+
+  let recoverInputVat =
+    inputVatRecoveryPct > 0;
+
+  let shippingIncludeVat =
+    parseBoolean(formData.get("shippingIncludeVat"));
+
   let shippingVatRatePct = parseRate(
     formData.get("shippingVatRatePct"),
     defaultVatRatePct,
   );
 
-  if (regime === "ITALY_FORFETTARIO") {
-    defaultVatRatePct = 0;
-    pricesIncludeVat = false;
-    recoverInputVat = false;
-    inputVatRecoveryPct = 0;
-    shippingIncludeVat = false;
-    shippingVatRatePct = 0;
-  }
-
-  if (regime === "ITALY_EXEMPT") {
+  if (!isStandardRecoverableRegime(regime)) {
     defaultVatRatePct = 0;
     pricesIncludeVat = false;
     recoverInputVat = false;
@@ -242,53 +323,202 @@ function Toggle({
 }
 
 export default function TaxProfilePage() {
-  const { taxContext } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
-  const fetcher = useFetcher<{ ok: boolean; error?: string }>();
-  const navigate = useNavigate();
-  const language = getStoredLanguage() === "it" ? "it" : "en";
+  const { taxContext } =
+    useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
-  const [regime, setRegime] = React.useState<SupportedRegime>(
-    taxContext.profile === "ITALY_FORFETTARIO" ||
-      taxContext.profile === "ITALY_EXEMPT"
+  const fetcher =
+    useFetcher<{ ok: boolean; error?: string }>();
+
+  const navigate = useNavigate();
+
+  const language =
+    getStoredLanguage() === "it" ? "it" : "en";
+
+  const countryCode =
+    taxContext.effectiveCountryCode;
+
+  const supported =
+    taxContext.advancedProfileAvailable;
+
+  const defaultStandardRegime =
+    getDefaultStandardRegime(countryCode);
+
+  const profileFromContext =
+    isSupportedRegime(taxContext.profile)
       ? taxContext.profile
-      : "ITALY_STANDARD",
-  );
-  const [defaultVatRatePct, setDefaultVatRatePct] = React.useState(
-    taxContext.defaultVatRatePct || 22,
-  );
-  const [pricesIncludeVat, setPricesIncludeVat] = React.useState(
-    taxContext.pricesIncludeVat,
-  );
-  const [costsIncludeVat, setCostsIncludeVat] = React.useState(
-    taxContext.costsIncludeVat,
-  );
-  const [inputVatRecoveryPct, setInputVatRecoveryPct] = React.useState(
+      : defaultStandardRegime;
+
+  const profileMatchesCurrentCountry =
+    (countryCode === "IT" &&
+      profileFromContext.startsWith("ITALY_")) ||
+    (countryCode === "GB" &&
+      profileFromContext.startsWith("UK_"));
+
+  const initialRegime =
+    profileMatchesCurrentCountry
+      ? profileFromContext
+      : defaultStandardRegime;
+
+  const countryDefaultRate =
+    getDefaultRateForCountry(countryCode);
+
+  const [regime, setRegime] =
+    React.useState<SupportedRegime>(initialRegime);
+
+  const [defaultVatRatePct, setDefaultVatRatePct] =
+    React.useState(
+      taxContext.defaultVatRatePct ||
+        countryDefaultRate,
+    );
+
+  const [pricesIncludeVat, setPricesIncludeVat] =
+    React.useState(taxContext.pricesIncludeVat);
+
+  const [costsIncludeVat, setCostsIncludeVat] =
+    React.useState(taxContext.costsIncludeVat);
+
+  const [
+    inputVatRecoveryPct,
+    setInputVatRecoveryPct,
+  ] = React.useState(
     taxContext.inputVatRecoveryPct,
   );
-  const recoverInputVat = inputVatRecoveryPct > 0;
-  const [shippingIncludeVat, setShippingIncludeVat] = React.useState(
-    taxContext.shippingIncludeVat,
-  );
-  const [shippingVatRatePct, setShippingVatRatePct] = React.useState(
-    taxContext.shippingVatRatePct || 22,
-  );
 
-  const supported = taxContext.isItalianStore;
-  const saving = fetcher.state !== "idle";
+  const recoverInputVat =
+    inputVatRecoveryPct > 0;
+
+  const [shippingIncludeVat, setShippingIncludeVat] =
+    React.useState(taxContext.shippingIncludeVat);
+
+  const [shippingVatRatePct, setShippingVatRatePct] =
+    React.useState(
+      taxContext.shippingVatRatePct ||
+        countryDefaultRate,
+    );
+
+  const saving =
+    fetcher.state !== "idle";
+
+  const standardRegime =
+    isStandardRecoverableRegime(regime);
+
+  const rateOptions =
+    getRateOptionsForCountry(countryCode);
+
+  const taxSystemLabel =
+    taxContext.taxSystem === "GST_HST"
+      ? "GST/HST"
+      : taxContext.taxSystem === "SALES_TAX"
+        ? "Sales Tax"
+        : taxContext.taxSystem;
+
+  const regimes: RegimeOption[] =
+    countryCode === "GB"
+      ? [
+          {
+            id: "UK_VAT_STANDARD",
+            title:
+              language === "it"
+                ? "VAT ordinaria"
+                : "Standard VAT",
+            subtitle:
+              language === "it"
+                ? "Store registrato VAT"
+                : "VAT-registered store",
+            detail:
+              language === "it"
+                ? "Configura aliquote, prezzi, costi e percentuale di input VAT recuperabile."
+                : "Configure rates, selling prices, cost basis and recoverable input VAT.",
+          },
+          {
+            id: "UK_VAT_EXEMPT",
+            title:
+              language === "it"
+                ? "Attività esente VAT"
+                : "VAT-exempt activity",
+            subtitle:
+              language === "it"
+                ? "Vendite trattate come esenti"
+                : "Sales treated as VAT exempt",
+            detail:
+              language === "it"
+                ? "Preset senza output VAT e senza recupero input VAT nel modello MarginLab."
+                : "Preset with no output VAT and no input VAT recovery in MarginLab.",
+          },
+          {
+            id: "UK_VAT_UNREGISTERED",
+            title:
+              language === "it"
+                ? "Non registrato VAT"
+                : "Not VAT registered",
+            subtitle:
+              language === "it"
+                ? "Nessun addebito VAT"
+                : "No VAT charged",
+            detail:
+              language === "it"
+                ? "Per merchant che non addebitano VAT sulle vendite analizzate."
+                : "For merchants that do not charge VAT on analyzed sales.",
+          },
+        ]
+      : [
+          {
+            id: "ITALY_STANDARD",
+            title:
+              language === "it"
+                ? "Regime ordinario"
+                : "Standard VAT regime",
+            subtitle:
+              language === "it"
+                ? "IVA applicata alle vendite"
+                : "VAT applied to sales",
+            detail:
+              language === "it"
+                ? "Configura aliquote, prezzi, costi e recuperabilità dell'IVA."
+                : "Configure rates, selling prices, cost basis and input VAT recovery.",
+          },
+          {
+            id: "ITALY_FORFETTARIO",
+            title:
+              language === "it"
+                ? "Regime forfettario"
+                : "Flat-rate tax regime",
+            subtitle:
+              language === "it"
+                ? "Vendite senza addebito IVA"
+                : "Sales without VAT charged",
+            detail:
+              language === "it"
+                ? "Preset senza IVA sulle vendite e senza recupero IVA sui costi."
+                : "Preset with no output VAT and no input VAT recovery.",
+          },
+          {
+            id: "ITALY_EXEMPT",
+            title:
+              language === "it"
+                ? "Operazioni esenti"
+                : "VAT-exempt activity",
+            subtitle:
+              language === "it"
+                ? "Vendite configurate come esenti"
+                : "Sales configured as VAT exempt",
+            detail:
+              language === "it"
+                ? "Per attività in cui le vendite analizzate non espongono IVA."
+                : "For activities where analyzed sales do not carry output VAT.",
+          },
+        ];
 
   React.useEffect(() => {
-    if (regime === "ITALY_STANDARD") {
-      if (defaultVatRatePct === 0) setDefaultVatRatePct(22);
-      if (shippingVatRatePct === 0) setShippingVatRatePct(22);
-      return;
-    }
+    if (standardRegime) {
+      if (defaultVatRatePct === 0) {
+        setDefaultVatRatePct(countryDefaultRate);
+      }
 
-    if (regime === "ITALY_FORFETTARIO") {
-      setDefaultVatRatePct(0);
-      setPricesIncludeVat(false);
-      setInputVatRecoveryPct(0);
-      setShippingIncludeVat(false);
-      setShippingVatRatePct(0);
+      if (shippingVatRatePct === 0) {
+        setShippingVatRatePct(countryDefaultRate);
+      }
+
       return;
     }
 
@@ -297,49 +527,13 @@ export default function TaxProfilePage() {
     setInputVatRecoveryPct(0);
     setShippingIncludeVat(false);
     setShippingVatRatePct(0);
-  }, [regime]);
-
-  const regimes = [
-    {
-      id: "ITALY_STANDARD" as const,
-      title: language === "it" ? "Regime ordinario" : "Standard VAT regime",
-      subtitle:
-        language === "it"
-          ? "IVA applicata alle vendite"
-          : "VAT applied to sales",
-      detail:
-        language === "it"
-          ? "Configura aliquote, prezzi, costi e recuperabilità dell'IVA."
-          : "Configure rates, selling prices, cost basis and input VAT recovery.",
-    },
-    {
-      id: "ITALY_FORFETTARIO" as const,
-      title:
-        language === "it" ? "Regime forfettario" : "Flat-rate tax regime",
-      subtitle:
-        language === "it"
-          ? "Vendite senza addebito IVA"
-          : "Sales without VAT charged",
-      detail:
-        language === "it"
-          ? "Preset senza IVA sulle vendite e senza recupero IVA sui costi."
-          : "Preset with no output VAT and no input VAT recovery.",
-    },
-    {
-      id: "ITALY_EXEMPT" as const,
-      title: language === "it" ? "Operazioni esenti" : "VAT-exempt activity",
-      subtitle:
-        language === "it"
-          ? "Vendite configurate come esenti"
-          : "Sales configured as VAT exempt",
-      detail:
-        language === "it"
-          ? "Per attività in cui le vendite analizzate non espongono IVA."
-          : "For activities where analyzed sales do not carry output VAT.",
-    },
-  ];
-
-  const rateOptions = [4, 5, 10, 22];
+  }, [
+    regime,
+    standardRegime,
+    countryDefaultRate,
+    defaultVatRatePct,
+    shippingVatRatePct,
+  ]);
 
   return (
     <div style={styles.page}>
@@ -349,7 +543,10 @@ export default function TaxProfilePage() {
       <div style={styles.container}>
         <div style={styles.topBar}>
           <div style={styles.logo}>
-            MARGIN<span style={{ color: "#ff5a36" }}>LAB</span>
+            MARGIN
+            <span style={{ color: "#ff5a36" }}>
+              LAB
+            </span>
           </div>
 
           <button
@@ -357,7 +554,9 @@ export default function TaxProfilePage() {
             style={styles.backBtn}
             onClick={() => navigate("/app")}
           >
-            {language === "it" ? "Torna alla dashboard" : "Back to dashboard"}
+            {language === "it"
+              ? "Torna alla dashboard"
+              : "Back to dashboard"}
           </button>
         </div>
 
@@ -365,7 +564,9 @@ export default function TaxProfilePage() {
           <div>
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
-              {language === "it" ? "PROFILO FISCALE" : "TAX PROFILE"}
+              {language === "it"
+                ? "PROFILO FISCALE AVANZATO"
+                : "ADVANCED TAX PROFILE"}
             </div>
 
             <h1 style={styles.title}>
@@ -376,31 +577,34 @@ export default function TaxProfilePage() {
 
             <p style={styles.subtitle}>
               {language === "it"
-                ? "Una configurazione a livello store, disponibile sia su Starter sia su Growth, progettata per alimentare analisi di redditività fiscalmente più coerenti."
-                : "A store-level configuration available on both Starter and Growth, designed to power more tax-aware profitability analysis."}
+                ? "Una configurazione a livello store che completa i dati fiscali reali Shopify e migliora la base economica usata da MarginLab."
+                : "A store-level configuration that complements real Shopify tax data and improves the economic basis used by MarginLab."}
             </p>
           </div>
 
           <div style={styles.statusCard}>
             <div style={styles.kicker}>
-              {language === "it" ? "GIURISDIZIONE" : "JURISDICTION"}
+              {language === "it"
+                ? "GIURISDIZIONE"
+                : "JURISDICTION"}
             </div>
 
             <div style={styles.countryRow}>
               <div style={styles.countryBadge}>
-                {taxContext.effectiveCountryCode || "—"}
+                {countryCode || "—"}
               </div>
+
               <div>
                 <div style={styles.countryTitle}>
-                  {taxContext.effectiveCountryCode === "IT"
-                    ? language === "it"
-                      ? "Italia"
-                      : "Italy"
-                    : taxContext.effectiveCountryCode || "Unknown"}
+                  {getCountryName(
+                    countryCode,
+                    language,
+                  )}
                 </div>
+
                 <div style={styles.countryText}>
                   {taxContext.shopCountryCode !==
-                    taxContext.effectiveCountryCode
+                  taxContext.effectiveCountryCode
                     ? language === "it"
                       ? `Ambiente test · Shopify rileva ${taxContext.shopCountryCode || "—"}`
                       : `Test environment · Shopify reports ${taxContext.shopCountryCode || "—"}`
@@ -414,36 +618,44 @@ export default function TaxProfilePage() {
             <div style={styles.statusGrid}>
               <div style={styles.miniCard}>
                 <div style={styles.miniLabel}>
-                  {language === "it" ? "Stato" : "Status"}
+                  {language === "it"
+                    ? "Sistema"
+                    : "System"}
                 </div>
-                <div
-                  style={{
-                    ...styles.miniValue,
-                    color: taxContext.configured ? "#4ade80" : "#f59e0b",
-                  }}
-                >
-                  {taxContext.configured
-                    ? language === "it"
-                      ? "Configurato"
-                      : "Configured"
-                    : language === "it"
-                      ? "Da completare"
-                      : "Incomplete"}
+
+                <div style={styles.miniValue}>
+                  {taxSystemLabel || "—"}
                 </div>
               </div>
 
               <div style={styles.miniCard}>
                 <div style={styles.miniLabel}>
-                  {language === "it" ? "Supporto" : "Support"}
+                  {language === "it"
+                    ? "Profilo avanzato"
+                    : "Advanced profile"}
                 </div>
-                <div style={styles.miniValue}>
+
+                <div
+                  style={{
+                    ...styles.miniValue,
+                    color: supported
+                      ? taxContext.configured
+                        ? "#4ade80"
+                        : "#f59e0b"
+                      : "rgba(255,255,255,0.52)",
+                  }}
+                >
                   {supported
-                    ? language === "it"
-                      ? "Disponibile"
-                      : "Available"
+                    ? taxContext.configured
+                      ? language === "it"
+                        ? "Configurato"
+                        : "Configured"
+                      : language === "it"
+                        ? "Da completare"
+                        : "Incomplete"
                     : language === "it"
-                      ? "In arrivo"
-                      : "Coming later"}
+                      ? "Non disponibile"
+                      : "Not available"}
                 </div>
               </div>
             </div>
@@ -454,53 +666,66 @@ export default function TaxProfilePage() {
           <section style={styles.section}>
             <div style={styles.kicker}>
               {language === "it"
-                ? "PAESE NON ANCORA SUPPORTATO"
-                : "COUNTRY NOT YET SUPPORTED"}
+                ? "MOTORE GLOBALE ATTIVO"
+                : "GLOBAL ENGINE ACTIVE"}
             </div>
+
             <div style={styles.sectionTitle}>
               {language === "it"
-                ? "Tax Profile è già pronto per espandersi ad altre giurisdizioni."
-                : "Tax Profile is already structured for additional jurisdictions."}
+                ? `MarginLab utilizza già i dati ${taxSystemLabel || "fiscali"} reali di Shopify.`
+                : `MarginLab already uses real Shopify ${taxSystemLabel || "tax"} data.`}
             </div>
+
             <p style={styles.sectionText}>
               {language === "it"
-                ? "MarginLab continua a usare i calcoli attuali senza trasformazioni fiscali. Il supporto specifico per questo paese potrà essere aggiunto successivamente."
-                : "MarginLab continues using the current calculations without tax transformations. Country-specific support can be added later."}
+                ? "Il profilo fiscale avanzato specifico per questa giurisdizione non è ancora disponibile. MarginLab non inventa aliquote o recuperi fiscali: utilizza i dati transazionali Shopify e applica un trattamento prudenziale quando le informazioni non sono sufficienti."
+                : "An advanced country-specific tax profile is not available for this jurisdiction yet. MarginLab does not manufacture tax rates or recoverability assumptions: it uses Shopify transaction data and applies conservative treatment when evidence is insufficient."}
             </p>
           </section>
         ) : (
           <fetcher.Form method="post">
-            <input type="hidden" name="regime" value={regime} />
+            <input
+              type="hidden"
+              name="regime"
+              value={regime}
+            />
+
             <input
               type="hidden"
               name="defaultVatRatePct"
               value={defaultVatRatePct}
             />
+
             <input
               type="hidden"
               name="pricesIncludeVat"
               value={String(pricesIncludeVat)}
             />
+
             <input
               type="hidden"
               name="costsIncludeVat"
               value={String(costsIncludeVat)}
             />
+
             <input
               type="hidden"
               name="recoverInputVat"
               value={String(recoverInputVat)}
             />
+
             <input
               type="hidden"
               name="inputVatRecoveryPct"
               value={inputVatRecoveryPct}
             />
+
             <input
               type="hidden"
               name="shippingIncludeVat"
               value={String(shippingIncludeVat)}
             />
+
             <input
               type="hidden"
               name="shippingVatRatePct"
@@ -509,44 +734,66 @@ export default function TaxProfilePage() {
 
             <section style={styles.section}>
               <div style={styles.kicker}>
-                {language === "it" ? "1 · REGIME FISCALE" : "1 · TAX REGIME"}
+                {language === "it"
+                  ? "1 · REGIME FISCALE"
+                  : "1 · TAX REGIME"}
               </div>
+
               <div style={styles.sectionTitle}>
                 {language === "it"
                   ? "Come opera fiscalmente lo store?"
                   : "How does the store operate for tax purposes?"}
               </div>
+
               <p style={styles.sectionText}>
                 {language === "it"
-                  ? "Shopify può rilevare il paese, ma non il regime fiscale. Questa scelta deve essere confermata dal merchant."
-                  : "Shopify can detect the country, but not the merchant's tax regime. The merchant must confirm this setting."}
+                  ? "Shopify può rilevare il paese e le imposte applicate agli ordini, ma non il regime fiscale o la recuperabilità dell'imposta sugli acquisti. Queste informazioni devono essere confermate dal merchant."
+                  : "Shopify can detect the country and taxes applied to orders, but not the merchant's tax regime or input-tax recoverability. The merchant must confirm these settings."}
               </p>
 
               <div style={styles.regimeGrid}>
                 {regimes.map((item) => {
-                  const selected = regime === item.id;
+                  const selected =
+                    regime === item.id;
 
                   return (
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setRegime(item.id)}
+                      onClick={() =>
+                        setRegime(item.id)
+                      }
                       style={{
                         ...styles.regimeCard,
-                        ...(selected ? styles.regimeSelected : {}),
+                        ...(selected
+                          ? styles.regimeSelected
+                          : {}),
                       }}
                     >
                       <div
                         style={{
                           ...styles.check,
-                          ...(selected ? styles.checkSelected : {}),
+                          ...(selected
+                            ? styles.checkSelected
+                            : {}),
                         }}
                       >
                         {selected ? "✓" : ""}
                       </div>
-                      <div style={styles.regimeTitle}>{item.title}</div>
-                      <div style={styles.regimeSubtitle}>{item.subtitle}</div>
-                      <div style={styles.regimeText}>{item.detail}</div>
+
+                      <div style={styles.regimeTitle}>
+                        {item.title}
+                      </div>
+
+                      <div
+                        style={styles.regimeSubtitle}
+                      >
+                        {item.subtitle}
+                      </div>
+
+                      <div style={styles.regimeText}>
+                        {item.detail}
+                      </div>
                     </button>
                   );
                 })}
@@ -556,28 +803,30 @@ export default function TaxProfilePage() {
             <section style={styles.section}>
               <div style={styles.kicker}>
                 {language === "it"
-                  ? "2 · CONFIGURAZIONE IVA"
-                  : "2 · VAT CONFIGURATION"}
+                  ? `2 · CONFIGURAZIONE ${taxSystemLabel}`
+                  : `2 · ${taxSystemLabel} CONFIGURATION`}
               </div>
+
               <div style={styles.sectionTitle}>
                 {language === "it"
                   ? "Definisci la base economica di prezzi e costi"
                   : "Define the economic basis of prices and costs"}
               </div>
 
-              {regime === "ITALY_STANDARD" ? (
+              {standardRegime ? (
                 <>
                   <div style={styles.rateRow}>
                     <div>
                       <div style={styles.fieldLabel}>
                         {language === "it"
-                          ? "Aliquota IVA predefinita"
-                          : "Default VAT rate"}
+                          ? `Aliquota ${taxSystemLabel} predefinita`
+                          : `Default ${taxSystemLabel} rate`}
                       </div>
+
                       <div style={styles.fieldText}>
                         {language === "it"
-                          ? "Fallback quando non è disponibile un'aliquota più specifica."
-                          : "Fallback when a more specific tax rate is unavailable."}
+                          ? "Fallback utilizzato solo quando il motore non dispone di un'aliquota Shopify più specifica e il profilo avanzato consente una stima."
+                          : "Fallback used only when the engine lacks a more specific Shopify rate and the advanced profile permits an estimate."}
                       </div>
                     </div>
 
@@ -586,7 +835,9 @@ export default function TaxProfilePage() {
                         <button
                           key={rate}
                           type="button"
-                          onClick={() => setDefaultVatRatePct(rate)}
+                          onClick={() =>
+                            setDefaultVatRatePct(rate)
+                          }
                           style={{
                             ...styles.rateBtn,
                             ...(defaultVatRatePct === rate
@@ -597,6 +848,7 @@ export default function TaxProfilePage() {
                           {rate}%
                         </button>
                       ))}
+
                       <input
                         type="number"
                         min={0}
@@ -605,7 +857,12 @@ export default function TaxProfilePage() {
                         value={defaultVatRatePct}
                         onChange={(event) =>
                           setDefaultVatRatePct(
-                            Math.max(0, Number(event.target.value) || 0),
+                            Math.max(
+                              0,
+                              Number(
+                                event.target.value,
+                              ) || 0,
+                            ),
                           )
                         }
                         style={styles.rateInput}
@@ -619,13 +876,13 @@ export default function TaxProfilePage() {
                       onChange={setPricesIncludeVat}
                       label={
                         language === "it"
-                          ? "Prezzi Shopify IVA inclusa"
-                          : "Shopify prices include VAT"
+                          ? `I prezzi Shopify includono ${taxSystemLabel}`
+                          : `Shopify prices include ${taxSystemLabel}`
                       }
                       description={
                         language === "it"
-                          ? "I prezzi vendita analizzati comprendono già l'IVA."
-                          : "Analyzed selling prices already include VAT."
+                          ? "I prezzi vendita analizzati comprendono già l'imposta."
+                          : "Analyzed selling prices already include tax."
                       }
                     />
 
@@ -634,13 +891,13 @@ export default function TaxProfilePage() {
                       onChange={setCostsIncludeVat}
                       label={
                         language === "it"
-                          ? "COGS Shopify IVA inclusa"
-                          : "Shopify COGS include VAT"
+                          ? `I COGS Shopify includono ${taxSystemLabel}`
+                          : `Shopify COGS include ${taxSystemLabel}`
                       }
                       description={
                         language === "it"
-                          ? "I costi unitari salvati in Shopify comprendono l'IVA."
-                          : "Unit costs stored in Shopify include VAT."
+                          ? "I costi unitari salvati in Shopify comprendono già l'imposta sugli acquisti."
+                          : "Unit costs stored in Shopify already include input tax."
                       }
                     />
 
@@ -648,20 +905,23 @@ export default function TaxProfilePage() {
                       <div>
                         <div style={styles.fieldLabel}>
                           {language === "it"
-                            ? "Detraibilità IVA sugli acquisti"
-                            : "Input VAT recovery"}
+                            ? "Recuperabilità imposta sugli acquisti"
+                            : "Input tax recovery"}
                         </div>
+
                         <div style={styles.fieldText}>
                           {language === "it"
-                            ? "Definisci quanta IVA sui costi può essere recuperata economicamente."
-                            : "Define how much input VAT can be economically recovered from costs."}
+                            ? "Definisci quanta imposta contenuta nei costi può essere recuperata economicamente."
+                            : "Define how much tax embedded in costs can be economically recovered."}
                         </div>
                       </div>
 
                       <div style={styles.recoveryOptions}>
                         <button
                           type="button"
-                          onClick={() => setInputVatRecoveryPct(0)}
+                          onClick={() =>
+                            setInputVatRecoveryPct(0)
+                          }
                           style={{
                             ...styles.recoveryOption,
                             ...(inputVatRecoveryPct === 0
@@ -669,33 +929,66 @@ export default function TaxProfilePage() {
                               : {}),
                           }}
                         >
-                          <div style={styles.recoveryOptionTitle}>
-                            {language === "it" ? "Nessuna" : "None"}
+                          <div
+                            style={
+                              styles.recoveryOptionTitle
+                            }
+                          >
+                            {language === "it"
+                              ? "Nessuna"
+                              : "None"}
                           </div>
-                          <div style={styles.recoveryOptionValue}>0%</div>
-                        </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setInputVatRecoveryPct(100)}
-                          style={{
-                            ...styles.recoveryOption,
-                            ...(inputVatRecoveryPct === 100
-                              ? styles.recoveryOptionSelected
-                              : {}),
-                          }}
-                        >
-                          <div style={styles.recoveryOptionTitle}>
-                            {language === "it" ? "Completa" : "Full"}
+                          <div
+                            style={
+                              styles.recoveryOptionValue
+                            }
+                          >
+                            0%
                           </div>
-                          <div style={styles.recoveryOptionValue}>100%</div>
                         </button>
 
                         <button
                           type="button"
                           onClick={() =>
-                            setInputVatRecoveryPct((current) =>
-                              current > 0 && current < 100 ? current : 50,
+                            setInputVatRecoveryPct(100)
+                          }
+                          style={{
+                            ...styles.recoveryOption,
+                            ...(inputVatRecoveryPct ===
+                            100
+                              ? styles.recoveryOptionSelected
+                              : {}),
+                          }}
+                        >
+                          <div
+                            style={
+                              styles.recoveryOptionTitle
+                            }
+                          >
+                            {language === "it"
+                              ? "Completa"
+                              : "Full"}
+                          </div>
+
+                          <div
+                            style={
+                              styles.recoveryOptionValue
+                            }
+                          >
+                            100%
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setInputVatRecoveryPct(
+                              (current) =>
+                                current > 0 &&
+                                current < 100
+                                  ? current
+                                  : 50,
                             )
                           }
                           style={{
@@ -706,10 +999,21 @@ export default function TaxProfilePage() {
                               : {}),
                           }}
                         >
-                          <div style={styles.recoveryOptionTitle}>
-                            {language === "it" ? "Parziale" : "Partial"}
+                          <div
+                            style={
+                              styles.recoveryOptionTitle
+                            }
+                          >
+                            {language === "it"
+                              ? "Parziale"
+                              : "Partial"}
                           </div>
-                          <div style={styles.recoveryOptionValue}>
+
+                          <div
+                            style={
+                              styles.recoveryOptionValue
+                            }
+                          >
                             {inputVatRecoveryPct > 0 &&
                             inputVatRecoveryPct < 100
                               ? `${inputVatRecoveryPct}%`
@@ -720,39 +1024,59 @@ export default function TaxProfilePage() {
 
                       {inputVatRecoveryPct > 0 &&
                         inputVatRecoveryPct < 100 && (
-                          <div style={styles.partialRecoveryPanel}>
+                          <div
+                            style={
+                              styles.partialRecoveryPanel
+                            }
+                          >
                             <div>
-                              <div style={styles.fieldLabel}>
+                              <div
+                                style={styles.fieldLabel}
+                              >
                                 {language === "it"
-                                  ? "Percentuale detraibile"
+                                  ? "Percentuale recuperabile"
                                   : "Recoverable percentage"}
                               </div>
-                              <div style={styles.fieldText}>
+
+                              <div
+                                style={styles.fieldText}
+                              >
                                 {language === "it"
                                   ? "Inserisci la percentuale effettivamente recuperabile."
                                   : "Enter the percentage that is actually recoverable."}
                               </div>
                             </div>
 
-                            <div style={styles.partialRecoveryControl}>
+                            <div
+                              style={
+                                styles.partialRecoveryControl
+                              }
+                            >
                               <input
                                 type="range"
                                 min={1}
                                 max={99}
                                 step={1}
-                                value={inputVatRecoveryPct}
+                                value={
+                                  inputVatRecoveryPct
+                                }
                                 onChange={(event) =>
                                   setInputVatRecoveryPct(
                                     Math.min(
                                       99,
                                       Math.max(
                                         1,
-                                        Number(event.target.value) || 1,
+                                        Number(
+                                          event.target
+                                            .value,
+                                        ) || 1,
                                       ),
                                     ),
                                   )
                                 }
-                                style={styles.recoveryRange}
+                                style={
+                                  styles.recoveryRange
+                                }
                               />
 
                               <input
@@ -760,38 +1084,54 @@ export default function TaxProfilePage() {
                                 min={1}
                                 max={99}
                                 step={1}
-                                value={inputVatRecoveryPct}
+                                value={
+                                  inputVatRecoveryPct
+                                }
                                 onChange={(event) =>
                                   setInputVatRecoveryPct(
                                     Math.min(
                                       99,
                                       Math.max(
                                         1,
-                                        Number(event.target.value) || 1,
+                                        Number(
+                                          event.target
+                                            .value,
+                                        ) || 1,
                                       ),
                                     ),
                                   )
                                 }
-                                style={styles.recoveryInput}
+                                style={
+                                  styles.recoveryInput
+                                }
                               />
 
-                              <div style={styles.recoveryPercent}>%</div>
+                              <div
+                                style={
+                                  styles.recoveryPercent
+                                }
+                              >
+                                %
+                              </div>
                             </div>
                           </div>
                         )}
 
-                      <div style={styles.recoverySummary}>
+                      <div
+                        style={styles.recoverySummary}
+                      >
                         {language === "it"
                           ? inputVatRecoveryPct === 0
-                            ? "L'IVA sugli acquisti resta interamente nel costo economico."
+                            ? "L'imposta sugli acquisti resta interamente nel costo economico."
                             : inputVatRecoveryPct === 100
-                              ? "L'IVA sugli acquisti viene considerata interamente recuperabile."
-                              : `MarginLab considera recuperabile il ${inputVatRecoveryPct}% dell'IVA sugli acquisti.`
+                              ? "L'imposta sugli acquisti viene considerata interamente recuperabile."
+                              : `MarginLab considera recuperabile il ${inputVatRecoveryPct}% dell'imposta sugli acquisti.`
                           : inputVatRecoveryPct === 0
-                            ? "Input VAT remains fully included in economic cost."
-                            : inputVatRecoveryPct === 100
-                              ? "Input VAT is treated as fully recoverable."
-                              : `MarginLab treats ${inputVatRecoveryPct}% of input VAT as recoverable.`}
+                            ? "Input tax remains fully included in economic cost."
+                            : inputVatRecoveryPct ===
+                                100
+                              ? "Input tax is treated as fully recoverable."
+                              : `MarginLab treats ${inputVatRecoveryPct}% of input tax as recoverable.`}
                       </div>
                     </div>
                   </div>
@@ -799,12 +1139,12 @@ export default function TaxProfilePage() {
               ) : (
                 <div style={styles.notice}>
                   {language === "it"
-                    ? "Per questo regime l'IVA sulle vendite viene impostata a 0% nel profilo MarginLab. Il trattamento dei costi rimane configurabile."
-                    : "For this regime, output VAT is set to 0% in MarginLab. Cost treatment remains configurable."}
+                    ? `Per questo profilo l'output ${taxSystemLabel} viene impostato a 0% nel fallback MarginLab e non viene applicato recupero dell'imposta sugli acquisti. I dati fiscali reali Shopify continuano ad avere priorità quando disponibili.`
+                    : `For this profile, fallback output ${taxSystemLabel} is set to 0% and no input-tax recovery is applied. Real Shopify tax data still takes priority when available.`}
                 </div>
               )}
 
-              {regime !== "ITALY_STANDARD" && (
+              {!standardRegime && (
                 <div style={{ marginTop: 14 }}>
                   <Toggle
                     checked={costsIncludeVat}
@@ -816,8 +1156,8 @@ export default function TaxProfilePage() {
                     }
                     description={
                       language === "it"
-                        ? "Questa informazione resta utile anche quando le vendite non espongono IVA."
-                        : "This remains useful even when sales do not carry output VAT."
+                        ? "Questa informazione resta utile per descrivere correttamente la base dei costi, anche quando il profilo non consente recupero dell'imposta."
+                        : "This remains useful for describing the cost basis correctly, even when the profile does not allow input-tax recovery."
                     }
                   />
                 </div>
@@ -826,28 +1166,33 @@ export default function TaxProfilePage() {
 
             <section style={styles.section}>
               <div style={styles.kicker}>
-                {language === "it" ? "3 · SPEDIZIONI" : "3 · SHIPPING"}
+                {language === "it"
+                  ? "3 · SPEDIZIONI"
+                  : "3 · SHIPPING"}
               </div>
+
               <div style={styles.sectionTitle}>
                 {language === "it"
                   ? "Trattamento fiscale dei ricavi da spedizione"
                   : "Tax treatment of shipping revenue"}
               </div>
 
-              {regime === "ITALY_STANDARD" ? (
+              {standardRegime ? (
                 <div style={styles.shippingGrid}>
                   <Toggle
                     checked={shippingIncludeVat}
-                    onChange={setShippingIncludeVat}
+                    onChange={
+                      setShippingIncludeVat
+                    }
                     label={
                       language === "it"
-                        ? "Spedizione addebitata IVA inclusa"
-                        : "Shipping charge includes VAT"
+                        ? `La spedizione include ${taxSystemLabel}`
+                        : `Shipping charge includes ${taxSystemLabel}`
                     }
                     description={
                       language === "it"
-                        ? "Il prezzo di spedizione pagato dal cliente comprende già IVA."
-                        : "The customer-paid shipping charge already includes VAT."
+                        ? "Il prezzo di spedizione pagato dal cliente comprende già l'imposta."
+                        : "The customer-paid shipping charge already includes tax."
                     }
                   />
 
@@ -855,17 +1200,28 @@ export default function TaxProfilePage() {
                     <div style={styles.fieldLabel}>
                       {language === "it"
                         ? "Aliquota spedizione"
-                        : "Shipping VAT rate"}
+                        : "Shipping tax rate"}
                     </div>
-                    <div style={{ ...styles.rateButtons, marginTop: 12 }}>
+
+                    <div
+                      style={{
+                        ...styles.rateButtons,
+                        marginTop: 12,
+                      }}
+                    >
                       {rateOptions.map((rate) => (
                         <button
                           key={rate}
                           type="button"
-                          onClick={() => setShippingVatRatePct(rate)}
+                          onClick={() =>
+                            setShippingVatRatePct(
+                              rate,
+                            )
+                          }
                           style={{
                             ...styles.rateBtn,
-                            ...(shippingVatRatePct === rate
+                            ...(shippingVatRatePct ===
+                            rate
                               ? styles.rateBtnSelected
                               : {}),
                           }}
@@ -873,6 +1229,7 @@ export default function TaxProfilePage() {
                           {rate}%
                         </button>
                       ))}
+
                       <input
                         type="number"
                         min={0}
@@ -881,7 +1238,12 @@ export default function TaxProfilePage() {
                         value={shippingVatRatePct}
                         onChange={(event) =>
                           setShippingVatRatePct(
-                            Math.max(0, Number(event.target.value) || 0),
+                            Math.max(
+                              0,
+                              Number(
+                                event.target.value,
+                              ) || 0,
+                            ),
                           )
                         }
                         style={styles.rateInput}
@@ -892,8 +1254,8 @@ export default function TaxProfilePage() {
               ) : (
                 <div style={styles.notice}>
                   {language === "it"
-                    ? "Nel preset selezionato la spedizione non viene trattata come ricavo soggetto a IVA."
-                    : "In the selected preset, shipping is not treated as VAT-bearing revenue."}
+                    ? "Nel profilo selezionato MarginLab non applica una stima fiscale alla spedizione. Le tax line Shopify effettive restano comunque utilizzabili dal motore globale."
+                    : "In the selected profile, MarginLab does not estimate tax on shipping. Actual Shopify tax lines remain available to the global engine."}
                 </div>
               )}
             </section>
@@ -904,23 +1266,61 @@ export default function TaxProfilePage() {
                   ? "BASE DI CALCOLO MARGINLAB"
                   : "MARGINLAB CALCULATION BASIS"}
               </div>
+
               <div style={styles.sectionTitle}>
                 {language === "it"
-                  ? "La struttura che useremo nel motore fiscale"
-                  : "The structure the tax engine will use"}
+                  ? "Come il profilo completa il motore fiscale globale"
+                  : "How the profile complements the global tax engine"}
               </div>
 
               <div style={styles.flowGrid}>
                 {[
-                  ["01", language === "it" ? "Vendite lorde" : "Gross sales"],
-                  ["02", language === "it" ? "Componente fiscale" : "Tax component"],
-                  ["03", language === "it" ? "Ricavi netti" : "Net revenue"],
-                  ["04", language === "it" ? "COGS netti" : "Net COGS"],
-                  ["05", language === "it" ? "Margine" : "Margin"],
+                  [
+                    "01",
+                    language === "it"
+                      ? "Vendite Shopify"
+                      : "Shopify sales",
+                  ],
+                  [
+                    "02",
+                    language === "it"
+                      ? "Tax line reali"
+                      : "Actual tax lines",
+                  ],
+                  [
+                    "03",
+                    language === "it"
+                      ? "Profilo costi"
+                      : "Cost profile",
+                  ],
+                  [
+                    "04",
+                    language === "it"
+                      ? "COGS economici"
+                      : "Economic COGS",
+                  ],
+                  [
+                    "05",
+                    language === "it"
+                      ? "Profitto economico"
+                      : "Economic profit",
+                  ],
                 ].map(([n, label]) => (
-                  <div key={n} style={styles.flowCard}>
-                    <div style={styles.flowNumber}>{n}</div>
-                    <div style={styles.flowLabel}>{label}</div>
+                  <div
+                    key={n}
+                    style={styles.flowCard}
+                  >
+                    <div
+                      style={styles.flowNumber}
+                    >
+                      {n}
+                    </div>
+
+                    <div
+                      style={styles.flowLabel}
+                    >
+                      {label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -929,25 +1329,28 @@ export default function TaxProfilePage() {
             {fetcher.data?.ok && (
               <div style={styles.success}>
                 {language === "it"
-                  ? "Profilo fiscale salvato correttamente. I calcoli economici non sono ancora stati modificati."
-                  : "Tax Profile saved successfully. Economic calculations have not been changed yet."}
+                  ? "Profilo fiscale salvato correttamente. MarginLab userà questa configurazione insieme ai dati fiscali reali Shopify."
+                  : "Tax Profile saved successfully. MarginLab will use this configuration together with real Shopify tax data."}
               </div>
             )}
 
             {fetcher.data?.error && (
-              <div style={styles.error}>{fetcher.data.error}</div>
+              <div style={styles.error}>
+                {fetcher.data.error}
+              </div>
             )}
 
             <div style={styles.saveBar}>
               <div>
                 <div style={styles.saveTitle}>
                   {language === "it"
-                    ? "Salva il Tax Profile"
+                    ? "Salva il profilo fiscale"
                     : "Save Tax Profile"}
                 </div>
+
                 <div style={styles.saveText}>
                   {language === "it"
-                    ? "Configurazione dello store disponibile sia su Starter sia su Growth."
+                    ? "Configurazione a livello store disponibile sia su Starter sia su Growth."
                     : "Store-level configuration available on both Starter and Growth."}
                 </div>
               </div>
@@ -974,8 +1377,8 @@ export default function TaxProfilePage() {
 
         <div style={styles.disclaimer}>
           {language === "it"
-            ? "Tax Profile serve a migliorare la base economica delle analisi MarginLab. Non sostituisce contabilità, liquidazioni IVA o consulenza fiscale e non determina automaticamente gli obblighi tributari del merchant."
-            : "Tax Profile improves the economic basis used by MarginLab. It does not replace accounting, VAT filings or tax advice and does not automatically determine the merchant's tax obligations."}
+            ? "Tax Profile serve a migliorare la base economica delle analisi MarginLab. Non sostituisce contabilità, dichiarazioni fiscali o consulenza professionale e non determina automaticamente gli obblighi tributari del merchant."
+            : "Tax Profile improves the economic basis used by MarginLab. It does not replace accounting, tax filings or professional tax advice and does not automatically determine the merchant's tax obligations."}
         </div>
       </div>
     </div>
