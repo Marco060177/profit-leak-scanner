@@ -22,6 +22,23 @@ type ProductAggregate = {
   grossCogs: number;
   refundedCogs: number;
   missingCost: boolean;
+
+  // Product-level Shopify tax evidence.
+  productTaxAmount: number;
+  refundedTaxAmount: number;
+
+  includedProductTaxAmount: number;
+  excludedProductTaxAmount: number;
+  includedRefundedTaxAmount: number;
+  excludedRefundedTaxAmount: number;
+
+  taxableLineCount: number;
+  nonTaxableLineCount: number;
+  taxedLineCount: number;
+
+  taxExemptLineCount: number;
+  taxesIncludedLineCount: number;
+  taxesExcludedLineCount: number;
 };
 
 type PeriodAggregate = {
@@ -252,6 +269,22 @@ function getOrCreateProduct(
       grossCogs: 0,
       refundedCogs: 0,
       missingCost: false,
+
+      productTaxAmount: 0,
+      refundedTaxAmount: 0,
+
+      includedProductTaxAmount: 0,
+      excludedProductTaxAmount: 0,
+      includedRefundedTaxAmount: 0,
+      excludedRefundedTaxAmount: 0,
+
+      taxableLineCount: 0,
+      nonTaxableLineCount: 0,
+      taxedLineCount: 0,
+
+      taxExemptLineCount: 0,
+      taxesIncludedLineCount: 0,
+      taxesExcludedLineCount: 0,
     };
   }
 
@@ -400,10 +433,17 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     for (const lineEdge of order?.lineItems?.edges ?? []) {
       const line = lineEdge?.node;
 
+      const lineItemId = String(line?.id ?? "");
+      const product = line?.variant?.product;
+      const key = productKey(product, lineItemId);
+      const aggregate = getOrCreateProduct(byProduct, key, product);
+
       if (line?.taxable === true) {
         taxableLineCount += 1;
+        aggregate.taxableLineCount += 1;
       } else {
         nonTaxableLineCount += 1;
+        aggregate.nonTaxableLineCount += 1;
       }
 
       const lineTaxAmount = (line?.taxLines ?? []).reduce(
@@ -413,21 +453,26 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       );
 
       productTaxAmount += lineTaxAmount;
+      aggregate.productTaxAmount += lineTaxAmount;
 
       if (order?.taxesIncluded === true) {
         includedProductTaxAmount += lineTaxAmount;
+        aggregate.includedProductTaxAmount += lineTaxAmount;
+        aggregate.taxesIncludedLineCount += 1;
       } else {
         excludedProductTaxAmount += lineTaxAmount;
+        aggregate.excludedProductTaxAmount += lineTaxAmount;
+        aggregate.taxesExcludedLineCount += 1;
+      }
+
+      if (order?.taxExempt === true) {
+        aggregate.taxExemptLineCount += 1;
       }
 
       if (lineTaxAmount > 0) {
         taxedLineCount += 1;
+        aggregate.taxedLineCount += 1;
       }
-
-      const lineItemId = String(line?.id ?? "");
-      const product = line?.variant?.product;
-      const key = productKey(product, lineItemId);
-      const aggregate = getOrCreateProduct(byProduct, key, product);
 
       const quantity = amount(line?.quantity);
       const originalTotal = amount(
@@ -507,10 +552,14 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
         productRefunds += refundSubtotal;
         refundedTaxAmount += refundTax;
 
+        aggregate.refundedTaxAmount += refundTax;
+
         if (order?.taxesIncluded === true) {
           includedRefundedTaxAmount += refundTax;
+          aggregate.includedRefundedTaxAmount += refundTax;
         } else {
           excludedRefundedTaxAmount += refundTax;
+          aggregate.excludedRefundedTaxAmount += refundTax;
         }
 
         refundedCogs += refundCogs;
@@ -727,6 +776,82 @@ export async function loadMarginDashboardData({
       const profit = revenue - cogs;
       const marginPct = revenue > 0 ? (profit / revenue) * 100 : 0;
 
+      const productTaxAwarePeriod = {
+        totalShopifyTax: Math.max(
+          0,
+          product.productTaxAmount - product.refundedTaxAmount,
+        ),
+
+        productTaxAmount: product.productTaxAmount,
+        shippingTaxAmount: 0,
+        refundedTaxAmount: product.refundedTaxAmount,
+
+        includedProductTaxAmount:
+          product.includedProductTaxAmount,
+        excludedProductTaxAmount:
+          product.excludedProductTaxAmount,
+        includedShippingTaxAmount: 0,
+        excludedShippingTaxAmount: 0,
+        includedRefundedTaxAmount:
+          product.includedRefundedTaxAmount,
+        excludedRefundedTaxAmount:
+          product.excludedRefundedTaxAmount,
+
+        netCollectedTax: Math.max(
+          0,
+          product.productTaxAmount -
+            product.refundedTaxAmount,
+        ),
+
+        taxableLineCount: product.taxableLineCount,
+        nonTaxableLineCount: product.nonTaxableLineCount,
+        taxedLineCount: product.taxedLineCount,
+
+        taxExemptOrderCount: product.taxExemptLineCount,
+        taxesIncludedOrderCount:
+          product.taxesIncludedLineCount,
+        taxesExcludedOrderCount:
+          product.taxesExcludedLineCount,
+
+        hasActualShopifyTax:
+          product.productTaxAmount > 0 ||
+          product.taxedLineCount > 0,
+
+        hasTaxableProducts:
+          product.taxableLineCount > 0,
+
+        hasTaxExemptOrders:
+          product.taxExemptLineCount > 0,
+
+        taxDataCoverage:
+          product.taxableLineCount +
+            product.nonTaxableLineCount >
+          0
+            ? "complete"
+            : "partial",
+      } as const;
+
+      const productTaxTreatment = resolveTaxTreatment({
+        taxAwarePeriod: productTaxAwarePeriod,
+        taxContext,
+      });
+
+      const productTaxAwareEconomics =
+        calculateTaxAwareEconomics({
+          revenue,
+          cogs,
+          taxContext,
+          taxTreatment: productTaxTreatment,
+        });
+
+      const economicRevenue =
+        productTaxAwareEconomics.netRevenue;
+      const economicCogs =
+        productTaxAwareEconomics.economicCogs;
+      const economicProfit =
+        productTaxAwareEconomics.realProfit;
+      const economicMarginPct =
+        productTaxAwareEconomics.realMarginPct;
 
       const previousMarginPct = previousMargins.get(key) ?? null;
       const productMarginDelta =
@@ -792,6 +917,19 @@ export async function loadMarginDashboardData({
           netProductSales > 0
             ? (product.refunds / netProductSales) * 100
             : 0,
+
+        // Parallel product-level economic basis.
+        // Legacy revenue/cogs/profit/marginPct remain unchanged.
+        economicRevenue,
+        economicCogs,
+        economicProfit,
+        economicMarginPct,
+
+        salesTaxes: Math.max(
+          0,
+          product.productTaxAmount -
+            product.refundedTaxAmount,
+        ),
       };
     })
     .sort((a, b) => a.profit - b.profit);

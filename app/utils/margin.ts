@@ -98,6 +98,11 @@ export type Row = {
   taxReserve?: number;
   adjustedProfit?: number;
   adjustedMarginPct?: number;
+
+  economicRevenue?: number;
+  economicCogs?: number;
+  economicProfit?: number;
+  economicMarginPct?: number;
 };
 
 export type TrendPoint = {

@@ -86,6 +86,74 @@ export default function ProductsPage() {
       ),
     [locale],
   );
+
+  const economicRows = React.useMemo<Row[]>(
+    () =>
+      rows.map((row) => {
+        const economicRevenue =
+          row.economicRevenue ?? row.revenue;
+
+        const economicCogs =
+          row.economicCogs ?? row.cogs;
+
+        const economicProfit =
+          row.economicProfit ?? row.profit;
+
+        const economicMarginPct =
+          row.economicMarginPct ?? row.marginPct;
+
+        const qty = Math.max(0, row.qty);
+
+        const avgPrice =
+          qty > 0
+            ? economicRevenue / qty
+            : row.avgPrice;
+
+        const avgCost =
+          qty > 0
+            ? economicCogs / qty
+            : row.avgCost;
+
+        const breakEvenPrice = avgCost;
+
+        const targetPrice =
+          avgCost > 0
+            ? avgCost / (1 - targetMarginPct / 100)
+            : avgPrice;
+
+        const targetDelta =
+          targetPrice - avgPrice;
+
+        return {
+          ...row,
+
+          // Products Intelligence now consumes the product-level
+          // economic basis produced by margin.server.ts.
+          revenue: economicRevenue,
+          cogs: economicCogs,
+          profit: economicProfit,
+          marginPct: economicMarginPct,
+
+          losing: economicProfit < 0,
+          lowMargin:
+            economicMarginPct > 0 &&
+            economicMarginPct < 10,
+
+          avgPrice,
+          avgCost,
+          breakEvenPrice,
+          targetPrice,
+          targetDelta,
+        };
+      }),
+    [rows],
+  );
+
+  const economicLeak = economicRows.reduce(
+    (sum, row) =>
+      sum + (row.profit < 0 ? Math.abs(row.profit) : 0),
+    0,
+  );
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [visibleLimit, setVisibleLimit] = React.useState<10 | 20 | 50>(20);
 
@@ -105,8 +173,8 @@ export default function ProductsPage() {
   };
 
   const visibleRows = onlyLosing
-    ? rows.filter((row) => row.losing)
-    : rows;
+    ? economicRows.filter((row) => row.losing)
+    : economicRows;
 
   const allSortedRiskRows = [...visibleRows]
     .sort((a, b) => {
@@ -145,17 +213,24 @@ export default function ProductsPage() {
     return "rgba(34,197,94,0.12)";
   };
 
-  const criticalProducts = rows.filter((row) => row.losing).length;
+  const criticalProducts =
+    economicRows.filter((row) => row.losing).length;
 
-  const highProducts = rows.filter(
-    (row) => !row.losing && (row.missingCost || row.lowMargin),
+  const highProducts = economicRows.filter(
+    (row) =>
+      !row.losing &&
+      (row.missingCost || row.lowMargin),
   ).length;
 
-  const healthyProducts = rows.filter(
-    (row) => !row.losing && !row.missingCost && !row.lowMargin,
+  const healthyProducts = economicRows.filter(
+    (row) =>
+      !row.losing &&
+      !row.missingCost &&
+      !row.lowMargin,
   ).length;
 
-  const totalProducts = Math.max(rows.length, 1);
+  const totalProducts =
+    Math.max(economicRows.length, 1);
 
   const criticalPct = (criticalProducts / totalProducts) * 100;
   const highPct = (highProducts / totalProducts) * 100;
@@ -163,7 +238,7 @@ export default function ProductsPage() {
 
   const targetMarginPct = 20;
 
-  const revenueAtRisk = rows
+  const revenueAtRisk = economicRows
     .filter((row) => row.revenue > 0)
     .filter((row) => row.marginPct < targetMarginPct)
     .map((row) => ({
@@ -212,8 +287,28 @@ export default function ProductsPage() {
 
             <div className="hero-description">
               {language === "it"
-                ? "Analizza prodotti a basso margine, costi mancanti, rischi di prezzo e opportunità di profitto recuperabile nel tuo catalogo Shopify."
-                : "Analyze low-margin products, missing costs, pricing risks and recoverable profit opportunities across your Shopify catalog."}
+                ? "Analizza prodotti a basso margine, costi mancanti, rischi di prezzo e opportunità di profitto usando la base economica tax-aware di MarginLab."
+                : "Analyze low-margin products, missing costs, pricing risks and profit opportunities using MarginLab's tax-aware economic basis."}
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "inline-flex",
+                padding: "7px 11px",
+                borderRadius: 999,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                color: "#4ade80",
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it"
+                ? "Base economica tax-aware"
+                : "Tax-aware economic basis"}
             </div>
           </div>
         </div>
@@ -290,8 +385,8 @@ export default function ProductsPage() {
                 }}
               >
                 {language === "it"
-                  ? "MarginLab classifica i prodotti in base al rischio reale di margine, ai costi mancanti e alle opportunità di recupero tramite ottimizzazione dei prezzi."
-                  : "MarginLab ranks products by real margin risk, missing cost data and recoverable pricing opportunities."}
+                  ? "MarginLab classifica i prodotti usando ricavi, COGS, profitto e margine economici quando disponibili, mantenendo separati sconti, rimborsi e qualità dei dati."
+                  : "MarginLab ranks products using economic revenue, COGS, profit and margin when available, while keeping discounts, refunds and data quality separate."}
               </p>
 
               <div
@@ -321,9 +416,9 @@ export default function ProductsPage() {
 
                   [
                     language === "it"
-                      ? "Profitto recuperabile"
-                      : "Recoverable profit",
-                    money(summary.totalLeak),
+                      ? "Perdite economiche"
+                      : "Economic losses",
+                    money(economicLeak),
                   ],
 
                   [
@@ -500,8 +595,8 @@ export default function ProductsPage() {
               }}
             >
               {language === "it"
-                ? "Prodotto con il maggior rischio di ricavi, attualmente al di sotto della soglia di margine target."
-                : "Highest revenue-at-risk product currently operating below the target margin threshold."}
+                ? "Prodotto con la maggiore esposizione economica, attualmente al di sotto della soglia di margine target."
+                : "Product with the highest economic exposure currently operating below the target margin threshold."}
             </div>
 
             <div
