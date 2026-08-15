@@ -197,10 +197,10 @@ CONTENT RULES
 
 - Use only the supplied store data.
 - Do not invent numbers, costs, events, products or assumptions.
-- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly opportunity.
-- The value written after "Monthly opportunity:" in the OFFICIAL ECONOMIC SNAPSHOT is the one and only aggregate profit-opportunity amount allowed in the report.
+- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly profit gap to target.
+- The value written after "Monthly profit gap to target:" in the OFFICIAL ECONOMIC SNAPSHOT is the one and only aggregate target-gap amount allowed in the report.
 - Copy that monthly-opportunity value exactly when discussing the total opportunity. Do not calculate, infer, reconstruct or substitute another total from product margins, target prices, event descriptions or other metrics.
-- Product-level scenarios may be discussed qualitatively, but must not be added to the official monthly opportunity or presented as an alternative aggregate opportunity.
+- Product-level scenarios may be discussed qualitatively, but must not be added to the official monthly profit gap to target or presented as an alternative aggregate target-gap amount.
 - Never add loss, exposure and opportunity into one combined total.
 - Never describe exposure as a confirmed loss or opportunity as realized profit.
 - Use Profit Monitor events for severity, priority, recommended action and destination; do not independently re-rank them.
@@ -284,7 +284,7 @@ RESPONSE RULES
 - Answer only the user's specific question.
 - Use only the supplied store data.
 - Do not invent numbers, costs, events, products or assumptions.
-- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly opportunity.
+- Treat the official Economic Snapshot as the only source for monthly loss, monthly exposure and monthly profit gap to target.
 - Never add loss, exposure and opportunity into one combined total.
 - Never describe exposure as a confirmed loss or opportunity as realized profit.
 - Do not contradict or independently re-rank supplied Profit Monitor events.
