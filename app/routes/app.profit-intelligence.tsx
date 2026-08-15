@@ -512,113 +512,6 @@ export default function ProfitIntelligencePage() {
           </button>
         </div>
 
-        <div
-          className="panel"
-          style={{
-            marginBottom: 28,
-            border: "1px solid rgba(34,197,94,0.18)",
-            background:
-              "radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 34%), linear-gradient(180deg, rgba(15,23,42,0.96), rgba(8,13,22,0.98))",
-          }}
-        >
-          <div className="panel-header">
-            <div>
-              <div className="panel-eyebrow">
-                {language === "it"
-                  ? "BASE ECONOMICA DELLO STORE"
-                  : "STORE ECONOMIC BASIS"}
-              </div>
-              <h2 className="panel-title">
-                {language === "it"
-                  ? "Redditività normalizzata"
-                  : "Normalized profitability"}
-              </h2>
-              <div
-                style={{
-                  marginTop: 8,
-                  color: "rgba(255,255,255,0.58)",
-                  lineHeight: 1.6,
-                  maxWidth: 760,
-                }}
-              >
-                {language === "it"
-                  ? "Vista store-level basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti restano separate e non ricevono allocazioni fiscali stimate per prodotto."
-                  : "Store-level view from MarginLab's central economic engine. Product analytics below remain separate and do not receive estimated per-product tax allocations."}
-              </div>
-            </div>
-
-            <div
-              style={{
-                padding: "9px 12px",
-                borderRadius: 999,
-                border: "1px solid rgba(34,197,94,0.22)",
-                background: "rgba(34,197,94,0.08)",
-                color: "#86efac",
-                fontSize: 11,
-                fontWeight: 900,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {hasEconomicNormalization
-                ? `${taxSystemLabel} · ${language === "it" ? "motore attivo" : "engine active"}`
-                : language === "it"
-                  ? "Fallback disponibile"
-                  : "Fallback available"}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-              gap: 16,
-              marginTop: 24,
-            }}
-          >
-            {[
-              [language === "it" ? "Ricavi economici" : "Economic revenue", money(economicRevenue)],
-              [language === "it" ? "COGS economici" : "Economic COGS", money(economicCogs)],
-              [language === "it" ? "Profitto economico" : "Economic profit", money(economicProfit)],
-              [language === "it" ? "Margine economico" : "Economic margin", pct(economicMarginPct)],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                style={{
-                  padding: 18,
-                  borderRadius: 18,
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.44)",
-                  }}
-                >
-                  {label}
-                </div>
-                <div
-                  style={{
-                    marginTop: 10,
-                    fontSize: 25,
-                    fontWeight: 950,
-                    color: "#f3f4f6",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <div className="hero-score-card" style={{ marginBottom: 28 }}>
           <div
             style={{
@@ -810,6 +703,115 @@ export default function ProfitIntelligencePage() {
           profitPercentage={profitPercentage}
           leakPercentage={leakPercentage}
         />
+
+        <div
+          className="panel"
+          style={{
+            marginTop: 24,
+            marginBottom: 24,
+            border: "1px solid rgba(34,197,94,0.18)",
+            background:
+              "radial-gradient(circle at top right, rgba(34,197,94,0.08), transparent 34%), linear-gradient(180deg, rgba(15,23,42,0.96), rgba(8,13,22,0.98))",
+          }}
+        >
+          <div className="panel-header">
+            <div>
+              <div className="panel-eyebrow">
+                {language === "it"
+                  ? "BASE ECONOMICA DELLO STORE"
+                  : "STORE ECONOMIC BASIS"}
+              </div>
+              <h2 className="panel-title">
+                {language === "it"
+                  ? "Redditività normalizzata"
+                  : "Normalized profitability"}
+              </h2>
+              <div
+                style={{
+                  marginTop: 8,
+                  color: "rgba(255,255,255,0.58)",
+                  lineHeight: 1.6,
+                  maxWidth: 760,
+                }}
+              >
+                {language === "it"
+                  ? "Vista store-level basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti restano separate e non ricevono allocazioni fiscali stimate per prodotto."
+                  : "Store-level view from MarginLab's central economic engine. Product analytics below remain separate and do not receive estimated per-product tax allocations."}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: "9px 12px",
+                borderRadius: 999,
+                border: "1px solid rgba(34,197,94,0.22)",
+                background: "rgba(34,197,94,0.08)",
+                color: "#86efac",
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {hasEconomicNormalization
+                ? `${taxSystemLabel} · ${language === "it" ? "motore attivo" : "engine active"}`
+                : language === "it"
+                  ? "Fallback disponibile"
+                  : "Fallback available"}
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+              gap: 16,
+              marginTop: 24,
+            }}
+          >
+            {[
+              [language === "it" ? "Ricavi economici" : "Economic revenue", money(economicRevenue)],
+              [language === "it" ? "COGS economici" : "Economic COGS", money(economicCogs)],
+              [language === "it" ? "Profitto economico" : "Economic profit", money(economicProfit)],
+              [language === "it" ? "Margine economico" : "Economic margin", pct(economicMarginPct)],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                style={{
+                  padding: 18,
+                  borderRadius: 18,
+                  background: "rgba(255,255,255,0.035)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 900,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    color: "rgba(255,255,255,0.44)",
+                  }}
+                >
+                  {label}
+                </div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontSize: 25,
+                    fontWeight: 950,
+                    color: "#f3f4f6",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
 
         <div className="panel">
           <div className="panel-header">
