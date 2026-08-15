@@ -141,6 +141,16 @@ function buildServerStoreSummary({
   period: string;
 }) {
   const { summary, rows, economicSnapshot } = dashboardData;
+
+  const economicRevenue =
+    summary.economicRevenue ?? summary.revenue;
+  const economicCogs =
+    summary.economicCogs ?? summary.cogs;
+  const economicProfit =
+    summary.economicProfit ?? summary.profit;
+  const economicMarginPct =
+    summary.economicMarginPct ?? summary.marginPct;
+
   const periodDays = Number(period);
   const fixedCostFactor = periodDays / 30;
   const modelConfigured = assumptions !== null;
@@ -155,15 +165,15 @@ function buildServerStoreSummary({
   const proratedFixedCosts =
     (monthlyAds + monthlyShipping + monthlyOperating) * fixedCostFactor;
   const estimatedVariableCosts =
-    summary.revenue *
+    economicRevenue *
     ((paymentFeePct + transactionFeePct + taxReservePct) / 100);
   const totalEstimatedCosts = proratedFixedCosts + estimatedVariableCosts;
   const estimatedNetProfit = modelConfigured
-    ? summary.profit - totalEstimatedCosts
+    ? economicProfit - totalEstimatedCosts
     : null;
   const estimatedNetMargin =
-    modelConfigured && summary.revenue > 0
-      ? ((estimatedNetProfit as number) / summary.revenue) * 100
+    modelConfigured && economicRevenue > 0
+      ? ((estimatedNetProfit as number) / economicRevenue) * 100
       : null;
 
   const profitAlerts = generateProfitAlerts({
@@ -175,11 +185,21 @@ function buildServerStoreSummary({
   });
 
   const products = [...rows]
-    .sort((a: any, b: any) => a.profit - b.profit)
+    .map((row: any) => ({
+      ...row,
+      economicRevenue: row.economicRevenue ?? row.revenue,
+      economicProfit: row.economicProfit ?? row.profit,
+      economicMarginPct:
+        row.economicMarginPct ?? row.marginPct,
+    }))
+    .sort(
+      (a: any, b: any) =>
+        a.economicProfit - b.economicProfit,
+    )
     .slice(0, 8)
     .map(
       (row: any) =>
-        `${row.productTitle} | revenue ${row.revenue} | profit ${row.profit} | margin ${row.marginPct}% | quantity ${row.qty} | missing cost ${row.missingCost ? "yes" : "no"}`,
+        `${row.productTitle} | economic revenue ${row.economicRevenue} | economic profit ${row.economicProfit} | economic margin ${row.economicMarginPct}% | quantity ${row.qty} | missing cost ${row.missingCost ? "yes" : "no"}`,
     )
     .join("\n");
 
@@ -187,9 +207,10 @@ function buildServerStoreSummary({
 SERVER-VERIFIED MARGINLAB CONTEXT
 
 Analysis period: ${periodDays} days
-Revenue: ${summary.revenue}
-Gross profit: ${summary.profit}
-Gross margin: ${summary.marginPct}%
+Economic revenue: ${economicRevenue}
+Economic COGS: ${economicCogs}
+Economic profit: ${economicProfit}
+Economic margin: ${economicMarginPct}%
 Previous gross margin: ${summary.previousMarginPct}
 Margin change: ${summary.marginDelta}%
 Revenue change: ${summary.revenueDeltaPct}%
@@ -226,7 +247,7 @@ Monthly operating costs: ${monthlyOperating}
 Fixed costs prorated to ${periodDays} days: ${proratedFixedCosts}
 Payment fee: ${paymentFeePct}%
 Transaction fee: ${transactionFeePct}%
-Tax reserve: ${taxReservePct}%
+Business tax reserve: ${taxReservePct}%
 Variable costs for the selected period: ${estimatedVariableCosts}
 Estimated net profit for the selected period: ${estimatedNetProfit}
 Estimated net margin for the selected period: ${estimatedNetMargin}%`
@@ -509,6 +530,40 @@ export default function AiAdvisorPage() {
     }
   }, [aiFetcher.data]);
 
+  const economicRevenue =
+    summary.economicRevenue ?? summary.revenue;
+  const economicCogs =
+    summary.economicCogs ?? summary.cogs;
+  const economicProfit =
+    summary.economicProfit ?? summary.profit;
+  const economicMarginPct =
+    summary.economicMarginPct ?? summary.marginPct;
+
+  const economicRows = React.useMemo(
+    () =>
+      rows.map((row) => {
+        const rowRevenue =
+          row.economicRevenue ?? row.revenue;
+        const rowCogs =
+          row.economicCogs ?? row.cogs;
+        const rowProfit =
+          row.economicProfit ?? row.profit;
+        const rowMargin =
+          row.economicMarginPct ?? row.marginPct;
+
+        return {
+          ...row,
+          revenue: rowRevenue,
+          cogs: rowCogs,
+          profit: rowProfit,
+          marginPct: rowMargin,
+          losing: rowProfit < 0,
+          lowMargin: rowMargin > 0 && rowMargin < 10,
+        };
+      }),
+    [rows],
+  );
+
   /*
   |--------------------------------------------------------------------------
   | PROFIT MONITOR
@@ -578,24 +633,30 @@ export default function AiAdvisorPage() {
   |--------------------------------------------------------------------------
   */
 
-  const losingProducts = rows.filter((row) => row.losing);
+  const losingProducts = economicRows.filter((row) => row.losing);
 
   const missingCostProducts = rows.filter(
     (row) => row.missingCost,
   );
 
-  const lowMarginProducts = rows.filter(
+  const lowMarginProducts = economicRows.filter(
     (row) => row.lowMargin,
   );
 
   const topProfitLeak =
-    rows.length > 0
-      ? [...rows].sort((a, b) => a.profit - b.profit)[0]
+    economicRows.length > 0
+      ? [...economicRows].sort((a, b) => a.profit - b.profit)[0]
       : undefined;
 
-  const recoverableProfit = rows.reduce(
-    (sum, row) =>
-      sum + Math.max(0, row.targetDelta) * row.qty,
+  const recoverableProfit = economicRows.reduce(
+    (sum, row) => {
+      if (row.revenue <= 0 || row.marginPct >= 20) {
+        return sum;
+      }
+
+      const targetProfit = row.revenue * 0.2;
+      return sum + Math.max(0, targetProfit - row.profit);
+    },
     0,
   );
 
@@ -618,13 +679,13 @@ export default function AiAdvisorPage() {
   const taxReservePct = assumptions?.taxReservePct ?? 0;
 
   const estimatedPaymentFees =
-    summary.revenue * (paymentFeePct / 100);
+    economicRevenue * (paymentFeePct / 100);
 
   const estimatedTransactionFees =
-    summary.revenue * (transactionFeePct / 100);
+    economicRevenue * (transactionFeePct / 100);
 
   const estimatedTaxReserve =
-    summary.revenue * (taxReservePct / 100);
+    economicRevenue * (taxReservePct / 100);
 
   const totalEstimatedCosts =
     (monthlyAds +
@@ -636,12 +697,12 @@ export default function AiAdvisorPage() {
     estimatedTaxReserve;
 
   const estimatedNetProfit = modelConfigured
-    ? summary.profit - totalEstimatedCosts
+    ? economicProfit - totalEstimatedCosts
     : 0;
 
   const estimatedNetMargin =
-    modelConfigured && summary.revenue > 0
-      ? (estimatedNetProfit / summary.revenue) * 100
+    modelConfigured && economicRevenue > 0
+      ? (estimatedNetProfit / economicRevenue) * 100
       : 0;
 
   /*
@@ -693,11 +754,13 @@ export default function AiAdvisorPage() {
   |--------------------------------------------------------------------------
   */
 
-  const prioritizedProducts = [...rows]
+  const prioritizedProducts = [...economicRows]
     .filter((row) => row.revenue > 0)
     .map((row) => {
       const recoverableOpportunity =
-        Math.max(0, row.targetDelta) * row.qty;
+        row.revenue > 0 && row.marginPct < 20
+          ? Math.max(0, row.revenue * 0.2 - row.profit)
+          : 0;
 
       const priorityScore =
         recoverableOpportunity +
@@ -1058,9 +1121,10 @@ STORE SUMMARY
 
 Analysis period: ${period} days
 
-Revenue: ${summary.revenue}
-Gross Profit: ${summary.profit}
-Gross Margin: ${summary.marginPct}%
+Economic Revenue: ${economicRevenue}
+Economic COGS: ${economicCogs}
+Economic Profit: ${economicProfit}
+Economic Margin: ${economicMarginPct}%
 
 Previous Gross Margin: ${summary.previousMarginPct}
 Margin Change: ${summary.marginDelta}%
@@ -1070,7 +1134,7 @@ Revenue Change: ${summary.revenueDeltaPct}%
 Discounts: ${summary.discounts}
 Refunds: ${summary.refunds}
 
-Recoverable profit: ${recoverableProfit}
+Profit gap to 20% target: ${recoverableProfit}
 
 ACTIVE PROFIT MONITOR COUNTS
 
@@ -1092,11 +1156,11 @@ Monthly operating costs: ${monthlyOperating}
 
 Payment processing fee percentage: ${paymentFeePct}%
 Transaction fee percentage: ${transactionFeePct}%
-Tax reserve percentage: ${taxReservePct}%
+Business tax reserve percentage: ${taxReservePct}%
 
 Estimated payment fees: ${estimatedPaymentFees}
 Estimated transaction fees: ${estimatedTransactionFees}
-Estimated tax reserve: ${estimatedTaxReserve}
+Estimated business tax reserve: ${estimatedTaxReserve}
 
 Total estimated costs outside product costs: ${totalEstimatedCosts}
 
@@ -1155,22 +1219,17 @@ ${[...lowMarginProducts]
 
 TOP RECOVERY OPPORTUNITIES
 
-${[...rows]
-      .filter((row) => row.targetDelta > 0)
-      .sort(
-        (a, b) =>
-          b.targetDelta * b.qty -
-          a.targetDelta * a.qty,
-      )
+${[...prioritizedProducts]
+      .filter((row) => row.recoverableOpportunity > 0)
       .slice(0, 3)
       .map(
         (product) =>
-          `${product.productTitle} | Revenue ${money(
+          `${product.productTitle} | Economic Revenue ${money(
             product.revenue,
-          )} | Margin ${pct(
+          )} | Economic Margin ${pct(
             product.marginPct,
-          )} | Potential Recovery ${money(
-            product.targetDelta * product.qty,
+          )} | Profit Gap to Target ${money(
+            product.recoverableOpportunity,
           )}`,
       )
       .join("\n") || "None"
@@ -1185,15 +1244,15 @@ ${prioritizedProducts.length > 0
 PRIORITY ${index + 1}
 
 Product: ${product.productTitle}
-Revenue: ${product.revenue}
+Economic revenue: ${product.revenue}
 Quantity sold: ${product.qty}
-Profit: ${product.profit}
-Margin: ${product.marginPct}%
+Economic profit: ${product.profit}
+Economic margin: ${product.marginPct}%
 Average price: ${product.avgPrice}
 Average cost: ${product.avgCost}
 Target price: ${product.targetPrice}
 Price adjustment needed: ${product.targetDelta}
-Recoverable opportunity: ${product.recoverableOpportunity}
+Profit gap to 20% target: ${product.recoverableOpportunity}
 Selling below cost: ${product.losing ? "Yes" : "No"}
 Missing cost: ${product.missingCost ? "Yes" : "No"}
 Low margin: ${product.lowMargin ? "Yes" : "No"}
@@ -1234,7 +1293,7 @@ When the merchant asks which products should be reviewed first:
 - Use the prioritized product list.
 - Rank products by business impact.
 - Explain why each product is a priority.
-- Mention revenue, margin and recoverable opportunity when available.
+- Mention economic revenue, economic margin and profit gap when available.
 - Recommend one clear action for each product.
 - Give greater priority to high-revenue products with weak margins.
 - Give greater priority to products selling below cost.
@@ -1253,7 +1312,7 @@ Rules:
 - Mention estimated net margin when assumptions are provided.
 - Mention the primary Profit Monitor event first.
 - Mention the most important product risks.
-- Mention recoverable profit opportunities.
+- Mention profit gaps and pricing scenarios without presenting them as guaranteed recovered profit.
 - Do not contradict Profit Monitor.
 `;
 
@@ -1300,8 +1359,8 @@ Rules:
       label:
         recoverableProfit > 0
           ? language === "it"
-            ? "Come posso recuperare questo profitto?"
-            : "How can I recover this profit?"
+            ? "Come posso ridurre questo gap di profitto?"
+            : "How can I reduce this profit gap?"
           : language === "it"
             ? "Qual è il modo più rapido per migliorare?"
             : "What would improve profit fastest?",
@@ -1317,8 +1376,8 @@ Rules:
       id: "pricingOpportunity",
       label:
         language === "it"
-          ? "Qual è la migliore opportunità di prezzo?"
-          : "What is the best pricing opportunity?",
+          ? "Qual è il maggiore gap di prezzo verso il target?"
+          : "What is the largest pricing gap to target?",
     },
     {
       id: "hiddenCosts",
@@ -1368,6 +1427,26 @@ Rules:
               {language === "it"
                 ? "MarginLab analizza automaticamente redditività, rischi, opportunità e priorità. Prima ti dice cosa conta, poi risponde alle tue domande."
                 : "MarginLab automatically analyzes profitability, risk, opportunities and priorities. It tells you what matters first, then answers your questions."}
+            </div>
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "inline-flex",
+                padding: "7px 11px",
+                borderRadius: 999,
+                background: "rgba(34,197,94,0.08)",
+                border: "1px solid rgba(34,197,94,0.18)",
+                color: "#4ade80",
+                fontSize: 10,
+                fontWeight: 900,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+              }}
+            >
+              {language === "it"
+                ? "Base economica tax-aware"
+                : "Tax-aware economic basis"}
             </div>
           </div>
 
@@ -1636,8 +1715,8 @@ Rules:
                   {
                     label:
                       language === "it"
-                        ? "Profitto recuperabile"
-                        : "Recoverable Profit",
+                        ? "Gap di profitto al target"
+                        : "Profit Gap to Target",
                     value:
                       recoverableProfit > 0
                         ? `+${money(recoverableProfit)}`
@@ -2299,8 +2378,8 @@ Rules:
                       : "Identifies the first products to fix",
 
                     language === "it"
-                      ? "Stima il profitto recuperabile e le azioni consigliate"
-                      : "Estimates recoverable profit and recommended actions",
+                      ? "Stima i gap di profitto e le azioni consigliate"
+                      : "Estimates profit gaps and recommended actions",
                   ].map((item) => (
                     <div
                       key={item}
@@ -2594,8 +2673,8 @@ Rules:
             }}
           >
             {language === "it"
-              ? "Profit Copilot utilizza esclusivamente i dati Shopify, le ipotesi di costo e i segnali di redditività disponibili. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
-              : "Profit Copilot uses only available Shopify data, saved cost assumptions and profitability signals. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
+              ? "Profit Copilot utilizza la base economica tax-aware derivata dai dati Shopify, le ipotesi gestionali salvate nel Business Model Studio e i segnali del Profit Monitor. La riserva fiscale gestionale resta separata dal trattamento VAT/GST/Sales Tax. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
+              : "Profit Copilot uses the tax-aware economic basis derived from Shopify data, managerial assumptions saved in Business Model Studio and Profit Monitor signals. The business tax reserve remains separate from VAT/GST/Sales Tax treatment. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
           </div>
           </div>
           </div>
