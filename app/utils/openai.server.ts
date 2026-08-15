@@ -30,7 +30,7 @@ function getReportSectionNames(language: SupportedLanguage) {
       storeHealth: "STATO DELLO STORE",
       mainRisks: "RISCHI PRINCIPALI",
       whatToCheckFirst: "COSA CONTROLLARE PRIMA",
-      profitOpportunity: "OPPORTUNITÀ DI PROFITTO",
+      profitOpportunity: "GAP DI PROFITTO E POTENZIALE",
     };
   }
 
@@ -38,7 +38,7 @@ function getReportSectionNames(language: SupportedLanguage) {
     storeHealth: "STORE HEALTH",
     mainRisks: "MAIN RISKS",
     whatToCheckFirst: "WHAT TO CHECK FIRST",
-    profitOpportunity: "PROFIT OPPORTUNITY",
+    profitOpportunity: "PROFIT GAP & UPSIDE",
   };
 }
 
@@ -211,7 +211,7 @@ CONTENT RULES
 - Keep the tone professional, direct and easy to scan.
 - Focus on practical actions a Shopify merchant can take.
 - Prioritize the most important risks and opportunities.
-- Mention recoverable profit whenever it appears in the supplied data.
+- When the supplied data contains a modeled target gap, describe it as an estimated profit gap to target, never as recoverable or guaranteed profit.
 - Do not repeat every metric.
 - Never translate product names.
 
@@ -307,7 +307,7 @@ EXECUTIVE SUMMARY
 STORE HEALTH
 MAIN RISKS
 WHAT TO CHECK FIRST
-PROFIT OPPORTUNITY
+PROFIT GAP & UPSIDE
 GROSS VS NET PROFIT
 KEY FINDINGS
 RECOMMENDATIONS
