@@ -222,9 +222,9 @@ OFFICIAL ECONOMIC SNAPSHOT
 Currency: ${economicSnapshot.currencyCode}
 Monthly loss: ${economicSnapshot.totals.monthlyLoss}
 Monthly exposure: ${economicSnapshot.totals.monthlyExposure}
-Monthly opportunity: ${economicSnapshot.totals.monthlyOpportunity}
+Monthly profit gap to target: ${economicSnapshot.totals.monthlyOpportunity}
 These three amounts represent different economic meanings and must never be added together.
-Loss is measured negative profit. Exposure is revenue whose profitability cannot be verified because cost data is missing. Opportunity is potential improvement, not realized profit.
+Loss is measured negative profit. Exposure is revenue whose profitability cannot be verified because cost data is missing. Opportunity represents an estimated profit gap or modeled improvement scenario, not realized or guaranteed recovered profit.
 
 DATA CONFIDENCE
 
@@ -433,6 +433,11 @@ Do not contradict the severity, priority or recommended destination
 of the supplied Profit Monitor events.
 
 Use only the supplied store data.
+
+Never describe profit gaps, target gaps, pricing gaps or modeled recovery amounts as "profit opportunity", "recoverable profit" or guaranteed profit.
+Use "estimated profit gap to target", "estimated pricing gap to target" or "modeled scenario impact" as appropriate.
+State that these amounts are estimates, not guaranteed recovered profit.
+
 Do not generate a complete business analysis.
 `;
 
@@ -1085,6 +1090,21 @@ Do not invent products.
 
 Never translate product names.
 
+PROFIT GAP LANGUAGE RULES
+
+Never describe profit gaps, target gaps, pricing gaps or modeled recovery amounts as:
+- profit opportunity
+- recoverable profit
+- guaranteed profit
+- profit already available to recover
+
+Use wording such as:
+- estimated profit gap to target
+- estimated pricing gap to target
+- modeled scenario impact
+
+Always make clear that these values are estimates based on current data and assumptions, not guaranteed recovered profit.
+
 PROFIT MONITOR INSTRUCTIONS
 
 Profit Monitor is MarginLab's deterministic intelligence engine.
@@ -1276,7 +1296,7 @@ Your objective is to explain:
 - whether the store is profitable after estimated operating assumptions
 - what is creating profitability pressure
 - what should be reviewed first
-- where the biggest recovery opportunity exists
+- where the biggest estimated profit gap to target exists
 - which MarginLab module should be opened next
 
 When recommending a destination:
@@ -1313,6 +1333,8 @@ Rules:
 - Mention the primary Profit Monitor event first.
 - Mention the most important product risks.
 - Mention profit gaps and pricing scenarios without presenting them as guaranteed recovered profit.
+- Never use "profit opportunity" or "recoverable profit" for a modeled target gap.
+- Prefer "estimated profit gap to target" and "modeled scenario impact".
 - Do not contradict Profit Monitor.
 `;
 
