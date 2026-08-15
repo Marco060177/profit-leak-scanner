@@ -407,6 +407,56 @@ export function generateProfitAlerts({
         currencyCode,
     });
 
+    /*
+     * Profit Monitor uses the same product-level economic basis as Products.
+     * Raw Shopify fields remain available on the original rows for signals
+     * such as discounts, refunds and missing-cost data quality.
+     */
+    const economicRows = rows.map((row) => {
+        const economicRevenue =
+            row.economicRevenue ?? row.revenue;
+        const economicCogs =
+            row.economicCogs ?? row.cogs;
+        const economicProfit =
+            row.economicProfit ?? row.profit;
+        const economicMarginPct =
+            row.economicMarginPct ?? row.marginPct;
+
+        const qty = Math.max(0, safeNumber(row.qty));
+        const avgPrice =
+            qty > 0
+                ? economicRevenue / qty
+                : row.avgPrice;
+        const avgCost =
+            qty > 0
+                ? economicCogs / qty
+                : row.avgCost;
+
+        const targetMarginPct = 20;
+        const targetPrice =
+            avgCost > 0
+                ? avgCost / (1 - targetMarginPct / 100)
+                : avgPrice;
+        const targetDelta = targetPrice - avgPrice;
+
+        return {
+            ...row,
+            revenue: economicRevenue,
+            cogs: economicCogs,
+            profit: economicProfit,
+            marginPct: economicMarginPct,
+            losing: economicProfit < 0,
+            lowMargin:
+                economicMarginPct > 0 &&
+                economicMarginPct < 10,
+            avgPrice,
+            avgCost,
+            breakEvenPrice: avgCost,
+            targetPrice,
+            targetDelta,
+        };
+    });
+
     const monthlyProductLoss = economicSnapshot.totals.monthlyLoss;
     const monthlyMissingCostExposure =
         economicSnapshot.amounts.find(
@@ -430,20 +480,30 @@ export function generateProfitAlerts({
         formatStoreMoney(value, currencyCode, locale, digits);
 
     const revenue = safeNumber(
-        summary.netProductRevenue ?? summary.revenue,
+        summary.economicRevenue ??
+            summary.netProductRevenue ??
+            summary.revenue,
     );
     const grossProfit = safeNumber(
-        summary.grossProfit ?? summary.profit,
+        summary.economicProfit ??
+            summary.grossProfit ??
+            summary.profit,
     );
     const grossMargin = safeNumber(
-        summary.grossMarginPct ?? summary.marginPct,
+        summary.economicMarginPct ??
+            summary.grossMarginPct ??
+            summary.marginPct,
     );
 
     const discounts = Math.max(0, safeNumber(summary.discounts));
     const refunds = Math.max(0, safeNumber(summary.refunds));
-    const losingProducts = rows.filter((row) => row.losing);
+    const losingProducts = economicRows.filter((row) => row.losing);
+
+    // Missing-cost detection is a raw data-quality signal and intentionally
+    // remains based on the original Shopify-derived rows.
     const missingCostProducts = rows.filter((row) => row.missingCost);
-    const recoverableProfitForPeriod = rows.reduce((sum, row) => {
+
+    const recoverableProfitForPeriod = economicRows.reduce((sum, row) => {
         const opportunity =
             Math.max(0, safeNumber(row.targetDelta)) *
             Math.max(0, safeNumber(row.qty));
@@ -761,7 +821,7 @@ export function generateProfitAlerts({
 
     /*
      * ALERT 7
-     * Opportunità complessiva di recupero
+     * Gap teorico complessivo verso il target
      */
     if (monthlyRecoverableProfit > 0) {
         alerts.push({
@@ -770,12 +830,12 @@ export function generateProfitAlerts({
             category: "growth",
 
             title: isItalian
-                ? `${money(monthlyRecoverableProfit)} di opportunità teorica mensile al volume attuale`
-                : `${money(monthlyRecoverableProfit)} theoretical monthly opportunity at current volume`,
+                ? `${money(monthlyRecoverableProfit)} di gap teorico mensile verso il target`
+                : `${money(monthlyRecoverableProfit)} theoretical monthly profit gap to target`,
 
             description: isItalian
-                ? `${rows.filter((row) => row.targetDelta > 0).length} prodotti presentano un'opportunità di prezzo da verificare nel simulatore. La stima presume volumi invariati e non rappresenta profitto già recuperato.`
-                : `${rows.filter((row) => row.targetDelta > 0).length} products have a pricing opportunity to test in the simulator. The estimate assumes unchanged volume and is not profit already recovered.`,
+                ? `${economicRows.filter((row) => row.targetDelta > 0).length} prodotti presentano un gap di prezzo rispetto al target da verificare nel simulatore. La stima presume volumi invariati e non rappresenta profitto garantito o già recuperato.`
+                : `${economicRows.filter((row) => row.targetDelta > 0).length} products have a pricing gap to the target that can be tested in the simulator. The estimate assumes unchanged volume and is not guaranteed or already recovered profit.`,
 
             monthlyImpact: monthlyRecoverableProfit,
             economicKind: "opportunity",
@@ -792,7 +852,7 @@ export function generateProfitAlerts({
             route: "/app/recovery-simulator",
 
             metadata: {
-                affectedProducts: rows.filter(
+                affectedProducts: economicRows.filter(
                     (row) => row.targetDelta > 0,
                 ).length,
                 periodImpact: recoverableProfitForPeriod,
@@ -802,9 +862,9 @@ export function generateProfitAlerts({
 
     /*
      * ALERT 8
-     * Migliore opportunità di prezzo su singolo prodotto
+     * Maggiore gap di prezzo su singolo prodotto
      */
-    const pricingOpportunities = rows
+    const pricingOpportunities = economicRows
         .filter(
             (row) =>
                 row.targetDelta > 0 &&
@@ -835,8 +895,8 @@ export function generateProfitAlerts({
             category: "pricing",
 
             title: isItalian
-                ? `${row.productTitle} offre la migliore opportunità di prezzo`
-                : `${row.productTitle} has the strongest pricing opportunity`,
+                ? `${row.productTitle} presenta il maggiore gap di prezzo verso il target`
+                : `${row.productTitle} has the largest pricing gap to target`,
 
             description: isItalian
                 ? `Un adeguamento stimato del ${pct(
@@ -857,8 +917,8 @@ export function generateProfitAlerts({
             priority: 78,
 
             actionLabel: isItalian
-                ? "Simula questa opportunità"
-                : "Simulate this opportunity",
+                ? "Simula questo scenario"
+                : "Simulate this scenario",
 
             route: "/app/recovery-simulator",
 
@@ -881,7 +941,7 @@ export function generateProfitAlerts({
      * ALERT 9
      * Bestseller con margine debole
      */
-    const weakBestSeller = [...rows]
+    const weakBestSeller = [...economicRows]
         .filter(
             (row) =>
                 row.revenue > 0 &&

@@ -737,8 +737,8 @@ export default function RecommendationsPage() {
           summary: "RIEPILOGO DEL PIANO",
           metric: "Metrica",
           value: "Valore",
-          monthlyOpportunity: "Opportunità mensile stimata",
-          annualOpportunity: "Opportunità annuale stimata",
+          monthlyOpportunity: "Gap mensile stimato verso il target",
+          annualOpportunity: "Gap annuale stimato verso il target",
           actionCenterScore: "Action Center Score",
           confidence: "Data Confidence",
           totalActions: "Azioni totali",
@@ -785,8 +785,8 @@ export default function RecommendationsPage() {
           summary: "ACTION PLAN SUMMARY",
           metric: "Metric",
           value: "Value",
-          monthlyOpportunity: "Estimated monthly opportunity",
-          annualOpportunity: "Estimated annual opportunity",
+          monthlyOpportunity: "Estimated monthly profit gap to target",
+          annualOpportunity: "Estimated annual profit gap to target",
           actionCenterScore: "Action Center Score",
           confidence: "Data Confidence",
           totalActions: "Total actions",
@@ -1072,8 +1072,8 @@ export default function RecommendationsPage() {
                       }}
                     >
                       {language === "it"
-                        ? "OPPORTUNITÀ MENSILE STIMATA"
-                        : "ESTIMATED MONTHLY OPPORTUNITY"}
+                        ? "GAP MENSILE STIMATO VERSO IL TARGET"
+                        : "ESTIMATED MONTHLY PROFIT GAP TO TARGET"}
                     </div>
 
                     <button
@@ -1109,10 +1109,10 @@ export default function RecommendationsPage() {
                     }}
                   >
                     {language === "it"
-                      ? `${actionableCount} priorità operative sono disponibili. L'impatto annuale potenziale associato all'opportunità complessiva è ${money(
+                      ? `${actionableCount} priorità operative sono disponibili. Il gap annuale stimato verso il target, sulla base dello scenario corrente, è ${money(
                         annualOpportunity,
                       )}.`
-                      : `${actionableCount} operational priorities are available. The potential annual impact associated with the overall opportunity is ${money(
+                      : `${actionableCount} operational priorities are available. The estimated annual profit gap to target, based on the current scenario, is ${money(
                         annualOpportunity,
                       )}.`}
                   </p>
@@ -1176,8 +1176,8 @@ export default function RecommendationsPage() {
                       value={`+${compactMoney(annualOpportunity, currencyCode, locale)}`}
                       note={
                         language === "it"
-                          ? "Basato sull'opportunità complessiva"
-                          : "Based on the overall opportunity"
+                          ? "Basato sul gap complessivo verso il target"
+                          : "Based on the overall gap to target"
                       }
                       highlight
                     />
@@ -1680,7 +1680,7 @@ export default function RecommendationsPage() {
                       letterSpacing: "0.12em",
                     }}
                   >
-                    {language === "it" ? "IMPATTO POTENZIALE" : "POTENTIAL IMPACT"}
+                    {language === "it" ? "GAP ANNUALE AL TARGET" : "ANNUAL GAP TO TARGET"}
                   </div>
 
                   <div
@@ -1705,8 +1705,8 @@ export default function RecommendationsPage() {
                     }}
                   >
                     {language === "it"
-                      ? "opportunità annuale stimata"
-                      : "estimated annual opportunity"}
+                      ? "gap annuale stimato verso il target"
+                      : "estimated annual profit gap to target"}
                   </div>
                 </section>
               </aside>
@@ -2068,8 +2068,8 @@ export default function RecommendationsPage() {
               }}
             >
               {language === "it"
-                ? "Le opportunità sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-                : "Opportunities are estimates built from Shopify data for the selected period. Marking an action complete records operational progress; it does not prove recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
+                ? "I gap e gli scenari mostrati sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
+                : "Displayed gaps and scenarios are estimates built from Shopify data for the selected period. Marking an action complete records operational progress; it does not prove recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
             </div>
           </div>
         </div>
