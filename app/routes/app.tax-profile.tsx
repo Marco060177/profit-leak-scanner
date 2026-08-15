@@ -20,7 +20,25 @@ type SupportedRegime =
   | "CANADA_GST_HST_UNREGISTERED"
   | "AUSTRALIA_GST_REGISTERED"
   | "AUSTRALIA_GST_FREE"
-  | "AUSTRALIA_GST_UNREGISTERED";
+  | "AUSTRALIA_GST_UNREGISTERED"
+  | "GERMANY_VAT_STANDARD"
+  | "GERMANY_VAT_EXEMPT"
+  | "GERMANY_VAT_UNREGISTERED"
+  | "FRANCE_VAT_STANDARD"
+  | "FRANCE_VAT_EXEMPT"
+  | "FRANCE_VAT_UNREGISTERED"
+  | "SPAIN_VAT_STANDARD"
+  | "SPAIN_VAT_EXEMPT"
+  | "SPAIN_VAT_UNREGISTERED"
+  | "NETHERLANDS_VAT_STANDARD"
+  | "NETHERLANDS_VAT_EXEMPT"
+  | "NETHERLANDS_VAT_UNREGISTERED"
+  | "IRELAND_VAT_STANDARD"
+  | "IRELAND_VAT_EXEMPT"
+  | "IRELAND_VAT_UNREGISTERED"
+  | "NEW_ZEALAND_GST_REGISTERED"
+  | "NEW_ZEALAND_GST_EXEMPT"
+  | "NEW_ZEALAND_GST_UNREGISTERED";
 
 type RegimeOption = {
   id: SupportedRegime;
@@ -28,6 +46,193 @@ type RegimeOption = {
   subtitle: string;
   detail: string;
 };
+
+type CountryUiConfig = {
+  countryCode: string;
+  nameIt: string;
+  nameEn: string;
+  taxLabel: string;
+  standardRegime: SupportedRegime;
+  profilePrefix: string;
+  defaultRate: number;
+  rateOptions: number[];
+  regimes: {
+    standard: SupportedRegime;
+    exempt: SupportedRegime;
+    unregistered: SupportedRegime;
+  };
+  noticeIt?: string;
+  noticeEn?: string;
+};
+
+const COUNTRY_UI_CONFIGS: Record<string, CountryUiConfig> = {
+  IT: {
+    countryCode: "IT",
+    nameIt: "Italia",
+    nameEn: "Italy",
+    taxLabel: "VAT",
+    standardRegime: "ITALY_STANDARD",
+    profilePrefix: "ITALY_",
+    defaultRate: 22,
+    rateOptions: [4, 5, 10, 22],
+    regimes: {
+      standard: "ITALY_STANDARD",
+      exempt: "ITALY_EXEMPT",
+      unregistered: "ITALY_FORFETTARIO",
+    },
+  },
+  GB: {
+    countryCode: "GB",
+    nameIt: "Regno Unito",
+    nameEn: "United Kingdom",
+    taxLabel: "VAT",
+    standardRegime: "UK_VAT_STANDARD",
+    profilePrefix: "UK_",
+    defaultRate: 20,
+    rateOptions: [0, 5, 20],
+    regimes: {
+      standard: "UK_VAT_STANDARD",
+      exempt: "UK_VAT_EXEMPT",
+      unregistered: "UK_VAT_UNREGISTERED",
+    },
+  },
+  CA: {
+    countryCode: "CA",
+    nameIt: "Canada",
+    nameEn: "Canada",
+    taxLabel: "GST/HST",
+    standardRegime: "CANADA_GST_HST_REGISTERED",
+    profilePrefix: "CANADA_",
+    defaultRate: 5,
+    rateOptions: [0, 5, 13, 14, 15],
+    regimes: {
+      standard: "CANADA_GST_HST_REGISTERED",
+      exempt: "CANADA_GST_HST_EXEMPT",
+      unregistered: "CANADA_GST_HST_UNREGISTERED",
+    },
+    noticeIt:
+      "In Canada l'aliquota effettiva può variare in base al luogo della fornitura e alla provincia. Il 5% è usato solo come baseline di fallback: quando Shopify fornisce tax line reali, MarginLab usa quelle come fonte prioritaria.",
+    noticeEn:
+      "In Canada, the actual rate can vary by place of supply and province. The 5% rate is only a fallback baseline: when Shopify provides actual tax lines, MarginLab treats them as authoritative.",
+  },
+  AU: {
+    countryCode: "AU",
+    nameIt: "Australia",
+    nameEn: "Australia",
+    taxLabel: "GST",
+    standardRegime: "AUSTRALIA_GST_REGISTERED",
+    profilePrefix: "AUSTRALIA_",
+    defaultRate: 10,
+    rateOptions: [0, 10],
+    regimes: {
+      standard: "AUSTRALIA_GST_REGISTERED",
+      exempt: "AUSTRALIA_GST_FREE",
+      unregistered: "AUSTRALIA_GST_UNREGISTERED",
+    },
+    noticeIt:
+      "In Australia la GST standard è generalmente del 10% sulle vendite imponibili. MarginLab usa comunque le tax line Shopify reali come fonte prioritaria e applica il 10% solo come fallback del profilo avanzato.",
+    noticeEn:
+      "In Australia, the standard GST rate is generally 10% on taxable sales. MarginLab still treats actual Shopify tax lines as authoritative and uses 10% only as the advanced-profile fallback.",
+  },
+  DE: {
+    countryCode: "DE",
+    nameIt: "Germania",
+    nameEn: "Germany",
+    taxLabel: "VAT",
+    standardRegime: "GERMANY_VAT_STANDARD",
+    profilePrefix: "GERMANY_",
+    defaultRate: 19,
+    rateOptions: [0, 7, 19],
+    regimes: {
+      standard: "GERMANY_VAT_STANDARD",
+      exempt: "GERMANY_VAT_EXEMPT",
+      unregistered: "GERMANY_VAT_UNREGISTERED",
+    },
+  },
+  FR: {
+    countryCode: "FR",
+    nameIt: "Francia",
+    nameEn: "France",
+    taxLabel: "VAT",
+    standardRegime: "FRANCE_VAT_STANDARD",
+    profilePrefix: "FRANCE_",
+    defaultRate: 20,
+    rateOptions: [0, 5.5, 10, 20],
+    regimes: {
+      standard: "FRANCE_VAT_STANDARD",
+      exempt: "FRANCE_VAT_EXEMPT",
+      unregistered: "FRANCE_VAT_UNREGISTERED",
+    },
+  },
+  ES: {
+    countryCode: "ES",
+    nameIt: "Spagna",
+    nameEn: "Spain",
+    taxLabel: "VAT",
+    standardRegime: "SPAIN_VAT_STANDARD",
+    profilePrefix: "SPAIN_",
+    defaultRate: 21,
+    rateOptions: [0, 4, 10, 21],
+    regimes: {
+      standard: "SPAIN_VAT_STANDARD",
+      exempt: "SPAIN_VAT_EXEMPT",
+      unregistered: "SPAIN_VAT_UNREGISTERED",
+    },
+  },
+  NL: {
+    countryCode: "NL",
+    nameIt: "Paesi Bassi",
+    nameEn: "Netherlands",
+    taxLabel: "VAT",
+    standardRegime: "NETHERLANDS_VAT_STANDARD",
+    profilePrefix: "NETHERLANDS_",
+    defaultRate: 21,
+    rateOptions: [0, 9, 21],
+    regimes: {
+      standard: "NETHERLANDS_VAT_STANDARD",
+      exempt: "NETHERLANDS_VAT_EXEMPT",
+      unregistered: "NETHERLANDS_VAT_UNREGISTERED",
+    },
+  },
+  IE: {
+    countryCode: "IE",
+    nameIt: "Irlanda",
+    nameEn: "Ireland",
+    taxLabel: "VAT",
+    standardRegime: "IRELAND_VAT_STANDARD",
+    profilePrefix: "IRELAND_",
+    defaultRate: 23,
+    rateOptions: [0, 9, 13.5, 23],
+    regimes: {
+      standard: "IRELAND_VAT_STANDARD",
+      exempt: "IRELAND_VAT_EXEMPT",
+      unregistered: "IRELAND_VAT_UNREGISTERED",
+    },
+  },
+  NZ: {
+    countryCode: "NZ",
+    nameIt: "Nuova Zelanda",
+    nameEn: "New Zealand",
+    taxLabel: "GST",
+    standardRegime: "NEW_ZEALAND_GST_REGISTERED",
+    profilePrefix: "NEW_ZEALAND_",
+    defaultRate: 15,
+    rateOptions: [0, 15],
+    regimes: {
+      standard: "NEW_ZEALAND_GST_REGISTERED",
+      exempt: "NEW_ZEALAND_GST_EXEMPT",
+      unregistered: "NEW_ZEALAND_GST_UNREGISTERED",
+    },
+  },
+};
+
+const ALL_SUPPORTED_REGIMES = new Set<SupportedRegime>(
+  Object.values(COUNTRY_UI_CONFIGS).flatMap((config) => [
+    config.regimes.standard,
+    config.regimes.exempt,
+    config.regimes.unregistered,
+  ]),
+);
 
 const SHOP_QUERY = `#graphql
   query MarginLabTaxProfileShop {
@@ -50,77 +255,174 @@ function parseRate(value: FormDataEntryValue | null, fallback: number) {
 }
 
 function isSupportedRegime(value: string): value is SupportedRegime {
-  return (
-    value === "ITALY_STANDARD" ||
-    value === "ITALY_FORFETTARIO" ||
-    value === "ITALY_EXEMPT" ||
-    value === "UK_VAT_STANDARD" ||
-    value === "UK_VAT_EXEMPT" ||
-    value === "UK_VAT_UNREGISTERED" ||
-    value === "CANADA_GST_HST_REGISTERED" ||
-    value === "CANADA_GST_HST_EXEMPT" ||
-    value === "CANADA_GST_HST_UNREGISTERED" ||
-    value === "AUSTRALIA_GST_REGISTERED" ||
-    value === "AUSTRALIA_GST_FREE" ||
-    value === "AUSTRALIA_GST_UNREGISTERED"
-  );
+  return ALL_SUPPORTED_REGIMES.has(value as SupportedRegime);
+}
+
+function getCountryUiConfig(countryCode: string) {
+  return COUNTRY_UI_CONFIGS[countryCode];
 }
 
 function isStandardRecoverableRegime(regime: SupportedRegime) {
-  return (
-    regime === "ITALY_STANDARD" ||
-    regime === "UK_VAT_STANDARD" ||
-    regime === "CANADA_GST_HST_REGISTERED" ||
-    regime === "AUSTRALIA_GST_REGISTERED"
+  return Object.values(COUNTRY_UI_CONFIGS).some(
+    (config) => config.regimes.standard === regime,
   );
 }
 
 function getDefaultStandardRegime(countryCode: string): SupportedRegime {
-  if (countryCode === "GB") return "UK_VAT_STANDARD";
-  if (countryCode === "CA") return "CANADA_GST_HST_REGISTERED";
-  if (countryCode === "AU") return "AUSTRALIA_GST_REGISTERED";
-  return "ITALY_STANDARD";
+  return (
+    getCountryUiConfig(countryCode)?.standardRegime ??
+    "ITALY_STANDARD"
+  );
 }
 
 function getDefaultRateForCountry(countryCode: string) {
-  if (countryCode === "GB") return 20;
-  if (countryCode === "CA") return 5;
-  if (countryCode === "AU") return 10;
-  return 22;
+  return getCountryUiConfig(countryCode)?.defaultRate ?? 0;
 }
 
 function getRateOptionsForCountry(countryCode: string) {
-  if (countryCode === "GB") return [0, 5, 20];
-  if (countryCode === "CA") return [0, 5, 13, 14, 15];
-  if (countryCode === "AU") return [0, 10];
-  return [4, 5, 10, 22];
+  return getCountryUiConfig(countryCode)?.rateOptions ?? [0];
 }
 
 function getCountryName(
   countryCode: string,
   language: "it" | "en",
 ) {
-  if (countryCode === "IT") {
-    return language === "it" ? "Italia" : "Italy";
-  }
+  const config = getCountryUiConfig(countryCode);
 
-  if (countryCode === "GB") {
-    return language === "it" ? "Regno Unito" : "United Kingdom";
+  if (config) {
+    return language === "it"
+      ? config.nameIt
+      : config.nameEn;
   }
 
   if (countryCode === "US") {
-    return language === "it" ? "Stati Uniti" : "United States";
+    return language === "it"
+      ? "Stati Uniti"
+      : "United States";
   }
 
-  if (countryCode === "CA") {
-    return "Canada";
+  return countryCode ||
+    (language === "it" ? "Sconosciuto" : "Unknown");
+}
+
+function getRegimeOptions({
+  countryCode,
+  language,
+}: {
+  countryCode: string;
+  language: "it" | "en";
+}): RegimeOption[] {
+  const config = getCountryUiConfig(countryCode);
+
+  if (!config) {
+    return [];
   }
 
-  if (countryCode === "AU") {
-    return language === "it" ? "Australia" : "Australia";
+  if (countryCode === "IT") {
+    return [
+      {
+        id: "ITALY_STANDARD",
+        title:
+          language === "it"
+            ? "Regime ordinario"
+            : "Standard VAT regime",
+        subtitle:
+          language === "it"
+            ? "IVA applicata alle vendite"
+            : "VAT applied to sales",
+        detail:
+          language === "it"
+            ? "Configura aliquote, prezzi, costi e recuperabilità dell'IVA."
+            : "Configure rates, selling prices, cost basis and input VAT recovery.",
+      },
+      {
+        id: "ITALY_FORFETTARIO",
+        title:
+          language === "it"
+            ? "Regime forfettario"
+            : "Flat-rate tax regime",
+        subtitle:
+          language === "it"
+            ? "Vendite senza addebito IVA"
+            : "Sales without VAT charged",
+        detail:
+          language === "it"
+            ? "Preset senza IVA sulle vendite e senza recupero IVA sui costi."
+            : "Preset with no output VAT and no input VAT recovery.",
+      },
+      {
+        id: "ITALY_EXEMPT",
+        title:
+          language === "it"
+            ? "Operazioni esenti"
+            : "VAT-exempt activity",
+        subtitle:
+          language === "it"
+            ? "Vendite configurate come esenti"
+            : "Sales configured as VAT exempt",
+        detail:
+          language === "it"
+            ? "Per attività in cui le vendite analizzate non espongono IVA."
+            : "For activities where analyzed sales do not carry output VAT.",
+      },
+    ];
   }
 
-  return countryCode || (language === "it" ? "Sconosciuto" : "Unknown");
+  const isGst =
+    config.taxLabel === "GST" ||
+    config.taxLabel === "GST/HST";
+
+  return [
+    {
+      id: config.regimes.standard,
+      title:
+        language === "it"
+          ? `Registrato ${config.taxLabel}`
+          : `${config.taxLabel} registered`,
+      subtitle:
+        language === "it"
+          ? `Store registrato ${config.taxLabel}`
+          : `${config.taxLabel}-registered store`,
+      detail:
+        language === "it"
+          ? `Configura aliquote, prezzi, costi, spedizioni e recuperabilità dell'imposta sugli acquisti. Le tax line Shopify reali restano prioritarie.`
+          : `Configure rates, prices, costs, shipping and input-tax recovery. Actual Shopify tax lines remain authoritative.`,
+    },
+    {
+      id: config.regimes.exempt,
+      title:
+        language === "it"
+          ? isGst
+            ? `Vendite ${config.taxLabel}-free / esenti`
+            : `Attività esente ${config.taxLabel}`
+          : isGst
+            ? `${config.taxLabel}-free / exempt sales`
+            : `${config.taxLabel}-exempt activity`,
+      subtitle:
+        language === "it"
+          ? "Vendite trattate come esenti"
+          : "Sales treated as tax exempt",
+      detail:
+        language === "it"
+          ? `Preset senza output ${config.taxLabel} nel fallback MarginLab e senza recupero automatico dell'imposta sugli acquisti.`
+          : `Preset with no output ${config.taxLabel} in the MarginLab fallback and no automatic input-tax recovery.`,
+    },
+    {
+      id: config.regimes.unregistered,
+      title:
+        language === "it"
+          ? `Non registrato ${config.taxLabel}`
+          : `Not ${config.taxLabel} registered`,
+      subtitle:
+        language === "it"
+          ? `Nessun addebito ${config.taxLabel}`
+          : `No ${config.taxLabel} charged`,
+      detail:
+        language === "it"
+          ? `Per merchant che non addebitano ${config.taxLabel} sulle vendite analizzate.`
+          : `For merchants that do not charge ${config.taxLabel} on analyzed sales.`,
+    },
+  ];
 }
 
 export async function loader({ request }: { request: Request }) {
@@ -196,15 +498,15 @@ export async function action({ request }: { request: Request }) {
     );
   }
 
+  const countryConfig =
+    getCountryUiConfig(context.effectiveCountryCode);
+
   const regimeMatchesCountry =
-    (context.effectiveCountryCode === "IT" &&
-      regime.startsWith("ITALY_")) ||
-    (context.effectiveCountryCode === "GB" &&
-      regime.startsWith("UK_")) ||
-    (context.effectiveCountryCode === "CA" &&
-      regime.startsWith("CANADA_")) ||
-    (context.effectiveCountryCode === "AU" &&
-      regime.startsWith("AUSTRALIA_"));
+    Boolean(
+      countryConfig &&
+      countryConfig.profilePrefix &&
+      regime.startsWith(countryConfig.profilePrefix),
+    );
 
   if (!regimeMatchesCountry) {
     return Response.json(
@@ -377,15 +679,16 @@ export default function TaxProfilePage() {
       ? taxContext.profile
       : defaultStandardRegime;
 
+  const countryUiConfig =
+    getCountryUiConfig(countryCode);
+
   const profileMatchesCurrentCountry =
-    (countryCode === "IT" &&
-      profileFromContext.startsWith("ITALY_")) ||
-    (countryCode === "GB" &&
-      profileFromContext.startsWith("UK_")) ||
-    (countryCode === "CA" &&
-      profileFromContext.startsWith("CANADA_")) ||
-    (countryCode === "AU" &&
-      profileFromContext.startsWith("AUSTRALIA_"));
+    Boolean(
+      countryUiConfig &&
+      profileFromContext.startsWith(
+        countryUiConfig.profilePrefix,
+      ),
+    );
 
   const initialRegime =
     profileMatchesCurrentCountry
@@ -439,204 +742,18 @@ export default function TaxProfilePage() {
     getRateOptionsForCountry(countryCode);
 
   const taxSystemLabel =
-    taxContext.taxSystem === "GST_HST"
+    countryUiConfig?.taxLabel ??
+    (taxContext.taxSystem === "GST_HST"
       ? "GST/HST"
       : taxContext.taxSystem === "SALES_TAX"
         ? "Sales Tax"
-        : taxContext.taxSystem;
+        : taxContext.taxSystem);
 
-  const regimes: RegimeOption[] =
-    countryCode === "AU"
-      ? [
-          {
-            id: "AUSTRALIA_GST_REGISTERED",
-            title:
-              language === "it"
-                ? "Registrato GST"
-                : "GST registered",
-            subtitle:
-              language === "it"
-                ? "Store registrato GST"
-                : "GST-registered store",
-            detail:
-              language === "it"
-                ? "Configura prezzi, costi, spedizioni e recuperabilità della GST sugli acquisti. Le tax line Shopify reali restano prioritarie."
-                : "Configure prices, costs, shipping and recoverable GST on purchases. Actual Shopify tax lines remain authoritative.",
-          },
-          {
-            id: "AUSTRALIA_GST_FREE",
-            title:
-              language === "it"
-                ? "Vendite GST-free"
-                : "GST-free sales",
-            subtitle:
-              language === "it"
-                ? "Vendite trattate come GST-free"
-                : "Sales treated as GST-free",
-            detail:
-              language === "it"
-                ? "Preset senza output GST nel fallback MarginLab e senza recupero automatico dell'imposta sugli acquisti."
-                : "Preset with no output GST in the MarginLab fallback and no automatic input-tax recovery.",
-          },
-          {
-            id: "AUSTRALIA_GST_UNREGISTERED",
-            title:
-              language === "it"
-                ? "Non registrato GST"
-                : "Not GST registered",
-            subtitle:
-              language === "it"
-                ? "Nessun addebito GST"
-                : "No GST charged",
-            detail:
-              language === "it"
-                ? "Per merchant che non addebitano GST sulle vendite analizzate."
-                : "For merchants that do not charge GST on analyzed sales.",
-          },
-        ]
-      : countryCode === "CA"
-      ? [
-          {
-            id: "CANADA_GST_HST_REGISTERED",
-            title:
-              language === "it"
-                ? "Registrato GST/HST"
-                : "GST/HST registered",
-            subtitle:
-              language === "it"
-                ? "Store registrato GST/HST"
-                : "GST/HST-registered store",
-            detail:
-              language === "it"
-                ? "Configura la base fiscale dello store e la recuperabilità dell'imposta sugli acquisti. Le tax line Shopify restano prioritarie per l'aliquota effettiva."
-                : "Configure the store tax basis and input-tax recovery. Shopify tax lines remain authoritative for the actual rate applied.",
-          },
-          {
-            id: "CANADA_GST_HST_EXEMPT",
-            title:
-              language === "it"
-                ? "Attività esente GST/HST"
-                : "GST/HST-exempt activity",
-            subtitle:
-              language === "it"
-                ? "Vendite trattate come esenti"
-                : "Sales treated as GST/HST exempt",
-            detail:
-              language === "it"
-                ? "Preset senza output GST/HST e senza recupero dell'imposta sugli acquisti nel fallback MarginLab."
-                : "Preset with no output GST/HST and no input-tax recovery in the MarginLab fallback.",
-          },
-          {
-            id: "CANADA_GST_HST_UNREGISTERED",
-            title:
-              language === "it"
-                ? "Non registrato GST/HST"
-                : "Not GST/HST registered",
-            subtitle:
-              language === "it"
-                ? "Nessun addebito GST/HST"
-                : "No GST/HST charged",
-            detail:
-              language === "it"
-                ? "Per merchant che non addebitano GST/HST sulle vendite analizzate."
-                : "For merchants that do not charge GST/HST on analyzed sales.",
-          },
-        ]
-      : countryCode === "GB"
-      ? [
-          {
-            id: "UK_VAT_STANDARD",
-            title:
-              language === "it"
-                ? "VAT ordinaria"
-                : "Standard VAT",
-            subtitle:
-              language === "it"
-                ? "Store registrato VAT"
-                : "VAT-registered store",
-            detail:
-              language === "it"
-                ? "Configura aliquote, prezzi, costi e percentuale di input VAT recuperabile."
-                : "Configure rates, selling prices, cost basis and recoverable input VAT.",
-          },
-          {
-            id: "UK_VAT_EXEMPT",
-            title:
-              language === "it"
-                ? "Attività esente VAT"
-                : "VAT-exempt activity",
-            subtitle:
-              language === "it"
-                ? "Vendite trattate come esenti"
-                : "Sales treated as VAT exempt",
-            detail:
-              language === "it"
-                ? "Preset senza output VAT e senza recupero input VAT nel modello MarginLab."
-                : "Preset with no output VAT and no input VAT recovery in MarginLab.",
-          },
-          {
-            id: "UK_VAT_UNREGISTERED",
-            title:
-              language === "it"
-                ? "Non registrato VAT"
-                : "Not VAT registered",
-            subtitle:
-              language === "it"
-                ? "Nessun addebito VAT"
-                : "No VAT charged",
-            detail:
-              language === "it"
-                ? "Per merchant che non addebitano VAT sulle vendite analizzate."
-                : "For merchants that do not charge VAT on analyzed sales.",
-          },
-        ]
-      : [
-          {
-            id: "ITALY_STANDARD",
-            title:
-              language === "it"
-                ? "Regime ordinario"
-                : "Standard VAT regime",
-            subtitle:
-              language === "it"
-                ? "IVA applicata alle vendite"
-                : "VAT applied to sales",
-            detail:
-              language === "it"
-                ? "Configura aliquote, prezzi, costi e recuperabilità dell'IVA."
-                : "Configure rates, selling prices, cost basis and input VAT recovery.",
-          },
-          {
-            id: "ITALY_FORFETTARIO",
-            title:
-              language === "it"
-                ? "Regime forfettario"
-                : "Flat-rate tax regime",
-            subtitle:
-              language === "it"
-                ? "Vendite senza addebito IVA"
-                : "Sales without VAT charged",
-            detail:
-              language === "it"
-                ? "Preset senza IVA sulle vendite e senza recupero IVA sui costi."
-                : "Preset with no output VAT and no input VAT recovery.",
-          },
-          {
-            id: "ITALY_EXEMPT",
-            title:
-              language === "it"
-                ? "Operazioni esenti"
-                : "VAT-exempt activity",
-            subtitle:
-              language === "it"
-                ? "Vendite configurate come esenti"
-                : "Sales configured as VAT exempt",
-            detail:
-              language === "it"
-                ? "Per attività in cui le vendite analizzate non espongono IVA."
-                : "For activities where analyzed sales do not carry output VAT.",
-          },
-        ];
+  const regimes =
+    getRegimeOptions({
+      countryCode,
+      language,
+    });
 
   React.useEffect(() => {
     if (standardRegime) {
@@ -944,20 +1061,14 @@ export default function TaxProfilePage() {
 
               {standardRegime ? (
                 <>
-                  {countryCode === "CA" && (
-                    <div style={styles.notice}>
-                      {language === "it"
-                        ? "In Canada l'aliquota effettiva può variare in base al luogo della fornitura e alla provincia. Il 5% è usato solo come baseline di fallback: quando Shopify fornisce tax line reali, MarginLab usa quelle come fonte prioritaria."
-                        : "In Canada, the actual rate can vary by place of supply and province. The 5% rate is only a fallback baseline: when Shopify provides actual tax lines, MarginLab treats them as authoritative."}
-                    </div>
-                  )}
-                  {countryCode === "AU" && (
-                    <div style={styles.notice}>
-                      {language === "it"
-                        ? "In Australia la GST standard è generalmente del 10% sulle vendite imponibili. MarginLab usa comunque le tax line Shopify reali come fonte prioritaria e applica il 10% solo come fallback del profilo avanzato."
-                        : "In Australia, the standard GST rate is generally 10% on taxable sales. MarginLab still treats actual Shopify tax lines as authoritative and uses 10% only as the advanced-profile fallback."}
-                    </div>
-                  )}
+                  {countryUiConfig?.noticeIt &&
+                    countryUiConfig?.noticeEn && (
+                      <div style={styles.notice}>
+                        {language === "it"
+                          ? countryUiConfig.noticeIt
+                          : countryUiConfig.noticeEn}
+                      </div>
+                    )}
                   <div style={styles.rateRow}>
                     <div>
                       <div style={styles.fieldLabel}>
