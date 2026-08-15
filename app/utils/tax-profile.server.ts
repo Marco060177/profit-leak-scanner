@@ -18,7 +18,10 @@ export type TaxProfile =
   | "UK_VAT_UNREGISTERED"
   | "CANADA_GST_HST_REGISTERED"
   | "CANADA_GST_HST_EXEMPT"
-  | "CANADA_GST_HST_UNREGISTERED";
+  | "CANADA_GST_HST_UNREGISTERED"
+  | "AUSTRALIA_GST_REGISTERED"
+  | "AUSTRALIA_GST_FREE"
+  | "AUSTRALIA_GST_UNREGISTERED";
 
 export type CountryTaxCapabilities = {
   countryCode: string;
@@ -104,6 +107,14 @@ function isCanadaProfile(profile: TaxProfile) {
   );
 }
 
+function isAustraliaProfile(profile: TaxProfile) {
+  return (
+    profile === "AUSTRALIA_GST_REGISTERED" ||
+    profile === "AUSTRALIA_GST_FREE" ||
+    profile === "AUSTRALIA_GST_UNREGISTERED"
+  );
+}
+
 function profileMatchesCountry({
   profile,
   countryCode,
@@ -123,6 +134,10 @@ function profileMatchesCountry({
     return isCanadaProfile(profile);
   }
 
+  if (countryCode === "AU") {
+    return isAustraliaProfile(profile);
+  }
+
   return false;
 }
 
@@ -132,7 +147,8 @@ function profileAllowsInputTaxRecovery(
   return (
     profile === "ITALY_STANDARD" ||
     profile === "UK_VAT_STANDARD" ||
-    profile === "CANADA_GST_HST_REGISTERED"
+    profile === "CANADA_GST_HST_REGISTERED" ||
+    profile === "AUSTRALIA_GST_REGISTERED"
   );
 }
 
@@ -175,6 +191,21 @@ function getAdvancedCountryDefaults(
       inputVatRecoveryPct: 100,
       shippingIncludeVat: false,
       shippingVatRatePct: 5,
+    };
+  }
+
+  if (countryCode === "AU") {
+    return {
+      // Australia applies 10% GST to most taxable sales.
+      // Consumer prices are generally GST-inclusive, while actual
+      // Shopify tax lines remain authoritative whenever available.
+      defaultVatRatePct: 10,
+      pricesIncludeVat: true,
+      costsIncludeVat: true,
+      recoverInputVat: true,
+      inputVatRecoveryPct: 100,
+      shippingIncludeVat: true,
+      shippingVatRatePct: 10,
     };
   }
 
@@ -245,7 +276,8 @@ export function getCountryTaxCapabilities(
     advancedProfileAvailable:
       code === "IT" ||
       code === "GB" ||
-      code === "CA",
+      code === "CA" ||
+      code === "AU",
 
     supportsRecoverableInputTaxModel:
       taxSystem === "VAT" ||

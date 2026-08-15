@@ -6,7 +6,6 @@ import { getStoredLanguage } from "~/utils/i18n";
 import {
   getStoreTaxContext,
   saveStoreTaxProfile,
-  type TaxProfile,
 } from "~/utils/tax-profile.server";
 
 type SupportedRegime =
@@ -18,7 +17,10 @@ type SupportedRegime =
   | "UK_VAT_UNREGISTERED"
   | "CANADA_GST_HST_REGISTERED"
   | "CANADA_GST_HST_EXEMPT"
-  | "CANADA_GST_HST_UNREGISTERED";
+  | "CANADA_GST_HST_UNREGISTERED"
+  | "AUSTRALIA_GST_REGISTERED"
+  | "AUSTRALIA_GST_FREE"
+  | "AUSTRALIA_GST_UNREGISTERED";
 
 type RegimeOption = {
   id: SupportedRegime;
@@ -57,7 +59,10 @@ function isSupportedRegime(value: string): value is SupportedRegime {
     value === "UK_VAT_UNREGISTERED" ||
     value === "CANADA_GST_HST_REGISTERED" ||
     value === "CANADA_GST_HST_EXEMPT" ||
-    value === "CANADA_GST_HST_UNREGISTERED"
+    value === "CANADA_GST_HST_UNREGISTERED" ||
+    value === "AUSTRALIA_GST_REGISTERED" ||
+    value === "AUSTRALIA_GST_FREE" ||
+    value === "AUSTRALIA_GST_UNREGISTERED"
   );
 }
 
@@ -65,25 +70,29 @@ function isStandardRecoverableRegime(regime: SupportedRegime) {
   return (
     regime === "ITALY_STANDARD" ||
     regime === "UK_VAT_STANDARD" ||
-    regime === "CANADA_GST_HST_REGISTERED"
+    regime === "CANADA_GST_HST_REGISTERED" ||
+    regime === "AUSTRALIA_GST_REGISTERED"
   );
 }
 
 function getDefaultStandardRegime(countryCode: string): SupportedRegime {
   if (countryCode === "GB") return "UK_VAT_STANDARD";
   if (countryCode === "CA") return "CANADA_GST_HST_REGISTERED";
+  if (countryCode === "AU") return "AUSTRALIA_GST_REGISTERED";
   return "ITALY_STANDARD";
 }
 
 function getDefaultRateForCountry(countryCode: string) {
   if (countryCode === "GB") return 20;
   if (countryCode === "CA") return 5;
+  if (countryCode === "AU") return 10;
   return 22;
 }
 
 function getRateOptionsForCountry(countryCode: string) {
   if (countryCode === "GB") return [0, 5, 20];
   if (countryCode === "CA") return [0, 5, 13, 14, 15];
+  if (countryCode === "AU") return [0, 10];
   return [4, 5, 10, 22];
 }
 
@@ -193,7 +202,9 @@ export async function action({ request }: { request: Request }) {
     (context.effectiveCountryCode === "GB" &&
       regime.startsWith("UK_")) ||
     (context.effectiveCountryCode === "CA" &&
-      regime.startsWith("CANADA_"));
+      regime.startsWith("CANADA_")) ||
+    (context.effectiveCountryCode === "AU" &&
+      regime.startsWith("AUSTRALIA_"));
 
   if (!regimeMatchesCountry) {
     return Response.json(
@@ -372,7 +383,9 @@ export default function TaxProfilePage() {
     (countryCode === "GB" &&
       profileFromContext.startsWith("UK_")) ||
     (countryCode === "CA" &&
-      profileFromContext.startsWith("CANADA_"));
+      profileFromContext.startsWith("CANADA_")) ||
+    (countryCode === "AU" &&
+      profileFromContext.startsWith("AUSTRALIA_"));
 
   const initialRegime =
     profileMatchesCurrentCountry
@@ -433,7 +446,55 @@ export default function TaxProfilePage() {
         : taxContext.taxSystem;
 
   const regimes: RegimeOption[] =
-    countryCode === "CA"
+    countryCode === "AU"
+      ? [
+          {
+            id: "AUSTRALIA_GST_REGISTERED",
+            title:
+              language === "it"
+                ? "Registrato GST"
+                : "GST registered",
+            subtitle:
+              language === "it"
+                ? "Store registrato GST"
+                : "GST-registered store",
+            detail:
+              language === "it"
+                ? "Configura prezzi, costi, spedizioni e recuperabilità della GST sugli acquisti. Le tax line Shopify reali restano prioritarie."
+                : "Configure prices, costs, shipping and recoverable GST on purchases. Actual Shopify tax lines remain authoritative.",
+          },
+          {
+            id: "AUSTRALIA_GST_FREE",
+            title:
+              language === "it"
+                ? "Vendite GST-free"
+                : "GST-free sales",
+            subtitle:
+              language === "it"
+                ? "Vendite trattate come GST-free"
+                : "Sales treated as GST-free",
+            detail:
+              language === "it"
+                ? "Preset senza output GST nel fallback MarginLab e senza recupero automatico dell'imposta sugli acquisti."
+                : "Preset with no output GST in the MarginLab fallback and no automatic input-tax recovery.",
+          },
+          {
+            id: "AUSTRALIA_GST_UNREGISTERED",
+            title:
+              language === "it"
+                ? "Non registrato GST"
+                : "Not GST registered",
+            subtitle:
+              language === "it"
+                ? "Nessun addebito GST"
+                : "No GST charged",
+            detail:
+              language === "it"
+                ? "Per merchant che non addebitano GST sulle vendite analizzate."
+                : "For merchants that do not charge GST on analyzed sales.",
+          },
+        ]
+      : countryCode === "CA"
       ? [
           {
             id: "CANADA_GST_HST_REGISTERED",
@@ -888,6 +949,13 @@ export default function TaxProfilePage() {
                       {language === "it"
                         ? "In Canada l'aliquota effettiva può variare in base al luogo della fornitura e alla provincia. Il 5% è usato solo come baseline di fallback: quando Shopify fornisce tax line reali, MarginLab usa quelle come fonte prioritaria."
                         : "In Canada, the actual rate can vary by place of supply and province. The 5% rate is only a fallback baseline: when Shopify provides actual tax lines, MarginLab treats them as authoritative."}
+                    </div>
+                  )}
+                  {countryCode === "AU" && (
+                    <div style={styles.notice}>
+                      {language === "it"
+                        ? "In Australia la GST standard è generalmente del 10% sulle vendite imponibili. MarginLab usa comunque le tax line Shopify reali come fonte prioritaria e applica il 10% solo come fallback del profilo avanzato."
+                        : "In Australia, the standard GST rate is generally 10% on taxable sales. MarginLab still treats actual Shopify tax lines as authoritative and uses 10% only as the advanced-profile fallback."}
                     </div>
                   )}
                   <div style={styles.rateRow}>
