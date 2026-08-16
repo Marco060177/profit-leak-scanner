@@ -39,12 +39,20 @@ function normalizeLanguage(
 
 function safeJsonStringify(value: unknown) {
   if (value === undefined) return null;
-
   try {
     return JSON.stringify(value);
   } catch {
     return null;
   }
+}
+
+function sanitizeKeyPart(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._:-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export async function getNotificationPreferences(shop: string) {
@@ -68,9 +76,7 @@ export async function getOrCreateNotificationPreferences({
     where: { shop },
   });
 
-  if (existing) {
-    return existing;
-  }
+  if (existing) return existing;
 
   return prisma.notificationPreferences.create({
     data: {
@@ -143,45 +149,30 @@ export function shouldNotifyAlert(
   },
 ) {
   if (!preferences.emailAlertsEnabled) return false;
-
-  if (alert.severity === "critical") {
-    return preferences.notifyCritical;
-  }
-
-  if (alert.severity === "warning") {
-    return preferences.notifyWarnings;
-  }
-
-  if (alert.severity === "opportunity") {
-    return preferences.notifyOpportunities;
-  }
-
+  if (alert.severity === "critical") return preferences.notifyCritical;
+  if (alert.severity === "warning") return preferences.notifyWarnings;
+  if (alert.severity === "opportunity") return preferences.notifyOpportunities;
   return false;
-}
-
-function sanitizeKeyPart(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9._:-]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
 }
 
 export function buildAlertDeduplicationKey({
   shop,
   periodDays,
   alertKey,
+  monitorEventId,
 }: {
   shop: string;
   periodDays: number;
   alertKey: string;
+  monitorEventId: string;
 }) {
   return [
     sanitizeKeyPart(shop),
     "alert",
     String(clampInt(periodDays, 1, 3650)),
     sanitizeKeyPart(alertKey),
+    "event",
+    sanitizeKeyPart(monitorEventId),
   ].join(":");
 }
 
@@ -212,6 +203,7 @@ export async function createAlertNotificationDelivery({
   alert,
   recipient,
   periodDays,
+  monitorEventId,
   subject,
   payload,
 }: {
@@ -219,6 +211,7 @@ export async function createAlertNotificationDelivery({
   alert: ProfitAlert;
   recipient: string;
   periodDays: number;
+  monitorEventId: string;
   subject?: string;
   payload?: unknown;
 }) {
@@ -226,16 +219,14 @@ export async function createAlertNotificationDelivery({
     shop,
     periodDays,
     alertKey: alert.id,
+    monitorEventId,
   });
 
   const existing =
     await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
   if (existing) {
-    return {
-      created: false as const,
-      delivery: existing,
-    };
+    return { created: false as const, delivery: existing };
   }
 
   const delivery = await prisma.notificationDelivery.create({
@@ -248,15 +239,14 @@ export async function createAlertNotificationDelivery({
       periodDays,
       deduplicationKey,
       subject: subject ?? null,
-      payloadJson: safeJsonStringify(payload ?? alert),
+      payloadJson: safeJsonStringify(
+        payload ?? { monitorEventId, alert },
+      ),
       status: "pending",
     },
   });
 
-  return {
-    created: true as const,
-    delivery,
-  };
+  return { created: true as const, delivery };
 }
 
 export async function createWeeklyReportDelivery({
@@ -283,10 +273,7 @@ export async function createWeeklyReportDelivery({
     await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
   if (existing) {
-    return {
-      created: false as const,
-      delivery: existing,
-    };
+    return { created: false as const, delivery: existing };
   }
 
   const delivery = await prisma.notificationDelivery.create({
@@ -303,10 +290,7 @@ export async function createWeeklyReportDelivery({
     },
   });
 
-  return {
-    created: true as const,
-    delivery,
-  };
+  return { created: true as const, delivery };
 }
 
 export async function markNotificationDeliverySent({
@@ -361,9 +345,7 @@ export async function listPendingNotificationDeliveries({
       status: "pending",
       OR: [{ scheduledFor: null }, { scheduledFor: { lte: now } }],
     },
-    orderBy: {
-      createdAt: "asc",
-    },
+    orderBy: { createdAt: "asc" },
     take: clampInt(limit, 1, 200),
   });
 }
@@ -377,9 +359,7 @@ export async function listNotificationDeliveriesForShop({
 }) {
   return prisma.notificationDelivery.findMany({
     where: { shop },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
     take: clampInt(limit, 1, 200),
   });
 }
@@ -405,15 +385,18 @@ export async function hasAlertNotificationBeenPrepared({
   shop,
   periodDays,
   alertKey,
+  monitorEventId,
 }: {
   shop: string;
   periodDays: number;
   alertKey: string;
+  monitorEventId: string;
 }) {
   const deduplicationKey = buildAlertDeduplicationKey({
     shop,
     periodDays,
     alertKey,
+    monitorEventId,
   });
 
   return Boolean(
