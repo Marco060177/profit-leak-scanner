@@ -93,7 +93,9 @@ function buildConfidence(
     0,
     100,
   );
+
   const current = analysisContext?.current;
+
   const reasons: string[] = [
     "CURRENT_SHOPIFY_COSTS_APPLIED_TO_HISTORICAL_SALES",
     "TAX_NOT_ALLOCATED_TO_PRODUCT_REVENUE",
@@ -106,13 +108,20 @@ function buildConfidence(
   if (current) {
     score += Math.min(15, current.orderCount * 0.5);
     score += Math.min(10, current.activeDays * 0.5);
-    if (current.orderCount < 3) reasons.push("VERY_FEW_ORDERS");
-    else if (current.orderCount < 10) reasons.push("FEW_ORDERS");
+
+    if (current.orderCount < 3) {
+      reasons.push("VERY_FEW_ORDERS");
+    } else if (current.orderCount < 10) {
+      reasons.push("FEW_ORDERS");
+    }
   } else {
     reasons.push("ANALYSIS_CONTEXT_MISSING");
   }
 
-  if (coverage < 100) reasons.push("INCOMPLETE_COGS_COVERAGE");
+  if (coverage < 100) {
+    reasons.push("INCOMPLETE_COGS_COVERAGE");
+  }
+
   if (!analysisContext?.comparisonAvailable) {
     reasons.push("COMPARISON_UNAVAILABLE");
   }
@@ -144,19 +153,112 @@ export function buildEconomicSnapshot({
   analysisContext,
 }: BuildEconomicSnapshotInput): EconomicSnapshot {
   const days = periodDays(period);
-  const losingRows = rows.filter((row) => row.profit < 0);
-  const missingCostRows = rows.filter((row) => row.missingCost);
+  const targetMarginPct = 20;
+  const targetMarginRate = targetMarginPct / 100;
+
+  /*
+   * OFFICIAL PRODUCT ECONOMIC BASIS
+   *
+   * Economic Snapshot must use the same tax-aware product economics used by
+   * Products and Profit Monitor. Raw row fields remain fallbacks only.
+   */
+  const economicRows = rows.map((row) => {
+    const revenue = finite(row.economicRevenue ?? row.revenue);
+    const cogs = finite(row.economicCogs ?? row.cogs);
+    const profit = finite(row.economicProfit ?? row.profit);
+
+    const marginPct = finite(
+      row.economicMarginPct ??
+        (revenue > 0 ? (profit / revenue) * 100 : row.marginPct),
+    );
+
+    const qty = Math.max(0, finite(row.qty));
+
+    const avgPrice =
+      qty > 0
+        ? revenue / qty
+        : finite(row.avgPrice);
+
+    const avgCost =
+      qty > 0
+        ? cogs / qty
+        : finite(row.avgCost);
+
+    /*
+     * True target-price gap:
+     *
+     * targetPrice = cost / (1 - target margin)
+     *
+     * This is different from simply calculating:
+     * current revenue * target margin - current profit.
+     *
+     * The latter is a profit shortfall at current revenue; it does not tell us
+     * the price actually required to reach the target margin after revenue
+     * itself changes.
+     */
+    const targetPrice =
+      qty > 0 && avgCost > 0 && targetMarginRate < 1
+        ? avgCost / (1 - targetMarginRate)
+        : avgPrice;
+
+    const targetDelta = Math.max(0, targetPrice - avgPrice);
+
+    return {
+      row,
+      revenue,
+      cogs,
+      profit,
+      marginPct,
+      qty,
+      avgPrice,
+      avgCost,
+      targetPrice,
+      targetDelta,
+    };
+  });
+
+  /*
+   * LOSS
+   *
+   * Measured negative economic profit in the selected period, then normalized
+   * to a 30-day run-rate for the monthly amount.
+   */
+  const losingRows = economicRows.filter((item) => item.profit < 0);
+
   const lossForPeriod = losingRows.reduce(
-    (sum, row) => sum + Math.max(0, -finite(row.profit)),
+    (sum, item) => sum + Math.max(0, -item.profit),
     0,
   );
+
+  /*
+   * EXPOSURE
+   *
+   * Revenue attached to products with missing cost data. Because profitability
+   * cannot be verified for those products, this is exposure, not a loss.
+   */
+  const missingCostRows = economicRows.filter(
+    (item) => item.row.missingCost,
+  );
+
   const missingCostExposure = missingCostRows.reduce(
-    (sum, row) => sum + Math.max(0, finite(row.revenue)),
+    (sum, item) => sum + Math.max(0, item.revenue),
     0,
   );
-  const pricingOpportunity = rows.reduce(
-    (sum, row) =>
-      sum + Math.max(0, finite(row.targetDelta)) * Math.max(0, finite(row.qty)),
+
+  /*
+   * PRICING GAP TO TARGET
+   *
+   * Additional revenue required, at observed quantity, to move each product to
+   * a 20% economic margin using the tax-aware economic cost basis.
+   *
+   * periodAmount  = sum(targetDelta * qty)
+   * monthlyAmount = periodAmount normalized to 30 days
+   */
+  const pricingOpportunity = economicRows.reduce(
+    (sum, item) =>
+      sum +
+      Math.max(0, item.targetDelta) *
+        Math.max(0, item.qty),
     0,
   );
 
@@ -166,36 +268,73 @@ export function buildEconomicSnapshot({
       kind: "loss",
       periodAmount: lossForPeriod,
       monthlyAmount: monthly(lossForPeriod, days),
-      affectedProductIds: losingRows.map((row) => row.productId),
+      affectedProductIds: losingRows.map(
+        (item) => item.row.productId,
+      ),
     },
     {
       id: "missing-cogs-revenue",
       kind: "exposure",
       periodAmount: missingCostExposure,
       monthlyAmount: monthly(missingCostExposure, days),
-      affectedProductIds: missingCostRows.map((row) => row.productId),
+      affectedProductIds: missingCostRows.map(
+        (item) => item.row.productId,
+      ),
     },
     {
       id: "pricing-recovery",
       kind: "opportunity",
       periodAmount: pricingOpportunity,
       monthlyAmount: monthly(pricingOpportunity, days),
-      affectedProductIds: rows
-        .filter((row) => finite(row.targetDelta) > 0)
-        .map((row) => row.productId),
+      affectedProductIds: economicRows
+        .filter((item) => item.targetDelta > 0)
+        .map((item) => item.row.productId),
     },
   ];
 
   const total = (kind: EconomicAmountKind) =>
     amounts
       .filter((amount) => amount.kind === kind)
-      .reduce((sum, amount) => sum + Math.max(0, finite(amount.monthlyAmount)), 0);
+      .reduce(
+        (sum, amount) =>
+          sum +
+          Math.max(
+            0,
+            finite(amount.monthlyAmount),
+          ),
+        0,
+      );
 
+  /*
+   * Snapshot facts must use the same official economic summary basis whenever
+   * those normalized fields are available.
+   */
   const netProductRevenue = finite(
-    summary.netProductRevenue ?? summary.revenue,
+    summary.economicRevenue ??
+      summary.netProductRevenue ??
+      summary.revenue,
   );
-  const productCogs = finite(summary.productCogs ?? summary.cogs);
-  const grossProductProfit = finite(summary.grossProfit ?? summary.profit);
+
+  const productCogs = finite(
+    summary.economicCogs ??
+      summary.productCogs ??
+      summary.cogs,
+  );
+
+  const grossProductProfit = finite(
+    summary.economicProfit ??
+      summary.grossProfit ??
+      summary.profit,
+  );
+
+  const grossProductMarginPct = finite(
+    summary.economicMarginPct ??
+      summary.grossMarginPct ??
+      summary.marginPct,
+    netProductRevenue > 0
+      ? (grossProductProfit / netProductRevenue) * 100
+      : 0,
+  );
 
   return {
     version: 1,
@@ -204,17 +343,18 @@ export function buildEconomicSnapshot({
     facts: {
       grossProductSales: finite(summary.grossProductSales),
       discounts: finite(summary.discounts),
-      productRefunds: finite(summary.refundedProductRevenue ?? summary.refunds),
+      productRefunds: finite(
+        summary.refundedProductRevenue ??
+          summary.refunds,
+      ),
       netProductRevenue,
       productCogs,
       grossProductProfit,
-      grossProductMarginPct: finite(
-        summary.grossMarginPct ?? summary.marginPct,
-        netProductRevenue > 0
-          ? (grossProductProfit / netProductRevenue) * 100
-          : 0,
+      grossProductMarginPct,
+      shippingRevenue: finite(
+        summary.shippingRevenue ??
+          summary.shipping,
       ),
-      shippingRevenue: finite(summary.shippingRevenue ?? summary.shipping),
       reportedTaxes: finite(summary.taxes),
     },
     amounts,
@@ -223,7 +363,10 @@ export function buildEconomicSnapshot({
       monthlyExposure: total("exposure"),
       monthlyOpportunity: total("opportunity"),
     },
-    confidence: buildConfidence(summary, analysisContext),
+    confidence: buildConfidence(
+      summary,
+      analysisContext,
+    ),
   };
 }
 
@@ -231,5 +374,9 @@ export function getEconomicAmount(
   snapshot: EconomicSnapshot,
   id: string,
 ) {
-  return snapshot.amounts.find((amount) => amount.id === id) ?? null;
+  return (
+    snapshot.amounts.find(
+      (amount) => amount.id === id,
+    ) ?? null
+  );
 }
