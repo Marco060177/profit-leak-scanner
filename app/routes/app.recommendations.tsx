@@ -1504,13 +1504,11 @@ export default function RecommendationsPage() {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              value={
-                                alert.monthlyImpact > 0
-                                  ? money(alert.monthlyImpact)
-                                  : language === "it"
-                                    ? "Qualitativo"
-                                    : "Qualitative"
-                              }
+                              {alert.monthlyImpact > 0
+                                ? money(alert.monthlyImpact)
+                                : language === "it"
+                                  ? "Qualitativo"
+                                  : "Qualitative"}
                             </div>
 
                             <button

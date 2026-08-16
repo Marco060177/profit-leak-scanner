@@ -58,13 +58,24 @@ function reportPeriodLabel(language: WeeklyReportLanguage) {
 function normalizeEconomicSnapshot(data: any) {
   const snapshot = data?.economicSnapshot;
 
+  const lossAmount = snapshot?.amounts?.find(
+    (amount: any) => amount?.id === "product-losses",
+  );
+
+  const exposureAmount = snapshot?.amounts?.find(
+    (amount: any) => amount?.id === "missing-cogs-revenue",
+  );
+
+  const opportunityAmount = snapshot?.amounts?.find(
+    (amount: any) => amount?.id === "pricing-recovery",
+  );
+
   return {
-    monthlyLoss:
-      Number(snapshot?.totals?.monthlyLoss ?? 0),
-    monthlyExposure:
-      Number(snapshot?.totals?.monthlyExposure ?? 0),
-    monthlyProfitGapToTarget:
-      Number(snapshot?.totals?.monthlyOpportunity ?? 0),
+    periodLoss: Number(lossAmount?.periodAmount ?? 0),
+    periodExposure: Number(exposureAmount?.periodAmount ?? 0),
+    periodProfitGapToTarget: Number(
+      opportunityAmount?.periodAmount ?? 0,
+    ),
   };
 }
 
@@ -89,6 +100,7 @@ function buildNextActions(alerts: ReturnType<typeof generateProfitAlerts>) {
       description: alert.title,
       route: alert.route,
       module: alert.recommendedModule,
+      estimatedMinutes: alert.estimatedMinutes,
     }));
 }
 

@@ -47,9 +47,9 @@ type WeeklyProfitReportPayload = {
   };
 
   economics: {
-    monthlyLoss: number;
-    monthlyExposure: number;
-    monthlyProfitGapToTarget: number;
+    periodLoss: number;
+    periodExposure: number;
+    periodProfitGapToTarget: number;
   };
 
   alertCounts: {
@@ -70,6 +70,7 @@ type WeeklyProfitReportPayload = {
     description?: string;
     route?: string;
     module?: string;
+    estimatedMinutes?: number;
   }>;
 };
 
@@ -512,6 +513,11 @@ function buildWeeklyProfitReportEmail({
                     : ""
                 }
                 ${
+                  action.estimatedMinutes
+                    ? `<div style="margin-top:5px;font-size:11px;color:#64748b;">${language === "it" ? "Tempo stimato" : "Estimated time"}: ${action.estimatedMinutes} min</div>`
+                    : ""
+                }
+                ${
                   routeUrl
                     ? `<div style="margin-top:9px;"><a href="${escapeHtml(routeUrl)}" style="color:#ff875f;text-decoration:none;font-size:12px;font-weight:800;">${language === "it" ? "Apri in MarginLab →" : "Open in MarginLab →"}</a></div>`
                     : ""
@@ -579,17 +585,17 @@ function buildWeeklyProfitReportEmail({
 
         <div style="margin-top:22px;padding:18px;border-radius:16px;background:#0b1220;border:1px solid rgba(255,255,255,.08);">
           <div style="font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;">
-            ${language === "it" ? "Impatto economico" : "Economic impact"}
+            ${language === "it" ? "Impatto economico della settimana" : "Weekly economic impact"}
           </div>
           <div style="margin-top:12px;font-size:13px;line-height:1.8;color:#cbd5e1;">
-            <strong style="color:#ff8066;">${escapeHtml(money(payload.economics.monthlyLoss))}</strong>
-            ${language === "it" ? " perdita mensile stimata" : " estimated monthly loss"}
+            <strong style="color:#ff8066;">${escapeHtml(money(payload.economics.periodLoss))}</strong>
+            ${language === "it" ? " perdite prodotto osservate" : " observed product losses"}
             &nbsp;·&nbsp;
-            <strong style="color:#f59e0b;">${escapeHtml(money(payload.economics.monthlyExposure))}</strong>
-            ${language === "it" ? " esposizione mensile stimata" : " estimated monthly exposure"}
+            <strong style="color:#f59e0b;">${escapeHtml(money(payload.economics.periodExposure))}</strong>
+            ${language === "it" ? " ricavi con costo mancante" : " revenue with missing cost data"}
             &nbsp;·&nbsp;
-            <strong style="color:#4ade80;">${escapeHtml(money(payload.economics.monthlyProfitGapToTarget))}</strong>
-            ${language === "it" ? " gap mensile stimato verso il target" : " estimated monthly profit gap to target"}
+            <strong style="color:#4ade80;">${escapeHtml(money(payload.economics.periodProfitGapToTarget))}</strong>
+            ${language === "it" ? " gap stimato verso il target nel periodo" : " estimated gap to target for the period"}
           </div>
         </div>
 
@@ -622,8 +628,8 @@ function buildWeeklyProfitReportEmail({
         <div style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6;color:#64748b;">
           ${
             language === "it"
-              ? "Perdita, esposizione e gap verso il target sono stime distinte e non devono essere sommate. Il report utilizza la base economica tax-aware disponibile al momento della generazione."
-              : "Loss, exposure and profit gap to target are separate estimates and should not be added together. This report uses the tax-aware economic basis available when it is generated."
+              ? "Il report descrive esclusivamente gli ultimi 7 giorni. Perdite, esposizione e gap verso il target sono metriche distinte e non devono essere sommate. Il gap verso il target è una stima modellata sul periodo, non profitto garantito o già recuperato."
+              : "This report describes the last 7 days only. Loss, exposure and gap to target are separate metrics and should not be added together. The gap to target is a modeled estimate for the period, not guaranteed or already recovered profit."
           }
         </div>
       </div>
@@ -637,12 +643,15 @@ function buildWeeklyProfitReportEmail({
     `${language === "it" ? "Ricavi economici" : "Economic revenue"}: ${money(payload.summary.economicRevenue)}`,
     `${language === "it" ? "Profitto economico" : "Economic profit"}: ${money(payload.summary.economicProfit)}`,
     `${language === "it" ? "Margine economico" : "Economic margin"}: ${pct(payload.summary.economicMarginPct)}`,
-    `${language === "it" ? "Perdita mensile stimata" : "Estimated monthly loss"}: ${money(payload.economics.monthlyLoss)}`,
-    `${language === "it" ? "Esposizione mensile stimata" : "Estimated monthly exposure"}: ${money(payload.economics.monthlyExposure)}`,
-    `${language === "it" ? "Gap mensile stimato verso il target" : "Estimated monthly profit gap to target"}: ${money(payload.economics.monthlyProfitGapToTarget)}`,
+    `${language === "it" ? "Perdite prodotto osservate" : "Observed product losses"}: ${money(payload.economics.periodLoss)}`,
+    `${language === "it" ? "Ricavi con costo mancante" : "Revenue with missing cost data"}: ${money(payload.economics.periodExposure)}`,
+    `${language === "it" ? "Gap stimato verso il target nel periodo" : "Estimated gap to target for the period"}: ${money(payload.economics.periodProfitGapToTarget)}`,
     "",
     language === "it" ? "Le prossime azioni:" : "Your next actions:",
-    ...nextActions.map((action, index) => `${index + 1}. ${action.title}`),
+    ...nextActions.map(
+      (action, index) =>
+        `${index + 1}. ${action.title}${action.estimatedMinutes ? ` (${action.estimatedMinutes} min)` : ""}`,
+    ),
   ];
 
   return {
