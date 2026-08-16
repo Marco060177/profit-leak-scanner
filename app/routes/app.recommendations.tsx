@@ -1095,7 +1095,7 @@ export default function RecommendationsPage() {
                       color: "#22c55e",
                     }}
                   >
-                    +{money(headlineMonthlyOpportunity)}
+                    {money(headlineMonthlyOpportunity)}
                   </div>
 
                   <p
@@ -1504,12 +1504,13 @@ export default function RecommendationsPage() {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {alert.monthlyImpact > 0
-                                ? `${alert.businessAction === "optimize" ? "+" : ""
-                                }${money(alert.monthlyImpact)}`
-                                : language === "it"
-                                  ? "Qualitativo"
-                                  : "Qualitative"}
+                              value={
+                                alert.monthlyImpact > 0
+                                  ? money(alert.monthlyImpact)
+                                  : language === "it"
+                                    ? "Qualitativo"
+                                    : "Qualitative"
+                              }
                             </div>
 
                             <button

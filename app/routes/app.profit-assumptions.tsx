@@ -347,7 +347,7 @@ export default function ProfitAssumptionsPage() {
   const periodDays =
     Number.isFinite(periodValue) && periodValue > 0 ? periodValue : 30;
   const periodFractionOfMonth = periodDays / 30;
-  const annualizationMultiplier = 360 / periodDays;
+  const monthlyNormalizationMultiplier = 30 / periodDays;
 
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);
@@ -426,11 +426,24 @@ export default function ProfitAssumptionsPage() {
   const displayedEstimatedNetProfit = roundCsvNumber(estimatedNetProfit);
   const displayedTotalEstimatedCosts = roundCsvNumber(totalEstimatedCosts);
 
+  const monthlyEconomicRevenue = roundCsvNumber(
+    economicRevenue * monthlyNormalizationMultiplier,
+  );
+  const monthlyEconomicProfit = roundCsvNumber(
+    economicProfit * monthlyNormalizationMultiplier,
+  );
+  const monthlyEstimatedNetProfit = roundCsvNumber(
+    displayedEstimatedNetProfit * monthlyNormalizationMultiplier,
+  );
+  const monthlyEstimatedCosts = roundCsvNumber(
+    displayedTotalEstimatedCosts * monthlyNormalizationMultiplier,
+  );
+
   const annualNetProfit = roundCsvNumber(
-    displayedEstimatedNetProfit * annualizationMultiplier,
+    monthlyEstimatedNetProfit * 12,
   );
   const annualEstimatedCosts = roundCsvNumber(
-    displayedTotalEstimatedCosts * annualizationMultiplier,
+    monthlyEstimatedCosts * 12,
   );
 
   const grossMarginRate =
@@ -502,7 +515,9 @@ export default function ProfitAssumptionsPage() {
   const largestCost = [...costItems].sort((a, b) => b.value - a.value)[0];
 
   const largestCostMonthlySaving = largestCost
-    ? roundCsvNumber(largestCost.value * 0.1)
+    ? roundCsvNumber(
+        largestCost.value * monthlyNormalizationMultiplier * 0.1,
+      )
     : 0;
   const largestCostAnnualSaving = roundCsvNumber(
     largestCostMonthlySaving * 12,
@@ -515,7 +530,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci la pubblicità del 10%"
           : "Reduce advertising by 10%",
-      impact: roundCsvNumber(monthlyAds * periodFractionOfMonth * 0.1),
+      impact: roundCsvNumber(monthlyAds * 0.1),
       note:
         language === "it"
           ? "Effetto mensile immediato"
@@ -527,7 +542,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci le spedizioni del 10%"
           : "Reduce shipping by 10%",
-      impact: roundCsvNumber(monthlyShipping * periodFractionOfMonth * 0.1),
+      impact: roundCsvNumber(monthlyShipping * 0.1),
       note:
         language === "it"
           ? "Miglioramento operativo"
@@ -539,7 +554,7 @@ export default function ProfitAssumptionsPage() {
         language === "it"
           ? "Riduci le commissioni dello 0,5%"
           : "Reduce fees by 0.5%",
-      impact: roundCsvNumber(economicRevenue * 0.005),
+      impact: roundCsvNumber(monthlyEconomicRevenue * 0.005),
       note:
         language === "it"
           ? "Rinegoziazione o cambio provider"
@@ -634,10 +649,12 @@ export default function ProfitAssumptionsPage() {
           paymentFeePct: "Commissione di pagamento",
           transactionFeePct: "Commissione sulle transazioni",
           taxReservePct: "Riserva fiscale gestionale",
-          fixedCosts: "Costi fissi",
+          fixedCosts: "Costi fissi del periodo",
           variableCosts: "Commissioni e riserva gestionale",
           totalCosts: "Costi stimati totali",
           annualCosts: "Costi stimati annuali",
+          monthlyCosts: "Costi mensili normalizzati",
+          monthlyNetProfit: "Profitto netto mensile normalizzato",
           paymentFees: "Commissioni di pagamento stimate",
           transactionFees: "Commissioni sulle transazioni stimate",
           taxReserve: "Riserva fiscale gestionale stimata",
@@ -693,10 +710,12 @@ export default function ProfitAssumptionsPage() {
           paymentFeePct: "Payment processing fee",
           transactionFeePct: "Transaction fee",
           taxReservePct: "Business tax reserve",
-          fixedCosts: "Fixed costs",
+          fixedCosts: "Fixed costs for period",
           variableCosts: "Fees and business reserve",
           totalCosts: "Total estimated costs",
           annualCosts: "Annual estimated costs",
+          monthlyCosts: "Normalized monthly costs",
+          monthlyNetProfit: "Normalized monthly net profit",
           paymentFees: "Estimated payment fees",
           transactionFees: "Estimated transaction fees",
           taxReserve: "Estimated business tax reserve",
@@ -738,7 +757,9 @@ export default function ProfitAssumptionsPage() {
       [labels.costStructure, labels.variableCosts, roundCsvNumber(totalVariableCosts), currencyCode, labels.estimateNature, labels.estimateNote],
       [labels.costStructure, labels.totalCosts, roundCsvNumber(totalEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
       [labels.costStructure, labels.annualCosts, roundCsvNumber(annualEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.costStructure, labels.monthlyCosts, roundCsvNumber(monthlyEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
       [labels.results, labels.netProfit, roundCsvNumber(estimatedNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
+      [labels.results, labels.monthlyNetProfit, roundCsvNumber(monthlyEstimatedNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
       [labels.results, labels.netMargin, roundCsvNumber(estimatedNetMargin), "%", labels.estimateNature, labels.estimateNote],
       [labels.results, labels.annualNetProfit, roundCsvNumber(annualNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
       [labels.results, labels.breakEven, roundCsvNumber(breakEvenRevenue), currencyCode, labels.estimateNature, labels.estimateNote],
@@ -941,10 +962,10 @@ export default function ProfitAssumptionsPage() {
               <KpiCard
                 label={
                   language === "it"
-                    ? "Profitto netto stimato"
-                    : "Estimated Net Profit"
+                    ? "Profitto netto mensile stimato"
+                    : "Estimated Monthly Net Profit"
                 }
-                value={money(estimatedNetProfit)}
+                value={money(monthlyEstimatedNetProfit)}
                 note={`${pct(estimatedNetMargin)} ${language === "it" ? "di margine netto" : "net margin"
                   }`}
                 color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
@@ -955,7 +976,7 @@ export default function ProfitAssumptionsPage() {
                 label={
                   language === "it" ? "Costi mensili totali" : "Total Monthly Costs"
                 }
-                value={money(totalEstimatedCosts)}
+                value={money(monthlyEstimatedCosts)}
                 note={
                   language === "it"
                     ? "Fissi, commissioni e riserva"
@@ -1306,7 +1327,7 @@ export default function ProfitAssumptionsPage() {
                     letterSpacing: "-0.05em",
                   }}
                 >
-                  {money(estimatedNetProfit)}
+                  {money(monthlyEstimatedNetProfit)}
                 </div>
 
                 <div
@@ -1332,39 +1353,39 @@ export default function ProfitAssumptionsPage() {
                 >
                   {[
                     {
-                      label: language === "it" ? "Ricavi economici" : "Economic Revenue",
-                      value: money(economicRevenue),
+                      label: language === "it" ? "Ricavi economici mensili" : "Monthly Economic Revenue",
+                      value: money(monthlyEconomicRevenue),
                       color: "#f8fafc",
                     },
                     {
-                      label: language === "it" ? "Profitto economico" : "Economic Profit",
-                      value: money(economicProfit),
+                      label: language === "it" ? "Profitto economico mensile" : "Monthly Economic Profit",
+                      value: money(monthlyEconomicProfit),
                       color: "#22c55e",
                     },
                     {
-                      label: language === "it" ? "Costi fissi" : "Fixed Costs",
-                      value: `-${money(totalFixedCosts)}`,
+                      label: language === "it" ? "Costi fissi mensili" : "Monthly Fixed Costs",
+                      value: `-${money(monthlyFixedCosts)}`,
                       color: "#f8fafc",
                     },
                     {
                       label:
                         language === "it"
-                          ? "Commissioni e riserva"
-                          : "Fees and Reserve",
-                      value: `-${money(totalVariableCosts)}`,
+                          ? "Commissioni e riserva mensili"
+                          : "Monthly Fees and Reserve",
+                      value: `-${money(totalVariableCosts * monthlyNormalizationMultiplier)}`,
                       color: "#f8fafc",
                     },
                     {
                       label:
                         language === "it"
-                          ? "Costi stimati totali"
-                          : "Total Estimated Costs",
-                      value: `-${money(totalEstimatedCosts)}`,
+                          ? "Costi mensili stimati totali"
+                          : "Total Estimated Monthly Costs",
+                      value: `-${money(monthlyEstimatedCosts)}`,
                       color: "#ff9a70",
                     },
                     {
-                      label: language === "it" ? "Profitto netto" : "Net Profit",
-                      value: money(estimatedNetProfit),
+                      label: language === "it" ? "Profitto netto mensile" : "Monthly Net Profit",
+                      value: money(monthlyEstimatedNetProfit),
                       color: estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
                     },
                   ].map((item, index) => (
@@ -1428,22 +1449,22 @@ export default function ProfitAssumptionsPage() {
                   >
                     {estimatedNetProfit >= 0
                       ? language === "it"
-                        ? `Il modello genera un profitto netto positivo di ${money(
-                          estimatedNetProfit,
+                        ? `Il modello genera un profitto netto mensile positivo di ${money(
+                          monthlyEstimatedNetProfit,
                         )}. Il break-even stimato è ${money(
                           breakEvenRevenue,
                         )} di ricavi mensili.`
-                        : `The model generates positive net profit of ${money(
-                          estimatedNetProfit,
+                        : `The model generates positive monthly net profit of ${money(
+                          monthlyEstimatedNetProfit,
                         )}. Estimated break-even is ${money(
                           breakEvenRevenue,
                         )} in monthly revenue.`
                       : language === "it"
-                        ? `Il modello attuale produce una perdita stimata di ${money(
-                          Math.abs(estimatedNetProfit),
+                        ? `Il modello attuale produce una perdita mensile stimata di ${money(
+                          Math.abs(monthlyEstimatedNetProfit),
                         )}. Riduci i costi o aumenta il margine prima di scalare.`
-                        : `The current model produces an estimated loss of ${money(
-                          Math.abs(estimatedNetProfit),
+                        : `The current model produces an estimated monthly loss of ${money(
+                          Math.abs(monthlyEstimatedNetProfit),
                         )}. Reduce costs or improve margin before scaling.`}
                   </div>
                 </div>
@@ -1551,7 +1572,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Costi fissi" : "Fixed Costs"}
+                      {language === "it" ? "Costi fissi mensili" : "Monthly Fixed Costs"}
                     </div>
 
                     <div
@@ -1562,7 +1583,7 @@ export default function ProfitAssumptionsPage() {
                         fontWeight: 950,
                       }}
                     >
-                      {money(totalFixedCosts)}
+                      {money(monthlyFixedCosts)}
                     </div>
                   </div>
 
@@ -1848,7 +1869,7 @@ export default function ProfitAssumptionsPage() {
                         fontWeight: 950,
                       }}
                     >
-                      +{money((largestCost?.value ?? 0) * 0.1)}
+                      +{money(largestCostMonthlySaving)}
                     </div>
                   </div>
 
@@ -1879,7 +1900,7 @@ export default function ProfitAssumptionsPage() {
                         fontWeight: 950,
                       }}
                     >
-                      +{money((largestCost?.value ?? 0) * 1.2)}
+                      +{money(largestCostAnnualSaving)}
                     </div>
                   </div>
                 </div>
@@ -2005,8 +2026,8 @@ export default function ProfitAssumptionsPage() {
               }}
             >
               {language === "it"
-                ? "I valori inseriti manualmente vengono salvati e applicati alla base economica tax-aware utilizzata dalle funzioni Growth. La riserva fiscale gestionale è un'ipotesi separata e non sostituisce il trattamento VAT/GST/Sales Tax del Tax Engine."
-                : "Manually entered values are saved and applied to the tax-aware economic basis used by Growth features. The business tax reserve is a separate assumption and does not replace the Tax Engine's VAT/GST/Sales Tax treatment."}
+                ? `I valori inseriti manualmente vengono salvati e applicati alla base economica tax-aware osservata sugli ultimi ${periodDays} giorni. I risultati indicati come mensili vengono normalizzati su 30 giorni; le proiezioni annuali derivano da questa base mensile normalizzata. La riserva fiscale gestionale è un'ipotesi separata e non sostituisce il trattamento VAT/GST/Sales Tax del Tax Engine.`
+                : `Manually entered values are saved and applied to the tax-aware economic basis observed over the last ${periodDays} days. Results labeled monthly are normalized to 30 days, and annual projections are derived from that normalized monthly basis. The business tax reserve is a separate assumption and does not replace the Tax Engine's VAT/GST/Sales Tax treatment.`}
             </div>
           </div>
         </div>

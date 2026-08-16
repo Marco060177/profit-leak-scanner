@@ -251,9 +251,45 @@ export default function DashboardNav({
     setGrowthOpen(false);
     setMoreOpen(false);
 
-    if (active !== id) {
-      navigate(path);
+    if (active === id) return;
+
+    const currentParams = new URLSearchParams(
+      window.location.search,
+    );
+
+    const nextParams = new URLSearchParams();
+
+    const lang = currentParams.get("lang");
+    const period = currentParams.get("period");
+
+    if (lang === "it" || lang === "en") {
+      nextParams.set("lang", lang);
     }
+
+    const periodAwarePages: NavId[] = [
+      "overview",
+      "products",
+      "profit",
+      "alert-center",
+      "recommendations",
+      "ai-advisor",
+      "recovery-simulator",
+      "forecasting",
+      "profit-assumptions",
+    ];
+
+    if (
+      periodAwarePages.includes(id) &&
+      (period === "7" ||
+        period === "30" ||
+        period === "90")
+    ) {
+      nextParams.set("period", period);
+    }
+
+    const query = nextParams.toString();
+
+    navigate(query ? `${path}?${query}` : path);
   };
 
   const mainItems = [
@@ -345,7 +381,7 @@ export default function DashboardNav({
     <div className="navbar">
       <div
         className="logo"
-        onClick={() => navigate("/app")}
+        onClick={() => openPage("overview", "/app")}
         style={{ cursor: "pointer" }}
       >
         MARGIN<span>LAB</span>

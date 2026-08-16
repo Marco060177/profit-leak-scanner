@@ -621,13 +621,16 @@ export default function ProductsPage() {
                   "#ff6b4a",
                 ],
                 [
-                  language === "it" ? "Opportunità" : "Opportunity",
+                  language === "it" ? "Gap di profitto" : "Profit Gap",
                   money(biggestRiskProduct.riskValue),
                   "#22c55e",
                 ],
                   [
-                    language === "it" ? "Gap Target" : "Target Gap",
-                  pct(biggestRiskProduct.marginGap),
+                    language === "it" ? "Gap di margine" : "Margin Gap",
+                  `${new Intl.NumberFormat(locale, {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1,
+                  }).format(biggestRiskProduct.marginGap)} pp`,
                   "#f59e0b",
                 ],
               ].map(([label, value, color]) => (
@@ -848,18 +851,18 @@ export default function ProductsPage() {
                 {language === "it"
                   ? `${money(
                     totalRevenueAtRisk,
-                  )} di ricavi stanno attualmente lavorando sotto il margine target del ${pct(
+                  )} di ricavi economici stanno attualmente lavorando sotto il margine target del ${pct(
                     targetMarginPct,
-                  )}, con un'opportunità stimata di margine pari a ${money(
+                  )}, con un gap di profitto stimato verso il target pari a ${money(
                     totalRevenueAtRiskOpportunity,
                   )}.`
                   : `${money(
                     totalRevenueAtRisk,
-                  )} in revenue is currently operating below the ${pct(
+                  )} in economic revenue is currently operating below the ${pct(
                     targetMarginPct,
                   )} target margin, with an estimated ${money(
                     totalRevenueAtRiskOpportunity,
-                  )} margin opportunity.`}
+                  )} profit gap to target.`}
               </p>
             </div>
           </div>
@@ -988,7 +991,7 @@ export default function ProductsPage() {
                       }}
                     >
                       <span>
-                        {language === "it" ? "Opportunità" : "Opportunity"}
+                        {language === "it" ? "Gap di profitto" : "Profit gap"}
                       </span>
                       <span>{money(product.riskValue)}</span>
                     </div>
@@ -1004,8 +1007,8 @@ export default function ProductsPage() {
                       }}
                     >
                       {language === "it"
-                        ? "Prodotto ad alto ricavo che lavora sotto il margine target del 20%."
-                        : "High revenue product operating below the 20% target margin."}
+                        ? "Prodotto ad alto ricavo economico che lavora sotto il margine target del 20%. Il valore mostrato indica il gap di profitto necessario per raggiungere il target, non profitto garantito."
+                        : "High economic-revenue product operating below the 20% target margin. The value shown is the profit gap required to reach the target, not guaranteed recoverable profit."}
                     </div>
                   </div>
                 );
