@@ -25,6 +25,7 @@ type MonitorNotificationEvent = {
   eventId: string;
   alert: ProfitAlert;
   reopening: boolean;
+  materialChange: boolean;
 };
 
 function periodNumber(period: string | number) {
@@ -39,6 +40,92 @@ function alertType(alert: ProfitAlert) {
         Math.max(0, alert.id.length - alert.productId.length - 1),
       )
     : alert.id;
+}
+
+type PreviousAlertForMaterialChange = {
+  severity: string;
+  priority: number;
+  monthlyImpact: number;
+  productId: string | null;
+  metadataJson: string | null;
+};
+
+function parseMetadata(value: string | null): Record<string, unknown> {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function numericMetadataValue(
+  metadata: Record<string, unknown>,
+  key: string,
+) {
+  const value = metadata[key];
+  return typeof value === "number" && Number.isFinite(value)
+    ? value
+    : null;
+}
+
+function severityRank(value: string) {
+  switch (value) {
+    case "critical": return 4;
+    case "warning": return 3;
+    case "opportunity": return 2;
+    case "info": return 1;
+    default: return 0;
+  }
+}
+
+function hasMaterialAlertChange(
+  previous: PreviousAlertForMaterialChange,
+  alert: ProfitAlert,
+) {
+  if (severityRank(alert.severity) > severityRank(previous.severity)) {
+    return true;
+  }
+
+  if (
+    previous.productId &&
+    alert.productId &&
+    previous.productId !== alert.productId
+  ) {
+    return true;
+  }
+
+  const previousMetadata = parseMetadata(previous.metadataJson);
+  const nextMetadata =
+    alert.metadata && typeof alert.metadata === "object"
+      ? (alert.metadata as Record<string, unknown>)
+      : {};
+
+  for (const key of [
+    "affectedProducts",
+    "missingCostCount",
+    "losingCount",
+    "productCount",
+  ]) {
+    const before = numericMetadataValue(previousMetadata, key);
+    const after = numericMetadataValue(nextMetadata, key);
+    if (before !== null && after !== null && after > before) {
+      return true;
+    }
+  }
+
+  if (alert.priority >= previous.priority + 10) {
+    return true;
+  }
+
+  const previousImpact = Math.max(0, previous.monthlyImpact);
+  const nextImpact = Math.max(0, alert.monthlyImpact);
+  const meaningfulImpactIncrease = Math.max(50, previousImpact * 0.15);
+
+  return nextImpact >= previousImpact + meaningfulImpactIncrease;
 }
 
 function toStoredState(row: {
@@ -67,9 +154,13 @@ function alertEmailSubject(
   alert: ProfitAlert,
   language: "it" | "en",
   reopening: boolean,
+  materialChange: boolean,
 ) {
   if (language === "it") {
     if (reopening) return `MarginLab: un problema è tornato attivo — ${alert.title}`;
+    if (materialChange) {
+      return `MarginLab: cambiamento importante rilevato — ${alert.title}`;
+    }
     if (alert.severity === "critical") {
       return `MarginLab: rilevato un problema critico — ${alert.title}`;
     }
@@ -80,6 +171,9 @@ function alertEmailSubject(
   }
 
   if (reopening) return `MarginLab: an issue is active again — ${alert.title}`;
+  if (materialChange) {
+    return `MarginLab: important change detected — ${alert.title}`;
+  }
   if (alert.severity === "critical") {
     return `MarginLab: critical profit issue detected — ${alert.title}`;
   }
@@ -125,11 +219,13 @@ async function queueProfitMonitorNotifications({
         event.alert,
         language,
         event.reopening,
+        event.materialChange,
       ),
       payload: {
         source: "profit-monitor",
         monitorEventId: event.eventId,
         reopening: event.reopening,
+        materialChange: event.materialChange,
         language,
         alert: event.alert,
       },
@@ -172,6 +268,10 @@ export async function syncProfitMonitor({
     for (const alert of alerts) {
       const previous = byKey.get(alert.id);
       const reopening = previous?.status === "resolved";
+      const materialChange =
+        Boolean(previous) &&
+        !reopening &&
+        hasMaterialAlertChange(previous!, alert);
 
       const data = {
         alertType: alertType(alert),
@@ -204,13 +304,19 @@ export async function syncProfitMonitor({
           : data,
       });
 
-      if (!previous || reopening) {
+      if (!previous || reopening || materialChange) {
         const event = await tx.profitMonitorAlertEvent.create({
           data: {
             alertId: row.id,
             fromStatus: previous?.status ?? null,
-            toStatus: reopening ? "active" : "new",
-            source: "monitor-sync",
+            toStatus: reopening
+              ? "active"
+              : !previous
+                ? "new"
+                : row.status,
+            source: materialChange
+              ? "monitor-material-change"
+              : "monitor-sync",
           },
         });
 
@@ -218,6 +324,7 @@ export async function syncProfitMonitor({
           eventId: event.id,
           alert,
           reopening,
+          materialChange,
         });
       }
     }
