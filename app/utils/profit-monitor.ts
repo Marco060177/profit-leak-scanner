@@ -152,7 +152,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "action",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: "Products",
         };
     }
@@ -169,9 +169,9 @@ function enrichProfitAlert(
                     ? "easy"
                     : "medium",
             estimatedMinutes: clamp(
-                affectedProducts * 2,
-                5,
-                30,
+                affectedProducts,
+                3,
+                15,
             ),
             recommendedModule: "Products",
         };
@@ -185,7 +185,7 @@ function enrichProfitAlert(
                     ? "action"
                     : "review",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: "Profit Intelligence",
         };
     }
@@ -198,7 +198,7 @@ function enrichProfitAlert(
                     ? "action"
                     : "review",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: "Profit Intelligence",
         };
     }
@@ -208,7 +208,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "optimize",
             effort: "medium",
-            estimatedMinutes: 20,
+            estimatedMinutes: 10,
             recommendedModule: "Profit Intelligence",
         };
     }
@@ -218,7 +218,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "review",
             effort: "advanced",
-            estimatedMinutes: 30,
+            estimatedMinutes: 15,
             recommendedModule: "Profit Intelligence",
         };
     }
@@ -231,7 +231,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "optimize",
             effort: "easy",
-            estimatedMinutes: 10,
+            estimatedMinutes: 5,
             recommendedModule: "Recovery Simulator",
         };
     }
@@ -262,7 +262,7 @@ function enrichProfitAlert(
                     ? "action"
                     : "review",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: "Products",
         };
     }
@@ -275,7 +275,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "review",
             effort: "medium",
-            estimatedMinutes: 20,
+            estimatedMinutes: 10,
             recommendedModule: "AI Advisor",
         };
     }
@@ -288,7 +288,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "monitor",
             effort: "easy",
-            estimatedMinutes: 5,
+            estimatedMinutes: 2,
             recommendedModule: "AI Advisor",
         };
     }
@@ -298,7 +298,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "action",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: getModuleFromRoute(
                 alert.route,
             ),
@@ -310,7 +310,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "review",
             effort: "medium",
-            estimatedMinutes: 15,
+            estimatedMinutes: 5,
             recommendedModule: getModuleFromRoute(
                 alert.route,
             ),
@@ -324,7 +324,7 @@ function enrichProfitAlert(
             ...alert,
             businessAction: "optimize",
             effort: "easy",
-            estimatedMinutes: 10,
+            estimatedMinutes: 5,
             recommendedModule: getModuleFromRoute(
                 alert.route,
             ),
@@ -335,7 +335,7 @@ function enrichProfitAlert(
         ...alert,
         businessAction: "monitor",
         effort: "easy",
-        estimatedMinutes: 5,
+        estimatedMinutes: 2,
         recommendedModule: getModuleFromRoute(
             alert.route,
         ),
@@ -685,8 +685,16 @@ export function generateProfitAlerts({
      * Deterioramento del margine rispetto al periodo precedente
      */
     const marginDelta = safeNumber(summary.marginDelta);
+    const revenueDeltaPct = safeNumber(summary.revenueDeltaPct);
+    const revenueGrowingWhileMarginFalls =
+        revenueDeltaPct > 5 && marginDelta < 0;
 
-    if (marginDelta <= -2) {
+    /*
+     * When revenue is growing while margin is falling, the dedicated growth
+     * alert below already includes the margin deterioration signal. Avoid
+     * creating a second operational task with the same economic impact.
+     */
+    if (marginDelta <= -2 && !revenueGrowingWhileMarginFalls) {
         const previousMargin =
             summary.previousMarginPct !== undefined
                 ? safeNumber(summary.previousMarginPct)
@@ -1002,9 +1010,7 @@ export function generateProfitAlerts({
      * ALERT 10
      * Ricavi in crescita ma margine in calo
      */
-    const revenueDeltaPct = safeNumber(summary.revenueDeltaPct);
-
-    if (revenueDeltaPct > 5 && marginDelta < 0) {
+    if (revenueGrowingWhileMarginFalls) {
         alerts.push({
             id: "revenue-up-margin-down",
             severity: "warning",
@@ -1020,13 +1026,13 @@ export function generateProfitAlerts({
                 )}, mentre il margine è diminuito di ${number(
                     Math.abs(marginDelta),
                     1,
-                )} punti. La crescita attuale potrebbe non tradursi in profitto di qualità.`
+                )} punti. Questo segnale consolida il deterioramento del margine perché descrive lo stesso movimento economico.`
                 : `Revenue increased by ${pct(
                     revenueDeltaPct,
                 )}, while margin declined by ${number(
                     Math.abs(marginDelta),
                     1,
-                )} points. Current growth may not be translating into quality profit.`,
+                )} points. This consolidates the current margin-deterioration signal because both describe the same underlying movement.`,
 
             monthlyImpact: normalizeToMonthly(
                 revenue * (Math.abs(marginDelta) / 100),
