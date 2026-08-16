@@ -130,6 +130,62 @@ model StoreTaxProfile {
   shippingIncludeVat    Boolean  @default(true)
   shippingVatRatePct    Float    @default(22)
 
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model NotificationPreferences {
+  id                     String   @id @default(cuid())
+  shop                   String   @unique
+
+  recipientEmail         String?
+
+  emailAlertsEnabled     Boolean  @default(false)
+  weeklyReportEnabled    Boolean  @default(false)
+
+  notifyCritical         Boolean  @default(true)
+  notifyWarnings         Boolean  @default(false)
+  notifyOpportunities    Boolean  @default(false)
+
+  weeklyReportDay        Int      @default(1)
+  weeklyReportHour       Int      @default(8)
+
+  timezone               String   @default("UTC")
+  language               String   @default("en")
+
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+}
+
+model NotificationDelivery {
+  id                 String   @id @default(cuid())
+  shop               String
+
+  channel            String   @default("email")
+  notificationType   String
+
+  recipient          String
+
+  alertKey           String?
+  periodDays         Int?
+
+  deduplicationKey   String   @unique
+
+  subject            String?
+  payloadJson        String?
+
+  status             String   @default("pending")
+  providerMessageId  String?
+  errorMessage       String?
+
+  scheduledFor       DateTime?
+  sentAt             DateTime?
+  failedAt           DateTime?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([shop, notificationType, createdAt])
+  @@index([shop, status])
+  @@index([scheduledFor, status])
 }
