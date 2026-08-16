@@ -35,7 +35,7 @@ export async function action({ request }: { request: Request }) {
     input: {
       recipientEmail: email,
       emailAlertsEnabled: true,
-      weeklyReportEnabled: false,
+      weeklyReportEnabled: true,
       notifyCritical: true,
       notifyWarnings: false,
       notifyOpportunities: false,
