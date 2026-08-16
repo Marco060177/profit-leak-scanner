@@ -60,6 +60,7 @@ export default function ProfitIntelligencePage() {
     shopHandle,
     taxContext,
     taxAwareEconomics,
+    economicSnapshot,
   } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
@@ -86,9 +87,10 @@ export default function ProfitIntelligencePage() {
     .sort((a, b) => b.discounts - a.discounts)
     .slice(0, 5);
 
-  // Store-level economic basis. These values are produced centrally by the
-  // tax-aware engine. Product-level rows intentionally remain unchanged
-  // until MarginLab has a dedicated per-product tax allocation model.
+  // Official economic basis.
+  // Store-level values come from the central tax-aware engine. Product-level
+  // analytics use the normalized economic fields already produced by the
+  // dashboard loader, with raw Shopify fields only as fallbacks.
   const economicRevenue =
     summary.economicRevenue ?? taxAwareEconomics?.netRevenue ?? summary.revenue;
   const economicCogs =
@@ -97,6 +99,23 @@ export default function ProfitIntelligencePage() {
     summary.economicProfit ?? taxAwareEconomics?.realProfit ?? summary.profit;
   const economicMarginPct =
     summary.economicMarginPct ?? taxAwareEconomics?.realMarginPct ?? summary.marginPct;
+
+  const economicRows = rows.map((row) => {
+    const revenue = row.economicRevenue ?? row.revenue;
+    const cogs = row.economicCogs ?? row.cogs;
+    const profit = row.economicProfit ?? row.profit;
+    const marginPct = row.economicMarginPct ?? row.marginPct;
+
+    return {
+      ...row,
+      revenue,
+      cogs,
+      profit,
+      marginPct,
+      losing: profit < 0,
+      lowMargin: marginPct > 0 && marginPct < 10,
+    };
+  });
 
   const hasEconomicNormalization = Boolean(taxAwareEconomics);
 
@@ -107,21 +126,26 @@ export default function ProfitIntelligencePage() {
         ? "Sales Tax"
         : taxContext?.taxSystem ?? "—";
 
-  const totalRevenue = Math.max(summary.revenue, 1);
+  const totalRevenue = Math.max(economicRevenue, 1);
 
   const cogsPercentage = Math.min(
     100,
-    Math.max(0, (summary.cogs / totalRevenue) * 100),
+    Math.max(0, (economicCogs / totalRevenue) * 100),
   );
 
   const profitPercentage = Math.min(
     100,
-    Math.max(0, (summary.profit / totalRevenue) * 100),
+    Math.max(0, (economicProfit / totalRevenue) * 100),
   );
+
+  const periodEconomicLoss =
+    economicSnapshot?.amounts.find(
+      (amount) => amount.id === "product-losses",
+    )?.periodAmount ?? 0;
 
   const leakPercentage = Math.min(
     100,
-    Math.max(0, (summary.totalLeak / totalRevenue) * 100),
+    Math.max(0, (periodEconomicLoss / totalRevenue) * 100),
   );
 
   const firstTrendPoint = trend[0];
@@ -175,7 +199,7 @@ export default function ProfitIntelligencePage() {
           : 0,
     }));
 
-  const sortedRevenueRows = [...rows].sort((a, b) => b.revenue - a.revenue);
+  const sortedRevenueRows = [...economicRows].sort((a, b) => b.revenue - a.revenue);
 
   const topProductRevenue = sortedRevenueRows[0]?.revenue || 0;
   const top3Revenue = sortedRevenueRows
@@ -214,9 +238,9 @@ export default function ProfitIntelligencePage() {
           : "RISCHIO BASSO"
       : `${dependencyLevel.toUpperCase()} RISK`;
 
-  const sortedProfitRows = [...rows].sort((a, b) => b.profit - a.profit);
+  const sortedProfitRows = [...economicRows].sort((a, b) => b.profit - a.profit);
 
-  const totalProfitBase = Math.max(summary.profit, 1);
+  const totalProfitBase = Math.max(economicProfit, 1);
   const topProductProfit = sortedProfitRows[0]?.profit || 0;
   const top3Profit = sortedProfitRows
     .slice(0, 3)
@@ -225,16 +249,16 @@ export default function ProfitIntelligencePage() {
   const topProductProfitShare = (topProductProfit / totalProfitBase) * 100;
   const top3ProfitShare = (top3Profit / totalProfitBase) * 100;
 
-  const weakProfitDrivers = rows
+  const weakProfitDrivers = economicRows
     .filter((row) => row.revenue > 0 && row.marginPct < 15)
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 3);
 
-  const healthyProfitProducts = rows.filter(
+  const healthyProfitProducts = economicRows.filter(
     (row) => row.revenue > 0 && row.marginPct >= 30,
   ).length;
 
-  const weakProfitProducts = rows.filter(
+  const weakProfitProducts = economicRows.filter(
     (row) => row.revenue > 0 && row.marginPct < 15,
   ).length;
 
@@ -339,8 +363,8 @@ export default function ProfitIntelligencePage() {
           ["Rimborsi", round2(summary.refunds)],
           ["Spedizione", round2(summary.shipping)],
           ["Imposte registrate", round2(summary.taxes)],
-          ["Perdita totale", round2(summary.totalLeak)],
-          ["Prodotti in perdita", summary.losingCount],
+          ["Perdita economica del periodo", round2(periodEconomicLoss)],
+          ["Prodotti economicamente in perdita", economicRows.filter((row) => row.losing).length],
           ["Prodotti senza costo", summary.missingCostCount],
           ["Margine precedente %", round2(summary.previousMarginPct)],
           ["Variazione margine (punti)", round2(summary.marginDelta)],
@@ -364,8 +388,8 @@ export default function ProfitIntelligencePage() {
           ["Refunds", round2(summary.refunds)],
           ["Shipping", round2(summary.shipping)],
           ["Recorded taxes", round2(summary.taxes)],
-          ["Total leak", round2(summary.totalLeak)],
-          ["Losing products", summary.losingCount],
+          ["Economic loss for period", round2(periodEconomicLoss)],
+          ["Economically losing products", economicRows.filter((row) => row.losing).length],
           ["Products missing cost", summary.missingCostCount],
           ["Previous margin %", round2(summary.previousMarginPct)],
           ["Margin change (points)", round2(summary.marginDelta)],
@@ -396,7 +420,7 @@ export default function ProfitIntelligencePage() {
           "Recommended action",
         ];
 
-    const productRows = rows.map((row) => [
+    const productRows = economicRows.map((row) => [
       row.productTitle,
       row.productId,
       row.qty,
@@ -408,8 +432,8 @@ export default function ProfitIntelligencePage() {
       round2(row.marginPct),
       round2(row.previousMarginPct),
       round2(row.productMarginDelta),
-      round2(row.revenueSharePct ?? (row.revenue / totalRevenue) * 100),
-      round2(row.profitSharePct ?? (row.profit / totalProfitBase) * 100),
+      round2((row.revenue / totalRevenue) * 100),
+      round2((row.profit / totalProfitBase) * 100),
       round2(row.avgPrice),
       round2(row.avgCost),
       round2(row.breakEvenPrice),
@@ -705,6 +729,21 @@ export default function ProfitIntelligencePage() {
         />
 
         <div
+          style={{
+            marginTop: -16,
+            marginBottom: 24,
+            color: "rgba(255,255,255,0.42)",
+            fontSize: 11,
+            lineHeight: 1.55,
+            fontWeight: 700,
+          }}
+        >
+          {language === "it"
+            ? "COGS e profitto descrivono la composizione della base economica. La perdita di margine è un indicatore separato: quota dei ricavi associata a profitto economico negativo nel periodo selezionato."
+            : "COGS and profit describe the economic composition. Margin loss is a separate indicator: the share of revenue represented by negative economic profit in the selected period."}
+        </div>
+
+        <div
           className="panel"
           style={{
             marginTop: 24,
@@ -735,8 +774,8 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {language === "it"
-                  ? "Vista store-level basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti restano separate e non ricevono allocazioni fiscali stimate per prodotto."
-                  : "Store-level view from MarginLab's central economic engine. Product analytics below remain separate and do not receive estimated per-product tax allocations."}
+                  ? "Vista basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti utilizzano la stessa base economica normalizzata disponibile per ciascun prodotto."
+                  : "View based on MarginLab's central economic engine. Product analytics below use the same normalized economic basis available for each product."}
               </div>
             </div>
 
@@ -986,7 +1025,7 @@ export default function ProfitIntelligencePage() {
                       {row.previousMarginPct != null
                         ? pct(row.previousMarginPct)
                         : "—"}{" "}
-                      → {pct(row.marginPct)}
+                      → {pct(row.economicMarginPct ?? row.marginPct)}
                     </div>
                   </div>
                 </div>
@@ -1015,8 +1054,12 @@ export default function ProfitIntelligencePage() {
 
             <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
               {topDiscountProducts.map((row) => {
+                const productRevenue =
+                  row.economicRevenue ?? row.revenue;
                 const discountPct =
-                  row.revenue > 0 ? (row.discounts / row.revenue) * 100 : 0;
+                  productRevenue > 0
+                    ? (row.discounts / productRevenue) * 100
+                    : 0;
 
                 return (
                   <div
@@ -1559,7 +1602,7 @@ export default function ProfitIntelligencePage() {
                 letterSpacing: "-0.04em",
               }}
             >
-              {healthyProfitProducts}/{rows.length}
+              {healthyProfitProducts}/{economicRows.length}
             </div>
 
             <div
@@ -1603,7 +1646,7 @@ export default function ProfitIntelligencePage() {
                 style={{
                   width: `${Math.min(
                     100,
-                    Math.max(0, (healthyProfitProducts / Math.max(rows.length, 1)) * 100),
+                    Math.max(0, (healthyProfitProducts / Math.max(economicRows.length, 1)) * 100),
                   )}%`,
                   height: "100%",
                   borderRadius: 999,
