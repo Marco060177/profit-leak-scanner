@@ -37,9 +37,7 @@ export default function MetricTooltip({
     useRef<HTMLDivElement | null>(null);
 
   const [open, setOpen] = useState(false);
-
-  const [mounted, setMounted] =
-    useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const [position, setPosition] =
     useState<Position>({
@@ -71,8 +69,7 @@ export default function MetricTooltip({
       const gap = 10;
       const viewportPadding = 12;
 
-      const roomAbove =
-        triggerRect.top;
+      const roomAbove = triggerRect.top;
 
       const roomBelow =
         window.innerHeight -
@@ -210,13 +207,11 @@ export default function MetricTooltip({
             role="tooltip"
             style={{
               position: "fixed",
-
               top: position.top,
               left: position.left,
-
               zIndex: 999999,
 
-              width: 300,
+              width: 320,
               maxWidth:
                 "calc(100vw - 24px)",
 
@@ -235,6 +230,12 @@ export default function MetricTooltip({
 
               color: "#f8fafc",
 
+              fontFamily:
+                "Inter, Arial, sans-serif",
+
+              textTransform: "none",
+              letterSpacing: "normal",
+
               opacity:
                 position.ready ? 1 : 0,
 
@@ -244,9 +245,6 @@ export default function MetricTooltip({
                   : "hidden",
 
               pointerEvents: "none",
-
-              textTransform: "none",
-              letterSpacing: "normal",
             }}
           >
             <div
@@ -260,6 +258,7 @@ export default function MetricTooltip({
                 style={{
                   width: 6,
                   height: 6,
+
                   borderRadius: "50%",
 
                   background: "#ff733c",
@@ -275,10 +274,13 @@ export default function MetricTooltip({
                 style={{
                   color: "#ffffff",
 
-                  fontSize: 12,
-                  lineHeight: 1.3,
+                  fontSize: 13,
+                  lineHeight: 1.35,
 
-                  fontWeight: 950,
+                  fontWeight: 850,
+
+                  fontFamily:
+                    "Inter, Arial, sans-serif",
                 }}
               >
                 {content.title}
@@ -287,15 +289,18 @@ export default function MetricTooltip({
 
             <div
               style={{
-                marginTop: 8,
+                marginTop: 9,
 
                 color:
-                  "rgba(226,232,240,0.78)",
+                  "rgba(226,232,240,0.86)",
 
-                fontSize: 11,
-                lineHeight: 1.5,
+                fontSize: 12,
+                lineHeight: 1.6,
 
-                fontWeight: 650,
+                fontWeight: 500,
+
+                fontFamily:
+                  "Inter, Arial, sans-serif",
               }}
             >
               {content.description}
@@ -304,7 +309,7 @@ export default function MetricTooltip({
             {content.formula ? (
               <div
                 style={{
-                  marginTop: 10,
+                  marginTop: 11,
 
                   padding: "9px 10px",
 
@@ -320,18 +325,21 @@ export default function MetricTooltip({
                 <div
                   style={{
                     color:
-                      "rgba(148,163,184,0.75)",
+                      "rgba(148,163,184,0.78)",
 
                     fontSize: 8,
-                    lineHeight: 1.2,
+                    lineHeight: 1.25,
 
-                    fontWeight: 950,
+                    fontWeight: 900,
 
                     textTransform:
                       "uppercase",
 
                     letterSpacing:
                       "0.08em",
+
+                    fontFamily:
+                      "Inter, Arial, sans-serif",
                   }}
                 >
                   How it&apos;s calculated
@@ -339,15 +347,18 @@ export default function MetricTooltip({
 
                 <div
                   style={{
-                    marginTop: 4,
+                    marginTop: 5,
 
                     color:
                       "rgba(241,245,249,0.92)",
 
-                    fontSize: 10,
-                    lineHeight: 1.45,
+                    fontSize: 11,
+                    lineHeight: 1.55,
 
-                    fontWeight: 700,
+                    fontWeight: 600,
+
+                    fontFamily:
+                      "Inter, Arial, sans-serif",
                   }}
                 >
                   {content.formula}
@@ -358,19 +369,22 @@ export default function MetricTooltip({
             {content.note ? (
               <div
                 style={{
-                  marginTop: 8,
-                  paddingTop: 8,
+                  marginTop: 9,
+                  paddingTop: 9,
 
                   borderTop:
                     "1px solid rgba(255,255,255,0.06)",
 
                   color:
-                    "rgba(148,163,184,0.75)",
+                    "rgba(148,163,184,0.80)",
 
-                  fontSize: 9,
-                  lineHeight: 1.45,
+                  fontSize: 10,
+                  lineHeight: 1.55,
 
-                  fontWeight: 650,
+                  fontWeight: 500,
+
+                  fontFamily:
+                    "Inter, Arial, sans-serif",
                 }}
               >
                 {content.note}
@@ -503,8 +517,11 @@ export default function MetricTooltip({
           boxShadow:
             "0 0 12px rgba(255,115,60,0.07)",
 
+          fontFamily:
+            "Inter, Arial, sans-serif",
+
           fontSize: 10,
-          fontWeight: 950,
+          fontWeight: 900,
 
           lineHeight: 1,
 
