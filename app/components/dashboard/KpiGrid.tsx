@@ -1,9 +1,14 @@
+import MetricTooltip, {
+  type MetricTooltipContent,
+} from "~/components/ui/MetricTooltip";
+
 type Kpi = {
   label: string;
   value: string;
   note: string;
   icon?: string;
   tone?: "positive" | "warning" | "danger";
+  tooltip?: MetricTooltipContent;
 };
 
 type Props = {
@@ -41,8 +46,10 @@ export default function KpiGrid({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(255,115,60,0.08)",
-                border: "1px solid rgba(255,115,60,0.20)",
+                background:
+                  "rgba(255,115,60,0.08)",
+                border:
+                  "1px solid rgba(255,115,60,0.20)",
                 color: "#ff733c",
                 fontSize: 14,
                 fontWeight: 900,
@@ -53,8 +60,22 @@ export default function KpiGrid({
             </div>
           )}
 
-          <div className="kpi-label">
-            {item.label}
+          <div
+            className="kpi-label"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              paddingRight: item.icon ? 42 : 0,
+            }}
+          >
+            <span>{item.label}</span>
+
+            {item.tooltip ? (
+              <MetricTooltip
+                content={item.tooltip}
+              />
+            ) : null}
           </div>
 
           <div className="kpi-value">
