@@ -22,6 +22,7 @@ type NavId =
   | "forecasting"
   | "profit-assumptions"
   | "tax-profile"
+  | "reports-notifications"
   | "billing";
 
 type Props = {
@@ -686,7 +687,9 @@ export default function DashboardNav({
           <button
             type="button"
             className={
-              active === "tax-profile" || active === "billing"
+              active === "tax-profile" ||
+                active === "reports-notifications" ||
+                active === "billing"
                 ? "nav-tab active"
                 : "nav-tab"
             }
@@ -824,6 +827,84 @@ export default function DashboardNav({
                   {language === "it"
                     ? "Regime IVA e impostazioni fiscali"
                     : "VAT regime and tax settings"}
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() =>
+                openPage(
+                  "reports-notifications",
+                  "/app/reports-notifications",
+                )
+              }
+              style={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: "34px minmax(0,1fr)",
+                gap: 10,
+                alignItems: "center",
+                padding: "11px 12px",
+                borderRadius: 14,
+                border:
+                  active === "reports-notifications"
+                    ? "1px solid rgba(255,115,60,0.24)"
+                    : "1px solid transparent",
+                background:
+                  active === "reports-notifications"
+                    ? "rgba(255,115,60,0.12)"
+                    : "transparent",
+                cursor: "pointer",
+                textAlign: "left",
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  display: "grid",
+                  placeItems: "center",
+                  borderRadius: 11,
+                  color: "#ff9a70",
+                  background: "rgba(255,115,60,0.09)",
+                  border: "1px solid rgba(255,115,60,0.16)",
+                  fontSize: 13,
+                  fontWeight: 950,
+                }}
+              >
+                ✉
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    color:
+                      active === "reports-notifications"
+                        ? "#ffffff"
+                        : "rgba(255,255,255,0.82)",
+                    fontSize: 13,
+                    fontWeight: 900,
+                  }}
+                >
+                  {language === "it"
+                    ? "Report e notifiche"
+                    : "Reports & Notifications"}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 3,
+                    color: "rgba(255,255,255,0.42)",
+                    fontSize: 10,
+                    lineHeight: 1.35,
+                    fontWeight: 700,
+                  }}
+                >
+                  {language === "it"
+                    ? "Email, report settimanali e alert"
+                    : "Email, weekly reports and alerts"}
                 </div>
               </div>
             </button>
