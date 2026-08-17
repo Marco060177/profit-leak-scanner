@@ -664,13 +664,31 @@ function buildWeeklyProfitReportEmail({
 export async function processPendingNotificationDeliveries({
   limit = 25,
   currencyCode = "USD",
+  notificationType,
 }: {
   limit?: number;
   currencyCode?: string;
+  notificationType?: "profit_alert" | "weekly_profit_report";
 } = {}) {
-  const deliveries = await listPendingNotificationDeliveries({
-    limit,
+  /*
+   * When a specific notification type is requested (for example by the
+   * Weekly Report test route), scan a larger slice of the pending queue first
+   * and then process only the requested type.
+   *
+   * Normal production behavior is unchanged when notificationType is omitted.
+   */
+  const pendingDeliveries = await listPendingNotificationDeliveries({
+    limit: notificationType ? 200 : limit,
   });
+
+  const deliveries = notificationType
+    ? pendingDeliveries
+        .filter(
+          (delivery) =>
+            delivery.notificationType === notificationType,
+        )
+        .slice(0, limit)
+    : pendingDeliveries;
 
   let sent = 0;
   let failed = 0;
@@ -710,11 +728,16 @@ export async function processPendingNotificationDeliveries({
               });
             })()
           : (() => {
-              const payload = parsePayload<WeeklyProfitReportPayload>(
-                delivery.payloadJson,
-              );
+              const payload =
+                parsePayload<WeeklyProfitReportPayload>(
+                  delivery.payloadJson,
+                );
 
-              if (!payload?.summary || !payload?.economics || !payload?.alertCounts) {
+              if (
+                !payload?.summary ||
+                !payload?.economics ||
+                !payload?.alertCounts
+              ) {
                 throw new Error(
                   "Weekly profit report delivery is missing a valid payload.",
                 );
