@@ -6,11 +6,6 @@ import type {
   ProfitAlertStatus,
   StoredProfitAlertState,
 } from "~/utils/profit-alert-state";
-import {
-  createAlertNotificationDelivery,
-  getNotificationPreferences,
-  shouldNotifyAlert,
-} from "~/services/notification.server";
 
 const VALID_STATUSES = new Set<ProfitAlertStatus>([
   "new",
@@ -183,56 +178,6 @@ function alertEmailSubject(
   return `MarginLab: new opportunity — ${alert.title}`;
 }
 
-async function queueProfitMonitorNotifications({
-  shop,
-  periodDays,
-  events,
-}: {
-  shop: string;
-  periodDays: number;
-  events: MonitorNotificationEvent[];
-}) {
-  if (events.length === 0) return;
-
-  const preferences = await getNotificationPreferences(shop);
-
-  if (
-    !preferences ||
-    !preferences.recipientEmail ||
-    !preferences.emailAlertsEnabled
-  ) {
-    return;
-  }
-
-  const language = preferences.language === "it" ? "it" : "en";
-
-  for (const event of events) {
-    if (!shouldNotifyAlert(event.alert, preferences)) continue;
-
-    await createAlertNotificationDelivery({
-      shop,
-      alert: event.alert,
-      recipient: preferences.recipientEmail,
-      periodDays,
-      monitorEventId: event.eventId,
-      subject: alertEmailSubject(
-        event.alert,
-        language,
-        event.reopening,
-        event.materialChange,
-      ),
-      payload: {
-        source: "profit-monitor",
-        monitorEventId: event.eventId,
-        reopening: event.reopening,
-        materialChange: event.materialChange,
-        language,
-        alert: event.alert,
-      },
-    });
-  }
-}
-
 export async function syncProfitMonitor({
   shop,
   period,
@@ -350,19 +295,8 @@ export async function syncProfitMonitor({
     return createdNotificationEvents;
   });
 
-  try {
-    await queueProfitMonitorNotifications({
-      shop,
-      periodDays,
-      events: notificationEvents,
-    });
-  } catch (error) {
-    console.error("Profit Monitor notification queue failed", {
-      shop,
-      periodDays,
-      error,
-    });
-  }
+  // Immediate email alerts are created by the orders/create webhook.
+  // Profit Monitor events remain persisted for the in-app Alert Center.
 
   return getProfitAlertStates({ shop, period: periodDays });
 }

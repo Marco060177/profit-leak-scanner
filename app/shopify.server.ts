@@ -19,6 +19,10 @@ const shopify = shopifyApp({
   distribution: AppDistribution.AppStore,
 
   webhooks: {
+    ORDERS_CREATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/orders/create",
+    },
     APP_UNINSTALLED: {
       deliveryMethod: DeliveryMethod.Http,
       callbackUrl: "/webhooks/app/uninstalled",
@@ -45,7 +49,6 @@ const shopify = shopifyApp({
 
   future: {
     expiringOfflineAccessTokens: true,
-    
   },
 
   ...(process.env.SHOP_CUSTOM_DOMAIN

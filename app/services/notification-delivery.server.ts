@@ -29,6 +29,19 @@ type ProfitAlertPayload = {
     recommendedModule: string;
     productTitle?: string;
   };
+  sale?: {
+    orderId: string;
+    orderName: string;
+    productId: string;
+    productTitle: string;
+    quantity: number;
+    revenue: number;
+    cogs: number | null;
+    profit: number | null;
+    marginPct: number | null;
+    missingCost: boolean;
+    currencyCode: string;
+  };
 };
 
 type WeeklyProfitReportPayload = {
@@ -195,6 +208,151 @@ function formatImpact({
               ? "Valore mensile indicativo"
               : "Indicative monthly value",
   };
+}
+
+function buildProductSaleAlertEmail({
+  payload,
+  fallbackCurrencyCode = "USD",
+}: {
+  payload: ProfitAlertPayload;
+  fallbackCurrencyCode?: string;
+}) {
+  const alert = payload.alert;
+  const sale = payload.sale;
+
+  if (!alert || !sale) {
+    throw new Error("Product sale alert payload is incomplete.");
+  }
+
+  const language = payload.language === "it" ? "it" : "en";
+  const locale = language === "it" ? "it-IT" : "en-US";
+  const currencyCode = sale.currencyCode || fallbackCurrencyCode;
+
+  const money = (value: number) =>
+    formatStoreMoney(
+      Number.isFinite(value) ? value : 0,
+      currencyCode,
+      locale,
+    );
+
+  const margin =
+    sale.marginPct === null
+      ? null
+      : `${new Intl.NumberFormat(locale, {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+        }).format(sale.marginPct)}%`;
+
+  const appUrl = buildAppUrl(alert.route);
+
+  const issueTitle =
+    language === "it"
+      ? sale.missingCost
+        ? "Hai appena venduto un prodotto senza costo configurato"
+        : sale.profit !== null && sale.profit < 0
+          ? "Hai appena venduto un prodotto in perdita"
+          : "Hai appena venduto un prodotto con margine debole"
+      : sale.missingCost
+        ? "You just sold a product with no cost configured"
+        : sale.profit !== null && sale.profit < 0
+          ? "You just sold a product at a loss"
+          : "You just sold a product with weak margin";
+
+  const explanation =
+    language === "it"
+      ? sale.missingCost
+        ? `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}, ma il costo Shopify del prodotto non è disponibile.`
+        : `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}. I valori sotto si riferiscono a questa vendita e al costo Shopify corrente, non a una previsione mensile.`
+      : sale.missingCost
+        ? `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}, but the product's Shopify cost is not available.`
+        : `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}. The values below refer to this sale and the current Shopify cost, not to a monthly forecast.`;
+
+  const subject =
+    language === "it"
+      ? `MarginLab: controlla ${sale.productTitle}`
+      : `MarginLab: review ${sale.productTitle}`;
+
+  const metrics = [
+    {
+      label: language === "it" ? "Ricavo netto prodotto" : "Net product revenue",
+      value: money(sale.revenue),
+    },
+    {
+      label: language === "it" ? "Costo Shopify corrente" : "Current Shopify cost",
+      value:
+        sale.cogs === null
+          ? language === "it"
+            ? "Mancante"
+            : "Missing"
+          : money(sale.cogs),
+    },
+    {
+      label: language === "it" ? "Profitto della vendita" : "Sale profit",
+      value: sale.profit === null ? "—" : money(sale.profit),
+    },
+    {
+      label: language === "it" ? "Margine della vendita" : "Sale margin",
+      value: margin ?? "—",
+    },
+  ];
+
+  const metricsHtml = metrics
+    .map(
+      (item) => `
+        <div style="padding:14px;border-radius:12px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${escapeHtml(item.label)}</div>
+          <div style="margin-top:5px;font-size:16px;font-weight:850;color:#ffffff;">${escapeHtml(item.value)}</div>
+        </div>
+      `,
+    )
+    .join("");
+
+  const cta = appUrl
+    ? `
+      <div style="margin-top:22px;">
+        <a href="${escapeHtml(appUrl)}" style="display:inline-block;padding:13px 18px;border-radius:12px;background:#ff6b4a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">
+          ${language === "it" ? "Controlla il prodotto →" : "Review product →"}
+        </a>
+      </div>
+    `
+    : "";
+
+  const html = `
+    <div style="margin:0;padding:32px;background:#050910;font-family:Arial,Helvetica,sans-serif;color:#f8fafc;">
+      <div style="max-width:680px;margin:0 auto;">
+        <div style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ff875f;">MARGINLAB PRODUCT ALERT</div>
+        <div style="margin-top:10px;font-size:30px;line-height:1.2;font-weight:900;color:#ffffff;">${escapeHtml(issueTitle)}</div>
+        <div style="margin-top:10px;font-size:21px;line-height:1.3;font-weight:900;color:#ffffff;">${escapeHtml(sale.productTitle)}</div>
+        <div style="margin-top:14px;font-size:15px;line-height:1.7;color:#cbd5e1;">${escapeHtml(explanation)}</div>
+        <div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">${metricsHtml}</div>
+        ${cta}
+        <div style="margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6;color:#64748b;">
+          ${
+            language === "it"
+              ? "Questo alert riguarda la vendita appena rilevata. Non contiene proiezioni mensili. Il costo utilizzato è il costo Shopify corrente disponibile al momento del controllo."
+              : "This alert refers to the sale just detected. It contains no monthly projection. The cost used is the current Shopify cost available when the alert was evaluated."
+          }
+        </div>
+      </div>
+    </div>
+  `;
+
+  const text = [
+    "MarginLab Product Alert",
+    "",
+    issueTitle,
+    sale.productTitle,
+    "",
+    explanation,
+    "",
+    `${language === "it" ? "Ricavo netto prodotto" : "Net product revenue"}: ${money(sale.revenue)}`,
+    `${language === "it" ? "Costo Shopify corrente" : "Current Shopify cost"}: ${sale.cogs === null ? (language === "it" ? "Mancante" : "Missing") : money(sale.cogs)}`,
+    `${language === "it" ? "Profitto della vendita" : "Sale profit"}: ${sale.profit === null ? "—" : money(sale.profit)}`,
+    `${language === "it" ? "Margine della vendita" : "Sale margin"}: ${margin ?? "—"}`,
+    ...(appUrl ? ["", `${language === "it" ? "Controlla in MarginLab" : "Review in MarginLab"}: ${appUrl}`] : []),
+  ].join("\\n");
+
+  return { subject, html, text };
 }
 
 function buildProfitAlertEmail({
@@ -720,6 +878,16 @@ export async function processPendingNotificationDeliveries({
                 throw new Error(
                   "Profit alert delivery is missing a valid payload.",
                 );
+              }
+
+              if (
+                payload.source === "product-sale-alert" &&
+                payload.sale
+              ) {
+                return buildProductSaleAlertEmail({
+                  payload,
+                  fallbackCurrencyCode: currencyCode,
+                });
               }
 
               return buildProfitAlertEmail({
