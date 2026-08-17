@@ -16,115 +16,44 @@ type Props = {
   content: MetricTooltipContent;
 };
 
-type Position = {
-  top: number;
-  left: number;
-  placement: "top" | "bottom";
-};
-
 export default function MetricTooltip({
   content,
 }: Props) {
   const id = useId();
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  const wrapperRef =
+    useRef<HTMLSpanElement | null>(null);
 
   const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState<Position>({
-    top: 0,
-    left: 0,
-    placement: "top",
-  });
 
   useEffect(() => {
     if (!open) return;
 
-    function updatePosition() {
-      const trigger = triggerRef.current;
-      const tooltip = tooltipRef.current;
-
-      if (!trigger || !tooltip) return;
-
-      const triggerRect = trigger.getBoundingClientRect();
-      const tooltipRect = tooltip.getBoundingClientRect();
-
-      const viewportPadding = 12;
-      const gap = 10;
-
-      const availableAbove = triggerRect.top;
-      const availableBelow =
-        window.innerHeight - triggerRect.bottom;
-
-      const placement =
-        availableAbove >= tooltipRect.height + gap ||
-        availableAbove >= availableBelow
-          ? "top"
-          : "bottom";
-
-      let top =
-        placement === "top"
-          ? triggerRect.top - tooltipRect.height - gap
-          : triggerRect.bottom + gap;
-
-      let left =
-        triggerRect.left +
-        triggerRect.width / 2 -
-        tooltipRect.width / 2;
-
-      left = Math.max(
-        viewportPadding,
-        Math.min(
-          left,
-          window.innerWidth -
-            tooltipRect.width -
-            viewportPadding,
-        ),
-      );
-
-      top = Math.max(
-        viewportPadding,
-        Math.min(
-          top,
-          window.innerHeight -
-            tooltipRect.height -
-            viewportPadding,
-        ),
-      );
-
-      setPosition({
-        top,
-        left,
-        placement,
-      });
-    }
-
-    updatePosition();
-
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-
-    return () => {
-      window.removeEventListener(
-        "resize",
-        updatePosition,
-      );
-      window.removeEventListener(
-        "scroll",
-        updatePosition,
-        true,
-      );
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+    function handlePointerDown(
+      event: PointerEvent,
+    ) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(
+          event.target as Node,
+        )
+      ) {
         setOpen(false);
-        triggerRef.current?.focus();
       }
     }
+
+    function handleKeyDown(
+      event: KeyboardEvent,
+    ) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "pointerdown",
+      handlePointerDown,
+    );
 
     document.addEventListener(
       "keydown",
@@ -133,6 +62,11 @@ export default function MetricTooltip({
 
     return () => {
       document.removeEventListener(
+        "pointerdown",
+        handlePointerDown,
+      );
+
+      document.removeEventListener(
         "keydown",
         handleKeyDown,
       );
@@ -140,18 +74,30 @@ export default function MetricTooltip({
   }, [open]);
 
   return (
-    <>
+    <span
+      ref={wrapperRef}
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        flexShrink: 0,
+      }}
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
       <button
-        ref={triggerRef}
         type="button"
         aria-label={`More information about ${content.title}`}
-        aria-describedby={open ? id : undefined}
+        aria-describedby={
+          open ? id : undefined
+        }
         aria-expanded={open}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
+        onClick={(event) => {
+          event.stopPropagation();
+
+          setOpen((current) => !current);
+        }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onClick={() => setOpen((value) => !value)}
         style={{
           width: 17,
           height: 17,
@@ -161,16 +107,22 @@ export default function MetricTooltip({
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
+
           border:
-            "1px solid rgba(255,115,60,0.32)",
+            "1px solid rgba(255,115,60,0.38)",
+
           background:
-            "linear-gradient(180deg, rgba(255,115,60,0.10), rgba(255,115,60,0.04))",
+            "linear-gradient(180deg, rgba(255,115,60,0.13), rgba(255,115,60,0.055))",
+
           color: "#ff8a5c",
+
           boxShadow:
-            "inset 0 0 0 1px rgba(255,255,255,0.02)",
+            "0 0 12px rgba(255,115,60,0.06), inset 0 0 0 1px rgba(255,255,255,0.025)",
+
           fontSize: 10,
-          fontWeight: 900,
+          fontWeight: 950,
           lineHeight: 1,
+
           cursor: "help",
           flexShrink: 0,
           outline: "none",
@@ -181,25 +133,42 @@ export default function MetricTooltip({
 
       {open ? (
         <div
-          ref={tooltipRef}
           id={id}
           role="tooltip"
           style={{
-            position: "fixed",
-            top: position.top,
-            left: position.left,
-            zIndex: 99999,
-            width: "min(340px, calc(100vw - 24px))",
-            padding: 16,
+            position: "absolute",
+
+            left: "50%",
+            bottom: "calc(100% + 10px)",
+
+            transform:
+              "translateX(-50%)",
+
+            zIndex: 1000,
+
+            width: 300,
+            maxWidth:
+              "min(300px, calc(100vw - 40px))",
+
+            padding: 14,
+
             borderRadius: 14,
+
             border:
               "1px solid rgba(255,115,60,0.22)",
+
             background:
-              "linear-gradient(145deg, rgba(18,20,25,0.985), rgba(10,11,14,0.99))",
+              "linear-gradient(145deg, rgba(17,21,29,0.99), rgba(7,11,18,0.995))",
+
             boxShadow:
-              "0 18px 55px rgba(0,0,0,0.48), 0 0 28px rgba(255,115,60,0.07)",
+              "0 18px 45px rgba(0,0,0,0.50), 0 0 22px rgba(255,115,60,0.07)",
+
             color: "#f8fafc",
-            pointerEvents: "none",
+
+            textTransform: "none",
+            letterSpacing: "normal",
+
+            pointerEvents: "auto",
           }}
         >
           <div
@@ -207,7 +176,6 @@ export default function MetricTooltip({
               display: "flex",
               alignItems: "center",
               gap: 8,
-              marginBottom: 8,
             }}
           >
             <span
@@ -217,17 +185,17 @@ export default function MetricTooltip({
                 borderRadius: "50%",
                 background: "#ff733c",
                 boxShadow:
-                  "0 0 10px rgba(255,115,60,0.65)",
+                  "0 0 9px rgba(255,115,60,0.65)",
                 flexShrink: 0,
               }}
             />
 
             <div
               style={{
-                fontSize: 13,
-                fontWeight: 900,
+                color: "#ffffff",
+                fontSize: 12,
                 lineHeight: 1.3,
-                letterSpacing: "-0.01em",
+                fontWeight: 950,
               }}
             >
               {content.title}
@@ -236,9 +204,12 @@ export default function MetricTooltip({
 
           <div
             style={{
-              fontSize: 12,
-              lineHeight: 1.6,
-              color: "#cbd5e1",
+              marginTop: 8,
+              color:
+                "rgba(226,232,240,0.76)",
+              fontSize: 11,
+              lineHeight: 1.5,
+              fontWeight: 650,
             }}
           >
             {content.description}
@@ -247,23 +218,27 @@ export default function MetricTooltip({
           {content.formula ? (
             <div
               style={{
-                marginTop: 12,
-                padding: "10px 11px",
+                marginTop: 10,
+                padding: "9px 10px",
+
                 borderRadius: 10,
-                border:
-                  "1px solid rgba(148,163,184,0.12)",
+
                 background:
-                  "rgba(255,255,255,0.025)",
+                  "rgba(255,255,255,0.03)",
+
+                border:
+                  "1px solid rgba(255,255,255,0.065)",
               }}
             >
               <div
                 style={{
-                  marginBottom: 4,
-                  fontSize: 9,
-                  fontWeight: 900,
-                  letterSpacing: "0.08em",
+                  color:
+                    "rgba(148,163,184,0.72)",
+                  fontSize: 8,
+                  lineHeight: 1.2,
+                  fontWeight: 950,
                   textTransform: "uppercase",
-                  color: "#94a3b8",
+                  letterSpacing: "0.08em",
                 }}
               >
                 How it&apos;s calculated
@@ -271,9 +246,12 @@ export default function MetricTooltip({
 
               <div
                 style={{
-                  fontSize: 11,
-                  lineHeight: 1.5,
-                  color: "#e2e8f0",
+                  marginTop: 4,
+                  color:
+                    "rgba(241,245,249,0.90)",
+                  fontSize: 10,
+                  lineHeight: 1.45,
+                  fontWeight: 700,
                 }}
               >
                 {content.formula}
@@ -284,10 +262,18 @@ export default function MetricTooltip({
           {content.note ? (
             <div
               style={{
-                marginTop: 10,
-                fontSize: 10,
-                lineHeight: 1.5,
-                color: "#94a3b8",
+                marginTop: 8,
+                paddingTop: 8,
+
+                borderTop:
+                  "1px solid rgba(255,255,255,0.055)",
+
+                color:
+                  "rgba(148,163,184,0.72)",
+
+                fontSize: 9,
+                lineHeight: 1.45,
+                fontWeight: 650,
               }}
             >
               {content.note}
@@ -297,33 +283,28 @@ export default function MetricTooltip({
           <div
             style={{
               position: "absolute",
-              ...(position.placement === "top"
-                ? {
-                    bottom: -5,
-                    borderTop:
-                      "5px solid rgba(18,20,25,0.99)",
-                    borderLeft:
-                      "5px solid transparent",
-                    borderRight:
-                      "5px solid transparent",
-                  }
-                : {
-                    top: -5,
-                    borderBottom:
-                      "5px solid rgba(18,20,25,0.99)",
-                    borderLeft:
-                      "5px solid transparent",
-                    borderRight:
-                      "5px solid transparent",
-                  }),
+
               left: "50%",
-              transform: "translateX(-50%)",
-              width: 0,
-              height: 0,
+              bottom: -5,
+
+              transform:
+                "translateX(-50%) rotate(45deg)",
+
+              width: 9,
+              height: 9,
+
+              background:
+                "rgba(7,11,18,0.995)",
+
+              borderRight:
+                "1px solid rgba(255,115,60,0.18)",
+
+              borderBottom:
+                "1px solid rgba(255,115,60,0.18)",
             }}
           />
         </div>
       ) : null}
-    </>
+    </span>
   );
 }
