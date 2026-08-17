@@ -11,16 +11,16 @@ export type TaxEconomicsInput = {
 
 export type TaxEconomicsResult = {
   source:
-    | "shopify_actual_tax"
-    | "shopify_zero_tax"
-    | "tax_profile_fallback"
-    | "insufficient_data";
+  | "shopify_actual_tax"
+  | "shopify_zero_tax"
+  | "tax_profile_fallback"
+  | "insufficient_data";
 
   confidence:
-    | "none"
-    | "low"
-    | "medium"
-    | "high";
+  | "none"
+  | "low"
+  | "medium"
+  | "high";
 
   grossRevenue: number;
 
@@ -101,26 +101,36 @@ function canUseRecoverableInputTaxModel(
   );
 }
 
+function profileAllowsOutputTaxEstimation(
+  profile: TaxContext["profile"],
+) {
+  return (
+    profile === "ITALY_STANDARD" ||
+    profile === "UK_VAT_STANDARD" ||
+    profile === "CANADA_GST_HST_REGISTERED" ||
+    profile === "AUSTRALIA_GST_REGISTERED" ||
+    profile === "GERMANY_VAT_STANDARD" ||
+    profile === "FRANCE_VAT_STANDARD" ||
+    profile === "SPAIN_VAT_STANDARD" ||
+    profile === "NETHERLANDS_VAT_STANDARD" ||
+    profile === "IRELAND_VAT_STANDARD" ||
+    profile === "NEW_ZEALAND_GST_REGISTERED"
+  );
+}
+
 function canEstimateIncludedOutputTax(
   taxContext: TaxContext,
 ) {
   if (
     !taxContext.configured ||
     !taxContext.advancedProfileAvailable ||
+    !profileAllowsOutputTaxEstimation(taxContext.profile) ||
     !taxContext.pricesIncludeVat ||
     safeRate(taxContext.defaultVatRatePct) <= 0
   ) {
     return false;
   }
 
-  /**
-   * MarginLab may estimate tax embedded in gross prices only for
-   * tax families that support tax-inclusive price normalization.
-   *
-   * US SALES_TAX is deliberately excluded. When Shopify does not
-   * provide enough US transaction tax evidence, MarginLab must not
-   * manufacture sales tax from a country default.
-   */
   return (
     taxContext.taxSystem === "VAT" ||
     taxContext.taxSystem === "GST" ||
@@ -216,13 +226,13 @@ export function calculateTaxAwareEconomics({
     const netIncludedProductTax = Math.max(
       0,
       finite(taxTreatment.includedProductTaxAmount) -
-        finite(taxTreatment.includedRefundedTaxAmount),
+      finite(taxTreatment.includedRefundedTaxAmount),
     );
 
     const netExcludedProductTax = Math.max(
       0,
       finite(taxTreatment.excludedProductTaxAmount) -
-        finite(taxTreatment.excludedRefundedTaxAmount),
+      finite(taxTreatment.excludedRefundedTaxAmount),
     );
 
     const totalShippingTax =
@@ -232,8 +242,8 @@ export function calculateTaxAwareEconomics({
     outputVat = Math.max(
       0,
       netIncludedProductTax +
-        netExcludedProductTax +
-        totalShippingTax,
+      netExcludedProductTax +
+      totalShippingTax,
     );
 
     includedProductVatAdjustment =
