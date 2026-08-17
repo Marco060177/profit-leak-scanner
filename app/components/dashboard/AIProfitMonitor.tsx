@@ -5,6 +5,7 @@ import type { ProfitAlert, ProfitAlertSeverity } from "~/utils/profit-monitor";
 import { getStoredLanguage } from "~/utils/i18n";
 import { money } from "~/utils/margin";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type Props = {
   alerts: ProfitAlert[];
@@ -532,16 +533,44 @@ export default function AIProfitMonitor({
           <div
             style={{
               marginTop: 13,
-              color: "#f8fafc",
-              fontSize: 28,
-              lineHeight: 1.15,
-              fontWeight: 950,
-              letterSpacing: "-0.035em",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexWrap: "wrap",
             }}
           >
-            {language === "it"
-              ? `${sortedAlerts.length} segnali attivi sulla redditività`
-              : `${sortedAlerts.length} active profitability signals`}
+            <div
+              style={{
+                color: "#f8fafc",
+                fontSize: 28,
+                lineHeight: 1.15,
+                fontWeight: 950,
+                letterSpacing: "-0.035em",
+              }}
+            >
+              {language === "it"
+                ? `${sortedAlerts.length} segnali attivi sulla redditività`
+                : `${sortedAlerts.length} active profitability signals`}
+            </div>
+
+            <MetricTooltip
+              content={{
+                title:
+                  language === "it"
+                    ? "Segnali di redditività"
+                    : "Profitability signals",
+
+                description:
+                  language === "it"
+                    ? "Problemi, rischi o opportunità che MarginLab ha rilevato analizzando i dati dello store."
+                    : "Problems, risks or opportunities MarginLab detected while analyzing your store data.",
+
+                note:
+                  language === "it"
+                    ? "I segnali vengono ordinati in base alla loro importanza e all'impatto economico."
+                    : "Signals are ranked by importance and economic impact.",
+              }}
+            />
           </div>
 
           <div
@@ -905,12 +934,10 @@ export default function AIProfitMonitor({
           }}
         >
           {language === "it"
-            ? `Altri ${
-                sortedAlerts.length - 5
-              } segnali sono stati analizzati dal monitor.`
-            : `${
-                sortedAlerts.length - 5
-              } additional signals were analyzed by the monitor.`}
+            ? `Altri ${sortedAlerts.length - 5
+            } segnali sono stati analizzati dal monitor.`
+            : `${sortedAlerts.length - 5
+            } additional signals were analyzed by the monitor.`}
         </div>
       )}
     </section>

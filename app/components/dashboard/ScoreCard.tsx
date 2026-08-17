@@ -1,6 +1,7 @@
 import { money, pct } from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type Props = {
   assessment: MarginAssessment;
@@ -115,8 +116,38 @@ export default function ScoreCard({
       <div className="score-glow-two" />
 
       <div className="score-content">
-        <div className="section-eyebrow">
-          {language === "it" ? "SALUTE DEL MARGINE" : "MARGIN HEALTH"}
+        <div
+          className="section-eyebrow"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+          }}
+        >
+          <span>
+            {language === "it"
+              ? "SALUTE DEL MARGINE"
+              : "MARGIN HEALTH"}
+          </span>
+
+          <MetricTooltip
+            content={{
+              title:
+                language === "it"
+                  ? "Salute del margine"
+                  : "Margin health",
+
+              description:
+                language === "it"
+                  ? "Un punteggio da 0 a 100 che riassume quanto è sana la redditività dello store. Tiene conto di perdite, margini, copertura dei costi e qualità dei dati."
+                  : "A 0–100 score summarizing how healthy the store's profitability is. It considers losses, margins, cost coverage and data quality.",
+
+              note:
+                language === "it"
+                  ? "Più il punteggio è alto, migliore è la salute del margine."
+                  : "The higher the score, the healthier the margin.",
+            }}
+          />
         </div>
 
         <div className="score-number">

@@ -1,5 +1,6 @@
 import { money, pct } from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type ChartPoint = {
   date: string;
@@ -147,7 +148,13 @@ export default function TrendChart({
             boxShadow: "0 18px 50px rgba(34,197,94,0.10)",
           }}
         >
-          <div style={{ fontSize: 22, fontWeight: 950, color: "#22c55e" }}>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 950,
+              color: "#22c55e",
+            }}
+          >
             ↗ {pct(visualMarginPct)}
           </div>
 
@@ -167,6 +174,30 @@ export default function TrendChart({
               ? "Periodo Attuale"
               : "Current Period"}
           </div>
+
+          <MetricTooltip
+            content={{
+              title:
+                language === "it"
+                  ? "Margine di profitto"
+                  : "Profit margin",
+
+              description:
+                language === "it"
+                  ? "La percentuale dei ricavi prodotto che rimane dopo aver sottratto il costo dei prodotti venduti."
+                  : "The percentage of product revenue remaining after subtracting the cost of products sold.",
+
+              formula:
+                language === "it"
+                  ? "(Profitto prodotto ÷ Ricavi prodotto) × 100"
+                  : "(Product profit ÷ Product revenue) × 100",
+
+              note:
+                language === "it"
+                  ? "Può essere diverso dal Margine economico, che considera anche gli eventuali aggiustamenti fiscali."
+                  : "It can differ from Economic Margin, which also considers applicable tax adjustments.",
+            }}
+          />
         </div>
       </div>
 

@@ -10,7 +10,7 @@ import KpiGrid from "~/components/dashboard/KpiGrid";
 import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
-
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts, type ProfitAlert } from "~/utils/profit-monitor";
 import { syncProfitMonitor } from "~/services/profit-monitor.server";
@@ -1190,18 +1190,21 @@ export default function DashboardV2() {
                   language === "it"
                     ? "Profitto economico"
                     : "Economic profit",
+
                 description:
                   language === "it"
-                    ? "La misura di profitto che MarginLab usa per valutare la reale redditività dello store. Combina i ricavi normalizzati fiscalmente con il costo economico effettivo dei prodotti."
-                    : "The profit measure MarginLab uses to evaluate the store's underlying profitability. It combines tax-normalized revenue with the effective economic cost of products.",
+                    ? "Quanto rimane dei ricavi economici dopo aver considerato il costo economico dei prodotti venduti."
+                    : "What remains from economic revenue after accounting for the economic cost of the products sold.",
+
                 formula:
                   language === "it"
                     ? "Ricavi economici − COGS economici"
                     : "Economic revenue − Economic COGS",
+
                 note:
                   language === "it"
-                    ? "Se il profilo fiscale supporta il recupero dell'imposta sugli acquisti, la quota recuperabile non viene trattata come costo economico."
-                    : "When the tax profile supports input-tax recovery, the recoverable portion is not treated as an economic cost.",
+                    ? "È la misura di profitto principale utilizzata da MarginLab."
+                    : "This is MarginLab's primary profit measure.",
               },
             },
             {
@@ -1221,18 +1224,21 @@ export default function DashboardV2() {
                   language === "it"
                     ? "Margine economico"
                     : "Economic margin",
+
                 description:
                   language === "it"
-                    ? "La percentuale dei ricavi economici che rimane come profitto dopo i COGS economici. È la metrica di margine principale usata da MarginLab per confrontare la redditività reale."
-                    : "The percentage of economic revenue remaining as profit after economic COGS. It is MarginLab's primary margin measure for comparing underlying profitability.",
+                    ? "La percentuale dei ricavi economici che rimane come profitto dopo il costo dei prodotti."
+                    : "The percentage of economic revenue that remains as profit after product costs.",
+
                 formula:
                   language === "it"
                     ? "(Profitto economico ÷ Ricavi economici) × 100"
                     : "(Economic profit ÷ Economic revenue) × 100",
+
                 note:
                   language === "it"
-                    ? "Può differire dal margine Shopify quando il trattamento fiscale modifica ricavi o costi economici."
-                    : "It can differ from the Shopify margin when tax treatment changes economic revenue or costs.",
+                    ? "Più è alto, maggiore è la redditività dello store."
+                    : "The higher it is, the more profitable the store is.",
               },
             },
             {
@@ -1322,18 +1328,16 @@ export default function DashboardV2() {
                   language === "it"
                     ? "Gap di profitto al target"
                     : "Profit gap to target",
+
                 description:
                   language === "it"
-                    ? "Una stima modellata di quanto profitto aggiuntivo sarebbe necessario per portare i prodotti sotto target fino al margine obiettivo selezionato."
-                    : "A modeled estimate of the additional profit required to bring products below target up to the selected target margin.",
-                formula:
-                  language === "it"
-                    ? "Somma del profitto mancante dei prodotti sotto il margine target"
-                    : "Sum of the profit shortfall across products below the target margin",
+                    ? "Quanto profitto manca, in teoria, per portare i prodotti sotto target fino al margine obiettivo."
+                    : "The estimated profit shortfall required to bring below-target products up to the target margin.",
+
                 note:
                   language === "it"
-                    ? "È un'opportunità teorica basata sui dati osservati, non una previsione né profitto garantito."
-                    : "This is a modeled opportunity based on observed data, not a forecast or guaranteed profit.",
+                    ? "È una stima di opportunità, non una previsione o un profitto garantito."
+                    : "This is an opportunity estimate, not a forecast or guaranteed profit.",
               },
             },
           ]}
@@ -1387,14 +1391,42 @@ export default function DashboardV2() {
                 <div
                   style={{
                     marginTop: 7,
-                    color: "#f8fafc",
-                    fontSize: 20,
-                    fontWeight: 950,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    flexWrap: "wrap",
                   }}
                 >
-                  {language === "it"
-                    ? "Normalizzazione fiscale e dei costi"
-                    : "Tax & cost normalization"}
+                  <div
+                    style={{
+                      color: "#f8fafc",
+                      fontSize: 20,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {language === "it"
+                      ? "Normalizzazione fiscale e dei costi"
+                      : "Tax & cost normalization"}
+                  </div>
+
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Normalizzazione fiscale e dei costi"
+                          : "Tax & cost normalization",
+
+                      description:
+                        language === "it"
+                          ? "Mostra come imposte e costi modificano il profitto utilizzato da MarginLab per valutare la redditività reale dello store."
+                          : "Shows how taxes and costs affect the profit MarginLab uses to evaluate the store's underlying profitability.",
+
+                      note:
+                        language === "it"
+                          ? "Per il dettaglio completo del calcolo consulta il Glossario."
+                          : "See the Glossary for the full calculation methodology.",
+                    }}
+                  />
                 </div>
 
                 <div
