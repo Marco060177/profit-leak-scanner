@@ -1,6 +1,7 @@
 import * as React from "react";
 import { money, pct, type Row } from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type Props = {
   sortedRiskRows: Row[];
@@ -150,21 +151,21 @@ export default function ProductRiskTable({
             const isItalian = language === "it";
             const headers = isItalian
               ? [
-                  "Store", "Periodo (giorni)", "Filtro", "Valuta", "ID prodotto",
-                  "Prodotto", "Quantità", "Ricavi", "COGS", "Sconti", "Rimborsi",
-                  "Profitto", "Margine %", "Margine precedente %", "Variazione margine (pp)",
-                  "Prezzo medio", "Costo medio", "Prezzo di pareggio", "Prezzo target",
-                  "Delta prezzo", "Punteggio rischio", "Rischio", "In perdita",
-                  "Margine basso", "Costo mancante", "Azione consigliata",
-                ]
+                "Store", "Periodo (giorni)", "Filtro", "Valuta", "ID prodotto",
+                "Prodotto", "Quantità", "Ricavi", "COGS", "Sconti", "Rimborsi",
+                "Profitto", "Margine %", "Margine precedente %", "Variazione margine (pp)",
+                "Prezzo medio", "Costo medio", "Prezzo di pareggio", "Prezzo target",
+                "Delta prezzo", "Punteggio rischio", "Rischio", "In perdita",
+                "Margine basso", "Costo mancante", "Azione consigliata",
+              ]
               : [
-                  "Store", "Period (days)", "Filter", "Currency", "Product ID",
-                  "Product", "Quantity", "Revenue", "COGS", "Discounts", "Refunds",
-                  "Profit", "Margin %", "Previous margin %", "Margin change (pp)",
-                  "Average price", "Average cost", "Break-even price", "Target price",
-                  "Price delta", "Risk score", "Risk", "Losing", "Low margin",
-                  "Missing cost", "Recommended action",
-                ];
+                "Store", "Period (days)", "Filter", "Currency", "Product ID",
+                "Product", "Quantity", "Revenue", "COGS", "Discounts", "Refunds",
+                "Profit", "Margin %", "Previous margin %", "Margin change (pp)",
+                "Average price", "Average cost", "Break-even price", "Target price",
+                "Price delta", "Risk score", "Risk", "Losing", "Low margin",
+                "Missing cost", "Recommended action",
+              ];
 
             const filterLabel = onlyLosing
               ? isItalian ? "Solo in perdita" : "Losing only"
@@ -228,18 +229,115 @@ export default function ProductRiskTable({
           <thead>
             <tr>
               {[
-                language === "it" ? "Prodotto" : "Product",
-                "Revenue",
-                "COGS",
-                language === "it" ? "Profitto" : "Profit",
-                language === "it" ? "Prezzo target" : "Target Price",
-                "Delta",
-                language === "it" ? "Margine" : "Margin",
-                language === "it" ? "Punteggio" : "Risk Score",
-                language === "it" ? "Rischio" : "Risk",
-              ].map((h) => (
+                {
+                  key: "product",
+                  label: language === "it" ? "Prodotto" : "Product",
+                },
+                {
+                  key: "revenue",
+                  label: "Revenue",
+                },
+                {
+                  key: "cogs",
+                  label: "COGS",
+                },
+                {
+                  key: "profit",
+                  label: language === "it" ? "Profitto" : "Profit",
+                },
+                {
+                  key: "target-price",
+                  label:
+                    language === "it"
+                      ? "Prezzo target"
+                      : "Target Price",
+                  tooltip: {
+                    title:
+                      language === "it"
+                        ? "Prezzo target"
+                        : "Target price",
+
+                    description:
+                      language === "it"
+                        ? "Il prezzo di vendita stimato necessario per raggiungere il margine target mantenendo invariato il costo attuale del prodotto."
+                        : "The estimated selling price required to reach the target margin while keeping the product's current cost unchanged.",
+
+                    formula:
+                      language === "it"
+                        ? "Costo medio ÷ (1 − margine target)"
+                        : "Average cost ÷ (1 − target margin)",
+
+                    note:
+                      language === "it"
+                        ? "È un riferimento modellato per l'analisi del prezzo, non un prezzo di vendita garantito o automaticamente consigliato."
+                        : "It is a modeled pricing reference, not a guaranteed or automatically recommended selling price.",
+                  },
+                },
+                {
+                  key: "delta",
+                  label: "Delta",
+                  tooltip: {
+                    title:
+                      language === "it"
+                        ? "Delta prezzo"
+                        : "Price delta",
+
+                    description:
+                      language === "it"
+                        ? "La differenza tra il prezzo medio attuale del prodotto e il prezzo target calcolato da MarginLab."
+                        : "The difference between the product's current average selling price and the target price calculated by MarginLab.",
+
+                    formula:
+                      language === "it"
+                        ? "Prezzo target − Prezzo medio attuale"
+                        : "Target price − Current average price",
+
+                    note:
+                      language === "it"
+                        ? "Un valore positivo indica quanto dovrebbe aumentare il prezzo, a costi invariati, per raggiungere il margine target."
+                        : "A positive value indicates how much the price would need to increase, with costs unchanged, to reach the target margin.",
+                  },
+                },
+                {
+                  key: "margin",
+                  label:
+                    language === "it"
+                      ? "Margine"
+                      : "Margin",
+                },
+                {
+                  key: "risk-score",
+                  label:
+                    language === "it"
+                      ? "Punteggio"
+                      : "Risk Score",
+                  tooltip: {
+                    title:
+                      language === "it"
+                        ? "Punteggio di rischio"
+                        : "Risk score",
+
+                    description:
+                      language === "it"
+                        ? "Un punteggio da 0 a 100 che indica quanto un prodotto richiede attenzione in base a perdite, margine, costi mancanti e distanza dal prezzo target."
+                        : "A 0–100 score indicating how much attention a product requires based on losses, margin, missing costs and distance from its target price.",
+
+                    note:
+                      language === "it"
+                        ? "Più alto è il punteggio, maggiore è la priorità di revisione del prodotto."
+                        : "The higher the score, the higher the product's review priority.",
+                  },
+                },
+                {
+                  key: "risk",
+                  label:
+                    language === "it"
+                      ? "Rischio"
+                      : "Risk",
+                },
+              ].map((header) => (
                 <th
-                  key={h}
+                  key={header.key}
                   style={{
                     color: "rgba(255,255,255,0.55)",
                     fontSize: 11,
@@ -248,7 +346,21 @@ export default function ProductRiskTable({
                     fontWeight: 900,
                   }}
                 >
-                  {h}
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    <span>{header.label}</span>
+
+                    {header.tooltip ? (
+                      <MetricTooltip
+                        content={header.tooltip}
+                      />
+                    ) : null}
+                  </div>
                 </th>
               ))}
             </tr>
