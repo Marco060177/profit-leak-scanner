@@ -12,6 +12,7 @@ import {
 } from "~/utils/margin";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 import { getStoredLanguage } from "~/utils/i18n";
 
@@ -332,93 +333,93 @@ export default function ProfitIntelligencePage() {
 
     const metadata = language === "it"
       ? [
-          ["Report", "Profit Intelligence"],
-          ["Store", shopHandle],
-          ["Periodo (giorni)", period],
-          ["Valuta", currencyCode],
-          ["Lingua", "Italiano"],
-          ["Generato il", new Date().toLocaleString(locale)],
-        ]
+        ["Report", "Profit Intelligence"],
+        ["Store", shopHandle],
+        ["Periodo (giorni)", period],
+        ["Valuta", currencyCode],
+        ["Lingua", "Italiano"],
+        ["Generato il", new Date().toLocaleString(locale)],
+      ]
       : [
-          ["Report", "Profit Intelligence"],
-          ["Store", shopHandle],
-          ["Period (days)", period],
-          ["Currency", currencyCode],
-          ["Language", "English"],
-          ["Generated at", new Date().toLocaleString(locale)],
-        ];
+        ["Report", "Profit Intelligence"],
+        ["Store", shopHandle],
+        ["Period (days)", period],
+        ["Currency", currencyCode],
+        ["Language", "English"],
+        ["Generated at", new Date().toLocaleString(locale)],
+      ];
 
     const summaryRows = language === "it"
       ? [
-          ["Ricavi economici", round2(economicRevenue)],
-          ["COGS economici", round2(economicCogs)],
-          ["Profitto economico", round2(economicProfit)],
-          ["Margine economico %", round2(economicMarginPct)],
-          ["Sistema fiscale", taxSystemLabel],
-          ["Ricavi prodotto (base analitica)", round2(summary.revenue)],
-          ["COGS prodotto", round2(summary.cogs)],
-          ["Profitto prodotto", round2(summary.profit)],
-          ["Margine prodotto %", round2(summary.marginPct)],
-          ["Sconti", round2(summary.discounts)],
-          ["Rimborsi", round2(summary.refunds)],
-          ["Spedizione", round2(summary.shipping)],
-          ["Imposte registrate", round2(summary.taxes)],
-          ["Perdita economica del periodo", round2(periodEconomicLoss)],
-          ["Prodotti economicamente in perdita", economicRows.filter((row) => row.losing).length],
-          ["Prodotti senza costo", summary.missingCostCount],
-          ["Margine precedente %", round2(summary.previousMarginPct)],
-          ["Variazione margine (punti)", round2(summary.marginDelta)],
-          ["Variazione ricavi %", round2(summary.revenueDeltaPct)],
-          ["Indice di redditività", intelligenceScore],
-          ["Dipendenza ricavi top 3 %", round2(top3RevenueShare)],
-          ["Dipendenza profitti top 3 %", round2(top3ProfitShare)],
-          ["Qualità dei margini", profitQualityLevelLabel],
-        ]
+        ["Ricavi economici", round2(economicRevenue)],
+        ["COGS economici", round2(economicCogs)],
+        ["Profitto economico", round2(economicProfit)],
+        ["Margine economico %", round2(economicMarginPct)],
+        ["Sistema fiscale", taxSystemLabel],
+        ["Ricavi prodotto (base analitica)", round2(summary.revenue)],
+        ["COGS prodotto", round2(summary.cogs)],
+        ["Profitto prodotto", round2(summary.profit)],
+        ["Margine prodotto %", round2(summary.marginPct)],
+        ["Sconti", round2(summary.discounts)],
+        ["Rimborsi", round2(summary.refunds)],
+        ["Spedizione", round2(summary.shipping)],
+        ["Imposte registrate", round2(summary.taxes)],
+        ["Perdita economica del periodo", round2(periodEconomicLoss)],
+        ["Prodotti economicamente in perdita", economicRows.filter((row) => row.losing).length],
+        ["Prodotti senza costo", summary.missingCostCount],
+        ["Margine precedente %", round2(summary.previousMarginPct)],
+        ["Variazione margine (punti)", round2(summary.marginDelta)],
+        ["Variazione ricavi %", round2(summary.revenueDeltaPct)],
+        ["Indice di redditività", intelligenceScore],
+        ["Dipendenza ricavi top 3 %", round2(top3RevenueShare)],
+        ["Dipendenza profitti top 3 %", round2(top3ProfitShare)],
+        ["Qualità dei margini", profitQualityLevelLabel],
+      ]
       : [
-          ["Economic revenue", round2(economicRevenue)],
-          ["Economic COGS", round2(economicCogs)],
-          ["Economic profit", round2(economicProfit)],
-          ["Economic margin %", round2(economicMarginPct)],
-          ["Tax system", taxSystemLabel],
-          ["Product revenue (analytics basis)", round2(summary.revenue)],
-          ["Product COGS", round2(summary.cogs)],
-          ["Product profit", round2(summary.profit)],
-          ["Product margin %", round2(summary.marginPct)],
-          ["Discounts", round2(summary.discounts)],
-          ["Refunds", round2(summary.refunds)],
-          ["Shipping", round2(summary.shipping)],
-          ["Recorded taxes", round2(summary.taxes)],
-          ["Economic loss for period", round2(periodEconomicLoss)],
-          ["Economically losing products", economicRows.filter((row) => row.losing).length],
-          ["Products missing cost", summary.missingCostCount],
-          ["Previous margin %", round2(summary.previousMarginPct)],
-          ["Margin change (points)", round2(summary.marginDelta)],
-          ["Revenue change %", round2(summary.revenueDeltaPct)],
-          ["Profit Intelligence Score", intelligenceScore],
-          ["Top 3 revenue dependency %", round2(top3RevenueShare)],
-          ["Top 3 profit dependency %", round2(top3ProfitShare)],
-          ["Margin quality", profitQualityLevelLabel],
-        ];
+        ["Economic revenue", round2(economicRevenue)],
+        ["Economic COGS", round2(economicCogs)],
+        ["Economic profit", round2(economicProfit)],
+        ["Economic margin %", round2(economicMarginPct)],
+        ["Tax system", taxSystemLabel],
+        ["Product revenue (analytics basis)", round2(summary.revenue)],
+        ["Product COGS", round2(summary.cogs)],
+        ["Product profit", round2(summary.profit)],
+        ["Product margin %", round2(summary.marginPct)],
+        ["Discounts", round2(summary.discounts)],
+        ["Refunds", round2(summary.refunds)],
+        ["Shipping", round2(summary.shipping)],
+        ["Recorded taxes", round2(summary.taxes)],
+        ["Economic loss for period", round2(periodEconomicLoss)],
+        ["Economically losing products", economicRows.filter((row) => row.losing).length],
+        ["Products missing cost", summary.missingCostCount],
+        ["Previous margin %", round2(summary.previousMarginPct)],
+        ["Margin change (points)", round2(summary.marginDelta)],
+        ["Revenue change %", round2(summary.revenueDeltaPct)],
+        ["Profit Intelligence Score", intelligenceScore],
+        ["Top 3 revenue dependency %", round2(top3RevenueShare)],
+        ["Top 3 profit dependency %", round2(top3ProfitShare)],
+        ["Margin quality", profitQualityLevelLabel],
+      ];
 
     const productHeaders = language === "it"
       ? [
-          "Prodotto", "ID prodotto", "Quantità", "Ricavi", "COGS",
-          "Sconti", "Rimborsi", "Profitto", "Margine %",
-          "Margine precedente %", "Variazione margine (punti)",
-          "Quota ricavi %", "Quota profitti %", "Prezzo medio",
-          "Costo medio", "Prezzo break-even", "Prezzo target",
-          "Aumento target", "In perdita", "Margine basso",
-          "Costo mancante", "Azione consigliata",
-        ]
+        "Prodotto", "ID prodotto", "Quantità", "Ricavi", "COGS",
+        "Sconti", "Rimborsi", "Profitto", "Margine %",
+        "Margine precedente %", "Variazione margine (punti)",
+        "Quota ricavi %", "Quota profitti %", "Prezzo medio",
+        "Costo medio", "Prezzo break-even", "Prezzo target",
+        "Aumento target", "In perdita", "Margine basso",
+        "Costo mancante", "Azione consigliata",
+      ]
       : [
-          "Product", "Product ID", "Quantity", "Revenue", "COGS",
-          "Discounts", "Refunds", "Profit", "Margin %",
-          "Previous margin %", "Margin change (points)",
-          "Revenue share %", "Profit share %", "Average price",
-          "Average cost", "Break-even price", "Target price",
-          "Target increase", "Losing", "Low margin", "Missing cost",
-          "Recommended action",
-        ];
+        "Product", "Product ID", "Quantity", "Revenue", "COGS",
+        "Discounts", "Refunds", "Profit", "Margin %",
+        "Previous margin %", "Margin change (points)",
+        "Revenue share %", "Profit share %", "Average price",
+        "Average cost", "Break-even price", "Target price",
+        "Target increase", "Losing", "Low margin", "Missing cost",
+        "Recommended action",
+      ];
 
     const productRows = economicRows.map((row) => [
       row.productTitle,
@@ -546,10 +547,38 @@ export default function ProfitIntelligencePage() {
             }}
           >
             <div>
-              <div className="eyebrow">
-                {language === "it"
-                  ? "INDICE DI REDDITIVITA'"
-                  : "PROFIT INTELLIGENCE SCORE"}
+              <div
+                className="eyebrow"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                }}
+              >
+                <span>
+                  {language === "it"
+                    ? "INDICE DI REDDITIVITA'"
+                    : "PROFIT INTELLIGENCE SCORE"}
+                </span>
+
+                <MetricTooltip
+                  content={{
+                    title:
+                      language === "it"
+                        ? "Indice di redditività"
+                        : "Profit Intelligence Score",
+
+                    description:
+                      language === "it"
+                        ? "Un punteggio da 0 a 100 che riassume quanto la redditività dello store è solida e ben distribuita tra i prodotti."
+                        : "A 0–100 score summarizing how stable and well distributed the store's profitability is across products.",
+
+                    note:
+                      language === "it"
+                        ? "Tiene conto della concentrazione dei ricavi, della dipendenza dai profitti e dei prodotti con margini deboli. Più è alto, meglio è."
+                        : "It considers revenue concentration, profit dependency and weak-margin products. Higher is better.",
+                  }}
+                />
               </div>
 
               <div
@@ -604,26 +633,64 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 {[
-                  [
-                    language === "it"
-                      ? "Dipendenza dai ricavi"
-                      : "Revenue dependency",
-                    pct(top3RevenueShare),
-                  ],
-                  [
-                    language === "it"
-                      ? "Dipendenza dai profitti"
-                      : "Profit dependency",
-                    pct(top3ProfitShare),
-                  ],
-                  [
-                    language === "it"
-                      ? "Prodotti poco redditizi"
-                      : "Weak products",
-                    `${weakProfitProducts}`,
-                  ],
-                ].map(([label, value]) => (
-                  <div key={label}>
+                  {
+                    key: "revenue-dependency",
+                    label:
+                      language === "it"
+                        ? "Dipendenza dai ricavi"
+                        : "Revenue dependency",
+                    value: pct(top3RevenueShare),
+                    tooltip: {
+                      title:
+                        language === "it"
+                          ? "Dipendenza dai ricavi"
+                          : "Revenue dependency",
+
+                      description:
+                        language === "it"
+                          ? "Indica quale percentuale dei ricavi economici dello store proviene dai tre prodotti che generano più ricavi."
+                          : "Shows what percentage of the store's economic revenue comes from its three highest-revenue products.",
+
+                      note:
+                        language === "it"
+                          ? "Una percentuale elevata significa che una parte importante del business dipende da pochi prodotti."
+                          : "A high percentage means a significant part of the business depends on only a few products.",
+                    },
+                  },
+                  {
+                    key: "profit-dependency",
+                    label:
+                      language === "it"
+                        ? "Dipendenza dai profitti"
+                        : "Profit dependency",
+                    value: pct(top3ProfitShare),
+                    tooltip: {
+                      title:
+                        language === "it"
+                          ? "Dipendenza dai profitti"
+                          : "Profit dependency",
+
+                      description:
+                        language === "it"
+                          ? "Indica quanto del profitto economico totale è generato dai tre prodotti più profittevoli."
+                          : "Shows how much of total economic profit is generated by the three most profitable products.",
+
+                      note:
+                        language === "it"
+                          ? "Può superare il 100% quando altri prodotti generano perdite e riducono il profitto totale dello store."
+                          : "It can exceed 100% when other products generate losses that reduce the store's total profit.",
+                    },
+                  },
+                  {
+                    key: "weak-products",
+                    label:
+                      language === "it"
+                        ? "Prodotti poco redditizi"
+                        : "Weak products",
+                    value: `${weakProfitProducts}`,
+                  },
+                ].map((item) => (
+                  <div key={item.key}>
                     <div
                       style={{
                         fontSize: 34,
@@ -632,12 +699,15 @@ export default function ProfitIntelligencePage() {
                         lineHeight: 1,
                       }}
                     >
-                      {value}
+                      {item.value}
                     </div>
 
                     <div
                       style={{
                         marginTop: 9,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
                         fontSize: 11,
                         fontWeight: 900,
                         letterSpacing: "0.08em",
@@ -645,7 +715,13 @@ export default function ProfitIntelligencePage() {
                         color: "rgba(255,255,255,0.42)",
                       }}
                     >
-                      {label}
+                      <span>{item.label}</span>
+
+                      {item.tooltip ? (
+                        <MetricTooltip
+                          content={item.tooltip}
+                        />
+                      ) : null}
                     </div>
                   </div>
                 ))}
@@ -810,13 +886,89 @@ export default function ProfitIntelligencePage() {
             }}
           >
             {[
-              [language === "it" ? "Ricavi economici" : "Economic revenue", money(economicRevenue)],
-              [language === "it" ? "COGS economici" : "Economic COGS", money(economicCogs)],
-              [language === "it" ? "Profitto economico" : "Economic profit", money(economicProfit)],
-              [language === "it" ? "Margine economico" : "Economic margin", pct(economicMarginPct)],
-            ].map(([label, value]) => (
+              {
+                key: "economic-revenue",
+                label:
+                  language === "it"
+                    ? "Ricavi economici"
+                    : "Economic revenue",
+                value: money(economicRevenue),
+                tooltip: {
+                  title:
+                    language === "it"
+                      ? "Ricavi economici"
+                      : "Economic revenue",
+                  description:
+                    language === "it"
+                      ? "I ricavi che MarginLab considera realmente disponibili per misurare la redditività, dopo gli eventuali aggiustamenti fiscali."
+                      : "The revenue MarginLab considers actually available for measuring profitability, after any applicable tax adjustments.",
+                },
+              },
+              {
+                key: "economic-cogs",
+                label:
+                  language === "it"
+                    ? "COGS economici"
+                    : "Economic COGS",
+                value: money(economicCogs),
+                tooltip: {
+                  title:
+                    language === "it"
+                      ? "COGS economici"
+                      : "Economic COGS",
+                  description:
+                    language === "it"
+                      ? "Il costo economico dei prodotti venduti dopo gli eventuali aggiustamenti fiscali applicabili ai costi."
+                      : "The economic cost of products sold after any applicable tax adjustments to product costs.",
+                },
+              },
+              {
+                key: "economic-profit",
+                label:
+                  language === "it"
+                    ? "Profitto economico"
+                    : "Economic profit",
+                value: money(economicProfit),
+                tooltip: {
+                  title:
+                    language === "it"
+                      ? "Profitto economico"
+                      : "Economic profit",
+                  description:
+                    language === "it"
+                      ? "Quanto rimane dei ricavi economici dopo aver sottratto i COGS economici."
+                      : "What remains from economic revenue after subtracting economic COGS.",
+                  formula:
+                    language === "it"
+                      ? "Ricavi economici − COGS economici"
+                      : "Economic revenue − Economic COGS",
+                },
+              },
+              {
+                key: "economic-margin",
+                label:
+                  language === "it"
+                    ? "Margine economico"
+                    : "Economic margin",
+                value: pct(economicMarginPct),
+                tooltip: {
+                  title:
+                    language === "it"
+                      ? "Margine economico"
+                      : "Economic margin",
+                  description:
+                    language === "it"
+                      ? "La percentuale dei ricavi economici che rimane come profitto dopo i COGS economici."
+                      : "The percentage of economic revenue remaining as profit after economic COGS.",
+                  formula:
+                    language === "it"
+                      ? "(Profitto economico ÷ Ricavi economici) × 100"
+                      : "(Economic profit ÷ Economic revenue) × 100",
+                },
+              },
+            ].map((item) => (
               <div
-                key={label}
+                key={item.key}
                 style={{
                   padding: 18,
                   borderRadius: 18,
@@ -826,6 +978,9 @@ export default function ProfitIntelligencePage() {
               >
                 <div
                   style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
                     fontSize: 11,
                     fontWeight: 900,
                     letterSpacing: "0.08em",
@@ -833,8 +988,13 @@ export default function ProfitIntelligencePage() {
                     color: "rgba(255,255,255,0.44)",
                   }}
                 >
-                  {label}
+                  <span>{item.label}</span>
+
+                  <MetricTooltip
+                    content={item.tooltip}
+                  />
                 </div>
+
                 <div
                   style={{
                     marginTop: 10,
@@ -844,7 +1004,7 @@ export default function ProfitIntelligencePage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {value}
+                  {item.value}
                 </div>
               </div>
             ))}
@@ -1300,6 +1460,22 @@ export default function ProfitIntelligencePage() {
                 ? "DIPENDENZA DAI RICAVI"
                 : "REVENUE DEPENDENCY"
             }
+            tooltip={{
+              title:
+                language === "it"
+                  ? "Dipendenza dai ricavi"
+                  : "Revenue dependency",
+
+              description:
+                language === "it"
+                  ? "Mostra quanto i ricavi dello store dipendono dai prodotti che vendono di più."
+                  : "Shows how much of the store's revenue depends on its highest-revenue products.",
+
+              note:
+                language === "it"
+                  ? "Una percentuale elevata significa che pochi prodotti pesano molto sul fatturato totale."
+                  : "A high percentage means a small number of products account for a large share of total revenue.",
+            }}
             title={
               language === "it"
                 ? "Distribuzione dei ricavi"
@@ -1344,6 +1520,22 @@ export default function ProfitIntelligencePage() {
                 ? "DIPENDENZA DAI PROFITTI"
                 : "PROFIT CONCENTRATION"
             }
+            tooltip={{
+              title:
+                language === "it"
+                  ? "Dipendenza dai profitti"
+                  : "Profit dependency",
+
+              description:
+                language === "it"
+                  ? "Mostra quanto il profitto dello store dipende dai prodotti che generano più profitto."
+                  : "Shows how much of the store's profit depends on its most profitable products.",
+
+              note:
+                language === "it"
+                  ? "Può superare il 100% se altri prodotti generano perdite e riducono il profitto totale."
+                  : "It can exceed 100% when other products generate losses that reduce total store profit.",
+            }}
             title={
               language === "it"
                 ? "Distribuzione dei profitti"
@@ -1562,10 +1754,38 @@ export default function ProfitIntelligencePage() {
               background: `radial-gradient(circle at top right, ${profitQualityColor}18, transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))`,
             }}
           >
-            <div className="panel-eyebrow">
-              {language === "it"
-                ? "QUALITÀ DEI MARGINI"
-                : "PROFIT QUALITY"}
+            <div
+              className="panel-eyebrow"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 7,
+              }}
+            >
+              <span>
+                {language === "it"
+                  ? "QUALITÀ DEI MARGINI"
+                  : "PROFIT QUALITY"}
+              </span>
+
+              <MetricTooltip
+                content={{
+                  title:
+                    language === "it"
+                      ? "Qualità dei margini"
+                      : "Profit quality",
+
+                  description:
+                    language === "it"
+                      ? "Riassume quanto sono solidi i margini dei prodotti dello store, distinguendo quelli sani da quelli che richiedono attenzione."
+                      : "Summarizes how healthy product margins are across the store, separating strong-margin products from those requiring attention.",
+
+                  note:
+                    language === "it"
+                      ? "MarginLab considera sani i prodotti con margine almeno del 30% e deboli quelli sotto il 15%."
+                      : "MarginLab treats products with at least 30% margin as healthy and products below 15% as weak.",
+                }}
+              />
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 8 }}>
@@ -1668,6 +1888,7 @@ function ConcentrationCard({
   statusColor,
   rows,
   pct,
+  tooltip,
 }: {
   eyebrow: string;
   title: string;
@@ -1675,10 +1896,29 @@ function ConcentrationCard({
   statusColor: string;
   rows: [string, number][];
   pct: (value: number) => string;
+  tooltip?: {
+    title: string;
+    description: string;
+    formula?: string;
+    note?: string;
+  };
 }) {
   return (
     <div className="panel" style={{ marginBottom: 0 }}>
-      <div className="panel-eyebrow">{eyebrow}</div>
+      <div
+        className="panel-eyebrow"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 7,
+        }}
+      >
+        <span>{eyebrow}</span>
+
+        {tooltip ? (
+          <MetricTooltip content={tooltip} />
+        ) : null}
+      </div>
 
       <h2 className="panel-title" style={{ marginTop: 8 }}>
         {title}

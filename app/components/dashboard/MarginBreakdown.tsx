@@ -1,5 +1,6 @@
 import { getStoredLanguage } from "~/utils/i18n";
 import { pct } from "~/utils/margin";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type Props = {
   cogsPercentage: number;
@@ -23,6 +24,20 @@ export default function MarginBreakdown({
         language === "it"
           ? "Quota dei ricavi assorbita dai costi dei prodotti."
           : "Revenue absorbed by product costs.",
+      tooltip: {
+        title:
+          language === "it"
+            ? "COGS"
+            : "COGS",
+        description:
+          language === "it"
+            ? "Indica quale parte dei ricavi viene assorbita dal costo dei prodotti venduti."
+            : "Shows what share of revenue is absorbed by the cost of products sold.",
+        note:
+          language === "it"
+            ? "Una percentuale più alta lascia meno spazio al profitto."
+            : "A higher percentage leaves less room for profit.",
+      },
     },
     {
       label: language === "it" ? "Profitto" : "Profit",
@@ -32,15 +47,46 @@ export default function MarginBreakdown({
         language === "it"
           ? "Quota dei ricavi che genera profitto."
           : "Revenue retained as gross profit.",
+      tooltip: {
+        title:
+          language === "it"
+            ? "Profitto"
+            : "Profit",
+        description:
+          language === "it"
+            ? "Indica quale percentuale dei ricavi rimane come profitto dopo i COGS."
+            : "Shows what percentage of revenue remains as profit after COGS.",
+        note:
+          language === "it"
+            ? "In questa sezione il valore è calcolato sulla base economica normalizzata."
+            : "In this section the value is calculated using the normalized economic basis.",
+      },
     },
     {
-      label: language === "it" ? "Perdite di margine" : "Margin Loss",
+      label:
+        language === "it"
+          ? "Perdite di margine"
+          : "Margin Loss",
       value: leakPercentage,
       color: "#ef4444",
       description:
         language === "it"
           ? "Margini persi a causa delle inefficienze rilevate."
           : "Detected margin leakage across products.",
+      tooltip: {
+        title:
+          language === "it"
+            ? "Perdita di margine"
+            : "Margin loss",
+        description:
+          language === "it"
+            ? "Indica la quota dei ricavi associata a prodotti che hanno generato profitto economico negativo nel periodo."
+            : "Shows the share of revenue associated with products that generated negative economic profit during the period.",
+        note:
+          language === "it"
+            ? "Non è una seconda voce di costo e non va sommata a COGS e Profitto."
+            : "It is not a second cost category and should not be added to COGS and Profit.",
+      },
     },
   ];
 
@@ -93,6 +139,9 @@ export default function MarginBreakdown({
             >
               <div
                 style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
                   fontSize: 11,
                   fontWeight: 900,
                   letterSpacing: "0.12em",
@@ -100,7 +149,9 @@ export default function MarginBreakdown({
                   color: "rgba(255,255,255,0.54)",
                 }}
               >
-                {item.label}
+                <span>{item.label}</span>
+
+                <MetricTooltip content={item.tooltip} />
               </div>
 
               <div
