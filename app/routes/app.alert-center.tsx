@@ -5,6 +5,7 @@ import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
@@ -70,15 +71,15 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const alertStates = growthAccess
     ? await syncProfitMonitor({
-        shop: session.shop,
-        period,
-        alerts,
-        snapshot: {
-          summary: data.summary,
-          economicSnapshot: data.economicSnapshot,
-          alertIds: alerts.map((alert) => alert.id),
-        },
-      })
+      shop: session.shop,
+      period,
+      alerts,
+      snapshot: {
+        summary: data.summary,
+        economicSnapshot: data.economicSnapshot,
+        alertIds: alerts.map((alert) => alert.id),
+      },
+    })
     : {};
 
   return {
@@ -546,6 +547,9 @@ function AlertCard({
           <div
             style={{
               marginTop: 7,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               color: "rgba(255,255,255,0.42)",
               fontSize: 9,
               fontWeight: 850,
@@ -553,25 +557,58 @@ function AlertCard({
               letterSpacing: "0.08em",
             }}
           >
-            {alert.monthlyImpact > 0
-              ? economicKind === "loss"
-                ? language === "it"
-                  ? "Perdita mensile stimata"
-                  : "Estimated monthly loss"
-                : economicKind === "exposure"
+            <span>
+              {alert.monthlyImpact > 0
+                ? economicKind === "loss"
                   ? language === "it"
-                    ? "Esposizione mensile stimata"
-                    : "Estimated monthly exposure"
-                  : economicKind === "opportunity"
+                    ? "Perdita mensile stimata"
+                    : "Estimated monthly loss"
+                  : economicKind === "exposure"
                     ? language === "it"
-                      ? "Gap mensile stimato verso il target"
-                      : "Estimated monthly profit gap to target"
-                    : language === "it"
-                      ? "Valore mensile indicativo"
-                      : "Indicative monthly value"
-              : language === "it"
-                ? "Impatto da verificare"
-                : "Impact to review"}
+                      ? "Esposizione mensile stimata"
+                      : "Estimated monthly exposure"
+                    : economicKind === "opportunity"
+                      ? language === "it"
+                        ? "Gap mensile stimato verso il target"
+                        : "Estimated monthly profit gap to target"
+                      : language === "it"
+                        ? "Valore mensile indicativo"
+                        : "Indicative monthly value"
+                : language === "it"
+                  ? "Impatto da verificare"
+                  : "Impact to review"}
+            </span>
+
+            <MetricTooltip
+              content={{
+                title:
+                  language === "it"
+                    ? "Impatto economico dell'alert"
+                    : "Alert economic impact",
+
+                description:
+                  language === "it"
+                    ? economicKind === "loss"
+                      ? "Stima della perdita economica mensile associata al problema rilevato."
+                      : economicKind === "exposure"
+                        ? "Valore economico mensile esposto al problema rilevato. Non significa che questo importo sia già perso."
+                        : economicKind === "opportunity"
+                          ? "Stima del profitto mensile aggiuntivo necessario per raggiungere il target modellato."
+                          : "Valore economico indicativo associato al segnale."
+                    : economicKind === "loss"
+                      ? "Estimated monthly economic loss associated with the detected issue."
+                      : economicKind === "exposure"
+                        ? "Monthly economic value exposed to the detected issue. It does not mean this amount has already been lost."
+                        : economicKind === "opportunity"
+                          ? "Estimated additional monthly profit required to reach the modeled target."
+                          : "Indicative economic value associated with the signal.",
+
+                note:
+                  language === "it"
+                    ? "È una stima basata sui dati osservati e non rappresenta un risultato futuro garantito."
+                    : "This is an estimate based on observed data and does not represent a guaranteed future result.",
+              }}
+            />
           </div>
 
           <div
@@ -615,6 +652,9 @@ function AlertCard({
         <div>
           <div
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               color: "rgba(255,255,255,0.35)",
               fontSize: 8,
               fontWeight: 950,
@@ -622,7 +662,28 @@ function AlertCard({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "Priorità" : "Priority"}
+            <span>
+              {language === "it" ? "Priorità" : "Priority"}
+            </span>
+
+            <MetricTooltip
+              content={{
+                title:
+                  language === "it"
+                    ? "Priorità dell'alert"
+                    : "Alert priority",
+
+                description:
+                  language === "it"
+                    ? "Un punteggio da 0 a 100 che indica quanto rapidamente questo segnale merita attenzione rispetto agli altri."
+                    : "A 0–100 score showing how urgently this signal deserves attention compared with the others.",
+
+                note:
+                  language === "it"
+                    ? "Più alto è il punteggio, maggiore è la priorità. Non rappresenta una percentuale di perdita o di rischio."
+                    : "The higher the score, the higher the priority. It is not a percentage of loss or risk.",
+              }}
+            />
           </div>
 
           <div
@@ -640,6 +701,9 @@ function AlertCard({
         <div>
           <div
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               color: "rgba(255,255,255,0.35)",
               fontSize: 8,
               fontWeight: 950,
@@ -647,7 +711,28 @@ function AlertCard({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "Azione" : "Business action"}
+            <span>
+              {language === "it" ? "Azione" : "Business action"}
+            </span>
+
+            <MetricTooltip
+              content={{
+                title:
+                  language === "it"
+                    ? "Tipo di azione"
+                    : "Business action",
+
+                description:
+                  language === "it"
+                    ? "Indica che tipo di intervento MarginLab considera più adatto per questo segnale."
+                    : "Shows the type of response MarginLab considers most appropriate for this signal.",
+
+                note:
+                  language === "it"
+                    ? "Action richiede un intervento diretto, Review una verifica e Optimize un miglioramento."
+                    : "Action calls for direct intervention, Review for investigation, and Optimize for improvement.",
+              }}
+            />
           </div>
 
           <div
@@ -852,43 +937,43 @@ export default function AlertCenterPage() {
   const businessStatus =
     criticalCount > 0
       ? {
-          label: language === "it" ? "Intervento richiesto" : "Action required",
-          description:
-            language === "it"
-              ? "È presente almeno un rischio critico che richiede una verifica prioritaria."
-              : "At least one critical profitability risk requires priority review.",
-          color: "#ff6b4a",
-        }
+        label: language === "it" ? "Intervento richiesto" : "Action required",
+        description:
+          language === "it"
+            ? "È presente almeno un rischio critico che richiede una verifica prioritaria."
+            : "At least one critical profitability risk requires priority review.",
+        color: "#ff6b4a",
+      }
       : warningCount > 0
         ? {
-            label:
-              language === "it" ? "Verifica consigliata" : "Review recommended",
-            description:
-              language === "it"
-                ? "Non emerge un'emergenza generale, ma alcuni segnali meritano attenzione."
-                : "There is no broad emergency, but some signals deserve attention.",
-            color: "#f59e0b",
-          }
+          label:
+            language === "it" ? "Verifica consigliata" : "Review recommended",
+          description:
+            language === "it"
+              ? "Non emerge un'emergenza generale, ma alcuni segnali meritano attenzione."
+              : "There is no broad emergency, but some signals deserve attention.",
+          color: "#f59e0b",
+        }
         : severityCounts.opportunity > 0
           ? {
-              label:
-                language === "it"
-                  ? "Opportunità disponibili"
-                  : "Opportunities available",
-              description:
-                language === "it"
-                  ? "La situazione è relativamente stabile e sono disponibili opportunità di ottimizzazione."
-                  : "The business is relatively stable and optimization opportunities are available.",
-              color: "#22c55e",
-            }
+            label:
+              language === "it"
+                ? "Opportunità disponibili"
+                : "Opportunities available",
+            description:
+              language === "it"
+                ? "La situazione è relativamente stabile e sono disponibili opportunità di ottimizzazione."
+                : "The business is relatively stable and optimization opportunities are available.",
+            color: "#22c55e",
+          }
           : {
-              label: language === "it" ? "Situazione stabile" : "Stable status",
-              description:
-                language === "it"
-                  ? "Nessun rischio significativo richiede un intervento immediato."
-                  : "No significant profitability risk requires immediate action.",
-              color: "#38bdf8",
-            };
+            label: language === "it" ? "Situazione stabile" : "Stable status",
+            description:
+              language === "it"
+                ? "Nessun rischio significativo richiede un intervento immediato."
+                : "No significant profitability risk requires immediate action.",
+            color: "#38bdf8",
+          };
 
   const handleOpenAlert = (alert: ProfitAlert) => {
     if (!growthAccess) {
@@ -1013,109 +1098,109 @@ export default function AlertCenterPage() {
     const labels =
       language === "it"
         ? {
-            report: "Report",
-            store: "Store",
-            period: "Periodo (giorni)",
-            currency: "Valuta",
-            language: "Lingua",
-            generated: "Generato il",
-            storage: "Storico stati",
-            storageValue: "Database MarginLab",
-            summary: "RIEPILOGO",
-            metric: "Metrica",
-            value: "Valore",
-            currentAlerts: "Alert correnti",
-            newAlerts: "Nuovi",
-            unreadCurrent: "Alert correnti non letti",
-            active: "Attivi",
-            acknowledged: "Presi in carico",
-            historicalResolved: "Risolti storici",
-            totalExported: "Record totali esportati",
-            critical: "Critici",
-            warnings: "Attenzione",
-            opportunities: "Opportunità",
-            information: "Informazioni",
-            monthlyLoss: "Perdita mensile stimata",
-            monthlyExposure: "Esposizione ricavi per costi mancanti",
-            monthlyOpportunity:
-              "Gap mensile stimato verso il target (non cumulabile)",
-            confidence: "Affidabilità dati",
-            cogsCoverage: "Copertura COGS",
-            alerts: "DETTAGLIO ALERT",
-            columns: [
-              "ID",
-              "Titolo",
-              "Descrizione",
-              "Categoria",
-              "Severità",
-              "Stato",
-              "Letto",
-              "Natura economica",
-              "Importo economico mensile",
-              "Priorità",
-              "Azione",
-              "Prodotto",
-              "Tempo stimato (min)",
-              "Modulo consigliato",
-              "Percorso",
-              "Prima rilevazione",
-              "Ultima rilevazione",
-              "Preso in carico il",
-              "Risolto il",
-            ],
-          }
+          report: "Report",
+          store: "Store",
+          period: "Periodo (giorni)",
+          currency: "Valuta",
+          language: "Lingua",
+          generated: "Generato il",
+          storage: "Storico stati",
+          storageValue: "Database MarginLab",
+          summary: "RIEPILOGO",
+          metric: "Metrica",
+          value: "Valore",
+          currentAlerts: "Alert correnti",
+          newAlerts: "Nuovi",
+          unreadCurrent: "Alert correnti non letti",
+          active: "Attivi",
+          acknowledged: "Presi in carico",
+          historicalResolved: "Risolti storici",
+          totalExported: "Record totali esportati",
+          critical: "Critici",
+          warnings: "Attenzione",
+          opportunities: "Opportunità",
+          information: "Informazioni",
+          monthlyLoss: "Perdita mensile stimata",
+          monthlyExposure: "Esposizione ricavi per costi mancanti",
+          monthlyOpportunity:
+            "Gap mensile stimato verso il target (non cumulabile)",
+          confidence: "Affidabilità dati",
+          cogsCoverage: "Copertura COGS",
+          alerts: "DETTAGLIO ALERT",
+          columns: [
+            "ID",
+            "Titolo",
+            "Descrizione",
+            "Categoria",
+            "Severità",
+            "Stato",
+            "Letto",
+            "Natura economica",
+            "Importo economico mensile",
+            "Priorità",
+            "Azione",
+            "Prodotto",
+            "Tempo stimato (min)",
+            "Modulo consigliato",
+            "Percorso",
+            "Prima rilevazione",
+            "Ultima rilevazione",
+            "Preso in carico il",
+            "Risolto il",
+          ],
+        }
         : {
-            report: "Report",
-            store: "Store",
-            period: "Period (days)",
-            currency: "Currency",
-            language: "Language",
-            generated: "Generated at",
-            storage: "Status history",
-            storageValue: "MarginLab database",
-            summary: "SUMMARY",
-            metric: "Metric",
-            value: "Value",
-            currentAlerts: "Current alerts",
-            newAlerts: "New",
-            unreadCurrent: "Unread current alerts",
-            active: "Active",
-            acknowledged: "Acknowledged",
-            historicalResolved: "Historical resolved",
-            totalExported: "Total exported records",
-            critical: "Critical",
-            warnings: "Warnings",
-            opportunities: "Opportunities",
-            information: "Information",
-            monthlyLoss: "Estimated monthly loss",
-            monthlyExposure: "Missing-cost revenue exposure",
-            monthlyOpportunity:
-              "Estimated monthly profit gap to target (non-additive)",
-            confidence: "Data confidence",
-            cogsCoverage: "COGS coverage",
-            alerts: "ALERT DETAILS",
-            columns: [
-              "ID",
-              "Title",
-              "Description",
-              "Category",
-              "Severity",
-              "Status",
-              "Read",
-              "Economic kind",
-              "Monthly economic amount",
-              "Priority",
-              "Business action",
-              "Product",
-              "Estimated time (min)",
-              "Recommended module",
-              "Route",
-              "First seen",
-              "Last seen",
-              "Acknowledged at",
-              "Resolved at",
-            ],
-          };
+          report: "Report",
+          store: "Store",
+          period: "Period (days)",
+          currency: "Currency",
+          language: "Language",
+          generated: "Generated at",
+          storage: "Status history",
+          storageValue: "MarginLab database",
+          summary: "SUMMARY",
+          metric: "Metric",
+          value: "Value",
+          currentAlerts: "Current alerts",
+          newAlerts: "New",
+          unreadCurrent: "Unread current alerts",
+          active: "Active",
+          acknowledged: "Acknowledged",
+          historicalResolved: "Historical resolved",
+          totalExported: "Total exported records",
+          critical: "Critical",
+          warnings: "Warnings",
+          opportunities: "Opportunities",
+          information: "Information",
+          monthlyLoss: "Estimated monthly loss",
+          monthlyExposure: "Missing-cost revenue exposure",
+          monthlyOpportunity:
+            "Estimated monthly profit gap to target (non-additive)",
+          confidence: "Data confidence",
+          cogsCoverage: "COGS coverage",
+          alerts: "ALERT DETAILS",
+          columns: [
+            "ID",
+            "Title",
+            "Description",
+            "Category",
+            "Severity",
+            "Status",
+            "Read",
+            "Economic kind",
+            "Monthly economic amount",
+            "Priority",
+            "Business action",
+            "Product",
+            "Estimated time (min)",
+            "Recommended module",
+            "Route",
+            "First seen",
+            "Last seen",
+            "Acknowledged at",
+            "Resolved at",
+          ],
+        };
 
     const currentAlertIds = new Set(alerts.map((alert) => alert.id));
     const currentStates = alerts.map(
@@ -1212,7 +1297,7 @@ export default function AlertCenterPage() {
           alert.priority,
           alert.businessAction,
           alert.productTitle ??
-            (language === "it" ? "Intero store" : "Store-wide"),
+          (language === "it" ? "Intero store" : "Store-wide"),
           alert.estimatedMinutes,
           alert.recommendedModule,
           alert.route,
@@ -1249,37 +1334,37 @@ export default function AlertCenterPage() {
     count: number;
     color: string;
   }> = [
-    {
-      id: "all",
-      label: language === "it" ? "Tutti" : "All",
-      count: severityCounts.total,
-      color: "#f8fafc",
-    },
-    {
-      id: "critical",
-      label: language === "it" ? "Critici" : "Critical",
-      count: severityCounts.critical,
-      color: "#ff6b4a",
-    },
-    {
-      id: "warning",
-      label: language === "it" ? "Attenzione" : "Warnings",
-      count: severityCounts.warning,
-      color: "#f59e0b",
-    },
-    {
-      id: "opportunity",
-      label: language === "it" ? "Opportunità" : "Opportunities",
-      count: severityCounts.opportunity,
-      color: "#22c55e",
-    },
-    {
-      id: "info",
-      label: language === "it" ? "Informazioni" : "Information",
-      count: severityCounts.info,
-      color: "#38bdf8",
-    },
-  ];
+      {
+        id: "all",
+        label: language === "it" ? "Tutti" : "All",
+        count: severityCounts.total,
+        color: "#f8fafc",
+      },
+      {
+        id: "critical",
+        label: language === "it" ? "Critici" : "Critical",
+        count: severityCounts.critical,
+        color: "#ff6b4a",
+      },
+      {
+        id: "warning",
+        label: language === "it" ? "Attenzione" : "Warnings",
+        count: severityCounts.warning,
+        color: "#f59e0b",
+      },
+      {
+        id: "opportunity",
+        label: language === "it" ? "Opportunità" : "Opportunities",
+        count: severityCounts.opportunity,
+        color: "#22c55e",
+      },
+      {
+        id: "info",
+        label: language === "it" ? "Informazioni" : "Information",
+        count: severityCounts.info,
+        color: "#38bdf8",
+      },
+    ];
 
   return (
     <div className="dashboard-shell">
@@ -1450,414 +1535,492 @@ export default function AlertCenterPage() {
               growthAccess
                 ? undefined
                 : {
-                    pointerEvents: "none",
-                    userSelect: "none",
-                    opacity: 0.5,
-                  }
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  opacity: 0.5,
+                }
             }
           >
-        <section
-          style={{
-            marginBottom: 25,
-            borderRadius: 30,
-            padding: 28,
-            background: `radial-gradient(circle at 12% 15%, ${businessStatus.color}20, transparent 32%), radial-gradient(circle at 88% 12%, rgba(255,115,80,0.10), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))`,
-            border: `1px solid ${businessStatus.color}38`,
-            boxShadow:
-              "0 28px 90px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.03)",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.1fr 0.9fr",
-              gap: 25,
-              alignItems: "center",
-            }}
-          >
-            <div>
+            <section
+              style={{
+                marginBottom: 25,
+                borderRadius: 30,
+                padding: 28,
+                background: `radial-gradient(circle at 12% 15%, ${businessStatus.color}20, transparent 32%), radial-gradient(circle at 88% 12%, rgba(255,115,80,0.10), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))`,
+                border: `1px solid ${businessStatus.color}38`,
+                boxShadow:
+                  "0 28px 90px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.03)",
+              }}
+            >
               <div
                 style={{
-                  color: businessStatus.color,
-                  fontSize: 10,
-                  fontWeight: 950,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
+                  display: "grid",
+                  gridTemplateColumns: "1.1fr 0.9fr",
+                  gap: 25,
+                  alignItems: "center",
                 }}
               >
-                {language === "it"
-                  ? "STATO DEL MONITORAGGIO"
-                  : "MONITORING STATUS"}
+                <div>
+                  <div
+                    style={{
+                      color: businessStatus.color,
+                      fontSize: 10,
+                      fontWeight: 950,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {language === "it"
+                      ? "STATO DEL MONITORAGGIO"
+                      : "MONITORING STATUS"}
+                  </div>
+
+                  <h2
+                    style={{
+                      margin: "11px 0 0",
+                      color: "#f8fafc",
+                      fontSize: 36,
+                      lineHeight: 1.12,
+                      fontWeight: 950,
+                      letterSpacing: "-0.045em",
+                    }}
+                  >
+                    {businessStatus.label}
+                  </h2>
+
+                  <p
+                    style={{
+                      margin: "12px 0 0",
+                      maxWidth: 720,
+                      color: "rgba(255,255,255,0.64)",
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      fontWeight: 730,
+                    }}
+                  >
+                    {businessStatus.description}
+                  </p>
+
+                  <div
+                    style={{
+                      marginTop: 20,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <TinyBadge color={businessStatus.color}>
+                      {lifecycleCounts.unread}{" "}
+                      {language === "it" ? "non letti" : "unread"}
+                    </TinyBadge>
+
+                    <TinyBadge color="#38bdf8">
+                      {lifecycleCounts.active}{" "}
+                      {language === "it" ? "attivi" : "active"}
+                    </TinyBadge>
+
+                    <TinyBadge color="#c084fc">
+                      {lifecycleCounts.acknowledged}{" "}
+                      {language === "it" ? "presi in carico" : "acknowledged"}
+                    </TinyBadge>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 25,
+                    padding: 23,
+                    background: "rgba(255,255,255,0.025)",
+                    border: "1px solid rgba(255,255,255,0.075)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      color: "rgba(255,255,255,0.42)",
+                      fontSize: 9,
+                      fontWeight: 950,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    <span>
+                      {language === "it"
+                        ? "IMPATTI ECONOMICI MENSILI"
+                        : "MONTHLY ECONOMIC IMPACTS"}
+                    </span>
+
+                    <MetricTooltip
+                      content={{
+                        title:
+                          language === "it"
+                            ? "Impatti economici mensili"
+                            : "Monthly economic impacts",
+
+                        description:
+                          language === "it"
+                            ? "Mostra tre valori distinti: perdita stimata, esposizione economica e gap di profitto verso il target."
+                            : "Shows three separate values: estimated loss, economic exposure and profit gap to target.",
+
+                        note:
+                          language === "it"
+                            ? "Questi valori non vanno sommati tra loro perché rappresentano fenomeni economici diversi."
+                            : "These values should not be added together because they represent different economic effects.",
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 13,
+                      color: "#f8fafc",
+                      fontSize: 47,
+                      lineHeight: 1,
+                      fontWeight: 950,
+                      letterSpacing: "-0.055em",
+                    }}
+                  >
+                    <span style={{ color: "#ff6b4a" }}>
+                      {storeMoney(economicTotals.monthlyLoss)}
+                    </span>
+                    <span
+                      style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
+                    >
+                      ·
+                    </span>
+                    <span style={{ color: "#f59e0b" }}>
+                      {storeMoney(economicTotals.monthlyExposure)}
+                    </span>
+                    <span
+                      style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
+                    >
+                      ·
+                    </span>
+                    <span style={{ color: "#22c55e" }}>
+                      {storeMoney(economicTotals.monthlyOpportunity)}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 9,
+                      color: "rgba(255,255,255,0.47)",
+                      fontSize: 11,
+                      lineHeight: 1.55,
+                      fontWeight: 750,
+                    }}
+                  >
+                    {language === "it"
+                      ? "Perdita · esposizione · gap verso il target. Valori distinti e non sommabili."
+                      : "Loss · exposure · profit gap to target. Separate, non-additive values."}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 15,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: 9,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <TinyBadge color={confidenceColor}>
+                        {language === "it"
+                          ? `AFFIDABILITÀ ${dataConfidence.score}% · ${confidenceLabel}`
+                          : `CONFIDENCE ${dataConfidence.score}% · ${confidenceLabel}`}
+                      </TinyBadge>
+
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Affidabilità dei dati"
+                              : "Data confidence",
+
+                          description:
+                            language === "it"
+                              ? "Indica quanto MarginLab considera affidabile l'analisi in base alla completezza e alla qualità dei dati disponibili."
+                              : "Shows how reliable MarginLab considers the analysis based on the completeness and quality of the available data.",
+
+                          note:
+                            language === "it"
+                              ? "Un valore più alto significa che l'analisi si basa su dati più completi e utilizzabili."
+                              : "A higher value means the analysis is based on more complete and usable data.",
+                        }}
+                      />
+                    </div>
+
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <TinyBadge color="#60a5fa">
+                        {language === "it"
+                          ? `COPERTURA COGS ${Math.round(dataConfidence.cogsCoveragePct)}%`
+                          : `COGS COVERAGE ${Math.round(dataConfidence.cogsCoveragePct)}%`}
+                      </TinyBadge>
+
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Copertura COGS"
+                              : "COGS coverage",
+
+                          description:
+                            language === "it"
+                              ? "Indica quale parte dei dati analizzati dispone di costi prodotto sufficienti per calcolare la redditività in modo affidabile."
+                              : "Shows how much of the analyzed data has sufficient product cost information for reliable profitability calculations.",
+
+                          note:
+                            language === "it"
+                              ? "Una copertura bassa può rendere meno affidabili margini, perdite e priorità."
+                              : "Low coverage can make margins, losses and priorities less reliable.",
+                        }}
+                      />
+                    </div>
+
+                    {!dataConfidence.comparisonAvailable ? (
+                      <TinyBadge color="#94a3b8">
+                        {language === "it"
+                          ? "CONFRONTO NON DISPONIBILE"
+                          : "COMPARISON UNAVAILABLE"}
+                      </TinyBadge>
+                    ) : null}
+                  </div>
+                </div>
               </div>
+            </section>
 
-              <h2
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+                gap: 13,
+                marginBottom: 25,
+              }}
+            >
+              <SummaryCard
+                label={language === "it" ? "Critici" : "Critical"}
+                value={`${severityCounts.critical}`}
+                note={
+                  language === "it" ? "Richiedono priorità" : "Require priority"
+                }
+                color="#ff6b4a"
+              />
+
+              <SummaryCard
+                label={language === "it" ? "Attenzione" : "Warnings"}
+                value={`${severityCounts.warning}`}
+                note={language === "it" ? "Da controllare" : "Need review"}
+                color="#f59e0b"
+              />
+
+              <SummaryCard
+                label={language === "it" ? "Opportunità" : "Opportunities"}
+                value={`${severityCounts.opportunity}`}
+                note={
+                  language === "it"
+                    ? "Possibile miglioramento"
+                    : "Potential improvement"
+                }
+                color="#22c55e"
+              />
+
+              <SummaryCard
+                label={language === "it" ? "Non letti" : "Unread"}
+                value={`${lifecycleCounts.unread}`}
+                note={language === "it" ? "Nuovi segnali" : "New signals"}
+                color="#38bdf8"
+              />
+            </div>
+
+            <section
+              className="panel"
+              style={{
+                margin: 0,
+                padding: 22,
+              }}
+            >
+              <div
                 style={{
-                  margin: "11px 0 0",
-                  color: "#f8fafc",
-                  fontSize: 36,
-                  lineHeight: 1.12,
-                  fontWeight: 950,
-                  letterSpacing: "-0.045em",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 16,
+                  flexWrap: "wrap",
                 }}
               >
-                {businessStatus.label}
-              </h2>
+                <div>
+                  <div className="panel-eyebrow">
+                    {language === "it" ? "SEGNALI ATTIVI" : "ACTIVE SIGNALS"}
+                  </div>
 
-              <p
-                style={{
-                  margin: "12px 0 0",
-                  maxWidth: 720,
-                  color: "rgba(255,255,255,0.64)",
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                  fontWeight: 730,
-                }}
-              >
-                {businessStatus.description}
-              </p>
+                  <h2 className="panel-title" style={{ marginTop: 6 }}>
+                    {language === "it" ? "Profit Alert Feed" : "Profit Alert Feed"}
+                  </h2>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 9,
+                      color: "rgba(255,255,255,0.55)",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={showAcknowledged}
+                      disabled={!growthAccess}
+                      onChange={(event) =>
+                        setShowAcknowledged(event.target.checked)
+                      }
+                    />
+
+                    {language === "it"
+                      ? "Mostra presi in carico"
+                      : "Show acknowledged"}
+                  </label>
+
+                  <button
+                    type="button"
+                    className="apply-button"
+                    onClick={handleExportCsv}
+                  >
+                    {language === "it" ? "Esporta CSV" : "Export CSV"}
+                  </button>
+                </div>
+              </div>
 
               <div
                 style={{
                   marginTop: 20,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 10,
+                  gap: 9,
                   flexWrap: "wrap",
                 }}
               >
-                <TinyBadge color={businessStatus.color}>
-                  {lifecycleCounts.unread}{" "}
-                  {language === "it" ? "non letti" : "unread"}
-                </TinyBadge>
+                {filters.map((filter) => {
+                  const selected = severityFilter === filter.id;
 
-                <TinyBadge color="#38bdf8">
-                  {lifecycleCounts.active}{" "}
-                  {language === "it" ? "attivi" : "active"}
-                </TinyBadge>
-
-                <TinyBadge color="#c084fc">
-                  {lifecycleCounts.acknowledged}{" "}
-                  {language === "it" ? "presi in carico" : "acknowledged"}
-                </TinyBadge>
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 25,
-                padding: 23,
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.075)",
-              }}
-            >
-              <div
-                style={{
-                  color: "rgba(255,255,255,0.42)",
-                  fontSize: 9,
-                  fontWeight: 950,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {language === "it"
-                  ? "IMPATTI ECONOMICI MENSILI"
-                  : "MONTHLY ECONOMIC IMPACTS"}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 13,
-                  color: "#f8fafc",
-                  fontSize: 47,
-                  lineHeight: 1,
-                  fontWeight: 950,
-                  letterSpacing: "-0.055em",
-                }}
-              >
-                <span style={{ color: "#ff6b4a" }}>
-                  {storeMoney(economicTotals.monthlyLoss)}
-                </span>
-                <span
-                  style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
-                >
-                  ·
-                </span>
-                <span style={{ color: "#f59e0b" }}>
-                  {storeMoney(economicTotals.monthlyExposure)}
-                </span>
-                <span
-                  style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
-                >
-                  ·
-                </span>
-                <span style={{ color: "#22c55e" }}>
-                  {storeMoney(economicTotals.monthlyOpportunity)}
-                </span>
+                  return (
+                    <button
+                      key={filter.id}
+                      type="button"
+                      onClick={() => setSeverityFilter(filter.id)}
+                      style={{
+                        cursor: "pointer",
+                        minHeight: 38,
+                        padding: "9px 13px",
+                        borderRadius: 999,
+                        color: selected ? filter.color : "rgba(255,255,255,0.52)",
+                        background: selected
+                          ? `${filter.color}16`
+                          : "rgba(255,255,255,0.025)",
+                        border: selected
+                          ? `1px solid ${filter.color}42`
+                          : "1px solid rgba(255,255,255,0.07)",
+                        fontSize: 10,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {filter.label}{" "}
+                      <span
+                        style={{
+                          marginLeft: 5,
+                          opacity: 0.72,
+                        }}
+                      >
+                        {filter.count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
               <div
                 style={{
-                  marginTop: 9,
-                  color: "rgba(255,255,255,0.47)",
-                  fontSize: 11,
-                  lineHeight: 1.55,
-                  fontWeight: 750,
+                  marginTop: 21,
+                  display: "grid",
+                  gap: 14,
                 }}
               >
-                {language === "it"
-                  ? "Perdita · esposizione · gap verso il target. Valori distinti e non sommabili."
-                  : "Loss · exposure · profit gap to target. Separate, non-additive values."}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 15,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                  gap: 9,
-                }}
-              >
-                <TinyBadge color={confidenceColor}>
-                  {language === "it"
-                    ? `AFFIDABILITÀ ${dataConfidence.score}% · ${confidenceLabel}`
-                    : `CONFIDENCE ${dataConfidence.score}% · ${confidenceLabel}`}
-                </TinyBadge>
-
-                <TinyBadge color="#60a5fa">
-                  {language === "it"
-                    ? `COPERTURA COGS ${Math.round(dataConfidence.cogsCoveragePct)}%`
-                    : `COGS COVERAGE ${Math.round(dataConfidence.cogsCoveragePct)}%`}
-                </TinyBadge>
-
-                {!dataConfidence.comparisonAvailable ? (
-                  <TinyBadge color="#94a3b8">
-                    {language === "it"
-                      ? "CONFRONTO NON DISPONIBILE"
-                      : "COMPARISON UNAVAILABLE"}
-                  </TinyBadge>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-            gap: 13,
-            marginBottom: 25,
-          }}
-        >
-          <SummaryCard
-            label={language === "it" ? "Critici" : "Critical"}
-            value={`${severityCounts.critical}`}
-            note={
-              language === "it" ? "Richiedono priorità" : "Require priority"
-            }
-            color="#ff6b4a"
-          />
-
-          <SummaryCard
-            label={language === "it" ? "Attenzione" : "Warnings"}
-            value={`${severityCounts.warning}`}
-            note={language === "it" ? "Da controllare" : "Need review"}
-            color="#f59e0b"
-          />
-
-          <SummaryCard
-            label={language === "it" ? "Opportunità" : "Opportunities"}
-            value={`${severityCounts.opportunity}`}
-            note={
-              language === "it"
-                ? "Possibile miglioramento"
-                : "Potential improvement"
-            }
-            color="#22c55e"
-          />
-
-          <SummaryCard
-            label={language === "it" ? "Non letti" : "Unread"}
-            value={`${lifecycleCounts.unread}`}
-            note={language === "it" ? "Nuovi segnali" : "New signals"}
-            color="#38bdf8"
-          />
-        </div>
-
-        <section
-          className="panel"
-          style={{
-            margin: 0,
-            padding: 22,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 16,
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <div className="panel-eyebrow">
-                {language === "it" ? "SEGNALI ATTIVI" : "ACTIVE SIGNALS"}
-              </div>
-
-              <h2 className="panel-title" style={{ marginTop: 6 }}>
-                {language === "it" ? "Profit Alert Feed" : "Profit Alert Feed"}
-              </h2>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                flexWrap: "wrap",
-                justifyContent: "flex-end",
-              }}
-            >
-              <label
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 9,
-                  color: "rgba(255,255,255,0.55)",
-                  fontSize: 11,
-                  fontWeight: 800,
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={showAcknowledged}
-                  disabled={!growthAccess}
-                  onChange={(event) =>
-                    setShowAcknowledged(event.target.checked)
-                  }
-                />
-
-                {language === "it"
-                  ? "Mostra presi in carico"
-                  : "Show acknowledged"}
-              </label>
-
-              <button
-                type="button"
-                className="apply-button"
-                onClick={handleExportCsv}
-              >
-                {language === "it" ? "Esporta CSV" : "Export CSV"}
-              </button>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 20,
-              display: "flex",
-              gap: 9,
-              flexWrap: "wrap",
-            }}
-          >
-            {filters.map((filter) => {
-              const selected = severityFilter === filter.id;
-
-              return (
-                <button
-                  key={filter.id}
-                  type="button"
-                  onClick={() => setSeverityFilter(filter.id)}
-                  style={{
-                    cursor: "pointer",
-                    minHeight: 38,
-                    padding: "9px 13px",
-                    borderRadius: 999,
-                    color: selected ? filter.color : "rgba(255,255,255,0.52)",
-                    background: selected
-                      ? `${filter.color}16`
-                      : "rgba(255,255,255,0.025)",
-                    border: selected
-                      ? `1px solid ${filter.color}42`
-                      : "1px solid rgba(255,255,255,0.07)",
-                    fontSize: 10,
-                    fontWeight: 900,
-                  }}
-                >
-                  {filter.label}{" "}
-                  <span
+                {filteredAlerts.length > 0 ? (
+                  filteredAlerts.map((alert) => (
+                    <AlertCard
+                      key={alert.id}
+                      alert={alert}
+                      alertStates={alertStates}
+                      language={language}
+                      onOpen={handleOpenAlert}
+                      onAcknowledge={handleAcknowledge}
+                    />
+                  ))
+                ) : (
+                  <div
                     style={{
-                      marginLeft: 5,
-                      opacity: 0.72,
+                      padding: 32,
+                      textAlign: "center",
+                      borderRadius: 21,
+                      color: "rgba(255,255,255,0.54)",
+                      background: "rgba(255,255,255,0.025)",
+                      border: "1px solid rgba(255,255,255,0.07)",
+                      fontSize: 13,
+                      fontWeight: 760,
                     }}
                   >
-                    {filter.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            style={{
-              marginTop: 21,
-              display: "grid",
-              gap: 14,
-            }}
-          >
-            {filteredAlerts.length > 0 ? (
-              filteredAlerts.map((alert) => (
-                <AlertCard
-                  key={alert.id}
-                  alert={alert}
-                  alertStates={alertStates}
-                  language={language}
-                  onOpen={handleOpenAlert}
-                  onAcknowledge={handleAcknowledge}
-                />
-              ))
-            ) : (
-              <div
-                style={{
-                  padding: 32,
-                  textAlign: "center",
-                  borderRadius: 21,
-                  color: "rgba(255,255,255,0.54)",
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                  fontSize: 13,
-                  fontWeight: 760,
-                }}
-              >
-                {language === "it"
-                  ? "Nessun alert corrisponde ai filtri selezionati."
-                  : "No alerts match the selected filters."}
+                    {language === "it"
+                      ? "Nessun alert corrisponde ai filtri selezionati."
+                      : "No alerts match the selected filters."}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </section>
+            </section>
 
-        <div
-          style={{
-            marginTop: 23,
-            marginBottom: 24,
-            padding: 18,
-            borderRadius: 18,
-            background: "rgba(255,115,60,0.065)",
-            border: "1px solid rgba(255,115,60,0.18)",
-            color: "rgba(255,255,255,0.62)",
-            fontSize: 12,
-            lineHeight: 1.65,
-            fontWeight: 700,
-          }}
-        >
-          {language === "it"
-            ? "Gli alert vengono generati usando la base economica tax-aware costruita sui dati Shopify del periodo selezionato. Perdita, esposizione e gap verso il target sono stime distinte e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-            : "Alerts are generated using the tax-aware economic basis built from Shopify data for the selected period. Loss, exposure and profit gap to target are separate estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
-        </div>
+            <div
+              style={{
+                marginTop: 23,
+                marginBottom: 24,
+                padding: 18,
+                borderRadius: 18,
+                background: "rgba(255,115,60,0.065)",
+                border: "1px solid rgba(255,115,60,0.18)",
+                color: "rgba(255,255,255,0.62)",
+                fontSize: 12,
+                lineHeight: 1.65,
+                fontWeight: 700,
+              }}
+            >
+              {language === "it"
+                ? "Gli alert vengono generati usando la base economica tax-aware costruita sui dati Shopify del periodo selezionato. Perdita, esposizione e gap verso il target sono stime distinte e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
+                : "Alerts are generated using the tax-aware economic basis built from Shopify data for the selected period. Loss, exposure and profit gap to target are separate estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
+            </div>
           </div>
         </div>
       </div>
