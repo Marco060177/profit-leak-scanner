@@ -2,6 +2,7 @@ import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import prisma from "~/db.server";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
@@ -40,19 +41,19 @@ export async function loader({ request }: { request: Request }) {
 
   const assumptions = growthAccess
     ? (await prisma.profitAssumptions.findUnique({
-        where: {
-          shop: session.shop,
-        },
-      })) ?? {
-        paymentFeePct: 0,
-        transactionFeePct: 0,
-        taxReservePct: 0,
-      }
+      where: {
+        shop: session.shop,
+      },
+    })) ?? {
+      paymentFeePct: 0,
+      transactionFeePct: 0,
+      taxReservePct: 0,
+    }
     : {
-        paymentFeePct: 0,
-        transactionFeePct: 0,
-        taxReservePct: 0,
-      };
+      paymentFeePct: 0,
+      transactionFeePct: 0,
+      taxReservePct: 0,
+    };
 
   return {
     ...dashboardData,
@@ -378,7 +379,7 @@ export default function RecoverySimulatorPage() {
 
   const currentMarginPct = safeNumber(
     selectedProduct.economicMarginPct ??
-      selectedProduct.marginPct,
+    selectedProduct.marginPct,
   );
 
   const currentMonthlyRevenue =
@@ -1153,272 +1154,26 @@ export default function RecoverySimulatorPage() {
               growthAccess
                 ? undefined
                 : {
-                    pointerEvents: "none",
-                    userSelect: "none",
-                    opacity: 0.5,
-                  }
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  opacity: 0.5,
+                }
             }
           >
-          <div style={{ ...cardStyle, padding: 22 }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1.25fr) minmax(280px, 0.75fr)",
-                gap: 20,
-                alignItems: "end",
-              }}
-            >
-              <div>
-                <div style={mutedLabelStyle}>
-                  {language === "it"
-                    ? "Selezione prodotto"
-                    : "Product selection"}
-                </div>
-                <div
-                  style={{
-                    marginTop: 9,
-                    color: "#f8fafc",
-                    fontSize: 20,
-                    fontWeight: 950,
-                  }}
-                >
-                  {language === "it"
-                    ? "Scegli il prodotto da simulare"
-                    : "Choose the product to simulate"}
-                </div>
-              </div>
-
-              <div style={{ position: "relative" }}>
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder={
-                    language === "it"
-                      ? "Cerca un prodotto..."
-                      : "Search a product..."
-                  }
-                  style={{
-                    width: "100%",
-                    boxSizing: "border-box",
-                    borderRadius: 16,
-                    padding: "14px 16px",
-                    color: "#f8fafc",
-                    background: "rgba(255,255,255,0.045)",
-                    border: "1px solid rgba(255,115,60,0.2)",
-                    outline: "none",
-                    fontWeight: 800,
-                  }}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: 10,
-                marginTop: 18,
-              }}
-            >
-              {filteredProducts.map((product) => {
-                const isActive =
-                  product.productId === selectedProduct.productId;
-
-                return (
-                  <button
-                    key={product.productId || product.productTitle}
-                    type="button"
-                    onClick={() => {
-                      setSelectedProductId(product.productId);
-                      setSearchQuery("");
-                    }}
-                    style={{
-                      minHeight: 74,
-                      padding: 14,
-                      borderRadius: 16,
-                      textAlign: "left",
-                      cursor: "pointer",
-                      background: isActive
-                        ? "linear-gradient(135deg, rgba(255,115,60,0.17), rgba(255,115,60,0.07))"
-                        : "rgba(255,255,255,0.035)",
-                      border: isActive
-                        ? "1px solid rgba(255,115,60,0.48)"
-                        : "1px solid rgba(255,255,255,0.075)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "#f8fafc",
-                        fontWeight: 900,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {product.productTitle}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 7,
-                        color: "rgba(255,255,255,0.52)",
-                        fontSize: 12,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {money(product.avgPrice, 2)} · {product.qty}{" "}
-                      {language === "it" ? "unità" : "units"}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(280px, 0.72fr) minmax(0, 1.28fr)",
-              gap: 24,
-              marginTop: 24,
-            }}
-          >
-            <div style={cardStyle}>
-              <div style={mutedLabelStyle}>
-                {language === "it"
-                  ? "Baseline economica attuale"
-                  : "Current economic baseline"}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  color: "#f8fafc",
-                  fontSize: 23,
-                  lineHeight: 1.25,
-                  fontWeight: 950,
-                }}
-              >
-                {selectedProduct.productTitle}
-              </div>
-
+            <div style={{ ...cardStyle, padding: 22 }}>
               <div
                 style={{
                   display: "grid",
-                  gap: 12,
-                  marginTop: 22,
-                }}
-              >
-                {[
-                  [
-                    language === "it" ? "Prezzo" : "Selling price",
-                    money(currentPrice, 2),
-                  ],
-                  [language === "it" ? "Costo" : "Cost", money(currentCost, 2)],
-                  [
-                    language === "it" ? "Vendite mensili" : "Monthly sales",
-                    Math.round(currentMonthlyQty).toString(),
-                  ],
-                  [
-                    language === "it" ? "Margine" : "Margin",
-                    pct(currentMarginPct),
-                  ],
-                  [
-                    language === "it" ? "Profitto mensile" : "Monthly profit",
-                    money(currentMonthlyProfit, 0),
-                  ],
-                ].map(([label, value]) => (
-                  <div
-                    key={label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 18,
-                      alignItems: "center",
-                      paddingBottom: 12,
-                      borderBottom: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "rgba(255,255,255,0.54)",
-                        fontSize: 13,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {label}
-                    </span>
-                    <strong style={{ color: "#f8fafc", fontSize: 16 }}>
-                      {value}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 22,
-                  padding: 16,
-                  borderRadius: 16,
-                  background:
-                    currentPrice <= currentCost
-                      ? "rgba(239,68,68,0.09)"
-                      : "rgba(255,115,60,0.075)",
-                  border:
-                    currentPrice <= currentCost
-                      ? "1px solid rgba(239,68,68,0.22)"
-                      : "1px solid rgba(255,115,60,0.17)",
-                }}
-              >
-                <div style={mutedLabelStyle}>
-                  {language === "it"
-                    ? "Prezzo di pareggio"
-                    : "Break-even price"}
-                </div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    color: currentPrice <= currentCost ? "#f87171" : "#ff9a70",
-                    fontSize: 25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {money(currentCost, 2)}
-                </div>
-                <div
-                  style={{
-                    marginTop: 5,
-                    color: "rgba(255,255,255,0.52)",
-                    fontSize: 12,
-                    lineHeight: 1.5,
-                    fontWeight: 750,
-                  }}
-                >
-                  {language === "it"
-                    ? "Sotto questo valore il prodotto non copre il costo economico unitario e le commissioni variabili impostate."
-                    : "Below this value, the product does not cover its economic unit cost and configured variable fees."}
-                </div>
-              </div>
-            </div>
-
-            <div
-              style={{
-                ...cardStyle,
-                background:
-                  "radial-gradient(circle at top right, rgba(255,115,60,0.11), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 16,
-                  alignItems: "flex-start",
-                  flexWrap: "wrap",
+                  gridTemplateColumns: "minmax(0, 1.25fr) minmax(280px, 0.75fr)",
+                  gap: 20,
+                  alignItems: "end",
                 }}
               >
                 <div>
                   <div style={mutedLabelStyle}>
-                    {language === "it" ? "Simulazione live" : "Live simulation"}
+                    {language === "it"
+                      ? "Selezione prodotto"
+                      : "Product selection"}
                   </div>
                   <div
                     style={{
@@ -1429,545 +1184,625 @@ export default function RecoverySimulatorPage() {
                     }}
                   >
                     {language === "it"
-                      ? "Modifica le tre leve di profitto"
-                      : "Adjust the three profit levers"}
+                      ? "Scegli il prodotto da simulare"
+                      : "Choose the product to simulate"}
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: 999,
-                    background: "rgba(255,115,60,0.1)",
-                    border: "1px solid rgba(255,115,60,0.2)",
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 900,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {scenario === "custom"
-                    ? language === "it"
-                      ? "Scenario personalizzato"
-                      : "Custom scenario"
-                    : scenario === "conservative"
-                      ? language === "it"
-                        ? "Prudente"
-                        : "Conservative"
-                      : scenario === "balanced"
-                        ? language === "it"
-                          ? "Bilanciato"
-                          : "Balanced"
-                        : language === "it"
-                          ? "Aggressivo"
-                          : "Aggressive"}
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gap: 26, marginTop: 30 }}>
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 16,
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it"
-                          ? "Prezzo di vendita"
-                          : "Selling price"}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: "rgba(255,255,255,0.48)",
-                          fontSize: 12,
-                          fontWeight: 750,
-                        }}
-                      >
-                        {language === "it"
-                          ? `Attuale ${money(currentPrice, 2)}`
-                          : `Current ${money(currentPrice, 2)}`}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        color:
-                          simulatedPrice >= currentPrice
-                            ? "#4ade80"
-                            : "#f59e0b",
-                        fontSize: 24,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {money(simulatedPrice, 2)}
-                    </div>
-                  </div>
+                <div style={{ position: "relative" }}>
                   <input
-                    className="recovery-range"
-                    type="range"
-                    min={priceMin}
-                    max={priceMax}
-                    step={priceStep}
-                    value={simulatedPrice}
-                    onChange={(event) =>
-                      handleManualPriceChange(Number(event.target.value))
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder={
+                      language === "it"
+                        ? "Cerca un prodotto..."
+                        : "Search a product..."
                     }
                     style={{
                       width: "100%",
-                      marginTop: 16,
-                      accentColor: "#ff733c",
-                    }}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: 6,
-                      color: "rgba(255,255,255,0.38)",
-                      fontSize: 11,
-                      fontWeight: 750,
-                    }}
-                  >
-                    <span>{money(priceMin, 2)}</span>
-                    <span>{money(priceMax, 2)}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 16,
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it"
-                          ? "Riduzione del costo"
-                          : "Cost reduction"}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: "rgba(255,255,255,0.48)",
-                          fontSize: 12,
-                          fontWeight: 750,
-                        }}
-                      >
-                        {language === "it"
-                          ? `Nuovo costo ${money(simulatedCost, 2)}`
-                          : `New cost ${money(simulatedCost, 2)}`}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        color: "#4ade80",
-                        fontSize: 24,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {pct(costReductionPct, 1)}
-                    </div>
-                  </div>
-                  <input
-                    className="recovery-range"
-                    type="range"
-                    min={0}
-                    max={20}
-                    step={0.5}
-                    value={costReductionPct}
-                    onChange={(event) =>
-                      handleManualCostChange(Number(event.target.value))
-                    }
-                    style={{
-                      width: "100%",
-                      marginTop: 16,
-                      accentColor: "#ff733c",
-                    }}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: 6,
-                      color: "rgba(255,255,255,0.38)",
-                      fontSize: 11,
-                      fontWeight: 750,
-                    }}
-                  >
-                    <span>0%</span>
-                    <span>20%</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 16,
-                      alignItems: "center",
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                        {language === "it"
-                          ? "Variazione delle vendite"
-                          : "Sales change"}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: "rgba(255,255,255,0.48)",
-                          fontSize: 12,
-                          fontWeight: 750,
-                        }}
-                      >
-                        {language === "it"
-                          ? `${Math.round(simulatedMonthlyQty)} unità mensili stimate`
-                          : `${Math.round(simulatedMonthlyQty)} estimated monthly units`}
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        color: salesChangePct >= 0 ? "#4ade80" : "#f59e0b",
-                        fontSize: 24,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {formatSignedPct(salesChangePct, 1)}
-                    </div>
-                  </div>
-                  <input
-                    className="recovery-range"
-                    type="range"
-                    min={-30}
-                    max={30}
-                    step={1}
-                    value={salesChangePct}
-                    onChange={(event) =>
-                      handleManualSalesChange(Number(event.target.value))
-                    }
-                    style={{
-                      width: "100%",
-                      marginTop: 16,
-                      accentColor: "#ff733c",
-                    }}
-                  />
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      marginTop: 6,
-                      color: "rgba(255,255,255,0.38)",
-                      fontSize: 11,
-                      fontWeight: 750,
-                    }}
-                  >
-                    <span>−30%</span>
-                    <span>+30%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: 14,
-              marginTop: 24,
-            }}
-          >
-            {scenarios.map((item) => {
-              const active = scenario === item.key;
-              const label =
-                item.key === "conservative"
-                  ? language === "it"
-                    ? "Prudente"
-                    : "Conservative"
-                  : item.key === "balanced"
-                    ? language === "it"
-                      ? "Bilanciato"
-                      : "Balanced"
-                    : language === "it"
-                      ? "Aggressivo"
-                      : "Aggressive";
-
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => applyScenario(item.key)}
-                  style={{
-                    padding: 18,
-                    borderRadius: 20,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    background: active
-                      ? "linear-gradient(135deg, rgba(255,115,60,0.18), rgba(255,115,60,0.07))"
-                      : "rgba(255,255,255,0.03)",
-                    border: active
-                      ? "1px solid rgba(255,115,60,0.48)"
-                      : "1px solid rgba(255,255,255,0.075)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 9,
+                      boxSizing: "border-box",
+                      borderRadius: 16,
+                      padding: "14px 16px",
                       color: "#f8fafc",
-                      fontSize: 15,
-                      fontWeight: 950,
+                      background: "rgba(255,255,255,0.045)",
+                      border: "1px solid rgba(255,115,60,0.2)",
+                      outline: "none",
+                      fontWeight: 800,
                     }}
-                  >
-                    <span
-                      style={{
-                        width: 9,
-                        height: 9,
-                        borderRadius: 999,
-                        background: active
-                          ? "#ff733c"
-                          : "rgba(255,255,255,0.2)",
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: 10,
+                  marginTop: 18,
+                }}
+              >
+                {filteredProducts.map((product) => {
+                  const isActive =
+                    product.productId === selectedProduct.productId;
+
+                  return (
+                    <button
+                      key={product.productId || product.productTitle}
+                      type="button"
+                      onClick={() => {
+                        setSelectedProductId(product.productId);
+                        setSearchQuery("");
                       }}
-                    />
-                    {label}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 9,
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 12,
-                      lineHeight: 1.55,
-                      fontWeight: 750,
-                    }}
-                  >
-                    {language === "it"
-                      ? `Prezzo +${item.priceChangePct}% · Costo −${item.costReductionPct}% · Vendite ${formatSignedPct(item.salesChangePct, 0)}`
-                      : `Price +${item.priceChangePct}% · Cost −${item.costReductionPct}% · Sales ${formatSignedPct(item.salesChangePct, 0)}`}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div
-            style={{
-              ...cardStyle,
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
-              gap: 22,
-              marginTop: 24,
-              alignItems: "center",
-              background:
-                "radial-gradient(circle at top left, rgba(124,58,237,0.16), transparent 42%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(167,139,250,0.24)",
-            }}
-          >
-            <div>
-              <div style={{ ...mutedLabelStyle, color: "#c4b5fd" }}>
-                {language === "it"
-                  ? "SCENARIO SUGGERITO"
-                  : "SUGGESTED SCENARIO"}
+                      style={{
+                        minHeight: 74,
+                        padding: 14,
+                        borderRadius: 16,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        background: isActive
+                          ? "linear-gradient(135deg, rgba(255,115,60,0.17), rgba(255,115,60,0.07))"
+                          : "rgba(255,255,255,0.035)",
+                        border: isActive
+                          ? "1px solid rgba(255,115,60,0.48)"
+                          : "1px solid rgba(255,255,255,0.075)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "#f8fafc",
+                          fontWeight: 900,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {product.productTitle}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 7,
+                          color: "rgba(255,255,255,0.52)",
+                          fontSize: 12,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {money(product.avgPrice, 2)} · {product.qty}{" "}
+                        {language === "it" ? "unità" : "units"}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <div
-                style={{
-                  marginTop: 9,
-                  color: "#f8fafc",
-                  fontSize: 21,
-                  fontWeight: 950,
-                }}
-              >
-                {language === "it"
-                  ? "Lascia che MarginLab trovi un equilibrio credibile"
-                  : "Let MarginLab find a credible balance"}
-              </div>
-              <div
-                style={{
-                  marginTop: 8,
-                  color: "rgba(255,255,255,0.58)",
-                  lineHeight: 1.65,
-                  fontSize: 13,
-                  fontWeight: 750,
-                }}
-              >
-                {language === "it"
-                  ? "La proposta usa margine economico, costo economico e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
-                  : "The proposal uses the product's economic margin, economic cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={applyAiSuggestedScenario}
-              style={{
-                minHeight: 52,
-                padding: "14px 20px",
-                borderRadius: 16,
-                cursor: "pointer",
-                color: "#fff",
-                background:
-                  "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(255,115,60,0.9))",
-                border: "1px solid rgba(255,255,255,0.16)",
-                boxShadow: "0 14px 34px rgba(124,58,237,0.2)",
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Applica scenario suggerito"
-                : "Apply suggested scenario"}
-            </button>
-          </div>
-
-          <div style={{ marginTop: 24 }}>
-            <div className="section-header">
-              <div>
-                <div className="section-title">
-                  {language === "it"
-                    ? "Risultato in tempo reale"
-                    : "Live result"}
-                </div>
-                <div className="section-subtitle">
-                  {language === "it"
-                    ? "Confronto tra la situazione attuale e lo scenario simulato."
-                    : "Comparison between the current situation and the simulated scenario."}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={exportCurrentScenario}
-                style={{
-                  minHeight: 42,
-                  padding: "0 15px",
-                  borderRadius: 13,
-                  cursor: "pointer",
-                  color: "#f8fafc",
-                  background: "rgba(255,255,255,0.055)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  fontSize: 12,
-                  fontWeight: 900,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {language === "it" ? "Esporta scenario CSV" : "Export scenario CSV"}
-              </button>
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 16,
-                marginTop: 18,
+                gridTemplateColumns: "minmax(280px, 0.72fr) minmax(0, 1.28fr)",
+                gap: 24,
+                marginTop: 24,
               }}
             >
-              {[
-                {
-                  label: language === "it" ? "Nuovo margine" : "New margin",
-                  value: pct(simulatedMarginPct),
-                  note: formatSignedPct(marginDelta, 1),
-                  positive: marginDelta >= 0,
-                },
-                {
-                  label:
-                    language === "it"
-                      ? "Nuovo profitto mensile"
-                      : "New monthly profit",
-                  value: money(simulatedMonthlyProfit, 0),
-                  note: formatSignedPct(profitDeltaPct, 1),
-                  positive: recoveredMonthlyProfit >= 0,
-                },
-                {
-                  label:
-                    language === "it"
-                      ? "Recupero mensile netto"
-                      : "Net monthly recovery",
-                  value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
-                  note:
-                    language === "it" ? "Impatto stimato" : "Estimated impact",
-                  positive: netRecoveredMonthlyProfit >= 0,
-                },
-                {
-                  label:
-                    language === "it"
-                      ? "Recupero annuale netto"
-                      : "Net annual recovery",
-                  value: formatSignedMoney(netRecoveredAnnualProfit, 0),
-                  note:
-                    language === "it"
-                      ? "Proiezione 12 mesi"
-                      : "12-month projection",
-                  positive: netRecoveredAnnualProfit >= 0,
-                },
-              ].map((item) => (
+              <div style={cardStyle}>
+                <div style={mutedLabelStyle}>
+                  {language === "it"
+                    ? "Baseline economica attuale"
+                    : "Current economic baseline"}
+                </div>
+
                 <div
-                  key={`${item.label}-${item.value}`}
-                  className="recovery-metric-card"
                   style={{
-                    borderRadius: 23,
-                    padding: 22,
-                    background: item.positive
-                      ? "radial-gradient(circle at top left, rgba(34,197,94,0.13), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))"
-                      : "radial-gradient(circle at top left, rgba(239,68,68,0.12), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))",
-                    border: item.positive
-                      ? "1px solid rgba(34,197,94,0.22)"
-                      : "1px solid rgba(239,68,68,0.22)",
+                    marginTop: 12,
+                    color: "#f8fafc",
+                    fontSize: 23,
+                    lineHeight: 1.25,
+                    fontWeight: 950,
                   }}
                 >
-                  <div style={mutedLabelStyle}>{item.label}</div>
-                  <div
-                    style={{
-                      marginTop: 12,
-                      color: item.positive ? "#4ade80" : "#f87171",
-                      fontSize: 29,
-                      lineHeight: 1,
-                      fontWeight: 950,
-                      letterSpacing: "-0.035em",
-                    }}
-                  >
-                    {item.value}
+                  {selectedProduct.productTitle}
+                </div>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 12,
+                    marginTop: 22,
+                  }}
+                >
+                  {[
+                    [
+                      language === "it" ? "Prezzo" : "Selling price",
+                      money(currentPrice, 2),
+                    ],
+                    [language === "it" ? "Costo" : "Cost", money(currentCost, 2)],
+                    [
+                      language === "it" ? "Vendite mensili" : "Monthly sales",
+                      Math.round(currentMonthlyQty).toString(),
+                    ],
+                    [
+                      language === "it" ? "Margine" : "Margin",
+                      pct(currentMarginPct),
+                    ],
+                    [
+                      language === "it" ? "Profitto mensile" : "Monthly profit",
+                      money(currentMonthlyProfit, 0),
+                    ],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 18,
+                        alignItems: "center",
+                        paddingBottom: 12,
+                        borderBottom: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: "rgba(255,255,255,0.54)",
+                            fontSize: 13,
+                            fontWeight: 800,
+                          }}
+                        >
+                          {label}
+                        </span>
+
+                        {label ===
+                          (language === "it" ? "Profitto mensile" : "Monthly profit") && (
+                            <MetricTooltip
+                              content={{
+                                title:
+                                  language === "it"
+                                    ? "Profitto mensile attuale"
+                                    : "Current monthly profit",
+                                description:
+                                  language === "it"
+                                    ? "Profitto economico del prodotto normalizzato su 30 giorni e al netto delle commissioni variabili configurate in MarginLab. Rappresenta la base di partenza usata dal simulatore."
+                                    : "The product's economic profit normalized to 30 days and reduced by the variable fees configured in MarginLab. This is the starting baseline used by the simulator.",
+                              }}
+                            />
+                          )}
+                      </div>
+                      <strong style={{ color: "#f8fafc", fontSize: 16 }}>
+                        {value}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 22,
+                    padding: 16,
+                    borderRadius: 16,
+                    background:
+                      currentPrice <= currentCost
+                        ? "rgba(239,68,68,0.09)"
+                        : "rgba(255,115,60,0.075)",
+                    border:
+                      currentPrice <= currentCost
+                        ? "1px solid rgba(239,68,68,0.22)"
+                        : "1px solid rgba(255,115,60,0.17)",
+                  }}
+                >
+                  <div style={mutedLabelStyle}>
+                    {language === "it"
+                      ? "Prezzo di pareggio"
+                      : "Break-even price"}
                   </div>
                   <div
                     style={{
-                      marginTop: 9,
-                      color: "rgba(255,255,255,0.54)",
-                      fontSize: 12,
-                      fontWeight: 800,
+                      marginTop: 8,
+                      color: currentPrice <= currentCost ? "#f87171" : "#ff9a70",
+                      fontSize: 25,
+                      fontWeight: 950,
                     }}
                   >
-                    {item.note}
+                    {money(currentCost, 2)}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 5,
+                      color: "rgba(255,255,255,0.52)",
+                      fontSize: 12,
+                      lineHeight: 1.5,
+                      fontWeight: 750,
+                    }}
+                  >
+                    {language === "it"
+                      ? "Sotto questo valore il prodotto non copre il costo economico unitario e le commissioni variabili impostate."
+                      : "Below this value, the product does not cover its economic unit cost and configured variable fees."}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <div
-            style={{
-              ...cardStyle,
-              marginTop: 24,
-            }}
-          >
+              <div
+                style={{
+                  ...cardStyle,
+                  background:
+                    "radial-gradient(circle at top right, rgba(255,115,60,0.11), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    alignItems: "flex-start",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <div style={mutedLabelStyle}>
+                      {language === "it" ? "Simulazione live" : "Live simulation"}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 9,
+                        color: "#f8fafc",
+                        fontSize: 20,
+                        fontWeight: 950,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Modifica le tre leve di profitto"
+                        : "Adjust the three profit levers"}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 999,
+                      background: "rgba(255,115,60,0.1)",
+                      border: "1px solid rgba(255,115,60,0.2)",
+                      color: "#ff9a70",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {scenario === "custom"
+                      ? language === "it"
+                        ? "Scenario personalizzato"
+                        : "Custom scenario"
+                      : scenario === "conservative"
+                        ? language === "it"
+                          ? "Prudente"
+                          : "Conservative"
+                        : scenario === "balanced"
+                          ? language === "it"
+                            ? "Bilanciato"
+                            : "Balanced"
+                          : language === "it"
+                            ? "Aggressivo"
+                            : "Aggressive"}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gap: 26, marginTop: 30 }}>
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ color: "#f8fafc", fontWeight: 900 }}>
+                          {language === "it"
+                            ? "Prezzo di vendita"
+                            : "Selling price"}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            color: "rgba(255,255,255,0.48)",
+                            fontSize: 12,
+                            fontWeight: 750,
+                          }}
+                        >
+                          {language === "it"
+                            ? `Attuale ${money(currentPrice, 2)}`
+                            : `Current ${money(currentPrice, 2)}`}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          color:
+                            simulatedPrice >= currentPrice
+                              ? "#4ade80"
+                              : "#f59e0b",
+                          fontSize: 24,
+                          fontWeight: 950,
+                        }}
+                      >
+                        {money(simulatedPrice, 2)}
+                      </div>
+                    </div>
+                    <input
+                      className="recovery-range"
+                      type="range"
+                      min={priceMin}
+                      max={priceMax}
+                      step={priceStep}
+                      value={simulatedPrice}
+                      onChange={(event) =>
+                        handleManualPriceChange(Number(event.target.value))
+                      }
+                      style={{
+                        width: "100%",
+                        marginTop: 16,
+                        accentColor: "#ff733c",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.38)",
+                        fontSize: 11,
+                        fontWeight: 750,
+                      }}
+                    >
+                      <span>{money(priceMin, 2)}</span>
+                      <span>{money(priceMax, 2)}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ color: "#f8fafc", fontWeight: 900 }}>
+                          {language === "it"
+                            ? "Riduzione del costo"
+                            : "Cost reduction"}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            color: "rgba(255,255,255,0.48)",
+                            fontSize: 12,
+                            fontWeight: 750,
+                          }}
+                        >
+                          {language === "it"
+                            ? `Nuovo costo ${money(simulatedCost, 2)}`
+                            : `New cost ${money(simulatedCost, 2)}`}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          color: "#4ade80",
+                          fontSize: 24,
+                          fontWeight: 950,
+                        }}
+                      >
+                        {pct(costReductionPct, 1)}
+                      </div>
+                    </div>
+                    <input
+                      className="recovery-range"
+                      type="range"
+                      min={0}
+                      max={20}
+                      step={0.5}
+                      value={costReductionPct}
+                      onChange={(event) =>
+                        handleManualCostChange(Number(event.target.value))
+                      }
+                      style={{
+                        width: "100%",
+                        marginTop: 16,
+                        accentColor: "#ff733c",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.38)",
+                        fontSize: 11,
+                        fontWeight: 750,
+                      }}
+                    >
+                      <span>0%</span>
+                      <span>20%</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div>
+                        <div style={{ color: "#f8fafc", fontWeight: 900 }}>
+                          {language === "it"
+                            ? "Variazione delle vendite"
+                            : "Sales change"}
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 4,
+                            color: "rgba(255,255,255,0.48)",
+                            fontSize: 12,
+                            fontWeight: 750,
+                          }}
+                        >
+                          {language === "it"
+                            ? `${Math.round(simulatedMonthlyQty)} unità mensili stimate`
+                            : `${Math.round(simulatedMonthlyQty)} estimated monthly units`}
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          color: salesChangePct >= 0 ? "#4ade80" : "#f59e0b",
+                          fontSize: 24,
+                          fontWeight: 950,
+                        }}
+                      >
+                        {formatSignedPct(salesChangePct, 1)}
+                      </div>
+                    </div>
+                    <input
+                      className="recovery-range"
+                      type="range"
+                      min={-30}
+                      max={30}
+                      step={1}
+                      value={salesChangePct}
+                      onChange={(event) =>
+                        handleManualSalesChange(Number(event.target.value))
+                      }
+                      style={{
+                        width: "100%",
+                        marginTop: 16,
+                        accentColor: "#ff733c",
+                      }}
+                    />
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.38)",
+                        fontSize: 11,
+                        fontWeight: 750,
+                      }}
+                    >
+                      <span>−30%</span>
+                      <span>+30%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 20,
-                alignItems: "flex-end",
-                flexWrap: "wrap",
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                gap: 14,
+                marginTop: 24,
+              }}
+            >
+              {scenarios.map((item) => {
+                const active = scenario === item.key;
+                const label =
+                  item.key === "conservative"
+                    ? language === "it"
+                      ? "Prudente"
+                      : "Conservative"
+                    : item.key === "balanced"
+                      ? language === "it"
+                        ? "Bilanciato"
+                        : "Balanced"
+                      : language === "it"
+                        ? "Aggressivo"
+                        : "Aggressive";
+
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => applyScenario(item.key)}
+                    style={{
+                      padding: 18,
+                      borderRadius: 20,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      background: active
+                        ? "linear-gradient(135deg, rgba(255,115,60,0.18), rgba(255,115,60,0.07))"
+                        : "rgba(255,255,255,0.03)",
+                      border: active
+                        ? "1px solid rgba(255,115,60,0.48)"
+                        : "1px solid rgba(255,255,255,0.075)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 9,
+                        color: "#f8fafc",
+                        fontSize: 15,
+                        fontWeight: 950,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 9,
+                          height: 9,
+                          borderRadius: 999,
+                          background: active
+                            ? "#ff733c"
+                            : "rgba(255,255,255,0.2)",
+                        }}
+                      />
+                      {label}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 9,
+                        color: "rgba(255,255,255,0.52)",
+                        fontSize: 12,
+                        lineHeight: 1.55,
+                        fontWeight: 750,
+                      }}
+                    >
+                      {language === "it"
+                        ? `Prezzo +${item.priceChangePct}% · Costo −${item.costReductionPct}% · Vendite ${formatSignedPct(item.salesChangePct, 0)}`
+                        : `Price +${item.priceChangePct}% · Cost −${item.costReductionPct}% · Sales ${formatSignedPct(item.salesChangePct, 0)}`}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                ...cardStyle,
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1.1fr) minmax(320px, 0.9fr)",
+                gap: 22,
+                marginTop: 24,
+                alignItems: "center",
+                background:
+                  "radial-gradient(circle at top left, rgba(124,58,237,0.16), transparent 42%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                border: "1px solid rgba(167,139,250,0.24)",
               }}
             >
               <div>
-                <div style={mutedLabelStyle}>
-                  {language === "it" ? "SCENARI SALVATI" : "SAVED SCENARIOS"}
+                <div style={{ ...mutedLabelStyle, color: "#c4b5fd" }}>
+                  {language === "it"
+                    ? "SCENARIO SUGGERITO"
+                    : "SUGGESTED SCENARIO"}
                 </div>
                 <div
                   style={{
@@ -1978,600 +1813,189 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   {language === "it"
-                    ? "Salva e confronta le decisioni"
-                    : "Save and compare decisions"}
+                    ? "Lascia che MarginLab trovi un equilibrio credibile"
+                    : "Let MarginLab find a credible balance"}
                 </div>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                <input
-                  value={scenarioName}
-                  onChange={(event) => setScenarioName(event.target.value)}
-                  placeholder={
-                    language === "it" ? "Nome dello scenario" : "Scenario name"
-                  }
+                <div
                   style={{
-                    minHeight: 46,
-                    minWidth: 220,
-                    padding: "0 14px",
-                    borderRadius: 14,
-                    color: "#f8fafc",
-                    background: "rgba(255,255,255,0.045)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    outline: "none",
-                    fontWeight: 800,
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={saveCurrentScenario}
-                  style={{
-                    minHeight: 46,
-                    padding: "0 18px",
-                    borderRadius: 14,
-                    cursor: "pointer",
-                    color: "#fff",
-                    background: "#ff733c",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    fontWeight: 950,
+                    marginTop: 8,
+                    color: "rgba(255,255,255,0.58)",
+                    lineHeight: 1.65,
+                    fontSize: 13,
+                    fontWeight: 750,
                   }}
                 >
-                  {language === "it" ? "Salva scenario" : "Save scenario"}
-                </button>
+                  {language === "it"
+                    ? "La proposta usa margine economico, costo economico e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
+                    : "The proposal uses the product's economic margin, economic cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
+                </div>
               </div>
-            </div>
-
-            {saveMessage && (
-              <div
+              <button
+                type="button"
+                onClick={applyAiSuggestedScenario}
                 style={{
-                  marginTop: 12,
-                  color: "#86efac",
-                  fontSize: 12,
-                  fontWeight: 900,
-                }}
-              >
-                ✓ {saveMessage}
-              </div>
-            )}
-
-            {savedScenarios.length === 0 ? (
-              <div
-                style={{
-                  marginTop: 20,
-                  padding: 18,
+                  minHeight: 52,
+                  padding: "14px 20px",
                   borderRadius: 16,
-                  color: "rgba(255,255,255,0.5)",
-                  background: "rgba(255,255,255,0.025)",
-                  border: "1px dashed rgba(255,255,255,0.1)",
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  fontWeight: 750,
+                  cursor: "pointer",
+                  color: "#fff",
+                  background:
+                    "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(255,115,60,0.9))",
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  boxShadow: "0 14px 34px rgba(124,58,237,0.2)",
+                  fontWeight: 950,
                 }}
               >
                 {language === "it"
-                  ? "Salva almeno due scenari per confrontare rapidamente margine, profitto e recupero annuale."
-                  : "Save at least two scenarios to quickly compare margin, profit and annual recovery."}
+                  ? "Applica scenario suggerito"
+                  : "Apply suggested scenario"}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <div className="section-header">
+                <div>
+                  <div className="section-title">
+                    {language === "it"
+                      ? "Risultato in tempo reale"
+                      : "Live result"}
+                  </div>
+                  <div className="section-subtitle">
+                    {language === "it"
+                      ? "Confronto tra la situazione attuale e lo scenario simulato."
+                      : "Comparison between the current situation and the simulated scenario."}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={exportCurrentScenario}
+                  style={{
+                    minHeight: 42,
+                    padding: "0 15px",
+                    borderRadius: 13,
+                    cursor: "pointer",
+                    color: "#f8fafc",
+                    background: "rgba(255,255,255,0.055)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {language === "it" ? "Esporta scenario CSV" : "Export scenario CSV"}
+                </button>
               </div>
-            ) : (
+
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                  gap: 14,
-                  marginTop: 20,
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 16,
+                  marginTop: 18,
                 }}
               >
-                {savedScenarios.map((saved) => (
+                {[
+                  {
+                    label: language === "it" ? "Nuovo margine" : "New margin",
+                    value: pct(simulatedMarginPct),
+                    note: formatSignedPct(marginDelta, 1),
+                    positive: marginDelta >= 0,
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Nuovo profitto mensile"
+                        : "New monthly profit",
+                    value: money(simulatedMonthlyProfit, 0),
+                    note: formatSignedPct(profitDeltaPct, 1),
+                    positive: recoveredMonthlyProfit >= 0,
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Recupero mensile netto"
+                        : "Net monthly recovery",
+                    value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
+                    note:
+                      language === "it" ? "Impatto stimato" : "Estimated impact",
+                    positive: netRecoveredMonthlyProfit >= 0,
+                  },
+                  {
+                    label:
+                      language === "it"
+                        ? "Recupero annuale netto"
+                        : "Net annual recovery",
+                    value: formatSignedMoney(netRecoveredAnnualProfit, 0),
+                    note:
+                      language === "it"
+                        ? "Proiezione 12 mesi"
+                        : "12-month projection",
+                    positive: netRecoveredAnnualProfit >= 0,
+                  },
+                ].map((item) => (
                   <div
-                    key={saved.id}
+                    key={`${item.label}-${item.value}`}
+                    className="recovery-metric-card"
                     style={{
-                      padding: 17,
-                      borderRadius: 17,
-                      background: "rgba(255,255,255,0.035)",
-                      border: "1px solid rgba(255,115,60,0.15)",
+                      borderRadius: 23,
+                      padding: 22,
+                      background: item.positive
+                        ? "radial-gradient(circle at top left, rgba(34,197,94,0.13), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))"
+                        : "radial-gradient(circle at top left, rgba(239,68,68,0.12), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))",
+                      border: item.positive
+                        ? "1px solid rgba(34,197,94,0.22)"
+                        : "1px solid rgba(239,68,68,0.22)",
                     }}
                   >
                     <div
                       style={{
+                        ...mutedLabelStyle,
                         display: "flex",
-                        justifyContent: "space-between",
-                        gap: 12,
-                        alignItems: "flex-start",
+                        alignItems: "center",
+                        gap: 6,
                       }}
                     >
-                      <div style={{ minWidth: 0 }}>
-                        <div
-                          style={{
-                            color: "#f8fafc",
-                            fontWeight: 950,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {saved.name}
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 5,
-                            color: "rgba(255,255,255,0.44)",
-                            fontSize: 11,
-                            fontWeight: 750,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {saved.productTitle}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => deleteSavedScenario(saved.id)}
-                        aria-label={
-                          language === "it"
-                            ? "Elimina scenario"
-                            : "Delete scenario"
-                        }
-                        style={{
-                          width: 30,
-                          height: 30,
-                          borderRadius: 10,
-                          cursor: "pointer",
-                          color: "rgba(255,255,255,0.52)",
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid rgba(255,255,255,0.08)",
-                          fontWeight: 900,
-                        }}
-                      >
-                        ×
-                      </button>
+                      <span>{item.label}</span>
+
+                      {item.label ===
+                        (language === "it"
+                          ? "Recupero mensile netto"
+                          : "Net monthly recovery") && (
+                          <MetricTooltip
+                            content={{
+                              title:
+                                language === "it"
+                                  ? "Recupero mensile netto"
+                                  : "Net monthly recovery",
+                              description:
+                                language === "it"
+                                  ? "Differenza stimata tra il profitto mensile dello scenario simulato e quello attuale, dopo l'eventuale riserva fiscale gestionale configurata. È un risultato della simulazione, non profitto già realizzato."
+                                  : "Estimated difference between the simulated monthly profit and the current monthly profit, after any configured business-model tax reserve. It is a simulation result, not profit already realized.",
+                            }}
+                          />
+                        )}
                     </div>
                     <div
                       style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                        gap: 10,
-                        marginTop: 15,
+                        marginTop: 12,
+                        color: item.positive ? "#4ade80" : "#f87171",
+                        fontSize: 29,
+                        lineHeight: 1,
+                        fontWeight: 950,
+                        letterSpacing: "-0.035em",
                       }}
                     >
-                      {[
-                        [
-                          language === "it" ? "Margine" : "Margin",
-                          pct(saved.marginPct),
-                        ],
-                        [
-                          language === "it"
-                            ? "Profitto/mese"
-                            : "Monthly profit",
-                          money(saved.monthlyProfit, 0),
-                        ],
-                        [
-                          language === "it"
-                            ? "Recupero/anno"
-                            : "Annual recovery",
-                          formatSignedMoney(saved.annualRecovery, 0),
-                        ],
-                        [
-                          language === "it" ? "Prezzo" : "Price",
-                          money(saved.simulatedPrice, 2),
-                        ],
-                      ].map(([label, value]) => (
-                        <div
-                          key={label}
-                          style={{
-                            padding: 10,
-                            borderRadius: 12,
-                            background: "rgba(255,255,255,0.025)",
-                          }}
-                        >
-                          <div
-                            style={{
-                              color: "rgba(255,255,255,0.42)",
-                              fontSize: 10,
-                              fontWeight: 850,
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            {label}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 5,
-                              color: "#f8fafc",
-                              fontSize: 14,
-                              fontWeight: 950,
-                            }}
-                          >
-                            {value}
-                          </div>
-                        </div>
-                      ))}
+                      {item.value}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => loadSavedScenario(saved)}
+                    <div
                       style={{
-                        width: "100%",
-                        minHeight: 40,
-                        marginTop: 13,
-                        borderRadius: 12,
-                        cursor: "pointer",
-                        color: "#ff9a70",
-                        background: "rgba(255,115,60,0.075)",
-                        border: "1px solid rgba(255,115,60,0.18)",
-                        fontWeight: 900,
-                      }}
-                    >
-                      {language === "it"
-                        ? "Carica questo scenario"
-                        : "Load this scenario"}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns:
-                "minmax(0, 1.15fr) minmax(260px, 0.7fr) minmax(0, 1fr)",
-              gap: 24,
-              marginTop: 24,
-            }}
-          >
-            <div style={cardStyle}>
-              <div style={mutedLabelStyle}>
-                {language === "it"
-                  ? "ORIGINE DEL RECUPERO"
-                  : "RECOVERY BREAKDOWN"}
-              </div>
-              <div
-                style={{
-                  marginTop: 9,
-                  color: "#f8fafc",
-                  fontSize: 20,
-                  fontWeight: 950,
-                }}
-              >
-                {language === "it"
-                  ? "Da dove nasce l'impatto annuale"
-                  : "Where the annual impact comes from"}
-              </div>
-              <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
-                {recoveryBreakdown.map((item) => (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 18,
-                      paddingBottom: 12,
-                      borderBottom: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "rgba(255,255,255,0.58)",
+                        marginTop: 9,
+                        color: "rgba(255,255,255,0.54)",
+                        fontSize: 12,
                         fontWeight: 800,
                       }}
                     >
-                      {item.label}
-                    </span>
-                    <strong
-                      style={{
-                        color: item.value >= 0 ? "#4ade80" : "#f87171",
-                      }}
-                    >
-                      {formatSignedMoney(item.value, 0)}
-                    </strong>
-                  </div>
-                ))}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 18,
-                    paddingTop: 2,
-                    color: "#f8fafc",
-                    fontWeight: 950,
-                  }}
-                >
-                  <span>
-                    {language === "it" ? "Totale netto" : "Net total"}
-                  </span>
-                  <span
-                    style={{
-                      color:
-                        netRecoveredAnnualProfit >= 0 ? "#4ade80" : "#f87171",
-                    }}
-                  >
-                    {formatSignedMoney(netRecoveredAnnualProfit, 0)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div style={cardStyle}>
-              <div style={mutedLabelStyle}>
-                {language === "it" ? "RISCHIO" : "RISK"}
-              </div>
-              <div
-                style={{
-                  marginTop: 14,
-                  color: riskColor,
-                  fontSize: 31,
-                  fontWeight: 950,
-                }}
-              >
-                {riskLabel}
-              </div>
-              <div
-                style={{
-                  height: 9,
-                  marginTop: 16,
-                  borderRadius: 999,
-                  overflow: "hidden",
-                  background: "rgba(255,255,255,0.075)",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.max(6, commercialRiskScore)}%`,
-                    height: "100%",
-                    borderRadius: 999,
-                    background: riskColor,
-                  }}
-                />
-              </div>
-              <div
-                style={{
-                  marginTop: 15,
-                  color: "rgba(255,255,255,0.56)",
-                  fontSize: 13,
-                  lineHeight: 1.65,
-                  fontWeight: 750,
-                }}
-              >
-                {language === "it"
-                  ? `Aumento prezzo ${formatSignedPct(priceChangePct)} e risposta vendite ${formatSignedPct(salesChangePct)}. Verifica il risultato reale per 30 giorni.`
-                  : `Price change ${formatSignedPct(priceChangePct)} and sales response ${formatSignedPct(salesChangePct)}. Validate the real result for 30 days.`}
-              </div>
-            </div>
-
-            <div style={cardStyle}>
-              <div style={mutedLabelStyle}>
-                {language === "it" ? "TIMELINE" : "TIMELINE"}
-              </div>
-              <div
-                style={{
-                  marginTop: 9,
-                  color: "#f8fafc",
-                  fontSize: 20,
-                  fontWeight: 950,
-                }}
-              >
-                {language === "it"
-                  ? "Recupero cumulativo"
-                  : "Cumulative recovery"}
-              </div>
-              <div style={{ display: "grid", gap: 11, marginTop: 20 }}>
-                {timeline.map((item) => (
-                  <div
-                    key={item.month}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 16,
-                      alignItems: "center",
-                      padding: "10px 12px",
-                      borderRadius: 13,
-                      background: "rgba(255,255,255,0.035)",
-                      border: "1px solid rgba(255,255,255,0.065)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: "rgba(255,255,255,0.58)",
-                        fontSize: 12,
-                        fontWeight: 850,
-                      }}
-                    >
-                      {item.month === 1
-                        ? language === "it"
-                          ? "1 mese"
-                          : "1 month"
-                        : `${item.month} ${language === "it" ? "mesi" : "months"}`}
-                    </span>
-                    <strong
-                      style={{
-                        color: item.value >= 0 ? "#4ade80" : "#f87171",
-                      }}
-                    >
-                      {formatSignedMoney(item.value, 0)}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1.15fr) minmax(300px, 0.85fr)",
-              gap: 24,
-              marginTop: 24,
-            }}
-          >
-            <div style={cardStyle}>
-              <div style={mutedLabelStyle}>
-                {language === "it" ? "Confronto" : "Comparison"}
-              </div>
-              <div
-                style={{
-                  marginTop: 9,
-                  color: "#f8fafc",
-                  fontSize: 20,
-                  fontWeight: 950,
-                }}
-              >
-                {language === "it" ? "Attuale → Nuovo" : "Current → New"}
-              </div>
-
-              <div style={{ display: "grid", gap: 18, marginTop: 24 }}>
-                {[
-                  {
-                    label: language === "it" ? "Margine" : "Margin",
-                    current: pct(currentMarginPct, 1),
-                    next: pct(simulatedMarginPct, 1),
-                    currentBar: clamp(currentMarginPct, 0, 60),
-                    nextBar: clamp(simulatedMarginPct, 0, 60),
-                    max: 60,
-                  },
-                  {
-                    label:
-                      language === "it" ? "Profitto mensile" : "Monthly profit",
-                    current: money(currentMonthlyProfit, 0),
-                    next: money(simulatedMonthlyProfit, 0),
-                    currentBar: Math.max(0, currentMonthlyProfit),
-                    nextBar: Math.max(0, simulatedMonthlyProfit),
-                    max: Math.max(
-                      1,
-                      currentMonthlyProfit,
-                      simulatedMonthlyProfit,
-                    ),
-                  },
-                  {
-                    label:
-                      language === "it" ? "Ricavi mensili" : "Monthly revenue",
-                    current: money(currentMonthlyRevenue, 0),
-                    next: money(simulatedMonthlyRevenue, 0),
-                    currentBar: Math.max(0, currentMonthlyRevenue),
-                    nextBar: Math.max(0, simulatedMonthlyRevenue),
-                    max: Math.max(
-                      1,
-                      currentMonthlyRevenue,
-                      simulatedMonthlyRevenue,
-                    ),
-                  },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: 16,
-                        alignItems: "center",
-                      }}
-                    >
-                      <span
-                        style={{
-                          color: "rgba(255,255,255,0.58)",
-                          fontWeight: 850,
-                        }}
-                      >
-                        {item.label}
-                      </span>
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 9,
-                          color: "#f8fafc",
-                          fontWeight: 900,
-                        }}
-                      >
-                        <span style={{ color: "rgba(255,255,255,0.58)" }}>
-                          {item.current}
-                        </span>
-                        <span
-                          style={{
-                            display: "inline-grid",
-                            placeItems: "center",
-                            width: 24,
-                            height: 24,
-                            borderRadius: 999,
-                            color:
-                              recoveredMonthlyProfit >= 0
-                                ? "#4ade80"
-                                : "#f87171",
-                            background:
-                              recoveredMonthlyProfit >= 0
-                                ? "rgba(34,197,94,0.11)"
-                                : "rgba(239,68,68,0.11)",
-                            border:
-                              recoveredMonthlyProfit >= 0
-                                ? "1px solid rgba(34,197,94,0.2)"
-                                : "1px solid rgba(239,68,68,0.2)",
-                          }}
-                        >
-                          →
-                        </span>
-                        <span
-                          style={{
-                            color:
-                              recoveredMonthlyProfit >= 0
-                                ? "#4ade80"
-                                : "#f87171",
-                          }}
-                        >
-                          {item.next}
-                        </span>
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        display: "grid",
-                        gap: 7,
-                        marginTop: 10,
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: 8,
-                          borderRadius: 999,
-                          background: "rgba(255,255,255,0.07)",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${clamp((item.currentBar / item.max) * 100, 0, 100)}%`,
-                            height: "100%",
-                            borderRadius: 999,
-                            background: "rgba(255,255,255,0.34)",
-                          }}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          height: 8,
-                          borderRadius: 999,
-                          background: "rgba(255,255,255,0.07)",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${clamp((item.nextBar / item.max) * 100, 0, 100)}%`,
-                            height: "100%",
-                            borderRadius: 999,
-                            background:
-                              recoveredMonthlyProfit >= 0
-                                ? "#22c55e"
-                                : "#ef4444",
-                          }}
-                        />
-                      </div>
+                      {item.note}
                     </div>
                   </div>
                 ))}
@@ -2581,241 +2005,929 @@ export default function RecoverySimulatorPage() {
             <div
               style={{
                 ...cardStyle,
-                background:
-                  "radial-gradient(circle at top left, rgba(34,197,94,0.13), transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
-                border: "1px solid rgba(34,197,94,0.22)",
+                marginTop: 24,
               }}
             >
-              <div style={{ ...mutedLabelStyle, color: "#4ade80" }}>
-                {language === "it" ? "Impatto annuale" : "Annual impact"}
-              </div>
-              <div
-                key={`annual-${Math.round(netRecoveredAnnualProfit)}`}
-                className="recovery-annual-value"
-                style={{
-                  marginTop: 15,
-                  color:
-                    netRecoveredAnnualProfit >= 0 ? "#22c55e" : "#f87171",
-                  fontSize: 48,
-                  lineHeight: 1,
-                  letterSpacing: "-0.05em",
-                  fontWeight: 950,
-                }}
-              >
-                {formatSignedMoney(netRecoveredAnnualProfit, 0)}
-              </div>
               <div
                 style={{
-                  marginTop: 10,
-                  color: "rgba(255,255,255,0.58)",
-                  lineHeight: 1.6,
-                  fontWeight: 750,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 20,
+                  alignItems: "flex-end",
+                  flexWrap: "wrap",
                 }}
               >
-                {language === "it"
-                  ? `Profitto netto stimato dopo la riserva fiscale del ${pct(taxReserveRate * 100)}.`
-                  : `Estimated net profit after the ${pct(taxReserveRate * 100)} tax reserve.`}
-              </div>
-
-              {netRecoveredAnnualProfit > 0 && (
-                <div
-                  key={`unlock-${Math.round(netRecoveredAnnualProfit)}`}
-                  className="recovery-unlocked-badge"
-                >
-                  <span>↗</span>
-                  <span>
-                    {language === "it"
-                      ? `${formatSignedMoney(netRecoveredAnnualProfit, 0)} di profitto annuale netto sbloccato`
-                      : `${formatSignedMoney(netRecoveredAnnualProfit, 0)} net annual profit unlocked`}
-                  </span>
-                </div>
-              )}
-
-              <div
-                style={{
-                  marginTop: 24,
-                  paddingTop: 20,
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 16,
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <div style={mutedLabelStyle}>
-                      {language === "it"
-                        ? "Salute del profitto"
-                        : "Profit health"}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 7,
-                        color: "#f8fafc",
-                        fontSize: 18,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {profitHealth}
-                    </div>
+                <div>
+                  <div style={mutedLabelStyle}>
+                    {language === "it" ? "SCENARI SALVATI" : "SAVED SCENARIOS"}
                   </div>
                   <div
                     style={{
-                      color: simulatedMarginPct >= 20 ? "#4ade80" : "#f59e0b",
-                      fontSize: 25,
+                      marginTop: 9,
+                      color: "#f8fafc",
+                      fontSize: 21,
                       fontWeight: 950,
                     }}
                   >
-                    {pct(simulatedMarginPct, 1)}
+                    {language === "it"
+                      ? "Salva e confronta le decisioni"
+                      : "Save and compare decisions"}
                   </div>
                 </div>
                 <div
                   style={{
-                    height: 10,
-                    marginTop: 13,
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.075)",
-                    overflow: "hidden",
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    alignItems: "center",
                   }}
                 >
-                  <div
+                  <input
+                    value={scenarioName}
+                    onChange={(event) => setScenarioName(event.target.value)}
+                    placeholder={
+                      language === "it" ? "Nome dello scenario" : "Scenario name"
+                    }
                     style={{
-                      width: `${clamp((simulatedMarginPct / 50) * 100, 0, 100)}%`,
-                      height: "100%",
-                      borderRadius: 999,
-                      background:
-                        simulatedMarginPct >= 20 ? "#22c55e" : "#f59e0b",
+                      minHeight: 46,
+                      minWidth: 220,
+                      padding: "0 14px",
+                      borderRadius: 14,
+                      color: "#f8fafc",
+                      background: "rgba(255,255,255,0.045)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      outline: "none",
+                      fontWeight: 800,
                     }}
                   />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={saveCurrentScenario}
+                    style={{
+                      minHeight: 46,
+                      padding: "0 18px",
+                      borderRadius: 14,
+                      cursor: "pointer",
+                      color: "#fff",
+                      background: "#ff733c",
+                      border: "1px solid rgba(255,255,255,0.12)",
+                      fontWeight: 950,
+                    }}
+                  >
+                    {language === "it" ? "Salva scenario" : "Save scenario"}
+                  </button>
                 </div>
               </div>
-            </div>
 
-          <div
-            style={{
-              ...cardStyle,
-              marginTop: 24,
-              background:
-                "linear-gradient(135deg, rgba(255,115,60,0.12), rgba(8,13,22,0.98) 46%, rgba(17,24,39,0.98))",
-              border: "1px solid rgba(255,115,60,0.25)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 18,
-                alignItems: "flex-start",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <div style={{ ...mutedLabelStyle, color: "#ff9a70" }}>
-                  {language === "it"
-                    ? "RACCOMANDAZIONE ESECUTIVA"
-                    : "EXECUTIVE RECOMMENDATION"}
-                </div>
+              {saveMessage && (
                 <div
                   style={{
-                    marginTop: 9,
-                    color: "#f8fafc",
-                    fontSize: 21,
-                    fontWeight: 950,
+                    marginTop: 12,
+                    color: "#86efac",
+                    fontSize: 12,
+                    fontWeight: 900,
+                  }}
+                >
+                  ✓ {saveMessage}
+                </div>
+              )}
+
+              {savedScenarios.length === 0 ? (
+                <div
+                  style={{
+                    marginTop: 20,
+                    padding: 18,
+                    borderRadius: 16,
+                    color: "rgba(255,255,255,0.5)",
+                    background: "rgba(255,255,255,0.025)",
+                    border: "1px dashed rgba(255,255,255,0.1)",
+                    fontSize: 13,
+                    lineHeight: 1.6,
+                    fontWeight: 750,
                   }}
                 >
                   {language === "it"
-                    ? "La decisione suggerita da MarginLab"
-                    : "MarginLab's suggested decision"}
+                    ? "Salva almeno due scenari per confrontare rapidamente margine, profitto e recupero annuale."
+                    : "Save at least two scenarios to quickly compare margin, profit and annual recovery."}
                 </div>
-              </div>
-
-              <div
-                style={{
-                  padding: "9px 13px",
-                  borderRadius: 999,
-                  background: "rgba(34,197,94,0.1)",
-                  border: "1px solid rgba(34,197,94,0.2)",
-                  color: "#86efac",
-                  fontSize: 12,
-                  fontWeight: 900,
-                }}
-              >
-                {language === "it" ? "Affidabilità" : "Confidence"}:{" "}
-                {confidenceLabel} · {dataConfidenceScore}% ·{" "}
-                {language === "it" ? "Rischio" : "Risk"} {riskLabel}
-              </div>
-            </div>
-
-            <div
-              style={{
-                marginTop: 20,
-                color: "rgba(255,255,255,0.78)",
-                fontSize: 15,
-                lineHeight: 1.75,
-                fontWeight: 750,
-              }}
-            >
-              {recommendation}
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                    gap: 14,
+                    marginTop: 20,
+                  }}
+                >
+                  {savedScenarios.map((saved) => (
+                    <div
+                      key={saved.id}
+                      style={{
+                        padding: 17,
+                        borderRadius: 17,
+                        background: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,115,60,0.15)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 12,
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div
+                            style={{
+                              color: "#f8fafc",
+                              fontWeight: 950,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {saved.name}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 5,
+                              color: "rgba(255,255,255,0.44)",
+                              fontSize: 11,
+                              fontWeight: 750,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {saved.productTitle}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => deleteSavedScenario(saved.id)}
+                          aria-label={
+                            language === "it"
+                              ? "Elimina scenario"
+                              : "Delete scenario"
+                          }
+                          style={{
+                            width: 30,
+                            height: 30,
+                            borderRadius: 10,
+                            cursor: "pointer",
+                            color: "rgba(255,255,255,0.52)",
+                            background: "rgba(255,255,255,0.04)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            fontWeight: 900,
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                          gap: 10,
+                          marginTop: 15,
+                        }}
+                      >
+                        {[
+                          [
+                            language === "it" ? "Margine" : "Margin",
+                            pct(saved.marginPct),
+                          ],
+                          [
+                            language === "it"
+                              ? "Profitto/mese"
+                              : "Monthly profit",
+                            money(saved.monthlyProfit, 0),
+                          ],
+                          [
+                            language === "it"
+                              ? "Recupero/anno"
+                              : "Annual recovery",
+                            formatSignedMoney(saved.annualRecovery, 0),
+                          ],
+                          [
+                            language === "it" ? "Prezzo" : "Price",
+                            money(saved.simulatedPrice, 2),
+                          ],
+                        ].map(([label, value]) => (
+                          <div
+                            key={label}
+                            style={{
+                              padding: 10,
+                              borderRadius: 12,
+                              background: "rgba(255,255,255,0.025)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                color: "rgba(255,255,255,0.42)",
+                                fontSize: 10,
+                                fontWeight: 850,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {label}
+                            </div>
+                            <div
+                              style={{
+                                marginTop: 5,
+                                color: "#f8fafc",
+                                fontSize: 14,
+                                fontWeight: 950,
+                              }}
+                            >
+                              {value}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => loadSavedScenario(saved)}
+                        style={{
+                          width: "100%",
+                          minHeight: 40,
+                          marginTop: 13,
+                          borderRadius: 12,
+                          cursor: "pointer",
+                          color: "#ff9a70",
+                          background: "rgba(255,115,60,0.075)",
+                          border: "1px solid rgba(255,115,60,0.18)",
+                          fontWeight: 900,
+                        }}
+                      >
+                        {language === "it"
+                          ? "Carica questo scenario"
+                          : "Load this scenario"}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-                gap: 12,
-                marginTop: 22,
+                gridTemplateColumns:
+                  "minmax(0, 1.15fr) minmax(260px, 0.7fr) minmax(0, 1fr)",
+                gap: 24,
+                marginTop: 24,
               }}
             >
-              {suggestedActions.map((action) => (
+              <div style={cardStyle}>
+                <div style={mutedLabelStyle}>
+                  {language === "it"
+                    ? "ORIGINE DEL RECUPERO"
+                    : "RECOVERY BREAKDOWN"}
+                </div>
                 <div
-                  key={action.text}
                   style={{
-                    display: "flex",
-                    gap: 10,
-                    alignItems: "flex-start",
-                    padding: 14,
-                    borderRadius: 15,
-                    background: "rgba(255,255,255,0.04)",
-                    border: "1px solid rgba(255,115,60,0.13)",
-                    color: "rgba(255,255,255,0.72)",
-                    lineHeight: 1.5,
-                    fontSize: 13,
-                    fontWeight: 800,
+                    marginTop: 9,
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
                   }}
                 >
-                  <span style={{ color: "#4ade80", fontWeight: 950 }}>✓</span>
-                  <span>{action.text}</span>
+                  {language === "it"
+                    ? "Da dove nasce l'impatto annuale"
+                    : "Where the annual impact comes from"}
                 </div>
-              ))}
-            </div>
-          </div>
+                <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
+                  {recoveryBreakdown.map((item) => (
+                    <div
+                      key={item.key}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 18,
+                        paddingBottom: 12,
+                        borderBottom: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.58)",
+                          fontWeight: 800,
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      <strong
+                        style={{
+                          color: item.value >= 0 ? "#4ade80" : "#f87171",
+                        }}
+                      >
+                        {formatSignedMoney(item.value, 0)}
+                      </strong>
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 18,
+                      paddingTop: 2,
+                      color: "#f8fafc",
+                      fontWeight: 950,
+                    }}
+                  >
+                    <span>
+                      {language === "it" ? "Totale netto" : "Net total"}
+                    </span>
+                    <span
+                      style={{
+                        color:
+                          netRecoveredAnnualProfit >= 0 ? "#4ade80" : "#f87171",
+                      }}
+                    >
+                      {formatSignedMoney(netRecoveredAnnualProfit, 0)}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-          <div
-            style={{
-              marginTop: 24,
-              padding: 18,
-              borderRadius: 18,
-              background: "rgba(255,115,60,0.075)",
-              border: "1px solid rgba(255,115,60,0.18)",
-              color: "rgba(255,255,255,0.66)",
-              lineHeight: 1.65,
-              fontSize: 13,
-              fontWeight: 700,
-            }}
-          >
-            {growthAccess
-              ? language === "it"
-                ? `Le stime partono dalla base economica tax-aware costruita sui dati Shopify degli ultimi ${periodDays} giorni e sono normalizzate su base mensile. La riserva fiscale gestionale resta un'ipotesi separata del Business Model Studio. Il simulatore non modifica automaticamente prezzi o costi.`
-                : `Estimates start from the tax-aware economic basis built from Shopify data over the last ${periodDays} days and are normalized to a monthly basis. The business-model tax reserve remains a separate Business Model Studio assumption. The simulator does not automatically change prices or costs.`
-              : language === "it"
-                ? "Anteprima Growth. Passa a Growth per utilizzare il simulatore completo."
-                : "Growth preview. Upgrade to Growth to use the full simulator."}
-          </div>
+              <div style={cardStyle}>
+                <div
+                  style={{
+                    ...mutedLabelStyle,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>{language === "it" ? "RISCHIO" : "RISK"}</span>
+
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Rischio commerciale"
+                          : "Commercial risk",
+                      description:
+                        language === "it"
+                          ? "Stima del rischio commerciale dello scenario basata soprattutto sull'aumento di prezzo ipotizzato e sull'eventuale calo delle vendite. Un rischio più alto indica che lo scenario richiede maggiore cautela e verifica sul campo."
+                          : "Estimate of the scenario's commercial risk, based mainly on the assumed price increase and any expected sales decline. A higher risk means the scenario requires more caution and real-world validation.",
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    marginTop: 14,
+                    color: riskColor,
+                    fontSize: 31,
+                    fontWeight: 950,
+                  }}
+                >
+                  {riskLabel}
+                </div>
+                <div
+                  style={{
+                    height: 9,
+                    marginTop: 16,
+                    borderRadius: 999,
+                    overflow: "hidden",
+                    background: "rgba(255,255,255,0.075)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(6, commercialRiskScore)}%`,
+                      height: "100%",
+                      borderRadius: 999,
+                      background: riskColor,
+                    }}
+                  />
+                </div>
+                <div
+                  style={{
+                    marginTop: 15,
+                    color: "rgba(255,255,255,0.56)",
+                    fontSize: 13,
+                    lineHeight: 1.65,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? `Aumento prezzo ${formatSignedPct(priceChangePct)} e risposta vendite ${formatSignedPct(salesChangePct)}. Verifica il risultato reale per 30 giorni.`
+                    : `Price change ${formatSignedPct(priceChangePct)} and sales response ${formatSignedPct(salesChangePct)}. Validate the real result for 30 days.`}
+                </div>
+              </div>
+
+              <div style={cardStyle}>
+                <div style={mutedLabelStyle}>
+                  {language === "it" ? "TIMELINE" : "TIMELINE"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 9,
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it"
+                    ? "Recupero cumulativo"
+                    : "Cumulative recovery"}
+                </div>
+                <div style={{ display: "grid", gap: 11, marginTop: 20 }}>
+                  {timeline.map((item) => (
+                    <div
+                      key={item.month}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 16,
+                        alignItems: "center",
+                        padding: "10px 12px",
+                        borderRadius: 13,
+                        background: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,255,255,0.065)",
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.58)",
+                          fontSize: 12,
+                          fontWeight: 850,
+                        }}
+                      >
+                        {item.month === 1
+                          ? language === "it"
+                            ? "1 mese"
+                            : "1 month"
+                          : `${item.month} ${language === "it" ? "mesi" : "months"}`}
+                      </span>
+                      <strong
+                        style={{
+                          color: item.value >= 0 ? "#4ade80" : "#f87171",
+                        }}
+                      >
+                        {formatSignedMoney(item.value, 0)}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1.15fr) minmax(300px, 0.85fr)",
+                gap: 24,
+                marginTop: 24,
+              }}
+            >
+              <div style={cardStyle}>
+                <div style={mutedLabelStyle}>
+                  {language === "it" ? "Confronto" : "Comparison"}
+                </div>
+                <div
+                  style={{
+                    marginTop: 9,
+                    color: "#f8fafc",
+                    fontSize: 20,
+                    fontWeight: 950,
+                  }}
+                >
+                  {language === "it" ? "Attuale → Nuovo" : "Current → New"}
+                </div>
+
+                <div style={{ display: "grid", gap: 18, marginTop: 24 }}>
+                  {[
+                    {
+                      label: language === "it" ? "Margine" : "Margin",
+                      current: pct(currentMarginPct, 1),
+                      next: pct(simulatedMarginPct, 1),
+                      currentBar: clamp(currentMarginPct, 0, 60),
+                      nextBar: clamp(simulatedMarginPct, 0, 60),
+                      max: 60,
+                    },
+                    {
+                      label:
+                        language === "it" ? "Profitto mensile" : "Monthly profit",
+                      current: money(currentMonthlyProfit, 0),
+                      next: money(simulatedMonthlyProfit, 0),
+                      currentBar: Math.max(0, currentMonthlyProfit),
+                      nextBar: Math.max(0, simulatedMonthlyProfit),
+                      max: Math.max(
+                        1,
+                        currentMonthlyProfit,
+                        simulatedMonthlyProfit,
+                      ),
+                    },
+                    {
+                      label:
+                        language === "it" ? "Ricavi mensili" : "Monthly revenue",
+                      current: money(currentMonthlyRevenue, 0),
+                      next: money(simulatedMonthlyRevenue, 0),
+                      currentBar: Math.max(0, currentMonthlyRevenue),
+                      nextBar: Math.max(0, simulatedMonthlyRevenue),
+                      max: Math.max(
+                        1,
+                        currentMonthlyRevenue,
+                        simulatedMonthlyRevenue,
+                      ),
+                    },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: 16,
+                          alignItems: "center",
+                        }}
+                      >
+                        <span
+                          style={{
+                            color: "rgba(255,255,255,0.58)",
+                            fontWeight: 850,
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 9,
+                            color: "#f8fafc",
+                            fontWeight: 900,
+                          }}
+                        >
+                          <span style={{ color: "rgba(255,255,255,0.58)" }}>
+                            {item.current}
+                          </span>
+                          <span
+                            style={{
+                              display: "inline-grid",
+                              placeItems: "center",
+                              width: 24,
+                              height: 24,
+                              borderRadius: 999,
+                              color:
+                                recoveredMonthlyProfit >= 0
+                                  ? "#4ade80"
+                                  : "#f87171",
+                              background:
+                                recoveredMonthlyProfit >= 0
+                                  ? "rgba(34,197,94,0.11)"
+                                  : "rgba(239,68,68,0.11)",
+                              border:
+                                recoveredMonthlyProfit >= 0
+                                  ? "1px solid rgba(34,197,94,0.2)"
+                                  : "1px solid rgba(239,68,68,0.2)",
+                            }}
+                          >
+                            →
+                          </span>
+                          <span
+                            style={{
+                              color:
+                                recoveredMonthlyProfit >= 0
+                                  ? "#4ade80"
+                                  : "#f87171",
+                            }}
+                          >
+                            {item.next}
+                          </span>
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 7,
+                          marginTop: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: 8,
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.07)",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${clamp((item.currentBar / item.max) * 100, 0, 100)}%`,
+                              height: "100%",
+                              borderRadius: 999,
+                              background: "rgba(255,255,255,0.34)",
+                            }}
+                          />
+                        </div>
+                        <div
+                          style={{
+                            height: 8,
+                            borderRadius: 999,
+                            background: "rgba(255,255,255,0.07)",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${clamp((item.nextBar / item.max) * 100, 0, 100)}%`,
+                              height: "100%",
+                              borderRadius: 999,
+                              background:
+                                recoveredMonthlyProfit >= 0
+                                  ? "#22c55e"
+                                  : "#ef4444",
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  ...cardStyle,
+                  background:
+                    "radial-gradient(circle at top left, rgba(34,197,94,0.13), transparent 38%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(34,197,94,0.22)",
+                }}
+              >
+                <div style={{ ...mutedLabelStyle, color: "#4ade80" }}>
+                  {language === "it" ? "Impatto annuale" : "Annual impact"}
+                </div>
+                <div
+                  key={`annual-${Math.round(netRecoveredAnnualProfit)}`}
+                  className="recovery-annual-value"
+                  style={{
+                    marginTop: 15,
+                    color:
+                      netRecoveredAnnualProfit >= 0 ? "#22c55e" : "#f87171",
+                    fontSize: 48,
+                    lineHeight: 1,
+                    letterSpacing: "-0.05em",
+                    fontWeight: 950,
+                  }}
+                >
+                  {formatSignedMoney(netRecoveredAnnualProfit, 0)}
+                </div>
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: "rgba(255,255,255,0.58)",
+                    lineHeight: 1.6,
+                    fontWeight: 750,
+                  }}
+                >
+                  {language === "it"
+                    ? `Profitto netto stimato dopo la riserva fiscale del ${pct(taxReserveRate * 100)}.`
+                    : `Estimated net profit after the ${pct(taxReserveRate * 100)} tax reserve.`}
+                </div>
+
+                {netRecoveredAnnualProfit > 0 && (
+                  <div
+                    key={`unlock-${Math.round(netRecoveredAnnualProfit)}`}
+                    className="recovery-unlocked-badge"
+                  >
+                    <span>↗</span>
+                    <span>
+                      {language === "it"
+                        ? `${formatSignedMoney(netRecoveredAnnualProfit, 0)} di profitto annuale netto sbloccato`
+                        : `${formatSignedMoney(netRecoveredAnnualProfit, 0)} net annual profit unlocked`}
+                    </span>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    marginTop: 24,
+                    paddingTop: 20,
+                    borderTop: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          ...mutedLabelStyle,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span>
+                          {language === "it"
+                            ? "Salute del profitto"
+                            : "Profit health"}
+                        </span>
+
+                        <MetricTooltip
+                          content={{
+                            title:
+                              language === "it"
+                                ? "Salute del profitto"
+                                : "Profit health",
+                            description:
+                              language === "it"
+                                ? "Valutazione sintetica del margine simulato. MarginLab classifica lo scenario come in perdita, critico, debole, solido o forte in base al livello di margine raggiunto."
+                                : "Summary assessment of the simulated margin. MarginLab classifies the scenario as loss-making, critical, weak, healthy or strong based on the margin level achieved.",
+                          }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 7,
+                          color: "#f8fafc",
+                          fontSize: 18,
+                          fontWeight: 950,
+                        }}
+                      >
+                        {profitHealth}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        color: simulatedMarginPct >= 20 ? "#4ade80" : "#f59e0b",
+                        fontSize: 25,
+                        fontWeight: 950,
+                      }}
+                    >
+                      {pct(simulatedMarginPct, 1)}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      height: 10,
+                      marginTop: 13,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.075)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${clamp((simulatedMarginPct / 50) * 100, 0, 100)}%`,
+                        height: "100%",
+                        borderRadius: 999,
+                        background:
+                          simulatedMarginPct >= 20 ? "#22c55e" : "#f59e0b",
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style={{
+                ...cardStyle,
+                marginTop: 24,
+                background:
+                  "linear-gradient(135deg, rgba(255,115,60,0.12), rgba(8,13,22,0.98) 46%, rgba(17,24,39,0.98))",
+                border: "1px solid rgba(255,115,60,0.25)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 18,
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <div style={{ ...mutedLabelStyle, color: "#ff9a70" }}>
+                    {language === "it"
+                      ? "RACCOMANDAZIONE ESECUTIVA"
+                      : "EXECUTIVE RECOMMENDATION"}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 9,
+                      color: "#f8fafc",
+                      fontSize: 21,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {language === "it"
+                      ? "La decisione suggerita da MarginLab"
+                      : "MarginLab's suggested decision"}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: "9px 13px",
+                    borderRadius: 999,
+                    background: "rgba(34,197,94,0.1)",
+                    border: "1px solid rgba(34,197,94,0.2)",
+                    color: "#86efac",
+                    fontSize: 12,
+                    fontWeight: 900,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>
+                    {language === "it" ? "Affidabilità" : "Confidence"}:{" "}
+                    {confidenceLabel} · {dataConfidenceScore}% ·{" "}
+                    {language === "it" ? "Rischio" : "Risk"} {riskLabel}
+                  </span>
+
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Affidabilità dei dati"
+                          : "Data confidence",
+                      description:
+                        language === "it"
+                          ? "Misura la qualità dei dati utilizzati dalla simulazione, considerando disponibilità dei costi, volume di vendite e completezza dei dati del prodotto. Non rappresenta la probabilità che il profitto simulato venga effettivamente realizzato."
+                          : "Measures the quality of the data used by the simulation, considering cost availability, sales volume and product data completeness. It does not represent the probability that the simulated profit will actually be achieved.",
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 20,
+                  color: "rgba(255,255,255,0.78)",
+                  fontSize: 15,
+                  lineHeight: 1.75,
+                  fontWeight: 750,
+                }}
+              >
+                {recommendation}
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+                  gap: 12,
+                  marginTop: 22,
+                }}
+              >
+                {suggestedActions.map((action) => (
+                  <div
+                    key={action.text}
+                    style={{
+                      display: "flex",
+                      gap: 10,
+                      alignItems: "flex-start",
+                      padding: 14,
+                      borderRadius: 15,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,115,60,0.13)",
+                      color: "rgba(255,255,255,0.72)",
+                      lineHeight: 1.5,
+                      fontSize: 13,
+                      fontWeight: 800,
+                    }}
+                  >
+                    <span style={{ color: "#4ade80", fontWeight: 950 }}>✓</span>
+                    <span>{action.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                marginTop: 24,
+                padding: 18,
+                borderRadius: 18,
+                background: "rgba(255,115,60,0.075)",
+                border: "1px solid rgba(255,115,60,0.18)",
+                color: "rgba(255,255,255,0.66)",
+                lineHeight: 1.65,
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {growthAccess
+                ? language === "it"
+                  ? `Le stime partono dalla base economica tax-aware costruita sui dati Shopify degli ultimi ${periodDays} giorni e sono normalizzate su base mensile. La riserva fiscale gestionale resta un'ipotesi separata del Business Model Studio. Il simulatore non modifica automaticamente prezzi o costi.`
+                  : `Estimates start from the tax-aware economic basis built from Shopify data over the last ${periodDays} days and are normalized to a monthly basis. The business-model tax reserve remains a separate Business Model Studio assumption. The simulator does not automatically change prices or costs.`
+                : language === "it"
+                  ? "Anteprima Growth. Passa a Growth per utilizzare il simulatore completo."
+                  : "Growth preview. Upgrade to Growth to use the full simulator."}
+            </div>
           </div>
         </div>
       </div>
