@@ -4,6 +4,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   money as formatStoreMoney,
   pct as formatStorePercent,
@@ -296,22 +297,22 @@ export async function loader({ request }: { request: Request }) {
 
   const assumptions = growthAccess
     ? (await prisma.profitAssumptions.findUnique({
-        where: {
-          shop: session.shop,
-        },
-      })) ?? null
+      where: {
+        shop: session.shop,
+      },
+    })) ?? null
     : null;
 
   const month = getUsageMonth();
   const usage = growthAccess
     ? await prisma.aiUsage.findUnique({
-        where: {
-          shop_month: {
-            shop: session.shop,
-            month,
-          },
+      where: {
+        shop_month: {
+          shop: session.shop,
+          month,
         },
-      })
+      },
+    })
     : null;
 
   return {
@@ -514,20 +515,20 @@ export default function AiAdvisorPage() {
     aiUsage,
     growthAccess,
   } = useLoaderData() as LoaderData & {
-      growthAccess: boolean;
-      assumptions: {
-        monthlyAds: number;
-        monthlyShipping: number;
-        monthlyOperating: number;
-        paymentFeePct: number;
-        transactionFeePct: number;
-        taxReservePct: number;
-      } | null;
-      aiUsage: {
-        used: number;
-        limit: number;
-      };
+    growthAccess: boolean;
+    assumptions: {
+      monthlyAds: number;
+      monthlyShipping: number;
+      monthlyOperating: number;
+      paymentFeePct: number;
+      transactionFeePct: number;
+      taxReservePct: number;
+    } | null;
+    aiUsage: {
+      used: number;
+      limit: number;
     };
+  };
 
   React.useEffect(() => {
     if (aiFetcher.data?.text) {
@@ -1576,773 +1577,1121 @@ Rules:
               growthAccess
                 ? undefined
                 : {
-                    pointerEvents: "none",
-                    userSelect: "none",
-                    opacity: 0.5,
-                  }
+                  pointerEvents: "none",
+                  userSelect: "none",
+                  opacity: 0.5,
+                }
             }
           >
-        <div
-          style={{
-            borderRadius: 30,
-            padding: 28,
-            background:
-              "radial-gradient(circle at 12% 14%, rgba(255,115,80,0.14), transparent 30%), radial-gradient(circle at 88% 18%, rgba(34,197,94,0.13), transparent 32%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-            border: "1px solid rgba(255,115,60,0.22)",
-            boxShadow:
-              "0 28px 90px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03)",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.2fr 0.8fr",
-              gap: 28,
-              alignItems: "stretch",
-            }}
-          >
-            <div>
+            <div
+              style={{
+                borderRadius: 30,
+                padding: 28,
+                background:
+                  "radial-gradient(circle at 12% 14%, rgba(255,115,80,0.14), transparent 30%), radial-gradient(circle at 88% 18%, rgba(34,197,94,0.13), transparent 32%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
+                border: "1px solid rgba(255,115,60,0.22)",
+                boxShadow:
+                  "0 28px 90px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03)",
+              }}
+            >
               <div
                 style={{
-                  fontSize: 11,
-                  fontWeight: 950,
-                  letterSpacing: "0.14em",
-                  textTransform: "uppercase",
-                  color: "#ff9a70",
+                  display: "grid",
+                  gridTemplateColumns: "1.2fr 0.8fr",
+                  gap: 28,
+                  alignItems: "stretch",
                 }}
               >
-                {language === "it"
-                  ? "BRIEFING ESECUTIVO"
-                  : "EXECUTIVE BRIEF"}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 14,
-                  color: "#f8fafc",
-                  fontSize: 27,
-                  fontWeight: 950,
-                  lineHeight: 1.2,
-                  letterSpacing: "-0.035em",
-                  maxWidth: 760,
-                }}
-              >
-                {executiveBrief}
-              </div>
-
-              {primaryProfitAlert && (
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div>
                   <div
                     style={{
-                      padding: "7px 11px",
-                      borderRadius: 999,
-                      color:
-                        primaryProfitAlert.severity === "critical"
-                          ? "#ff8a6b"
-                          : primaryProfitAlert.severity === "warning"
-                            ? "#fbbf24"
-                            : primaryProfitAlert.severity === "opportunity"
-                              ? "#4ade80"
-                              : "#7dd3fc",
-                      background:
-                        primaryProfitAlert.severity === "critical"
-                          ? "rgba(255,107,74,0.10)"
-                          : primaryProfitAlert.severity === "warning"
-                            ? "rgba(245,158,11,0.10)"
-                            : primaryProfitAlert.severity === "opportunity"
-                              ? "rgba(34,197,94,0.10)"
-                              : "rgba(56,189,248,0.10)",
-                      border:
-                        primaryProfitAlert.severity === "critical"
-                          ? "1px solid rgba(255,107,74,0.24)"
-                          : primaryProfitAlert.severity === "warning"
-                            ? "1px solid rgba(245,158,11,0.24)"
-                            : primaryProfitAlert.severity === "opportunity"
-                              ? "1px solid rgba(34,197,94,0.24)"
-                              : "1px solid rgba(56,189,248,0.24)",
-                      fontSize: 9,
-                      fontWeight: 950,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    {primaryProfitAlert.severity === "critical"
-                      ? language === "it"
-                        ? "Priorità critica"
-                        : "Critical Priority"
-                      : primaryProfitAlert.severity === "warning"
-                        ? language === "it"
-                          ? "Priorità da controllare"
-                          : "Priority to Review"
-                        : primaryProfitAlert.severity === "opportunity"
-                          ? language === "it"
-                            ? "Opportunità rilevata"
-                            : "Opportunity Detected"
-                          : language === "it"
-                            ? "Segnale Profit Monitor"
-                            : "Profit Monitor Signal"}
-                  </div>
-
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,0.48)",
                       fontSize: 11,
-                      fontWeight: 750,
+                      fontWeight: 950,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "#ff9a70",
                     }}
                   >
                     {language === "it"
-                      ? "Priorità determinata dal Profit Monitor"
-                      : "Priority determined by Profit Monitor"}
+                      ? "BRIEFING ESECUTIVO"
+                      : "EXECUTIVE BRIEF"}
                   </div>
-                </div>
-              )}
 
-              <div
-                style={{
-                  marginTop: 22,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                  gap: 12,
-                }}
-              >
-                {[
-                  {
-                    label:
-                      language === "it"
-                        ? "Profitto netto stimato"
-                        : "Estimated Net Profit",
-                    value: modelConfigured
-                      ? money(estimatedNetProfit)
-                      : language === "it"
-                        ? "Da configurare"
-                        : "Not configured",
-                    note: modelConfigured
-                      ? pct(estimatedNetMargin)
-                      : "Business Model Studio",
-                    color:
-                      !modelConfigured
-                        ? "#f59e0b"
-                        : estimatedNetProfit >= 0
-                          ? "#22c55e"
-                          : "#ff6b4a",
-                  },
-                  {
-                    label:
-                      language === "it"
-                        ? "Gap di profitto al target"
-                        : "Profit Gap to Target",
-                    value:
-                      recoverableProfit > 0
-                        ? `+${money(recoverableProfit)}`
-                        : money(recoverableProfit),
-                    note:
-                      language === "it"
-                        ? `${prioritizedProducts.length} priorità prodotto`
-                        : `${prioritizedProducts.length} product priorities`,
-                    color: "#22c55e",
-                  },
-                  {
-                    label:
-                      language === "it"
-                        ? "Rischi attivi"
-                        : "Active Risks",
-                    value: `${activeRiskAlerts.length}`,
-                    note:
-                      language === "it"
-                        ? `${criticalAlerts.length} critici`
-                        : `${criticalAlerts.length} critical`,
-                    color:
-                      criticalAlerts.length > 0
-                        ? "#ff6b4a"
-                        : activeRiskAlerts.length > 0
-                          ? "#f59e0b"
-                          : "#22c55e",
-                  },
-                  {
-                    label:
-                      language === "it"
-                        ? "Missione settimanale"
-                        : "Weekly Mission",
-                    value: `${missionActions}`,
-                    note:
-                      language === "it"
-                        ? `${missionMinutes} minuti stimati`
-                        : `${missionMinutes} estimated minutes`,
-                    color: "#38bdf8",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    style={{
-                      minWidth: 0,
-                      padding: 18,
-                      borderRadius: 18,
-                      background: "rgba(255,255,255,0.035)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.43)",
-                        fontSize: 9,
-                        fontWeight: 950,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                      }}
-                    >
-                      {item.label}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 9,
-                        color: item.color,
-                        fontSize: 25,
-                        fontWeight: 950,
-                        lineHeight: 1,
-                        letterSpacing: "-0.03em",
-                      }}
-                    >
-                      {item.value}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 7,
-                        color: "rgba(255,255,255,0.52)",
-                        fontSize: 11,
-                        fontWeight: 780,
-                      }}
-                    >
-                      {item.note}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 20,
-                  display: "flex",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => navigate("/app/recommendations")}
-                >
-                  {language === "it"
-                    ? "Apri il piano operativo →"
-                    : "Open Action Plan →"}
-                </button>
-
-                <button
-                  type="button"
-                  className="apply-button"
-                  onClick={() => navigate("/app/recovery-simulator")}
-                >
-                  {language === "it"
-                    ? "Simula il recupero"
-                    : "Simulate Recovery"}
-                </button>
-
-                <button
-                  type="button"
-                  className="apply-button"
-                  onClick={() => navigate("/app/forecasting")}
-                >
-                  {language === "it"
-                    ? "Verifica la previsione"
-                    : "Open Forecast"}
-                </button>
-              </div>
-            </div>
-
-            <div
-              style={{
-                borderRadius: 26,
-                padding: 24,
-                background:
-                  "radial-gradient(circle at center, rgba(34,197,94,0.13), transparent 42%), rgba(255,255,255,0.025)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    width: 188,
-                    height: 188,
-                    margin: "0 auto",
-                    borderRadius: "50%",
-                    display: "grid",
-                    placeItems: "center",
-                    background: `conic-gradient(${healthColor} ${healthScore * 3.6
-                      }deg, rgba(255,255,255,0.08) 0deg)`,
-                    boxShadow: `0 0 54px ${healthColor}22`,
-                  }}
-                >
                   <div
                     style={{
-                      width: 148,
-                      height: 148,
-                      borderRadius: "50%",
-                      display: "grid",
-                      placeItems: "center",
-                      background:
-                        "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
-                      border: "1px solid rgba(255,255,255,0.06)",
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          color: "#f8fafc",
-                          fontSize: 52,
-                          fontWeight: 950,
-                          lineHeight: 1,
-                          letterSpacing: "-0.05em",
-                        }}
-                      >
-                        {healthScore}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 7,
-                          color: healthColor,
-                          fontSize: 10,
-                          fontWeight: 950,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.1em",
-                        }}
-                      >
-                        {language === "it"
-                          ? "Salute dello store"
-                          : "Store Health"}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 18,
-                    color: "#f8fafc",
-                    fontSize: 20,
-                    fontWeight: 950,
-                  }}
-                >
-                  {healthLabel}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 7,
-                    color: "rgba(255,255,255,0.52)",
-                    fontSize: 12,
-                    fontWeight: 750,
-                  }}
-                >
-                  {language === "it"
-                    ? "Valutazione aggiornata sui dati attuali"
-                    : "Updated from current store data"}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <BusinessPriorities
-          alerts={profitAlerts}
-          navigate={navigate}
-          maxItems={3}
-        />
-
-        <div
-          style={{
-            marginTop: 24,
-            display: "grid",
-            gridTemplateColumns: "repeat(5,minmax(0,1fr))",
-            gap: 14,
-          }}
-        >
-          {scorecards.map((card) => (
-            <div
-              key={card.key}
-              style={{
-                padding: 18,
-                borderRadius: 20,
-                background:
-                  "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-                border: "1px solid rgba(255,115,60,0.14)",
-              }}
-            >
-              <div
-                style={{
-                  color: "rgba(255,255,255,0.45)",
-                  fontSize: 9,
-                  fontWeight: 950,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                {card.label}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 11,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "end",
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    color: card.color,
-                    fontSize: 30,
-                    fontWeight: 950,
-                    lineHeight: 1,
-                  }}
-                >
-                  {card.value}
-                </div>
-
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.35)",
-                    fontSize: 10,
-                    fontWeight: 850,
-                  }}
-                >
-                  /100
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 12,
-                  height: 7,
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.08)",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${card.value}%`,
-                    height: "100%",
-                    borderRadius: 999,
-                    background: card.color,
-                    boxShadow: `0 0 14px ${card.color}55`,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-
-
-        <div
-          style={{
-            marginTop: 24,
-            display: "grid",
-            gridTemplateColumns: "0.9fr 1.1fr",
-            gap: 22,
-            alignItems: "start",
-          }}
-        >
-          <div
-            style={{
-              borderRadius: 26,
-              padding: "24px 24px 32px",
-              background:
-                "radial-gradient(circle at top right, rgba(56,189,248,0.10), transparent 40%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(56,189,248,0.18)",
-            }}
-          >
-            <div
-              style={{
-                color: "#7dd3fc",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.13em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it"
-                ? "MISSIONE DELLA SETTIMANA"
-                : "WEEKLY MISSION"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 11,
-                color: "#f8fafc",
-                fontSize: 23,
-                fontWeight: 950,
-                lineHeight: 1.25,
-              }}
-            >
-              {weeklyReport.title}
-            </div>
-
-            <div
-              style={{
-                marginTop: 9,
-                color: "rgba(255,255,255,0.58)",
-                fontSize: 12,
-                fontWeight: 740,
-                lineHeight: 1.55,
-              }}
-            >
-              {weeklyReport.recommendation}
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "repeat(3,1fr)",
-                gap: 10,
-              }}
-            >
-              {[
-                {
-                  label: language === "it" ? "Azioni" : "Actions",
-                  value: `${missionActions}`,
-                  color: "#f8fafc",
-                },
-                {
-                  label:
-                    language === "it" ? "Tempo stimato" : "Estimated Time",
-                  value: `${missionMinutes}m`,
-                  color: "#38bdf8",
-                },
-                {
-                  label:
-                    language === "it" ? "Potenziale" : "Potential",
-                  value:
-                    recoverableProfit > 0
-                      ? `+${money(recoverableProfit)}`
-                      : money(recoverableProfit),
-                  color: "#22c55e",
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  style={{
-                    padding: 14,
-                    borderRadius: 15,
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "rgba(255,255,255,0.42)",
-                      fontSize: 9,
+                      marginTop: 14,
+                      color: "#f8fafc",
+                      fontSize: 27,
                       fontWeight: 950,
-                      textTransform: "uppercase",
+                      lineHeight: 1.2,
+                      letterSpacing: "-0.035em",
+                      maxWidth: 760,
                     }}
                   >
-                    {item.label}
+                    {executiveBrief}
                   </div>
 
-                  <div
-                    style={{
-                      marginTop: 7,
-                      color: item.color,
-                      fontSize: 21,
-                      fontWeight: 950,
-                    }}
-                  >
-                    {item.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              className="primary-button"
-              style={{
-                width: "100%",
-                marginTop: 20,
-                padding: "16px 20px",
-              }}
-              onClick={() => navigate(weeklyReport.route)}
-            >
-              {missionAlert?.actionLabel ??
-                (language === "it"
-                  ? "Apri il piano operativo →"
-                  : "Open Action Plan →")}
-            </button>
-          </div>
-
-          <div className="panel" style={{ margin: 0, padding: 24 }}>
-            <div className="panel-eyebrow">
-              {language === "it"
-                ? "FEED DELLE DECISIONI"
-                : "DECISION FEED"}
-            </div>
-
-            <h2 className="panel-title" style={{ marginTop: 6 }}>
-              {language === "it"
-                ? "I segnali che richiedono attenzione"
-                : "Signals that need attention"}
-            </h2>
-
-            <div
-              style={{
-                display: "grid",
-                gap: 11,
-                marginTop: 19,
-              }}
-            >
-              {decisionFeed.length > 0 ? (
-                decisionFeed.map((item) => (
-                  <button
-                    key={`${item.when}-${item.title}`}
-                    type="button"
-                    onClick={() => navigate(item.route)}
-                    style={{
-                      width: "100%",
-                      display: "grid",
-                      gridTemplateColumns: "10px minmax(0,1fr) auto",
-                      gap: 13,
-                      padding: 14,
-                      borderRadius: 16,
-                      background: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      cursor: "pointer",
-                      textAlign: "left",
-                      fontFamily: "inherit",
-                    }}
-                  >
+                  {primaryProfitAlert && (
                     <div
                       style={{
-                        width: 9,
-                        height: 9,
-                        marginTop: 5,
-                        borderRadius: "50%",
-                        background: item.color,
-                        boxShadow: `0 0 14px ${item.color}88`,
+                        marginTop: 18,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        flexWrap: "wrap",
                       }}
-                    />
-
-                    <div>
+                    >
                       <div
                         style={{
-                          color: item.color,
+                          padding: "7px 11px",
+                          borderRadius: 999,
+                          color:
+                            primaryProfitAlert.severity === "critical"
+                              ? "#ff8a6b"
+                              : primaryProfitAlert.severity === "warning"
+                                ? "#fbbf24"
+                                : primaryProfitAlert.severity === "opportunity"
+                                  ? "#4ade80"
+                                  : "#7dd3fc",
+                          background:
+                            primaryProfitAlert.severity === "critical"
+                              ? "rgba(255,107,74,0.10)"
+                              : primaryProfitAlert.severity === "warning"
+                                ? "rgba(245,158,11,0.10)"
+                                : primaryProfitAlert.severity === "opportunity"
+                                  ? "rgba(34,197,94,0.10)"
+                                  : "rgba(56,189,248,0.10)",
+                          border:
+                            primaryProfitAlert.severity === "critical"
+                              ? "1px solid rgba(255,107,74,0.24)"
+                              : primaryProfitAlert.severity === "warning"
+                                ? "1px solid rgba(245,158,11,0.24)"
+                                : primaryProfitAlert.severity === "opportunity"
+                                  ? "1px solid rgba(34,197,94,0.24)"
+                                  : "1px solid rgba(56,189,248,0.24)",
                           fontSize: 9,
                           fontWeight: 950,
                           textTransform: "uppercase",
                           letterSpacing: "0.1em",
                         }}
                       >
-                        {item.when}
+                        {primaryProfitAlert.severity === "critical"
+                          ? language === "it"
+                            ? "Priorità critica"
+                            : "Critical Priority"
+                          : primaryProfitAlert.severity === "warning"
+                            ? language === "it"
+                              ? "Priorità da controllare"
+                              : "Priority to Review"
+                            : primaryProfitAlert.severity === "opportunity"
+                              ? language === "it"
+                                ? "Opportunità rilevata"
+                                : "Opportunity Detected"
+                              : language === "it"
+                                ? "Segnale Profit Monitor"
+                                : "Profit Monitor Signal"}
                       </div>
 
                       <div
                         style={{
-                          marginTop: 5,
-                          color: "#f8fafc",
-                          fontSize: 14,
-                          fontWeight: 900,
-                        }}
-                      >
-                        {item.title}
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: 4,
-                          color: "rgba(255,255,255,0.52)",
+                          color: "rgba(255,255,255,0.48)",
                           fontSize: 11,
-                          fontWeight: 730,
-                          lineHeight: 1.45,
+                          fontWeight: 750,
                         }}
                       >
-                        {item.detail}
+                        {language === "it"
+                          ? "Priorità determinata dal Profit Monitor"
+                          : "Priority determined by Profit Monitor"}
                       </div>
+                    </div>
+                  )}
 
+                  <div
+                    style={{
+                      marginTop: 22,
+                      display: "grid",
+                      gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+                      gap: 12,
+                    }}
+                  >
+                    {[
+                      {
+                        label:
+                          language === "it"
+                            ? "Profitto netto stimato"
+                            : "Estimated Net Profit",
+                        value: modelConfigured
+                          ? money(estimatedNetProfit)
+                          : language === "it"
+                            ? "Da configurare"
+                            : "Not configured",
+                        note: modelConfigured
+                          ? pct(estimatedNetMargin)
+                          : "Business Model Studio",
+                        color:
+                          !modelConfigured
+                            ? "#f59e0b"
+                            : estimatedNetProfit >= 0
+                              ? "#22c55e"
+                              : "#ff6b4a",
+
+                        tooltip: {
+                          title:
+                            language === "it"
+                              ? "Profitto netto stimato"
+                              : "Estimated net profit",
+
+                          description:
+                            language === "it"
+                              ? "Stima del profitto che rimane dopo aver applicato al profitto prodotto i costi operativi configurati nel Business Model Studio."
+                              : "Estimated profit remaining after applying the operating costs configured in Business Model Studio to product profit.",
+
+                          note:
+                            language === "it"
+                              ? "È una stima gestionale basata sul modello configurato, non il risultato contabile definitivo dello store."
+                              : "This is a management estimate based on the configured model, not the store's final accounting profit.",
+                        },
+                      },
+                      {
+                        label:
+                          language === "it"
+                            ? "Gap di profitto al target"
+                            : "Profit Gap to Target",
+                        value:
+                          recoverableProfit > 0
+                            ? `+${money(recoverableProfit)}`
+                            : money(recoverableProfit),
+                        note:
+                          language === "it"
+                            ? `${prioritizedProducts.length} priorità prodotto`
+                            : `${prioritizedProducts.length} product priorities`,
+                        color: "#22c55e",
+
+                        tooltip: {
+                          title:
+                            language === "it"
+                              ? "Gap di profitto al target"
+                              : "Profit gap to target",
+
+                          description:
+                            language === "it"
+                              ? "Stima di quanto profitto aggiuntivo manca per portare i prodotti sotto target fino al margine obiettivo."
+                              : "Estimated additional profit required to bring below-target products up to the target margin.",
+
+                          note:
+                            language === "it"
+                              ? "È una stima modellata, non profitto garantito o già disponibile da recuperare."
+                              : "This is a modeled estimate, not guaranteed profit or profit already available to recover.",
+                        },
+                      },
+                      {
+                        label:
+                          language === "it"
+                            ? "Rischi attivi"
+                            : "Active Risks",
+                        value: `${activeRiskAlerts.length}`,
+                        note:
+                          language === "it"
+                            ? `${criticalAlerts.length} critici`
+                            : `${criticalAlerts.length} critical`,
+                        color:
+                          criticalAlerts.length > 0
+                            ? "#ff6b4a"
+                            : activeRiskAlerts.length > 0
+                              ? "#f59e0b"
+                              : "#22c55e",
+                      },
+                      {
+                        label:
+                          language === "it"
+                            ? "Missione settimanale"
+                            : "Weekly Mission",
+                        value: `${missionActions}`,
+                        note:
+                          language === "it"
+                            ? `${missionMinutes} minuti stimati`
+                            : `${missionMinutes} estimated minutes`,
+                        color: "#38bdf8",
+                      },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        style={{
+                          minWidth: 0,
+                          padding: 18,
+                          borderRadius: 18,
+                          background: "rgba(255,255,255,0.035)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            color: "rgba(255,255,255,0.43)",
+                            fontSize: 9,
+                            fontWeight: 950,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.1em",
+                          }}
+                        >
+                          <span>{item.label}</span>
+
+                          {"tooltip" in item && item.tooltip ? (
+                            <MetricTooltip content={item.tooltip} />
+                          ) : null}
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 9,
+                            color: item.color,
+                            fontSize: 25,
+                            fontWeight: 950,
+                            lineHeight: 1,
+                            letterSpacing: "-0.03em",
+                          }}
+                        >
+                          {item.value}
+                        </div>
+
+                        <div
+                          style={{
+                            marginTop: 7,
+                            color: "rgba(255,255,255,0.52)",
+                            fontSize: 11,
+                            fontWeight: 780,
+                          }}
+                        >
+                          {item.note}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 20,
+                      display: "flex",
+                      gap: 12,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => navigate("/app/recommendations")}
+                    >
+                      {language === "it"
+                        ? "Apri il piano operativo →"
+                        : "Open Action Plan →"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="apply-button"
+                      onClick={() => navigate("/app/recovery-simulator")}
+                    >
+                      {language === "it"
+                        ? "Simula il recupero"
+                        : "Simulate Recovery"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="apply-button"
+                      onClick={() => navigate("/app/forecasting")}
+                    >
+                      {language === "it"
+                        ? "Verifica la previsione"
+                        : "Open Forecast"}
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    borderRadius: 26,
+                    padding: 24,
+                    background:
+                      "radial-gradient(circle at center, rgba(34,197,94,0.13), transparent 42%), rgba(255,255,255,0.025)",
+                    border: "1px solid rgba(34,197,94,0.18)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <div style={{ textAlign: "center" }}>
+                    <div
+                      style={{
+                        width: 188,
+                        height: 188,
+                        margin: "0 auto",
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        background: `conic-gradient(${healthColor} ${healthScore * 3.6
+                          }deg, rgba(255,255,255,0.08) 0deg)`,
+                        boxShadow: `0 0 54px ${healthColor}22`,
+                      }}
+                    >
                       <div
                         style={{
-                          marginTop: 8,
-                          color: item.color,
-                          fontSize: 10,
-                          fontWeight: 900,
+                          width: 148,
+                          height: 148,
+                          borderRadius: "50%",
+                          display: "grid",
+                          placeItems: "center",
+                          background:
+                            "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
+                          border: "1px solid rgba(255,255,255,0.06)",
                         }}
                       >
-                        {item.actionLabel}
+                        <div>
+                          <div
+                            style={{
+                              color: "#f8fafc",
+                              fontSize: 52,
+                              fontWeight: 950,
+                              lineHeight: 1,
+                              letterSpacing: "-0.05em",
+                            }}
+                          >
+                            {healthScore}
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 7,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 6,
+                              color: healthColor,
+                              fontSize: 10,
+                              fontWeight: 950,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.1em",
+                            }}
+                          >
+                            <span>
+                              {language === "it"
+                                ? "Salute dello store"
+                                : "Store Health"}
+                            </span>
+
+                            <MetricTooltip
+                              content={{
+                                title:
+                                  language === "it"
+                                    ? "Salute dello store"
+                                    : "Store health",
+
+                                description:
+                                  language === "it"
+                                    ? "Un punteggio da 0 a 100 che riassume lo stato generale della redditività dello store."
+                                    : "A 0–100 score summarizing the store's overall profitability health.",
+
+                                note:
+                                  language === "it"
+                                    ? "Tiene conto di prodotti in perdita, costi mancanti e margini deboli. Più è alto, meglio è."
+                                    : "It considers loss-making products, missing costs and weak margins. Higher is better.",
+                              }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
                     <div
                       style={{
-                        alignSelf: "center",
-                        color: item.color,
-                        fontSize: 16,
+                        marginTop: 18,
+                        color: "#f8fafc",
+                        fontSize: 20,
                         fontWeight: 950,
                       }}
                     >
-                      →
+                      {healthLabel}
                     </div>
-                  </button>
-                ))
-              ) : (
+
+                    <div
+                      style={{
+                        marginTop: 7,
+                        color: "rgba(255,255,255,0.52)",
+                        fontSize: 12,
+                        fontWeight: 750,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Valutazione aggiornata sui dati attuali"
+                        : "Updated from current store data"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <BusinessPriorities
+              alerts={profitAlerts}
+              navigate={navigate}
+              maxItems={3}
+            />
+
+            <div
+              style={{
+                marginTop: 24,
+                display: "grid",
+                gridTemplateColumns: "repeat(5,minmax(0,1fr))",
+                gap: 14,
+              }}
+            >
+              {scorecards.map((card) => (
+                <div
+                  key={card.key}
+                  style={{
+                    padding: 18,
+                    borderRadius: 20,
+                    background:
+                      "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+                    border: "1px solid rgba(255,115,60,0.14)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      color: "rgba(255,255,255,0.45)",
+                      fontSize: 9,
+                      fontWeight: 950,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.1em",
+                    }}
+                  >
+                    <span>{card.label}</span>
+
+                    <MetricTooltip
+                      content={
+                        card.key === "health"
+                          ? {
+                            title:
+                              language === "it"
+                                ? "Salute dello store"
+                                : "Store health",
+                            description:
+                              language === "it"
+                                ? "Riassume la salute complessiva della redditività dello store."
+                                : "Summarizes the overall health of the store's profitability.",
+                            note:
+                              language === "it"
+                                ? "Considera perdite, costi mancanti e margini deboli. Più è alto, meglio è."
+                                : "Considers losses, missing costs and weak margins. Higher is better.",
+                          }
+                          : card.key === "profit"
+                            ? {
+                              title:
+                                language === "it"
+                                  ? "Qualità del profitto"
+                                  : "Profit quality",
+                              description:
+                                language === "it"
+                                  ? "Misura quanto sono solidi i margini dei prodotti analizzati."
+                                  : "Measures how healthy the margins are across the analyzed products.",
+                              note:
+                                language === "it"
+                                  ? "Un punteggio alto indica una maggiore presenza di prodotti con margini sani."
+                                  : "A higher score indicates more products with healthy margins.",
+                            }
+                            : card.key === "pricing"
+                              ? {
+                                title:
+                                  language === "it"
+                                    ? "Efficienza dei prezzi"
+                                    : "Pricing efficiency",
+                                description:
+                                  language === "it"
+                                    ? "Indica quanto i prezzi attuali riescono a sostenere i margini desiderati."
+                                    : "Shows how effectively current prices support the desired margins.",
+                                note:
+                                  language === "it"
+                                    ? "Un punteggio basso segnala maggiore distanza dai livelli di prezzo necessari per raggiungere i target."
+                                    : "A lower score indicates a larger gap from the pricing levels needed to reach targets.",
+                              }
+                              : card.key === "data"
+                                ? {
+                                  title:
+                                    language === "it"
+                                      ? "Qualità dei dati"
+                                      : "Data quality",
+                                  description:
+                                    language === "it"
+                                      ? "Misura quanto i dati disponibili sono completi per effettuare un'analisi affidabile."
+                                      : "Measures how complete the available data is for reliable analysis.",
+                                  note:
+                                    language === "it"
+                                      ? "La presenza dei costi prodotto è uno dei fattori principali."
+                                      : "Product cost coverage is one of the main factors.",
+                                }
+                                : {
+                                  title:
+                                    language === "it"
+                                      ? "Capacità di intervento"
+                                      : "Execution readiness",
+                                  description:
+                                    language === "it"
+                                      ? "Indica quanto MarginLab dispone di segnali concreti e utilizzabili per suggerire azioni."
+                                      : "Shows how much actionable evidence MarginLab has available to recommend actions.",
+                                  note:
+                                    language === "it"
+                                      ? "Più è alto, maggiore è la possibilità di trasformare l'analisi in interventi concreti."
+                                      : "Higher scores indicate more opportunities to turn the analysis into concrete actions.",
+                                }
+                      }
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 11,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "end",
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: card.color,
+                        fontSize: 30,
+                        fontWeight: 950,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {card.value}
+                    </div>
+
+                    <div
+                      style={{
+                        color: "rgba(255,255,255,0.35)",
+                        fontSize: 10,
+                        fontWeight: 850,
+                      }}
+                    >
+                      /100
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 12,
+                      height: 7,
+                      borderRadius: 999,
+                      background: "rgba(255,255,255,0.08)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${card.value}%`,
+                        height: "100%",
+                        borderRadius: 999,
+                        background: card.color,
+                        boxShadow: `0 0 14px ${card.color}55`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+
+
+            <div
+              style={{
+                marginTop: 24,
+                display: "grid",
+                gridTemplateColumns: "0.9fr 1.1fr",
+                gap: 22,
+                alignItems: "start",
+              }}
+            >
+              <div
+                style={{
+                  borderRadius: 26,
+                  padding: "24px 24px 32px",
+                  background:
+                    "radial-gradient(circle at top right, rgba(56,189,248,0.10), transparent 40%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(56,189,248,0.18)",
+                }}
+              >
                 <div
                   style={{
-                    padding: 20,
-                    borderRadius: 17,
-                    color: "#86efac",
-                    background: "rgba(34,197,94,0.08)",
-                    border: "1px solid rgba(34,197,94,0.20)",
-                    fontWeight: 800,
+                    color: "#7dd3fc",
+                    fontSize: 11,
+                    fontWeight: 950,
+                    letterSpacing: "0.13em",
+                    textTransform: "uppercase",
                   }}
                 >
                   {language === "it"
-                    ? "Nessun nuovo segnale critico."
-                    : "No new critical signals."}
+                    ? "MISSIONE DELLA SETTIMANA"
+                    : "WEEKLY MISSION"}
                 </div>
-              )}
-            </div>
-          </div>
 
-          <div
-            style={{
-              marginTop: 24,
-              borderRadius: 26,
-              padding: 24,
-              background:
-                "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(255,115,60,0.20)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 16,
-                alignItems: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
+                <div
+                  style={{
+                    marginTop: 11,
+                    color: "#f8fafc",
+                    fontSize: 23,
+                    fontWeight: 950,
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {weeklyReport.title}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 9,
+                    color: "rgba(255,255,255,0.58)",
+                    fontSize: 12,
+                    fontWeight: 740,
+                    lineHeight: 1.55,
+                  }}
+                >
+                  {weeklyReport.recommendation}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    display: "grid",
+                    gridTemplateColumns: "repeat(3,1fr)",
+                    gap: 10,
+                  }}
+                >
+                  {[
+                    {
+                      label: language === "it" ? "Azioni" : "Actions",
+                      value: `${missionActions}`,
+                      color: "#f8fafc",
+                    },
+                    {
+                      label:
+                        language === "it" ? "Tempo stimato" : "Estimated Time",
+                      value: `${missionMinutes}m`,
+                      color: "#38bdf8",
+                    },
+                    {
+                      label:
+                        language === "it" ? "Potenziale" : "Potential",
+                      value:
+                        recoverableProfit > 0
+                          ? `+${money(recoverableProfit)}`
+                          : money(recoverableProfit),
+                      color: "#22c55e",
+
+                      tooltip: {
+                        title:
+                          language === "it"
+                            ? "Potenziale della missione"
+                            : "Mission potential",
+
+                        description:
+                          language === "it"
+                            ? "Stima dell'opportunità di profitto associata ai prodotti inclusi nella missione settimanale."
+                            : "Estimated profit opportunity associated with the products included in the weekly mission.",
+
+                        note:
+                          language === "it"
+                            ? "È un potenziale modellato sui dati disponibili, non profitto garantito."
+                            : "This is modeled potential based on available data, not guaranteed profit.",
+                      },
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      style={{
+                        padding: 14,
+                        borderRadius: 15,
+                        background: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          color: "rgba(255,255,255,0.42)",
+                          fontSize: 9,
+                          fontWeight: 950,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        <span>{item.label}</span>
+
+                        {"tooltip" in item && item.tooltip ? (
+                          <MetricTooltip content={item.tooltip} />
+                        ) : null}
+                      </div>
+
+                      <div
+                        style={{
+                          marginTop: 7,
+                          color: item.color,
+                          fontSize: 21,
+                          fontWeight: 950,
+                        }}
+                      >
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="primary-button"
+                  style={{
+                    width: "100%",
+                    marginTop: 20,
+                    padding: "16px 20px",
+                  }}
+                  onClick={() => navigate(weeklyReport.route)}
+                >
+                  {missionAlert?.actionLabel ??
+                    (language === "it"
+                      ? "Apri il piano operativo →"
+                      : "Open Action Plan →")}
+                </button>
+              </div>
+
+              <div className="panel" style={{ margin: 0, padding: 24 }}>
+                <div className="panel-eyebrow">
+                  {language === "it"
+                    ? "FEED DELLE DECISIONI"
+                    : "DECISION FEED"}
+                </div>
+
+                <h2 className="panel-title" style={{ marginTop: 6 }}>
+                  {language === "it"
+                    ? "I segnali che richiedono attenzione"
+                    : "Signals that need attention"}
+                </h2>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: 11,
+                    marginTop: 19,
+                  }}
+                >
+                  {decisionFeed.length > 0 ? (
+                    decisionFeed.map((item) => (
+                      <button
+                        key={`${item.when}-${item.title}`}
+                        type="button"
+                        onClick={() => navigate(item.route)}
+                        style={{
+                          width: "100%",
+                          display: "grid",
+                          gridTemplateColumns: "10px minmax(0,1fr) auto",
+                          gap: 13,
+                          padding: 14,
+                          borderRadius: 16,
+                          background: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.07)",
+                          cursor: "pointer",
+                          textAlign: "left",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 9,
+                            height: 9,
+                            marginTop: 5,
+                            borderRadius: "50%",
+                            background: item.color,
+                            boxShadow: `0 0 14px ${item.color}88`,
+                          }}
+                        />
+
+                        <div>
+                          <div
+                            style={{
+                              color: item.color,
+                              fontSize: 9,
+                              fontWeight: 950,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.1em",
+                            }}
+                          >
+                            {item.when}
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop: 5,
+                              color: "#f8fafc",
+                              fontSize: 14,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {item.title}
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop: 4,
+                              color: "rgba(255,255,255,0.52)",
+                              fontSize: 11,
+                              fontWeight: 730,
+                              lineHeight: 1.45,
+                            }}
+                          >
+                            {item.detail}
+                          </div>
+
+                          <div
+                            style={{
+                              marginTop: 8,
+                              color: item.color,
+                              fontSize: 10,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {item.actionLabel}
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            alignSelf: "center",
+                            color: item.color,
+                            fontSize: 16,
+                            fontWeight: 950,
+                          }}
+                        >
+                          →
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div
+                      style={{
+                        padding: 20,
+                        borderRadius: 17,
+                        color: "#86efac",
+                        background: "rgba(34,197,94,0.08)",
+                        border: "1px solid rgba(34,197,94,0.20)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Nessun nuovo segnale critico."
+                        : "No new critical signals."}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 24,
+                  borderRadius: 26,
+                  padding: 24,
+                  background:
+                    "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.20)",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 16,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        color: "#ff9a70",
+                        fontSize: 11,
+                        fontWeight: 950,
+                        letterSpacing: "0.13em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {language === "it"
+                        ? "ANALISI APPROFONDITA"
+                        : "DEEP ANALYSIS"}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 8,
+                        color: "#f8fafc",
+                        fontSize: 22,
+                        fontWeight: 950,
+                      }}
+                    >
+                      {language === "it"
+                        ? "Genera il report completo del consulente"
+                        : "Generate the full advisor report"}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 6,
+                        color: "rgba(255,255,255,0.54)",
+                        fontSize: 12,
+                        fontWeight: 730,
+                      }}
+                    >
+                      {language === "it"
+                        ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
+                        : "AI will use all real store data already loaded on this page."}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 18,
+                        display: "grid",
+                        gap: 8,
+                      }}
+                    >
+                      {[
+                        language === "it"
+                          ? "Analizza il rischio principale rilevato"
+                          : "Analyzes the highest-priority business risk",
+
+                        language === "it"
+                          ? "Individua i prodotti da correggere per primi"
+                          : "Identifies the first products to fix",
+
+                        language === "it"
+                          ? "Stima i gap di profitto e le azioni consigliate"
+                          : "Estimates profit gaps and recommended actions",
+                      ].map((item) => (
+                        <div
+                          key={item}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            color: "rgba(255,255,255,0.70)",
+                            fontSize: 12,
+                            fontWeight: 720,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: "#22c55e",
+                              boxShadow: "0 0 10px rgba(34,197,94,0.5)",
+                              flexShrink: 0,
+                            }}
+                          />
+
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+
+                  <aiFetcher.Form
+                    method="post"
+                    onSubmit={() => setShowAiReport(false)}
+                  >
+                    <input type="hidden" name="language" value={language} />
+                    <input type="hidden" name="period" value={period} />
+
+                    <button
+                      type="submit"
+                      className="primary-button"
+                      disabled={aiFetcher.state !== "idle"}
+                    >
+                      {aiFetcher.state !== "idle"
+                        ? language === "it"
+                          ? "Analisi in corso..."
+                          : "Analyzing..."
+                        : language === "it"
+                          ? "Genera analisi AI →"
+                          : "Generate AI Analysis →"}
+                    </button>
+
+                    <div
+                      style={{
+                        marginTop: 9,
+                        color: "rgba(255,255,255,0.42)",
+                        fontSize: 10,
+                        fontWeight: 750,
+                      }}
+                    >
+                      {language === "it"
+                        ? `${aiUsage.used} di ${aiUsage.limit} richieste AI utilizzate questo mese`
+                        : `${aiUsage.used} of ${aiUsage.limit} AI requests used this month`}
+                    </div>
+                  </aiFetcher.Form>
+                </div>
+
+                {showAiReport && aiFetcher.data?.text && (
+                  <div style={{ marginTop: 20 }}>
+                    <div
+                      style={{
+                        padding: 22,
+                        borderRadius: 19,
+                        background: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(34,197,94,0.20)",
+                        color: "rgba(255,255,255,0.84)",
+                        fontSize: 14,
+                        lineHeight: 1.85,
+                        fontWeight: 720,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {aiFetcher.data.text}
+                    </div>
+
+                    <div
+                      style={{
+                        marginTop: 14,
+                        display: "flex",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={() =>
+                          downloadAiReportPdf(String(aiFetcher.data?.text), language)
+                        }
+                      >
+                        {language === "it"
+                          ? "Scarica report PDF ↓"
+                          : "Download PDF report ↓"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 24,
+                  borderRadius: 26,
+                  padding: 24,
+                  background:
+                    "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+                  border: "1px solid rgba(255,115,60,0.20)",
+                }}
+              >
                 <div
                   style={{
                     color: "#ff9a70",
@@ -2352,9 +2701,7 @@ Rules:
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "ANALISI APPROFONDITA"
-                    : "DEEP ANALYSIS"}
+                  {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
                 </div>
 
                 <div
@@ -2366,8 +2713,8 @@ Rules:
                   }}
                 >
                   {language === "it"
-                    ? "Genera il report completo del consulente"
-                    : "Generate the full advisor report"}
+                    ? "Approfondisci una decisione specifica"
+                    : "Explore a specific decision"}
                 </div>
 
                 <div
@@ -2376,329 +2723,155 @@ Rules:
                     color: "rgba(255,255,255,0.54)",
                     fontSize: 12,
                     fontWeight: 730,
+                    lineHeight: 1.5,
                   }}
                 >
                   {language === "it"
-                    ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
-                    : "AI will use all real store data already loaded on this page."}
+                    ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
+                    : "Questions adapt to the risks and opportunities detected in your store."}
                 </div>
 
                 <div
                   style={{
                     marginTop: 18,
                     display: "grid",
-                    gap: 8,
+                    gridTemplateColumns: "repeat(4,minmax(0,1fr))",
+                    gap: 11,
                   }}
                 >
-                  {[
-                    language === "it"
-                      ? "Analizza il rischio principale rilevato"
-                      : "Analyzes the highest-priority business risk",
+                  {dynamicQuestions.map((presetQuestion) => (
+                    <button
+                      key={presetQuestion.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedQuestion(
+                          presetQuestion.id as SelectedQuestion,
+                        );
+                        setQuestion(presetQuestion.label);
 
-                    language === "it"
-                      ? "Individua i prodotti da correggere per primi"
-                      : "Identifies the first products to fix",
+                        const formData = new FormData();
+                        formData.append("intent", "ask");
+                        formData.append("question", presetQuestion.label);
+                        formData.append("language", language);
+                        formData.append("period", period);
 
-                    language === "it"
-                      ? "Stima i gap di profitto e le azioni consigliate"
-                      : "Estimates profit gaps and recommended actions",
-                  ].map((item) => (
-                    <div
-                      key={item}
+                        askFetcher.submit(formData, {
+                          method: "post",
+                        });
+                      }}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        color: "rgba(255,255,255,0.70)",
+                        padding: "14px 15px",
+                        minHeight: 76,
+                        borderRadius: 15,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        color: "#f8fafc",
+                        background:
+                          selectedQuestion === presetQuestion.id
+                            ? "rgba(255,115,80,0.14)"
+                            : "rgba(255,255,255,0.035)",
+                        border:
+                          selectedQuestion === presetQuestion.id
+                            ? "1px solid rgba(255,115,80,0.42)"
+                            : "1px solid rgba(255,255,255,0.07)",
                         fontSize: 12,
-                        fontWeight: 720,
+                        fontWeight: 850,
+                        lineHeight: 1.4,
                       }}
                     >
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          borderRadius: "50%",
-                          background: "#22c55e",
-                          boxShadow: "0 0 10px rgba(34,197,94,0.5)",
-                          flexShrink: 0,
-                        }}
-                      />
-
-                      <span>{item}</span>
-                    </div>
+                      {presetQuestion.label}
+                    </button>
                   ))}
                 </div>
 
-              </div>
+                <askFetcher.Form method="post">
+                  <input type="hidden" name="intent" value="ask" />
+                  <input type="hidden" name="language" value={language} />
+                  <input type="hidden" name="period" value={period} />
 
-              <aiFetcher.Form
-                method="post"
-                onSubmit={() => setShowAiReport(false)}
-              >
-                <input type="hidden" name="language" value={language} />
-                <input type="hidden" name="period" value={period} />
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={aiFetcher.state !== "idle"}
-                >
-                  {aiFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Analisi in corso..."
-                      : "Analyzing..."
-                    : language === "it"
-                      ? "Genera analisi AI →"
-                      : "Generate AI Analysis →"}
-                </button>
-
-                <div
-                  style={{
-                    marginTop: 9,
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 10,
-                    fontWeight: 750,
-                  }}
-                >
-                  {language === "it"
-                    ? `${aiUsage.used} di ${aiUsage.limit} richieste AI utilizzate questo mese`
-                    : `${aiUsage.used} of ${aiUsage.limit} AI requests used this month`}
-                </div>
-              </aiFetcher.Form>
-            </div>
-
-            {showAiReport && aiFetcher.data?.text && (
-              <div style={{ marginTop: 20 }}>
-                <div
-                  style={{
-                    padding: 22,
-                    borderRadius: 19,
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(34,197,94,0.20)",
-                    color: "rgba(255,255,255,0.84)",
-                    fontSize: 14,
-                    lineHeight: 1.85,
-                    fontWeight: 720,
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {aiFetcher.data.text}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 14,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={() =>
-                      downloadAiReportPdf(String(aiFetcher.data?.text), language)
-                    }
+                  <div
+                    style={{
+                      marginTop: 16,
+                      display: "grid",
+                      gridTemplateColumns: "1fr auto",
+                      gap: 11,
+                    }}
                   >
-                    {language === "it"
-                      ? "Scarica report PDF ↓"
-                      : "Download PDF report ↓"}
-                  </button>
-                </div>
+                    <input
+                      name="question"
+                      value={question}
+                      onChange={(event) => setQuestion(event.target.value)}
+                      placeholder={
+                        language === "it"
+                          ? "Fai una domanda sulla redditività..."
+                          : "Ask a profitability question..."
+                      }
+                      style={{
+                        width: "100%",
+                        padding: "15px 16px",
+                        borderRadius: 14,
+                        color: "#ffffff",
+                        background: "rgba(255,255,255,0.035)",
+                        border: "1px solid rgba(255,115,60,0.18)",
+                        outline: "none",
+                        fontWeight: 800,
+                      }}
+                    />
+
+                    <button
+                      type="submit"
+                      className="primary-button"
+                      disabled={askFetcher.state !== "idle" || !question.trim()}
+                    >
+                      {askFetcher.state !== "idle"
+                        ? language === "it"
+                          ? "Elaborazione..."
+                          : "Thinking..."
+                        : language === "it"
+                          ? "Chiedi all'AI →"
+                          : "Ask AI →"}
+                    </button>
+                  </div>
+                </askFetcher.Form>
+
+                {askFetcher.data?.text && (
+                  <div
+                    style={{
+                      marginTop: 18,
+                      padding: 21,
+                      borderRadius: 18,
+                      background: "rgba(34,197,94,0.055)",
+                      border: "1px solid rgba(34,197,94,0.20)",
+                      color: "rgba(255,255,255,0.84)",
+                      lineHeight: 1.8,
+                      fontSize: 14,
+                      fontWeight: 730,
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {askFetcher.data.text}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              marginTop: 24,
-              borderRadius: 26,
-              padding: 24,
-              background:
-                "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-              border: "1px solid rgba(255,115,60,0.20)",
-            }}
-          >
-            <div
-              style={{
-                color: "#ff9a70",
-                fontSize: 11,
-                fontWeight: 950,
-                letterSpacing: "0.13em",
-                textTransform: "uppercase",
-              }}
-            >
-              {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 8,
-                color: "#f8fafc",
-                fontSize: 22,
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Approfondisci una decisione specifica"
-                : "Explore a specific decision"}
-            </div>
-
-            <div
-              style={{
-                marginTop: 6,
-                color: "rgba(255,255,255,0.54)",
-                fontSize: 12,
-                fontWeight: 730,
-                lineHeight: 1.5,
-              }}
-            >
-              {language === "it"
-                ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
-                : "Questions adapt to the risks and opportunities detected in your store."}
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                display: "grid",
-                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                gap: 11,
-              }}
-            >
-              {dynamicQuestions.map((presetQuestion) => (
-                <button
-                  key={presetQuestion.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedQuestion(
-                      presetQuestion.id as SelectedQuestion,
-                    );
-                    setQuestion(presetQuestion.label);
-
-                    const formData = new FormData();
-                    formData.append("intent", "ask");
-                    formData.append("question", presetQuestion.label);
-                    formData.append("language", language);
-                    formData.append("period", period);
-
-                    askFetcher.submit(formData, {
-                      method: "post",
-                    });
-                  }}
-                  style={{
-                    padding: "14px 15px",
-                    minHeight: 76,
-                    borderRadius: 15,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    color: "#f8fafc",
-                    background:
-                      selectedQuestion === presetQuestion.id
-                        ? "rgba(255,115,80,0.14)"
-                        : "rgba(255,255,255,0.035)",
-                    border:
-                      selectedQuestion === presetQuestion.id
-                        ? "1px solid rgba(255,115,80,0.42)"
-                        : "1px solid rgba(255,255,255,0.07)",
-                    fontSize: 12,
-                    fontWeight: 850,
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {presetQuestion.label}
-                </button>
-              ))}
-            </div>
-
-            <askFetcher.Form method="post">
-              <input type="hidden" name="intent" value="ask" />
-              <input type="hidden" name="language" value={language} />
-              <input type="hidden" name="period" value={period} />
 
               <div
                 style={{
-                  marginTop: 16,
-                  display: "grid",
-                  gridTemplateColumns: "1fr auto",
-                  gap: 11,
-                }}
-              >
-                <input
-                  name="question"
-                  value={question}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  placeholder={
-                    language === "it"
-                      ? "Fai una domanda sulla redditività..."
-                      : "Ask a profitability question..."
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "15px 16px",
-                    borderRadius: 14,
-                    color: "#ffffff",
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,115,60,0.18)",
-                    outline: "none",
-                    fontWeight: 800,
-                  }}
-                />
-
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={askFetcher.state !== "idle" || !question.trim()}
-                >
-                  {askFetcher.state !== "idle"
-                    ? language === "it"
-                      ? "Elaborazione..."
-                      : "Thinking..."
-                    : language === "it"
-                      ? "Chiedi all'AI →"
-                      : "Ask AI →"}
-                </button>
-              </div>
-            </askFetcher.Form>
-
-            {askFetcher.data?.text && (
-              <div
-                style={{
-                  marginTop: 18,
-                  padding: 21,
+                  marginTop: 22,
+                  padding: 18,
                   borderRadius: 18,
-                  background: "rgba(34,197,94,0.055)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "rgba(255,255,255,0.84)",
-                  lineHeight: 1.8,
-                  fontSize: 14,
-                  fontWeight: 730,
-                  whiteSpace: "pre-wrap",
+                  background: "rgba(255,115,60,0.07)",
+                  border: "1px solid rgba(255,115,60,0.18)",
+                  color: "rgba(255,255,255,0.64)",
+                  lineHeight: 1.6,
+                  fontSize: 12,
+                  fontWeight: 700,
                 }}
               >
-                {askFetcher.data.text}
+                {language === "it"
+                  ? "Profit Copilot utilizza la base economica tax-aware derivata dai dati Shopify, le ipotesi gestionali salvate nel Business Model Studio e i segnali del Profit Monitor. La riserva fiscale gestionale resta separata dal trattamento VAT/GST/Sales Tax. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
+                  : "Profit Copilot uses the tax-aware economic basis derived from Shopify data, managerial assumptions saved in Business Model Studio and Profit Monitor signals. The business tax reserve remains separate from VAT/GST/Sales Tax treatment. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
               </div>
-            )}
-          </div>
-
-          <div
-            style={{
-              marginTop: 22,
-              padding: 18,
-              borderRadius: 18,
-              background: "rgba(255,115,60,0.07)",
-              border: "1px solid rgba(255,115,60,0.18)",
-              color: "rgba(255,255,255,0.64)",
-              lineHeight: 1.6,
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          >
-            {language === "it"
-              ? "Profit Copilot utilizza la base economica tax-aware derivata dai dati Shopify, le ipotesi gestionali salvate nel Business Model Studio e i segnali del Profit Monitor. La riserva fiscale gestionale resta separata dal trattamento VAT/GST/Sales Tax. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
-              : "Profit Copilot uses the tax-aware economic basis derived from Shopify data, managerial assumptions saved in Business Model Studio and Profit Monitor signals. The business tax reserve remains separate from VAT/GST/Sales Tax treatment. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
-          </div>
-          </div>
+            </div>
           </div>
         </div>
       </div>
