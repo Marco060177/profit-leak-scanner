@@ -1,7 +1,8 @@
 import * as React from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import { sendEmail } from "~/services/email.server";
 import { authenticate } from "~/shopify.server";
 import {
   getBillingStatus,
@@ -10,6 +11,25 @@ import {
 import { getStoredLanguage } from "~/utils/i18n";
 
 import "~/styles/dashboard.css";
+
+
+type SupportActionData = {
+  ok: boolean;
+  error?: string;
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function isValidEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
 
 export async function loader({ request }: { request: Request }) {
   const { admin } = await authenticate.admin(request);
@@ -29,8 +49,148 @@ export async function loader({ request }: { request: Request }) {
   };
 }
 
+
+export async function action({ request }: { request: Request }) {
+  const { session } = await authenticate.admin(request);
+  const formData = await request.formData();
+
+  const language =
+    String(formData.get("language") ?? "en") === "it" ? "it" : "en";
+
+  const email = String(formData.get("email") ?? "").trim();
+  const topic = String(formData.get("topic") ?? "").trim();
+  const subject = String(formData.get("subject") ?? "").trim();
+  const message = String(formData.get("message") ?? "").trim();
+
+  const respondError = (
+    it: string,
+    en: string,
+    status = 400,
+  ) =>
+    Response.json(
+      {
+        ok: false,
+        error: language === "it" ? it : en,
+      } satisfies SupportActionData,
+      { status },
+    );
+
+  if (!email || !isValidEmail(email)) {
+    return respondError(
+      "Inserisci un indirizzo email valido.",
+      "Enter a valid email address.",
+    );
+  }
+
+  if (!topic) {
+    return respondError(
+      "Seleziona l'argomento della richiesta.",
+      "Select a support topic.",
+    );
+  }
+
+  if (!subject || subject.length < 3) {
+    return respondError(
+      "Inserisci un oggetto di almeno 3 caratteri.",
+      "Enter a subject of at least 3 characters.",
+    );
+  }
+
+  if (subject.length > 140) {
+    return respondError(
+      "L'oggetto è troppo lungo.",
+      "The subject is too long.",
+    );
+  }
+
+  if (!message || message.length < 10) {
+    return respondError(
+      "Descrivi il problema con almeno 10 caratteri.",
+      "Describe the issue using at least 10 characters.",
+    );
+  }
+
+  if (message.length > 6000) {
+    return respondError(
+      "Il messaggio è troppo lungo.",
+      "The message is too long.",
+    );
+  }
+
+  const supportEmail = "support@marginlab.net";
+  const shop = session.shop;
+
+  const safeEmail = escapeHtml(email);
+  const safeTopic = escapeHtml(topic);
+  const safeSubject = escapeHtml(subject);
+  const safeShop = escapeHtml(shop);
+  const safeMessage = escapeHtml(message).replace(/\n/g, "<br />");
+
+  const emailSubject = `[MarginLab Support] ${shop} — ${subject}`;
+
+  const text = [
+    "MarginLab Support Request",
+    "",
+    `Store: ${shop}`,
+    `Contact email: ${email}`,
+    `Topic: ${topic}`,
+    `Subject: ${subject}`,
+    "",
+    message,
+  ].join("\n");
+
+  const html = `
+    <div style="margin:0;padding:32px;background:#050910;font-family:Arial,Helvetica,sans-serif;color:#f8fafc;">
+      <div style="max-width:700px;margin:0 auto;">
+        <div style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ff875f;">
+          MARGINLAB SUPPORT REQUEST
+        </div>
+        <div style="margin-top:10px;font-size:30px;line-height:1.2;font-weight:900;color:#ffffff;">
+          ${safeSubject}
+        </div>
+        <div style="margin-top:20px;padding:16px;border-radius:14px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
+          <div style="font-size:12px;line-height:1.8;color:#cbd5e1;">
+            <strong style="color:#ffffff;">Store:</strong> ${safeShop}<br />
+            <strong style="color:#ffffff;">Contact email:</strong> ${safeEmail}<br />
+            <strong style="color:#ffffff;">Topic:</strong> ${safeTopic}
+          </div>
+        </div>
+        <div style="margin-top:18px;padding:18px;border-radius:16px;background:#0b1220;border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">Message</div>
+          <div style="margin-top:10px;font-size:14px;line-height:1.75;color:#cbd5e1;">
+            ${safeMessage}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendEmail({
+      to: supportEmail,
+      subject: emailSubject,
+      html,
+      text,
+    });
+
+    return Response.json({
+      ok: true,
+    } satisfies SupportActionData);
+  } catch (sendError) {
+    console.error("[MarginLab Support] Email send failed", sendError);
+
+    return respondError(
+      "Non è stato possibile inviare il messaggio. Riprova tra poco.",
+      "The message could not be sent. Please try again shortly.",
+      500,
+    );
+  }
+}
+
 export default function SupportPage() {
   const navigate = useNavigate();
+  const supportFetcher = useFetcher<SupportActionData>();
+  const formRef = React.useRef<HTMLFormElement | null>(null);
 
   const {
     growthAccess,
@@ -43,7 +203,13 @@ export default function SupportPage() {
   const language =
     getStoredLanguage() === "it" ? "it" : "en";
 
-  const supportEmail = "support@marginlab.net";
+  const sending = supportFetcher.state !== "idle";
+
+  React.useEffect(() => {
+    if (supportFetcher.data?.ok) {
+      formRef.current?.reset();
+    }
+  }, [supportFetcher.data?.ok]);
 
   const whatsappMessage =
     language === "it"
@@ -260,7 +426,7 @@ export default function SupportPage() {
             style={{
               position: "relative",
               overflow: "hidden",
-              minHeight: 330,
+              minHeight: 430,
               padding: 26,
               borderRadius: 26,
               background:
@@ -298,9 +464,7 @@ export default function SupportPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "EMAIL SUPPORT"
-                : "EMAIL SUPPORT"}
+              EMAIL SUPPORT
             </div>
 
             <h2
@@ -313,8 +477,8 @@ export default function SupportPage() {
               }}
             >
               {language === "it"
-                ? "Supporto MarginLab"
-                : "MarginLab Support"}
+                ? "Scrivi direttamente a MarginLab"
+                : "Message MarginLab directly"}
             </h2>
 
             <p
@@ -328,76 +492,312 @@ export default function SupportPage() {
               }}
             >
               {language === "it"
-                ? "Scrivici per problemi tecnici, configurazione dell'app, domande sulle metriche o chiarimenti sull'utilizzo delle funzionalità MarginLab."
-                : "Contact us for technical issues, app setup, metric questions or help using MarginLab features."}
+                ? "Il messaggio viene inviato direttamente al supporto MarginLab senza dipendere dal programma di posta installato sul tuo dispositivo."
+                : "Your message is sent directly to MarginLab support without relying on an email application installed on your device."}
             </p>
 
-            <div
-              style={{
-                marginTop: 22,
-                padding: 15,
-                borderRadius: 15,
-                background:
-                  "rgba(255,255,255,0.035)",
-                border:
-                  "1px solid rgba(255,255,255,0.07)",
-              }}
+            <supportFetcher.Form
+              ref={formRef}
+              method="post"
+              style={{ marginTop: 20 }}
             >
-              <div
-                style={{
-                  color:
-                    "rgba(255,255,255,0.38)",
-                  fontSize: 9,
-                  fontWeight: 950,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.10em",
-                }}
-              >
-                {language === "it"
-                  ? "Disponibile con"
-                  : "Available with"}
-              </div>
+              <input
+                type="hidden"
+                name="language"
+                value={language}
+              />
 
               <div
                 style={{
-                  marginTop: 6,
-                  color: "#f8fafc",
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(2,minmax(0,1fr))",
+                  gap: 12,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      color:
+                        "rgba(255,255,255,0.48)",
+                      fontSize: 10,
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      marginBottom: 7,
+                    }}
+                  >
+                    {language === "it"
+                      ? "La tua email"
+                      : "Your email"}
+                  </div>
+
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    style={{
+                      width: "100%",
+                      boxSizing: "border-box",
+                      minHeight: 48,
+                      padding: "0 14px",
+                      borderRadius: 13,
+                      color: "#f8fafc",
+                      background:
+                        "rgba(4,8,15,0.72)",
+                      border:
+                        "1px solid rgba(56,189,248,0.18)",
+                      outline: "none",
+                      fontWeight: 760,
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <div
+                    style={{
+                      color:
+                        "rgba(255,255,255,0.48)",
+                      fontSize: 10,
+                      fontWeight: 900,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      marginBottom: 7,
+                    }}
+                  >
+                    {language === "it"
+                      ? "Argomento"
+                      : "Topic"}
+                  </div>
+
+                  <select
+                    name="topic"
+                    required
+                    defaultValue=""
+                    style={{
+                      width: "100%",
+                      boxSizing: "border-box",
+                      minHeight: 48,
+                      padding: "0 14px",
+                      borderRadius: 13,
+                      color: "#f8fafc",
+                      background:
+                        "rgba(4,8,15,0.92)",
+                      border:
+                        "1px solid rgba(56,189,248,0.18)",
+                      outline: "none",
+                      fontWeight: 760,
+                    }}
+                  >
+                    <option value="" disabled>
+                      {language === "it"
+                        ? "Seleziona..."
+                        : "Select..."}
+                    </option>
+                    <option value="Setup & configuration">
+                      {language === "it"
+                        ? "Configurazione"
+                        : "Setup & configuration"}
+                    </option>
+                    <option value="Metrics & analysis">
+                      {language === "it"
+                        ? "Metriche e analisi"
+                        : "Metrics & analysis"}
+                    </option>
+                    <option value="Features & usage">
+                      {language === "it"
+                        ? "Funzionalità e utilizzo"
+                        : "Features & usage"}
+                    </option>
+                    <option value="Technical issue">
+                      {language === "it"
+                        ? "Problema tecnico"
+                        : "Technical issue"}
+                    </option>
+                    <option value="Billing">
+                      {language === "it"
+                        ? "Piani e fatturazione"
+                        : "Plans & billing"}
+                    </option>
+                    <option value="Other">
+                      {language === "it"
+                        ? "Altro"
+                        : "Other"}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <div
+                  style={{
+                    color:
+                      "rgba(255,255,255,0.48)",
+                    fontSize: 10,
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 7,
+                  }}
+                >
+                  {language === "it"
+                    ? "Oggetto"
+                    : "Subject"}
+                </div>
+
+                <input
+                  type="text"
+                  name="subject"
+                  required
+                  maxLength={140}
+                  placeholder={
+                    language === "it"
+                      ? "Descrivi brevemente la richiesta"
+                      : "Briefly describe your request"
+                  }
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    minHeight: 48,
+                    padding: "0 14px",
+                    borderRadius: 13,
+                    color: "#f8fafc",
+                    background:
+                      "rgba(4,8,15,0.72)",
+                    border:
+                      "1px solid rgba(56,189,248,0.18)",
+                    outline: "none",
+                    fontWeight: 760,
+                  }}
+                />
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <div
+                  style={{
+                    color:
+                      "rgba(255,255,255,0.48)",
+                    fontSize: 10,
+                    fontWeight: 900,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    marginBottom: 7,
+                  }}
+                >
+                  {language === "it"
+                    ? "Messaggio"
+                    : "Message"}
+                </div>
+
+                <textarea
+                  name="message"
+                  required
+                  minLength={10}
+                  maxLength={6000}
+                  placeholder={
+                    language === "it"
+                      ? "Spiega cosa ti serve o descrivi il problema..."
+                      : "Tell us what you need or describe the issue..."
+                  }
+                  style={{
+                    width: "100%",
+                    boxSizing: "border-box",
+                    minHeight: 145,
+                    resize: "vertical",
+                    padding: 14,
+                    borderRadius: 13,
+                    color: "#f8fafc",
+                    background:
+                      "rgba(4,8,15,0.72)",
+                    border:
+                      "1px solid rgba(56,189,248,0.18)",
+                    outline: "none",
+                    lineHeight: 1.6,
+                    fontWeight: 760,
+                  }}
+                />
+              </div>
+
+              {supportFetcher.data?.ok && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: 13,
+                    borderRadius: 13,
+                    color: "#bbf7d0",
+                    background:
+                      "rgba(34,197,94,0.08)",
+                    border:
+                      "1px solid rgba(34,197,94,0.20)",
+                    fontSize: 11,
+                    fontWeight: 850,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  ✓{" "}
+                  {language === "it"
+                    ? "Messaggio inviato correttamente a MarginLab."
+                    : "Your message was sent successfully to MarginLab."}
+                </div>
+              )}
+
+              {supportFetcher.data?.error && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: 13,
+                    borderRadius: 13,
+                    color: "#fecaca",
+                    background:
+                      "rgba(239,68,68,0.08)",
+                    border:
+                      "1px solid rgba(239,68,68,0.20)",
+                    fontSize: 11,
+                    fontWeight: 850,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {supportFetcher.data.error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={sending}
+                style={{
+                  marginTop: 16,
+                  minHeight: 48,
+                  padding: "0 18px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  borderRadius: 14,
+                  color: "#ffffff",
+                  cursor: sending
+                    ? "wait"
+                    : "pointer",
+                  opacity: sending ? 0.7 : 1,
+                  background:
+                    "linear-gradient(135deg, rgba(56,189,248,0.92), rgba(37,99,235,0.86))",
+                  border:
+                    "1px solid rgba(125,211,252,0.24)",
                   fontSize: 13,
-                  fontWeight: 900,
+                  fontWeight: 950,
                 }}
               >
-                Starter + Growth
-              </div>
-            </div>
-
-            <a
-              href={`mailto:${supportEmail}?subject=${encodeURIComponent(
-                "MarginLab Support",
-              )}`}
-              style={{
-                marginTop: 20,
-                minHeight: 48,
-                padding: "0 18px",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                borderRadius: 14,
-                color: "#ffffff",
-                textDecoration: "none",
-                background:
-                  "linear-gradient(135deg, rgba(56,189,248,0.85), rgba(37,99,235,0.82))",
-                border:
-                  "1px solid rgba(125,211,252,0.24)",
-                fontSize: 13,
-                fontWeight: 950,
-              }}
-            >
-              {language === "it"
-                ? "Scrivi a MarginLab"
-                : "Email MarginLab"}
-              <span>→</span>
-            </a>
+                {sending
+                  ? language === "it"
+                    ? "Invio..."
+                    : "Sending..."
+                  : language === "it"
+                    ? "Invia messaggio"
+                    : "Send message"}
+                {!sending && <span>→</span>}
+              </button>
+            </supportFetcher.Form>
           </article>
 
           {/* WHATSAPP */}
