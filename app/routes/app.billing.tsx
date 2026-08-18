@@ -45,6 +45,7 @@ export default function Billing() {
   const fetcher = useFetcher();
   const navigate = useNavigate();
   const language = getStoredLanguage();
+  const isIt = language === "it";
 
   React.useEffect(() => {
     const data = fetcher.data as any;
@@ -58,10 +59,72 @@ export default function Billing() {
   const error = data && data.ok === false ? data.error : null;
   const isLoading = fetcher.state !== "idle";
 
+  const starterFeatures = isIt
+    ? [
+        ["Profit Leak Dashboard", "Panoramica immediata di margini, perdite e rischi."],
+        ["Product Risk Analysis", "Prodotti critici, margini deboli, costi mancanti e target price."],
+        ["Profit Intelligence", "Qualità del margine, concentrazione, sconti, rimborsi e shipping."],
+        ["Tax-aware economics", "Economia fiscale integrata e profili avanzati nei mercati supportati."],
+        ["CSV + PDF export", "Porta fuori da MarginLab dati e report pronti da condividere."],
+        ["Product email alerts", "Avviso quando viene venduto un prodotto con problemi di redditività."],
+        ["Weekly Profit Report", "Riepilogo settimanale di numeri, rischi e prossime azioni."],
+        ["Email support", "Assistenza diretta dall'interno di MarginLab."],
+      ]
+    : [
+        ["Profit Leak Dashboard", "Immediate view of margins, losses and risks."],
+        ["Product Risk Analysis", "Critical products, weak margins, missing costs and target prices."],
+        ["Profit Intelligence", "Margin quality, concentration, discounts, refunds and shipping."],
+        ["Tax-aware economics", "Integrated tax economics and advanced profiles in supported markets."],
+        ["CSV + PDF export", "Take MarginLab data and share-ready reports outside the app."],
+        ["Product email alerts", "Get notified when a problematic product is sold."],
+        ["Weekly Profit Report", "A weekly summary of numbers, risks and next actions."],
+        ["Email support", "Direct support from inside MarginLab."],
+      ];
+
+  const growthFeatures = isIt
+    ? [
+        ["Profit Action Center", "Trasforma i segnali in una coda di priorità operative."],
+        ["Alert Center", "Monitora e gestisci i segnali che richiedono attenzione."],
+        ["AI Advisor Pro", "Interroga i dati dello store e approfondisci decisioni e rischi."],
+        ["Recovery Simulator V2", "Simula prezzi, costi e margini prima di modificare lo store."],
+        ["Profit Forecast V2", "Proietta l'andamento del profitto e confronta scenari futuri."],
+        ["Business Model Studio", "Modella costi, fee e leve economiche oltre il margine prodotto."],
+        ["Advanced recommendations", "Priorità, opportunità di recupero e indicazioni operative evolute."],
+        ["WhatsApp direct support", "Canale diretto di assistenza riservato agli utenti Growth."],
+      ]
+    : [
+        ["Profit Action Center", "Turn signals into a prioritized operational queue."],
+        ["Alert Center", "Monitor and manage signals that deserve attention."],
+        ["AI Advisor Pro", "Explore store data and dig deeper into decisions and risks."],
+        ["Recovery Simulator V2", "Simulate prices, costs and margins before changing your store."],
+        ["Profit Forecast V2", "Project profit performance and compare future scenarios."],
+        ["Business Model Studio", "Model costs, fees and economic levers beyond product margin."],
+        ["Advanced recommendations", "Priorities, recovery opportunities and deeper operational guidance."],
+        ["WhatsApp direct support", "A direct support channel reserved for Growth users."],
+      ];
+
+  const openShopifyPricing = () => (
+    <fetcher.Form method="post" style={styles.form}>
+      <button
+        type="submit"
+        style={styles.primaryBtn}
+        disabled={isLoading}
+      >
+        {isLoading
+          ? isIt
+            ? "Apertura dei piani Shopify..."
+            : "Opening Shopify plans..."
+          : isIt
+            ? "Scegli questo piano su Shopify →"
+            : "Choose this plan on Shopify →"}
+      </button>
+    </fetcher.Form>
+  );
+
   return (
     <div style={styles.page}>
-      <div style={styles.backgroundGlowOne} />
-      <div style={styles.backgroundGlowTwo} />
+      <div style={styles.glowOne} />
+      <div style={styles.glowTwo} />
 
       <div style={styles.container}>
         <div style={styles.topBar}>
@@ -69,309 +132,326 @@ export default function Billing() {
             MARGIN<span style={{ color: "#ff5a36" }}>LAB</span>
           </div>
 
-          <button
-            type="button"
-            style={styles.backTopBtn}
-            onClick={() => navigate("/app")}
-          >
-            {language === "it" ? "Torna alla dashboard" : "Back to dashboard"}
-          </button>
-        </div>
-
-        <div style={styles.hero}>
-          <div style={styles.heroLeft}>
-            <div style={styles.badge}>
-              <span style={styles.badgeDot} />
-              {language === "it"
-                ? "PIATTAFORMA PER L'ANALISI DEI MARGINI"
-                : "MARGIN INTELLIGENCE PLATFORM"}
+          <div style={styles.topRight}>
+            <div style={styles.shopifyPill}>
+              {isIt ? "Pagamento gestito da Shopify" : "Billing managed by Shopify"}
             </div>
 
-            <h1 style={styles.title}>
-              {language === "it"
-                ? "Scegli il piano più adatto per analizzare e migliorare la redditività del tuo negozio."
-                : "Choose the margin intelligence plan for your store."}
-            </h1>
-
-            <p style={styles.subtitle}>
-              {language === "it"
-                ? "Scegli Starter per l'analisi essenziale oppure Growth per strumenti avanzati di simulazione, previsione, monitoraggio e AI."
-                : "Choose Starter for core margin intelligence or Growth for advanced simulation, forecasting, monitoring and AI tools."}
-            </p>
-
-            <div style={styles.heroStats}>
-              <div style={styles.statCard}>
-                <div style={styles.statLabel}>
-                  {language === "it" ? "Piani disponibili" : "Live plans"}
-                </div>
-                <div style={styles.statValue}>Starter + Growth</div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statLabel}>
-                  {language === "it" ? "Prova gratuita" : "Trial"}
-                </div>
-                <div style={styles.statValue}>
-                  {language === "it" ? "14 giorni" : "14 days"}
-                </div>
-              </div>
-
-              <div style={styles.statCard}>
-                <div style={styles.statLabel}>
-                  {language === "it" ? "Piano avanzato" : "Advanced plan"}
-                </div>
-                <div style={styles.statValue}>Growth</div>
-              </div>
-            </div>
-          </div>
-
-          <div style={styles.plansGrid}>
-            <div style={styles.pricingCard}>
-              <div style={styles.cardGlow} />
-
-              <div style={styles.planHeader}>
-                <div>
-                  <div style={styles.planEyebrow}>Starter</div>
-                  <div style={styles.planTitle}>
-                    {language === "it" ? "Analisi della redditività" : "Margin Intelligence"}
-                  </div>
-                </div>
-
-                <div style={styles.popularBadge}>
-                  {language === "it" ? "DISPONIBILE" : "LIVE"}
-                </div>
-              </div>
-
-              <div style={styles.priceRow}>
-                <div style={styles.price}>$39</div>
-                <div style={styles.priceMeta}>
-                  {language === "it" ? "/ mese" : "/ month"}
-                </div>
-              </div>
-
-              <div style={styles.note}>
-                {language === "it"
-                  ? "Prova gratuita di 14 giorni. Puoi annullare in qualsiasi momento tramite Shopify."
-                  : "14-day free trial. Cancel anytime through Shopify."}
-              </div>
-
-              <div style={styles.divider} />
-
-              <div style={styles.featureTitle}>
-                {language === "it" ? "Cosa include" : "What’s included"}
-              </div>
-
-              <div style={styles.featuresGrid}>
-                {(language === "it"
-                  ? [
-                      "Punteggio perdite di margine",
-                      "Tabella rischio prodotti",
-                      "Analisi di margini e costi",
-                      "Suggerimenti sul prezzo obiettivo",
-                      "Individuazione dei prodotti a basso margine",
-                      "Avvisi sui costi mancanti",
-                      "Raccomandazioni operative",
-                      "Esportazione CSV",
-                      "Collegamenti diretti ai prodotti Shopify",
-                    ]
-                  : [
-                      "Profit Leak Score",
-                      "Product risk table",
-                      "Margin and COGS analysis",
-                      "Target price suggestions",
-                      "Low-margin product detection",
-                      "Missing cost alerts",
-                      "Action Center recommendations",
-                      "CSV export",
-                      "Shopify product deep links",
-                    ]
-                ).map((feature) => (
-                  <div key={feature} style={styles.featureItem}>
-                    <span style={styles.check}>✓</span>
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              {error ? (
-                <div style={styles.errorBox}>
-                  <div style={styles.errorTitle}>
-                  {language === "it" ? "Errore di fatturazione" : "Billing error"}
-                </div>
-                  <div style={styles.errorText}>{String(error)}</div>
-                </div>
-              ) : null}
-
-              <fetcher.Form method="post" style={styles.form}>
-                <button
-                  type="submit"
-                  style={styles.primaryBtn}
-                  disabled={isLoading}
-                >
-                  {isLoading
-                    ? language === "it"
-                      ? "Apertura della pagina di pagamento Shopify..."
-                      : "Opening Shopify billing..."
-                    : language === "it"
-                      ? "Attiva il piano Starter"
-                      : "Activate Starter Plan"}
-                </button>
-              </fetcher.Form>
-
-              <button
-                type="button"
-                style={styles.secondaryBtn}
-                onClick={() => navigate("/app")}
-              >
-                {language === "it"
-                  ? "Continua in modalità anteprima"
-                  : "Continue in preview mode"}
-              </button>
-            </div>
-
-            <div style={styles.growthCard}>
-              <div style={styles.growthGlow} />
-
-              <div style={styles.planHeader}>
-                <div>
-                  <div style={styles.growthEyebrow}>Growth</div>
-                  <div style={styles.planTitle}>
-                    {language === "it" ? "Analisi avanzata" : "Advanced Intelligence"}
-                  </div>
-                </div>
-
-                <div style={styles.popularBadge}>
-                  {language === "it" ? "DISPONIBILE" : "LIVE"}
-                </div>
-              </div>
-
-              <div style={styles.priceRow}>
-                <div style={styles.price}>$99</div>
-                <div style={styles.priceMeta}>
-                  {language === "it" ? "/ mese" : "/ month"}
-                </div>
-              </div>
-
-              <div style={styles.note}>
-                {language === "it"
-                  ? "Prova gratuita di 14 giorni. Include gli strumenti avanzati MarginLab per analisi, simulazioni, previsioni e AI."
-                  : "14-day free trial. Includes MarginLab advanced tools for analysis, simulations, forecasting and AI."}
-              </div>
-
-              <div style={styles.divider} />
-
-              <div style={styles.featureTitle}>
-                {language === "it" ? "Cosa include" : "What’s included"}
-              </div>
-
-              <div style={styles.featuresGrid}>
-                {(language === "it"
-                  ? [
-                      "Profit Action Center",
-                      "Recovery Simulator V2",
-                      "Profit Forecast V2",
-                      "Business Model Studio",
-                      "AI Advisor Pro",
-                      "Profit Monitor avanzato",
-                      "Simulazioni e opportunità di recupero",
-                      "Analisi e previsioni avanzate",
-                      "Raccomandazioni operative avanzate",
-                      "Tutte le funzionalità Starter",
-                    ]
-                  : [
-                      "Profit Action Center",
-                      "Recovery Simulator V2",
-                      "Profit Forecast V2",
-                      "Business Model Studio",
-                      "AI Advisor Pro",
-                      "Advanced Profit Monitor",
-                      "Recovery simulations and opportunities",
-                      "Advanced analysis and forecasting",
-                      "Advanced operational recommendations",
-                      "Everything in Starter",
-                    ]
-                ).map((feature) => (
-                  <div key={feature} style={styles.featureItem}>
-                    <span style={styles.futureCheck}>↗</span>
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <fetcher.Form method="post" style={styles.form}>
-                <button
-                  type="submit"
-                  style={styles.primaryBtn}
-                  disabled={isLoading}
-                >
-                  {isLoading
-                    ? language === "it"
-                      ? "Apertura della pagina di pagamento Shopify..."
-                      : "Opening Shopify billing..."
-                    : language === "it"
-                      ? "Attiva il piano Growth"
-                      : "Activate Growth Plan"}
-                </button>
-              </fetcher.Form>
-
-              <div style={styles.earlyAccessText}>
-                {language === "it"
-                  ? "Gestisci attivazione, upgrade e abbonamento direttamente tramite Shopify."
-                  : "Manage activation, upgrades and your subscription directly through Shopify."}
-              </div>
-            </div>
+            <button
+              type="button"
+              style={styles.backBtn}
+              onClick={() => navigate("/app")}
+            >
+              {isIt ? "Torna alla dashboard" : "Back to dashboard"}
+            </button>
           </div>
         </div>
 
-        <div style={styles.bottomGrid}>
-          <div style={styles.infoPanel}>
-            <div style={styles.infoIcon}>⚠️</div>
-            <div>
-              <div style={styles.infoTitle}>
-                {language === "it"
-                  ? "Individua i problemi nascosti che riducono i margini"
-                  : "Detect hidden margin problems"}
-              </div>
-              <div style={styles.infoText}>
-                {language === "it"
-                  ? "Trova prodotti con margini bassi, costi mancanti e problemi di prezzo che riducono la redditività senza essere subito evidenti."
-                  : "Find low-margin products, missing costs and pricing issues that quietly reduce profitability."}
-              </div>
+        <section style={styles.hero}>
+          <div style={styles.badge}>
+            <span style={styles.badgeDot} />
+            MARGINLAB PLANS
+          </div>
+
+          <h1 style={styles.heroTitle}>
+            {isIt
+              ? "Capisci dove perdi profitto. Poi decidi cosa fare."
+              : "Understand where profit leaks. Then decide what to do."}
+          </h1>
+
+          <p style={styles.heroText}>
+            {isIt
+              ? "Starter costruisce una base completa di margin intelligence. Growth aggiunge simulazione, forecasting, AI e un vero sistema operativo per trasformare i segnali in decisioni."
+              : "Starter gives you a complete margin intelligence foundation. Growth adds simulation, forecasting, AI and an operating system for turning signals into decisions."}
+          </p>
+
+          <div style={styles.heroPills}>
+            <div style={styles.heroPill}>
+              <strong>14</strong>
+              <span>{isIt ? "giorni di prova gratuita" : "day free trial"}</span>
+            </div>
+            <div style={styles.heroPill}>
+              <strong>10</strong>
+              <span>{isIt ? "mercati tax-aware supportati" : "supported tax-aware markets"}</span>
+            </div>
+            <div style={styles.heroPill}>
+              <strong>2</strong>
+              <span>{isIt ? "piani, un'unica fonte dati" : "plans, one data foundation"}</span>
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.positioningStrip}>
+          <div style={styles.positioningItem}>
+            <div style={styles.positioningEyebrow}>STARTER · $39</div>
+            <div style={styles.positioningTitle}>
+              {isIt ? "Capisci il tuo vero profitto." : "Understand your real profit."}
+            </div>
+            <div style={styles.positioningText}>
+              {isIt
+                ? "Per merchant che vogliono vedere margini, rischi e problemi economici con chiarezza."
+                : "For merchants who want a clear view of margins, risks and economic problems."}
             </div>
           </div>
 
-          <div style={styles.infoPanel}>
-            <div style={styles.infoIcon}>📈</div>
+          <div style={styles.arrowBox}>→</div>
+
+          <div style={{ ...styles.positioningItem, ...styles.positioningGrowth }}>
+            <div style={styles.growthEyebrow}>GROWTH · $99</div>
+            <div style={styles.positioningTitle}>
+              {isIt ? "Decidi come migliorarlo." : "Decide how to improve it."}
+            </div>
+            <div style={styles.positioningText}>
+              {isIt
+                ? "Per merchant che vogliono simulare, prevedere, prioritizzare e agire."
+                : "For merchants who want to simulate, forecast, prioritize and act."}
+            </div>
+          </div>
+        </section>
+
+        <section style={styles.plansGrid}>
+          <article style={styles.starterCard}>
+            <div style={styles.cardTop}>
+              <div>
+                <div style={styles.starterEyebrow}>STARTER</div>
+                <h2 style={styles.planTitle}>Margin Intelligence</h2>
+              </div>
+              <div style={styles.liveBadge}>LIVE</div>
+            </div>
+
+            <div style={styles.priceRow}>
+              <div style={styles.price}>$39</div>
+              <div style={styles.priceMeta}>{isIt ? "/ mese" : "/ month"}</div>
+            </div>
+
+            <div style={styles.planPromise}>
+              {isIt
+                ? "Tutto ciò che serve per capire la redditività reale del tuo store."
+                : "Everything you need to understand the real profitability of your store."}
+            </div>
+
+            <div style={styles.trialLine}>
+              ✓ {isIt ? "14 giorni gratis · annulla tramite Shopify" : "14 days free · cancel through Shopify"}
+            </div>
+
+            <div style={styles.divider} />
+
+            <div style={styles.sectionLabel}>
+              {isIt ? "CORE MARGIN INTELLIGENCE" : "CORE MARGIN INTELLIGENCE"}
+            </div>
+
+            <div style={styles.featureList}>
+              {starterFeatures.map(([title, description]) => (
+                <div key={title} style={styles.featureRow}>
+                  <span style={styles.starterCheck}>✓</span>
+                  <div>
+                    <div style={styles.featureName}>{title}</div>
+                    <div style={styles.featureDescription}>{description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={styles.marketBox}>
+              <div style={styles.marketBoxTitle}>
+                {isIt ? "Tax-aware by design" : "Tax-aware by design"}
+              </div>
+              <div style={styles.marketBoxText}>
+                {isIt
+                  ? "MarginLab integra il trattamento fiscale nell'analisi economica e supporta profili avanzati in 10 mercati, usando i dati fiscali reali Shopify quando disponibili."
+                  : "MarginLab integrates tax treatment into economic analysis and supports advanced profiles across 10 markets, using actual Shopify tax data whenever available."}
+              </div>
+            </div>
+
+            {error ? (
+              <div style={styles.errorBox}>
+                <strong>{isIt ? "Errore di fatturazione" : "Billing error"}</strong>
+                <div style={{ marginTop: 5 }}>{String(error)}</div>
+              </div>
+            ) : null}
+
+            {openShopifyPricing()}
+
+            <button
+              type="button"
+              style={styles.previewBtn}
+              onClick={() => navigate("/app")}
+            >
+              {isIt ? "Continua in modalità anteprima" : "Continue in preview mode"}
+            </button>
+          </article>
+
+          <article style={styles.growthCard}>
+            <div style={styles.growthGlow} />
+
+            <div style={styles.cardTop}>
+              <div>
+                <div style={styles.growthEyebrow}>GROWTH</div>
+                <h2 style={styles.planTitle}>Advanced Intelligence</h2>
+              </div>
+              <div style={styles.recommendedBadge}>
+                {isIt ? "PIÙ COMPLETO" : "MOST COMPLETE"}
+              </div>
+            </div>
+
+            <div style={styles.priceRow}>
+              <div style={styles.price}>$99</div>
+              <div style={styles.priceMeta}>{isIt ? "/ mese" : "/ month"}</div>
+            </div>
+
+            <div style={styles.planPromise}>
+              {isIt
+                ? "Dall'analisi alla decisione: simula, prevedi e lavora sulle priorità che valgono di più."
+                : "From analysis to decision: simulate, forecast and work on the priorities that matter most."}
+            </div>
+
+            <div style={styles.growthTrialLine}>
+              ✓ {isIt ? "Include tutto Starter + strumenti avanzati" : "Everything in Starter + advanced tools"}
+            </div>
+
+            <div style={styles.divider} />
+
+            <div style={styles.sectionLabel}>
+              {isIt ? "DECISION & RECOVERY SYSTEM" : "DECISION & RECOVERY SYSTEM"}
+            </div>
+
+            <div style={styles.featureList}>
+              {growthFeatures.map(([title, description]) => (
+                <div key={title} style={styles.featureRow}>
+                  <span style={styles.growthCheck}>↗</span>
+                  <div>
+                    <div style={styles.featureName}>{title}</div>
+                    <div style={styles.featureDescription}>{description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={styles.growthValueBox}>
+              <div style={styles.growthValueTitle}>
+                {isIt ? "Non più dashboard da interpretare da solo." : "Not another dashboard you interpret alone."}
+              </div>
+              <div style={styles.growthValueText}>
+                {isIt
+                  ? "Growth collega segnali, priorità, simulazioni, forecasting e AI per aiutarti a scegliere dove intervenire prima."
+                  : "Growth connects signals, priorities, simulations, forecasting and AI to help you decide where to act first."}
+              </div>
+            </div>
+
+            {openShopifyPricing()}
+
+            <div style={styles.billingNote}>
+              {isIt
+                ? "Attivazione, upgrade e cancellazione sono gestiti direttamente da Shopify."
+                : "Activation, upgrades and cancellation are managed directly through Shopify."}
+            </div>
+          </article>
+        </section>
+
+        <section style={styles.compareSection}>
+          <div style={styles.compareHeader}>
             <div>
-              <div style={styles.infoTitle}>
-                {language === "it"
-                  ? "Trasforma i dati dei prodotti in azioni concrete"
-                  : "Turn product data into action"}
+              <div style={styles.compareEyebrow}>
+                {isIt ? "SCEGLI IN 10 SECONDI" : "CHOOSE IN 10 SECONDS"}
               </div>
-              <div style={styles.infoText}>
-                {language === "it"
-                  ? "Controlla prezzi obiettivo, opportunità di recupero stimate e prodotti che richiedono attenzione."
-                  : "Review target prices, estimated recovery opportunities and products requiring attention."}
-              </div>
+              <h2 style={styles.compareTitle}>
+                {isIt ? "Quale piano è giusto per te?" : "Which plan is right for you?"}
+              </h2>
+            </div>
+
+            <div style={styles.compareHint}>
+              {isIt
+                ? "Entrambi partono dagli stessi dati Shopify. Growth aggiunge gli strumenti per decidere e intervenire."
+                : "Both start from the same Shopify data. Growth adds the tools to decide and act."}
             </div>
           </div>
 
-          <div style={styles.infoPanel}>
-            <div style={styles.infoIcon}>🧠</div>
-            <div>
-              <div style={styles.infoTitle}>
-                {language === "it"
-                  ? "Progettato per migliorare la redditività"
-                  : "Built for margin intelligence"}
-              </div>
-              <div style={styles.infoText}>
-                {language === "it"
-                  ? "MarginLab va oltre i semplici report e offre analisi sempre più evolute per aiutare i negozi Shopify a migliorare i profitti."
-                  : "MarginLab is evolving beyond reporting into smarter profitability insights for Shopify stores."}
-              </div>
+          <div style={styles.compareGrid}>
+            {[
+              [
+                isIt ? "Vedere dove perdi margine" : "See where margin leaks",
+                true,
+                true,
+              ],
+              [
+                isIt ? "Analizzare prodotti e profitto" : "Analyze products and profit",
+                true,
+                true,
+              ],
+              [
+                isIt ? "Tax-aware economics" : "Tax-aware economics",
+                true,
+                true,
+              ],
+              [
+                isIt ? "CSV, PDF, alert email e report settimanale" : "CSV, PDF, email alerts and weekly report",
+                true,
+                true,
+              ],
+              [
+                isIt ? "Simulare recupero e modifiche" : "Simulate recovery and changes",
+                false,
+                true,
+              ],
+              [
+                isIt ? "Prevedere il profitto futuro" : "Forecast future profit",
+                false,
+                true,
+              ],
+              [
+                isIt ? "AI Advisor e priorità operative" : "AI Advisor and operational priorities",
+                false,
+                true,
+              ],
+              [
+                isIt ? "Alert Center + WhatsApp diretto" : "Alert Center + direct WhatsApp",
+                false,
+                true,
+              ],
+            ].map(([label, starter, growth]) => (
+              <React.Fragment key={String(label)}>
+                <div style={styles.compareLabel}>{String(label)}</div>
+                <div style={styles.compareStarter}>
+                  {starter ? "✓" : "—"}
+                </div>
+                <div style={styles.compareGrowth}>
+                  {growth ? "✓" : "—"}
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+
+          <div style={styles.compareLegend}>
+            <div style={styles.compareLegendSpacer} />
+            <div style={styles.compareLegendStarter}>STARTER · $39</div>
+            <div style={styles.compareLegendGrowth}>GROWTH · $99</div>
+          </div>
+        </section>
+
+        <section style={styles.finalStrip}>
+          <div>
+            <div style={styles.finalTitle}>
+              {isIt
+                ? "Parti dai numeri. Passa alle decisioni quando ne hai bisogno."
+                : "Start with the numbers. Move to decisions when you need them."}
+            </div>
+            <div style={styles.finalText}>
+              {isIt
+                ? "14 giorni di prova gratuita. Nessun pagamento gestito da MarginLab: l'abbonamento resta sotto il controllo di Shopify."
+                : "14-day free trial. MarginLab does not handle your payment directly: your subscription remains managed by Shopify."}
             </div>
           </div>
-        </div>
+
+          <fetcher.Form method="post">
+            <button
+              type="submit"
+              style={styles.finalBtn}
+              disabled={isLoading}
+            >
+              {isIt ? "Vedi i piani su Shopify →" : "View plans on Shopify →"}
+            </button>
+          </fetcher.Form>
+        </section>
       </div>
     </div>
   );
@@ -381,35 +461,35 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top left, rgba(255,115,60,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(255,115,60,0.08), transparent 28%), linear-gradient(180deg, #03050a 0%, #070b12 100%)",
-    color: "#f3f4f6",
+      "radial-gradient(circle at 8% 0%, rgba(255,90,54,0.12), transparent 25%), radial-gradient(circle at 92% 15%, rgba(34,197,94,0.07), transparent 25%), linear-gradient(180deg, #03050a 0%, #070b12 100%)",
+    color: "#f8fafc",
     fontFamily: "Inter, system-ui, sans-serif",
-    padding: 32,
+    padding: 28,
     position: "relative",
     overflow: "hidden",
   },
-  backgroundGlowOne: {
+  glowOne: {
     position: "absolute",
     top: -180,
-    left: -160,
-    width: 420,
-    height: 420,
+    left: -170,
+    width: 440,
+    height: 440,
     borderRadius: "50%",
-    background: "rgba(255,115,60,0.10)",
-    filter: "blur(70px)",
-  },
-  backgroundGlowTwo: {
-    position: "absolute",
-    bottom: -180,
-    right: -140,
-    width: 460,
-    height: 460,
-    borderRadius: "50%",
-    background: "rgba(255,115,60,0.07)",
+    background: "rgba(255,90,54,0.08)",
     filter: "blur(80px)",
   },
+  glowTwo: {
+    position: "absolute",
+    top: 280,
+    right: -220,
+    width: 500,
+    height: 500,
+    borderRadius: "50%",
+    background: "rgba(34,197,94,0.055)",
+    filter: "blur(90px)",
+  },
   container: {
-    maxWidth: 1480,
+    maxWidth: 1380,
     margin: "0 auto",
     position: "relative",
     zIndex: 2,
@@ -419,9 +499,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: "space-between",
     alignItems: "center",
     gap: 16,
-    marginBottom: 36,
-    padding: "14px 16px",
-    borderRadius: 18,
+    padding: "13px 15px",
+    borderRadius: 17,
     background: "rgba(8,13,22,0.92)",
     border: "1px solid rgba(255,115,60,0.18)",
   },
@@ -429,376 +508,528 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 950,
     letterSpacing: 0.5,
   },
-  backTopBtn: {
-    background: "rgba(255,115,60,0.08)",
+  topRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+  },
+  shopifyPill: {
+    padding: "8px 11px",
+    borderRadius: 999,
+    color: "rgba(255,255,255,0.52)",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.06)",
+    fontSize: 10,
+    fontWeight: 850,
+  },
+  backBtn: {
+    padding: "9px 13px",
+    borderRadius: 11,
+    color: "#f8fafc",
+    background: "rgba(255,115,60,0.07)",
     border: "1px solid rgba(255,115,60,0.18)",
-    color: "#f3f4f6",
-    padding: "10px 14px",
-    borderRadius: 12,
-    fontWeight: 800,
     cursor: "pointer",
+    fontWeight: 850,
   },
   hero: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 28,
-    alignItems: "stretch",
-  },
-  heroLeft: {
-    padding: 34,
-    borderRadius: 30,
-    background:
-      "radial-gradient(circle at top left, rgba(255,115,60,0.10), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-    border: "1px solid rgba(255,115,60,0.22)",
-    boxShadow: "0 24px 80px rgba(0,0,0,0.32)",
+    padding: "66px 22px 42px",
+    textAlign: "center",
   },
   badge: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 10,
-    padding: "9px 14px",
+    gap: 8,
+    padding: "8px 12px",
     borderRadius: 999,
-    background: "rgba(255,115,60,0.10)",
-    border: "1px solid rgba(255,115,60,0.22)",
     color: "#ff9a70",
-    fontSize: 12,
-    fontWeight: 900,
-    letterSpacing: 0.8,
+    background: "rgba(255,115,60,0.08)",
+    border: "1px solid rgba(255,115,60,0.20)",
+    fontSize: 10,
+    fontWeight: 950,
+    letterSpacing: "0.12em",
   },
   badgeDot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: "50%",
     background: "#ff5a36",
     boxShadow: "0 0 12px rgba(255,90,54,0.8)",
   },
-  title: {
-    margin: "26px 0 0",
-    maxWidth: 760,
-    fontSize: 48,
-    lineHeight: 1.04,
-    letterSpacing: -1.6,
+  heroTitle: {
+    maxWidth: 900,
+    margin: "18px auto 0",
+    fontSize: 52,
+    lineHeight: 1.02,
+    letterSpacing: "-0.052em",
     fontWeight: 950,
   },
-  subtitle: {
-    margin: "18px 0 0",
-    maxWidth: 720,
-    color: "rgba(243,244,246,0.72)",
-    fontSize: 18,
-    lineHeight: 1.65,
+  heroText: {
+    maxWidth: 820,
+    margin: "18px auto 0",
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 16,
+    lineHeight: 1.7,
+    fontWeight: 680,
   },
-  heroStats: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    gap: 14,
-    marginTop: 34,
+  heroPills: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 10,
+    flexWrap: "wrap",
+    marginTop: 26,
   },
-  statCard: {
-    padding: 18,
-    borderRadius: 18,
-    background: "rgba(255,255,255,0.035)",
-    border: "1px solid rgba(255,115,60,0.14)",
-    minHeight: 120,
-  },
-  statLabel: {
+  heroPill: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "10px 13px",
+    borderRadius: 13,
+    background: "rgba(255,255,255,0.028)",
+    border: "1px solid rgba(255,255,255,0.065)",
+    color: "rgba(255,255,255,0.58)",
     fontSize: 11,
-    opacity: 0.5,
-    textTransform: "uppercase",
-    letterSpacing: 0.9,
-    fontWeight: 900,
+    fontWeight: 800,
   },
-  statValue: {
-    marginTop: 8,
-    fontSize: 18,
-    lineHeight: 1.2,
-    wordBreak: "keep-all",
-    fontWeight: 900,
+  positioningStrip: {
+    display: "grid",
+    gridTemplateColumns: "1fr 54px 1fr",
+    gap: 14,
+    alignItems: "stretch",
+    marginBottom: 18,
+  },
+  positioningItem: {
+    padding: 20,
+    borderRadius: 20,
+    background: "linear-gradient(135deg, rgba(255,115,60,0.065), rgba(16,23,37,0.94))",
+    border: "1px solid rgba(255,115,60,0.16)",
+  },
+  positioningGrowth: {
+    background: "linear-gradient(135deg, rgba(34,197,94,0.065), rgba(16,23,37,0.94))",
+    border: "1px solid rgba(34,197,94,0.16)",
+  },
+  positioningEyebrow: {
+    color: "#ff9a70",
+    fontSize: 10,
+    fontWeight: 950,
+    letterSpacing: "0.1em",
+  },
+  growthEyebrow: {
+    color: "#4ade80",
+    fontSize: 10,
+    fontWeight: 950,
+    letterSpacing: "0.1em",
+  },
+  positioningTitle: {
+    marginTop: 7,
+    fontSize: 20,
+    fontWeight: 950,
+    letterSpacing: "-0.025em",
+  },
+  positioningText: {
+    marginTop: 6,
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 11,
+    lineHeight: 1.55,
+    fontWeight: 700,
+  },
+  arrowBox: {
+    display: "grid",
+    placeItems: "center",
+    borderRadius: 18,
+    color: "#ff9a70",
+    background: "rgba(255,115,60,0.045)",
+    border: "1px solid rgba(255,115,60,0.10)",
+    fontSize: 22,
+    fontWeight: 950,
   },
   plansGrid: {
-    display: "contents",
+    display: "grid",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+    gap: 18,
+    alignItems: "stretch",
   },
-  pricingCard: {
-    position: "relative",
-    overflow: "hidden",
+  starterCard: {
     padding: 30,
-    borderRadius: 30,
+    borderRadius: 28,
     background:
-      "radial-gradient(circle at top right, rgba(255,115,60,0.10), transparent 36%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(8,13,22,0.98))",
-    border: "1px solid rgba(255,115,60,0.28)",
-    boxShadow: "0 28px 90px rgba(0,0,0,0.38)",
+      "radial-gradient(circle at top right, rgba(255,115,60,0.09), transparent 32%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+    border: "1px solid rgba(255,115,60,0.24)",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
   },
   growthCard: {
     position: "relative",
     overflow: "hidden",
     padding: 30,
-    borderRadius: 30,
+    borderRadius: 28,
     background:
-      "radial-gradient(circle at top right, rgba(34,197,94,0.10), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-    border: "1px solid rgba(34,197,94,0.22)",
-    boxShadow: "0 28px 90px rgba(0,0,0,0.35)",
-  },
-  cardGlow: {
-    position: "absolute",
-    top: -120,
-    right: -120,
-    width: 260,
-    height: 260,
-    borderRadius: "50%",
-    background: "rgba(255,115,60,0.12)",
-    filter: "blur(50px)",
+      "radial-gradient(circle at top right, rgba(34,197,94,0.11), transparent 34%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
+    border: "1px solid rgba(34,197,94,0.26)",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
   },
   growthGlow: {
     position: "absolute",
-    top: -130,
-    right: -100,
-    width: 280,
-    height: 280,
+    top: -150,
+    right: -120,
+    width: 330,
+    height: 330,
     borderRadius: "50%",
-    background: "rgba(34,197,94,0.10)",
-    filter: "blur(60px)",
+    background: "rgba(34,197,94,0.08)",
+    filter: "blur(65px)",
   },
-  planHeader: {
+  cardTop: {
     display: "flex",
-    justifyContent: "space-between",
-    gap: 16,
     alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
     position: "relative",
     zIndex: 2,
   },
-  planEyebrow: {
-    fontSize: 12,
+  starterEyebrow: {
     color: "#ff9a70",
-    fontWeight: 900,
-    letterSpacing: 1,
-    textTransform: "uppercase",
-  },
-  growthEyebrow: {
-    fontSize: 12,
-    color: "#4ade80",
-    fontWeight: 900,
-    letterSpacing: 1,
-    textTransform: "uppercase",
+    fontSize: 11,
+    fontWeight: 950,
+    letterSpacing: "0.12em",
   },
   planTitle: {
-    marginTop: 8,
-    fontSize: 25,
+    margin: "7px 0 0",
+    fontSize: 28,
+    lineHeight: 1.1,
     fontWeight: 950,
-    letterSpacing: -0.4,
+    letterSpacing: "-0.035em",
   },
-  popularBadge: {
-    padding: "8px 11px",
+  liveBadge: {
+    padding: "7px 10px",
     borderRadius: 999,
-    background: "rgba(255,115,60,0.12)",
-    border: "1px solid rgba(255,115,60,0.24)",
     color: "#ff9a70",
-    fontSize: 11,
+    background: "rgba(255,115,60,0.08)",
+    border: "1px solid rgba(255,115,60,0.18)",
+    fontSize: 9,
     fontWeight: 950,
-    whiteSpace: "nowrap",
   },
-  comingBadge: {
-    padding: "8px 11px",
+  recommendedBadge: {
+    padding: "7px 10px",
     borderRadius: 999,
-    background: "rgba(34,197,94,0.10)",
-    border: "1px solid rgba(34,197,94,0.22)",
-    color: "#4ade80",
-    fontSize: 11,
+    color: "#86efac",
+    background: "rgba(34,197,94,0.08)",
+    border: "1px solid rgba(34,197,94,0.18)",
+    fontSize: 9,
     fontWeight: 950,
-    whiteSpace: "nowrap",
   },
   priceRow: {
     display: "flex",
     alignItems: "flex-end",
-    gap: 10,
-    marginTop: 30,
+    gap: 9,
+    marginTop: 26,
     position: "relative",
     zIndex: 2,
   },
   price: {
-    fontSize: 68,
+    fontSize: 62,
     lineHeight: 1,
     fontWeight: 950,
-    letterSpacing: -2,
+    letterSpacing: "-0.055em",
   },
   priceMeta: {
-    fontSize: 17,
-    color: "rgba(255,255,255,0.58)",
-    marginBottom: 8,
+    marginBottom: 7,
+    color: "rgba(255,255,255,0.46)",
+    fontSize: 14,
     fontWeight: 800,
   },
-  note: {
-    marginTop: 10,
-    color: "rgba(255,255,255,0.58)",
-    fontSize: 14,
-    lineHeight: 1.5,
+  planPromise: {
+    marginTop: 13,
+    maxWidth: 520,
+    color: "rgba(255,255,255,0.64)",
+    fontSize: 13,
+    lineHeight: 1.6,
+    fontWeight: 720,
+    position: "relative",
+    zIndex: 2,
+  },
+  trialLine: {
+    marginTop: 14,
+    color: "#fdba9f",
+    fontSize: 11,
+    fontWeight: 850,
+  },
+  growthTrialLine: {
+    marginTop: 14,
+    color: "#86efac",
+    fontSize: 11,
+    fontWeight: 850,
     position: "relative",
     zIndex: 2,
   },
   divider: {
     height: 1,
-    background: "rgba(255,115,60,0.14)",
-    margin: "26px 0",
-    position: "relative",
-    zIndex: 2,
+    margin: "23px 0",
+    background: "rgba(255,255,255,0.065)",
   },
-  featureTitle: {
-    fontSize: 13,
-    textTransform: "uppercase",
-    letterSpacing: 0.9,
-    fontWeight: 900,
-    color: "rgba(255,255,255,0.55)",
-    marginBottom: 16,
-    position: "relative",
-    zIndex: 2,
+  sectionLabel: {
+    color: "rgba(255,255,255,0.38)",
+    fontSize: 9,
+    fontWeight: 950,
+    letterSpacing: "0.12em",
   },
-  featuresGrid: {
+  featureList: {
     display: "grid",
-    gap: 12,
+    gap: 5,
+    marginTop: 14,
     position: "relative",
     zIndex: 2,
   },
-  featureItem: {
+  featureRow: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 11,
-    color: "rgba(255,255,255,0.82)",
-    fontSize: 14,
-    lineHeight: 1.5,
-    fontWeight: 700,
+    padding: "11px 0",
+    borderBottom: "1px solid rgba(255,255,255,0.045)",
   },
-  check: {
-    width: 22,
-    height: 22,
+  starterCheck: {
+    width: 23,
+    height: 23,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
     borderRadius: "50%",
-    background: "rgba(255,115,60,0.12)",
-    border: "1px solid rgba(255,115,60,0.24)",
     color: "#ff9a70",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
+    background: "rgba(255,115,60,0.09)",
+    border: "1px solid rgba(255,115,60,0.19)",
+    fontSize: 11,
     fontWeight: 950,
-    flexShrink: 0,
   },
-  futureCheck: {
-    width: 22,
-    height: 22,
-    borderRadius: "50%",
-    background: "rgba(34,197,94,0.12)",
-    border: "1px solid rgba(34,197,94,0.24)",
-    color: "#4ade80",
+  growthCheck: {
+    width: 23,
+    height: 23,
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    fontWeight: 950,
     flexShrink: 0,
+    borderRadius: "50%",
+    color: "#86efac",
+    background: "rgba(34,197,94,0.09)",
+    border: "1px solid rgba(34,197,94,0.19)",
+    fontSize: 11,
+    fontWeight: 950,
+  },
+  featureName: {
+    color: "#f8fafc",
+    fontSize: 12,
+    fontWeight: 900,
+  },
+  featureDescription: {
+    marginTop: 3,
+    color: "rgba(255,255,255,0.42)",
+    fontSize: 10,
+    lineHeight: 1.5,
+    fontWeight: 650,
+  },
+  marketBox: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    background: "rgba(56,189,248,0.045)",
+    border: "1px solid rgba(56,189,248,0.12)",
+  },
+  marketBoxTitle: {
+    color: "#7dd3fc",
+    fontSize: 11,
+    fontWeight: 950,
+  },
+  marketBoxText: {
+    marginTop: 6,
+    color: "rgba(255,255,255,0.48)",
+    fontSize: 10,
+    lineHeight: 1.55,
+    fontWeight: 680,
+  },
+  growthValueBox: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    background: "rgba(34,197,94,0.05)",
+    border: "1px solid rgba(34,197,94,0.14)",
+    position: "relative",
+    zIndex: 2,
+  },
+  growthValueTitle: {
+    color: "#86efac",
+    fontSize: 11,
+    fontWeight: 950,
+  },
+  growthValueText: {
+    marginTop: 6,
+    color: "rgba(255,255,255,0.48)",
+    fontSize: 10,
+    lineHeight: 1.55,
+    fontWeight: 680,
   },
   errorBox: {
-    marginTop: 22,
-    padding: 14,
-    borderRadius: 16,
-    border: "1px solid rgba(239,68,68,0.28)",
-    background: "rgba(239,68,68,0.08)",
-    position: "relative",
-    zIndex: 2,
-  },
-  errorTitle: {
-    fontWeight: 900,
-    color: "#fca5a5",
-  },
-  errorText: {
-    marginTop: 4,
+    marginTop: 18,
+    padding: 13,
+    borderRadius: 14,
     color: "#fecaca",
+    background: "rgba(239,68,68,0.07)",
+    border: "1px solid rgba(239,68,68,0.20)",
+    fontSize: 11,
     lineHeight: 1.5,
   },
   form: {
-    marginTop: 26,
+    marginTop: 22,
     position: "relative",
     zIndex: 2,
   },
   primaryBtn: {
     width: "100%",
-    padding: "15px 18px",
-    borderRadius: 16,
-    border: "1px solid rgba(255,115,60,0.34)",
-    background:
-      "linear-gradient(135deg, rgba(255,90,54,0.95), rgba(255,115,60,0.88))",
+    minHeight: 50,
+    padding: "0 17px",
+    borderRadius: 14,
     color: "#fff",
+    background: "linear-gradient(135deg, #ff5a36, #ff7547)",
+    border: "1px solid rgba(255,150,110,0.25)",
+    boxShadow: "0 16px 38px rgba(255,90,54,0.18)",
     cursor: "pointer",
+    fontSize: 13,
     fontWeight: 950,
-    fontSize: 15,
-    boxShadow: "0 18px 46px rgba(255,90,54,0.25)",
   },
-  secondaryBtn: {
+  previewBtn: {
     width: "100%",
-    marginTop: 12,
-    padding: "14px 18px",
-    borderRadius: 16,
-    border: "1px solid rgba(255,115,60,0.16)",
-    background: "rgba(255,115,60,0.06)",
-    color: "#f3f4f6",
+    minHeight: 46,
+    marginTop: 10,
+    padding: "0 17px",
+    borderRadius: 14,
+    color: "#f8fafc",
+    background: "rgba(255,255,255,0.025)",
+    border: "1px solid rgba(255,255,255,0.07)",
     cursor: "pointer",
+    fontSize: 12,
     fontWeight: 850,
-    fontSize: 14,
   },
-  disabledBtn: {
-    width: "100%",
-    marginTop: 26,
-    padding: "15px 18px",
-    borderRadius: 16,
-    border: "1px solid rgba(34,197,94,0.18)",
-    background: "rgba(34,197,94,0.06)",
-    color: "rgba(255,255,255,0.62)",
-    cursor: "not-allowed",
-    fontWeight: 950,
-    fontSize: 15,
-    position: "relative",
-    zIndex: 2,
-  },
-  earlyAccessText: {
-    marginTop: 12,
-    color: "rgba(255,255,255,0.48)",
-    fontSize: 13,
-    lineHeight: 1.5,
+  billingNote: {
+    marginTop: 11,
+    color: "rgba(255,255,255,0.36)",
     textAlign: "center",
-    position: "relative",
-    zIndex: 2,
+    fontSize: 10,
+    lineHeight: 1.5,
+    fontWeight: 700,
   },
-  bottomGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    width: "100%",
-    gap: 18,
-    marginTop: 28,
+  compareSection: {
+    marginTop: 20,
+    padding: 26,
+    borderRadius: 25,
+    background: "linear-gradient(180deg, rgba(16,23,37,0.96), rgba(7,12,21,0.98))",
+    border: "1px solid rgba(255,115,60,0.15)",
   },
-  infoPanel: {
+  compareHeader: {
     display: "flex",
-    gap: 14,
-    alignItems: "flex-start",
-    padding: 20,
-    borderRadius: 22,
-    background: "rgba(8,13,22,0.86)",
-    border: "1px solid rgba(255,115,60,0.16)",
-    boxShadow: "0 18px 50px rgba(0,0,0,0.18)",
+    justifyContent: "space-between",
+    gap: 24,
+    alignItems: "flex-end",
+    flexWrap: "wrap",
   },
-  infoIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 15,
-    background: "rgba(255,115,60,0.10)",
-    border: "1px solid rgba(255,115,60,0.18)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 19,
-    flexShrink: 0,
+  compareEyebrow: {
+    color: "#ff9a70",
+    fontSize: 9,
+    fontWeight: 950,
+    letterSpacing: "0.12em",
   },
-  infoTitle: {
-    fontWeight: 900,
-    fontSize: 15,
+  compareTitle: {
+    margin: "7px 0 0",
+    fontSize: 24,
+    fontWeight: 950,
+    letterSpacing: "-0.03em",
   },
-  infoText: {
-    marginTop: 6,
-    color: "rgba(255,255,255,0.58)",
+  compareHint: {
+    maxWidth: 520,
+    color: "rgba(255,255,255,0.43)",
+    fontSize: 10,
     lineHeight: 1.55,
-    fontSize: 13,
+    fontWeight: 700,
+  },
+  compareLegend: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 120px 120px",
+    gap: 8,
+    marginTop: 20,
+  },
+  compareLegendSpacer: {},
+  compareLegendStarter: {
+    textAlign: "center",
+    color: "#ff9a70",
+    fontSize: 9,
+    fontWeight: 950,
+  },
+  compareLegendGrowth: {
+    textAlign: "center",
+    color: "#86efac",
+    fontSize: 9,
+    fontWeight: 950,
+  },
+  compareGrid: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 120px 120px",
+    gap: 8,
+    marginTop: 8,
+  },
+  compareLabel: {
+    padding: "11px 13px",
+    borderRadius: 11,
+    color: "rgba(255,255,255,0.68)",
+    background: "rgba(255,255,255,0.025)",
+    fontSize: 11,
+    fontWeight: 780,
+  },
+  compareStarter: {
+    display: "grid",
+    placeItems: "center",
+    borderRadius: 11,
+    color: "#ff9a70",
+    background: "rgba(255,115,60,0.045)",
+    fontWeight: 950,
+  },
+  compareGrowth: {
+    display: "grid",
+    placeItems: "center",
+    borderRadius: 11,
+    color: "#86efac",
+    background: "rgba(34,197,94,0.045)",
+    fontWeight: 950,
+  },
+  finalStrip: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 24,
+    flexWrap: "wrap",
+    marginTop: 20,
+    padding: 23,
+    borderRadius: 22,
+    background:
+      "linear-gradient(100deg, rgba(255,90,54,0.08), rgba(16,23,37,0.94) 45%, rgba(34,197,94,0.055))",
+    border: "1px solid rgba(255,115,60,0.16)",
+  },
+  finalTitle: {
+    fontSize: 17,
+    fontWeight: 950,
+  },
+  finalText: {
+    marginTop: 6,
+    color: "rgba(255,255,255,0.43)",
+    fontSize: 10,
+    lineHeight: 1.55,
+    fontWeight: 700,
+  },
+  finalBtn: {
+    minHeight: 44,
+    padding: "0 16px",
+    borderRadius: 12,
+    color: "#fff",
+    background: "linear-gradient(135deg, #ff5a36, #ff7547)",
+    border: "1px solid rgba(255,150,110,0.22)",
+    cursor: "pointer",
+    fontSize: 11,
+    fontWeight: 950,
   },
 };
