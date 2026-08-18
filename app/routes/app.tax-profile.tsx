@@ -3,6 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { getStoredLanguage } from "~/utils/i18n";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   getStoreTaxContext,
   saveStoreTaxProfile,
@@ -704,7 +705,7 @@ export default function TaxProfilePage() {
   const [defaultVatRatePct, setDefaultVatRatePct] =
     React.useState(
       taxContext.defaultVatRatePct ||
-        countryDefaultRate,
+      countryDefaultRate,
     );
 
   const [pricesIncludeVat, setPricesIncludeVat] =
@@ -729,7 +730,7 @@ export default function TaxProfilePage() {
   const [shippingVatRatePct, setShippingVatRatePct] =
     React.useState(
       taxContext.shippingVatRatePct ||
-        countryDefaultRate,
+      countryDefaultRate,
     );
 
   const saving =
@@ -850,7 +851,7 @@ export default function TaxProfilePage() {
 
                 <div style={styles.countryText}>
                   {taxContext.shopCountryCode !==
-                  taxContext.effectiveCountryCode
+                    taxContext.effectiveCountryCode
                     ? language === "it"
                       ? `Ambiente test · Shopify rileva ${taxContext.shopCountryCode || "—"}`
                       : `Test environment · Shopify reports ${taxContext.shopCountryCode || "—"}`
@@ -1071,10 +1072,32 @@ export default function TaxProfilePage() {
                     )}
                   <div style={styles.rateRow}>
                     <div>
-                      <div style={styles.fieldLabel}>
-                        {language === "it"
-                          ? `Aliquota ${taxSystemLabel} predefinita`
-                          : `Default ${taxSystemLabel} rate`}
+                      <div
+                        style={{
+                          ...styles.fieldLabel,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <span>
+                          {language === "it"
+                            ? `Aliquota ${taxSystemLabel} predefinita`
+                            : `Default ${taxSystemLabel} rate`}
+                        </span>
+
+                        <MetricTooltip
+                          content={{
+                            title:
+                              language === "it"
+                                ? `Aliquota ${taxSystemLabel} predefinita`
+                                : `Default ${taxSystemLabel} rate`,
+                            description:
+                              language === "it"
+                                ? `Aliquota di fallback usata da MarginLab solo quando Shopify non fornisce una tax line più specifica e il profilo consente una stima. Non sostituisce né modifica automaticamente le imposte reali registrate sugli ordini Shopify.`
+                                : `Fallback rate used by MarginLab only when Shopify does not provide a more specific tax line and the profile allows an estimate. It does not replace or automatically modify the actual taxes recorded on Shopify orders.`,
+                          }}
+                        />
                       </div>
 
                       <div style={styles.fieldText}>
@@ -1157,10 +1180,32 @@ export default function TaxProfilePage() {
 
                     <div style={styles.recoveryCard}>
                       <div>
-                        <div style={styles.fieldLabel}>
-                          {language === "it"
-                            ? "Recuperabilità imposta sugli acquisti"
-                            : "Input tax recovery"}
+                        <div
+                          style={{
+                            ...styles.fieldLabel,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                          }}
+                        >
+                          <span>
+                            {language === "it"
+                              ? "Recuperabilità imposta sugli acquisti"
+                              : "Input tax recovery"}
+                          </span>
+
+                          <MetricTooltip
+                            content={{
+                              title:
+                                language === "it"
+                                  ? "Recuperabilità imposta sugli acquisti"
+                                  : "Input tax recovery",
+                              description:
+                                language === "it"
+                                  ? "Indica quale percentuale dell'imposta inclusa nei costi MarginLab deve considerare recuperabile e quindi non parte del costo economico definitivo. Questa impostazione serve al modello di marginalità e non determina il diritto fiscale effettivo alla detrazione."
+                                  : "Indicates what percentage of tax included in costs MarginLab should treat as recoverable and therefore not part of the final economic cost. This setting is used for margin analysis and does not determine the merchant's actual legal entitlement to recover input tax.",
+                            }}
+                          />
                         </div>
 
                         <div style={styles.fieldText}>
@@ -1210,7 +1255,7 @@ export default function TaxProfilePage() {
                           style={{
                             ...styles.recoveryOption,
                             ...(inputVatRecoveryPct ===
-                            100
+                              100
                               ? styles.recoveryOptionSelected
                               : {}),
                           }}
@@ -1240,7 +1285,7 @@ export default function TaxProfilePage() {
                             setInputVatRecoveryPct(
                               (current) =>
                                 current > 0 &&
-                                current < 100
+                                  current < 100
                                   ? current
                                   : 50,
                             )
@@ -1248,7 +1293,7 @@ export default function TaxProfilePage() {
                           style={{
                             ...styles.recoveryOption,
                             ...(inputVatRecoveryPct > 0 &&
-                            inputVatRecoveryPct < 100
+                              inputVatRecoveryPct < 100
                               ? styles.recoveryOptionSelected
                               : {}),
                           }}
@@ -1269,7 +1314,7 @@ export default function TaxProfilePage() {
                             }
                           >
                             {inputVatRecoveryPct > 0 &&
-                            inputVatRecoveryPct < 100
+                              inputVatRecoveryPct < 100
                               ? `${inputVatRecoveryPct}%`
                               : "—"}
                           </div>
@@ -1383,7 +1428,7 @@ export default function TaxProfilePage() {
                           : inputVatRecoveryPct === 0
                             ? "Input tax remains fully included in economic cost."
                             : inputVatRecoveryPct ===
-                                100
+                              100
                               ? "Input tax is treated as fully recoverable."
                               : `MarginLab treats ${inputVatRecoveryPct}% of input tax as recoverable.`}
                       </div>
@@ -1475,7 +1520,7 @@ export default function TaxProfilePage() {
                           style={{
                             ...styles.rateBtn,
                             ...(shippingVatRatePct ===
-                            rate
+                              rate
                               ? styles.rateBtnSelected
                               : {}),
                           }}
