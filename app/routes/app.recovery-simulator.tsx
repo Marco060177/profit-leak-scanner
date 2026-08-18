@@ -2905,6 +2905,33 @@ export default function RecoverySimulatorPage() {
                   </div>
                 ))}
               </div>
+              {selectedProduct.productId && loaderData.shopHandle ? (
+                <div
+                  style={{
+                    marginTop: 18,
+                    paddingTop: 18,
+                    borderTop: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <a
+                    href={`https://admin.shopify.com/store/${loaderData.shopHandle}/products/${selectedProduct.productId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="apply-button"
+                    style={{
+                      textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    {language === "it"
+                      ? "Apri prodotto in Shopify"
+                      : "Open product in Shopify"}
+                    <span style={{ fontSize: 18 }}>↗</span>
+                  </a>
+                </div>
+              ) : null}
             </div>
 
             <div

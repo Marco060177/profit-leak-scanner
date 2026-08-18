@@ -598,12 +598,12 @@ export default function ProductRiskTable({
                               >
                                 {row.missingCost
                                   ? language === "it"
-                                    ? "Aggiorna costo"
-                                    : "Update cost"
+                                    ? "Apri in Shopify"
+                                    : "Open in Shopify"
                                   : language === "it"
-                                    ? "Controlla prezzo"
-                                    : "Review pricing"}
-                                <span style={{ fontSize: 18 }}>→</span>
+                                    ? "Apri in Shopify"
+                                    : "Open in Shopify"}
+                                <span style={{ fontSize: 18 }}>↗</span>
                               </a>
                             </div>
                           ) : null}
