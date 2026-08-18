@@ -3,6 +3,7 @@ import { useLoaderData, useNavigate } from "react-router";
 
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
@@ -130,6 +131,7 @@ function SliderControl({
   helper,
   onChange,
   accent = "#ff7350",
+  tooltip,
 }: {
   label: string;
   value: number;
@@ -140,6 +142,7 @@ function SliderControl({
   helper: string;
   onChange: (value: number) => void;
   accent?: string;
+  tooltip?: React.ReactNode;
 }) {
   const locale = getStoredLanguage() === "it" ? "it-IT" : "en-US";
   const progress = ((value - min) / (max - min)) * 100;
@@ -162,8 +165,18 @@ function SliderControl({
         }}
       >
         <div>
-          <div style={{ color: "#f8fafc", fontWeight: 900, fontSize: 14 }}>
-            {label}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              color: "#f8fafc",
+              fontWeight: 900,
+              fontSize: 14,
+            }}
+          >
+            <span>{label}</span>
+            {tooltip}
           </div>
           <div
             style={{
@@ -269,12 +282,14 @@ function MetricCard({
   note,
   positive,
   highlighted,
+  tooltip,
 }: {
   label: string;
   value: string;
   note: string;
   positive?: boolean;
   highlighted?: boolean;
+  tooltip?: React.ReactNode;
 }) {
   return (
     <div
@@ -293,6 +308,9 @@ function MetricCard({
     >
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
           color: highlighted ? "#4ade80" : "rgba(255,255,255,0.52)",
           fontSize: 10,
           fontWeight: 950,
@@ -300,7 +318,8 @@ function MetricCard({
           textTransform: "uppercase",
         }}
       >
-        {label}
+        <span>{label}</span>
+        {tooltip}
       </div>
 
       <div
@@ -1106,6 +1125,20 @@ export default function ForecastingPage() {
                     ? `${pct(currentNetMargin)} di margine netto sulla base economica`
                     : `${pct(currentNetMargin)} net margin on the economic basis`
                 }
+                tooltip={
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Profitto netto mensile"
+                          : "Monthly net profit",
+                      description:
+                        language === "it"
+                          ? "Profitto mensile stimato sulla base economica attuale dello store, dopo costi fissi, commissioni variabili e l'eventuale riserva fiscale gestionale configurata. È il punto di partenza usato per costruire la previsione."
+                          : "Estimated monthly profit based on the store's current economic baseline, after fixed costs, variable fees and any configured business-model tax reserve. It is the starting point used to build the forecast.",
+                    }}
+                  />
+                }
               />
 
               <MetricCard
@@ -1140,6 +1173,20 @@ export default function ForecastingPage() {
                     : `Total impact across the next ${horizon} months`
                 }
                 highlighted={finalPoint.cumulativeLift >= 0}
+                tooltip={
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Profitto aggiuntivo cumulativo"
+                          : "Cumulative profit lift",
+                      description:
+                        language === "it"
+                          ? "Differenza totale tra il profitto netto previsto dallo scenario e il profitto che otterresti mantenendo invariato l'attuale profitto mensile per tutto l'orizzonte selezionato. È una stima di scenario, non profitto già realizzato."
+                          : "Total difference between the net profit projected by the scenario and the profit you would generate by keeping current monthly profit unchanged over the selected horizon. It is a scenario estimate, not profit already realized.",
+                    }}
+                  />
+                }
               />
 
               <MetricCard
@@ -1370,6 +1417,20 @@ export default function ForecastingPage() {
                       setCustomValue(setRecoveryCapture, value)
                     }
                     accent="#38bdf8"
+                    tooltip={
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Opportunità recuperate"
+                              : "Recovery opportunities captured",
+                          description:
+                            language === "it"
+                              ? "Percentuale del profitto recuperabile identificato da MarginLab che stai ipotizzando di riuscire effettivamente a ottenere nello scenario. Il 100% rappresenta il recupero completo dell'opportunità stimata, non un risultato garantito."
+                              : "Percentage of the recoverable profit identified by MarginLab that you assume will actually be achieved in the scenario. 100% means capturing the full estimated opportunity, not a guaranteed outcome.",
+                        }}
+                      />
+                    }
                   />
                 </div>
               </div>
@@ -1682,13 +1743,31 @@ export default function ForecastingPage() {
                   >
                     <div
                       style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
                         color: "rgba(255,255,255,0.43)",
                         fontSize: 10,
                         fontWeight: 950,
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Salute prevista" : "Forecast Health"}
+                      <span>
+                        {language === "it" ? "Salute prevista" : "Forecast Health"}
+                      </span>
+
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Salute prevista"
+                              : "Forecast health",
+                          description:
+                            language === "it"
+                              ? "Valutazione sintetica del margine netto previsto alla fine dell'orizzonte selezionato. MarginLab classifica lo scenario come molto solido, in miglioramento, fragile o a rischio in base al livello di margine raggiunto."
+                              : "Summary assessment of the projected net margin at the end of the selected horizon. MarginLab classifies the scenario as very strong, improving, fragile or at risk based on the margin level reached.",
+                        }}
+                      />
                     </div>
                     <div
                       style={{
@@ -1951,11 +2030,29 @@ export default function ForecastingPage() {
                       border: "1px solid rgba(34,197,94,0.22)",
                       fontSize: 11,
                       fontWeight: 950,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                     }}
                   >
-                    {language === "it"
-                      ? `Qualità dei dati ${pct(dataConfidence, 0)}`
-                      : `Data Quality ${pct(dataConfidence, 0)}`}
+                    <span>
+                      {language === "it"
+                        ? `Qualità dei dati ${pct(dataConfidence, 0)}`
+                        : `Data Quality ${pct(dataConfidence, 0)}`}
+                    </span>
+
+                    <MetricTooltip
+                      content={{
+                        title:
+                          language === "it"
+                            ? "Qualità dei dati"
+                            : "Data quality",
+                        description:
+                          language === "it"
+                            ? "Misura quanto sono solidi e completi i dati utilizzati per costruire la previsione, considerando storico disponibile, copertura dei dati e configurazione dei costi. Non indica la probabilità che lo scenario previsto si realizzi."
+                            : "Measures how complete and reliable the data used to build the forecast are, based on available history, data coverage and cost configuration. It does not indicate the probability that the projected scenario will occur.",
+                      }}
+                    />
                   </div>
                 </div>
 
@@ -2119,6 +2216,9 @@ export default function ForecastingPage() {
                 >
                   <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                       color: firstGoalMonth !== undefined ? "#86efac" : "#fbbf24",
                       fontSize: 11,
                       fontWeight: 950,
@@ -2126,7 +2226,22 @@ export default function ForecastingPage() {
                       letterSpacing: "0.10em",
                     }}
                   >
-                    {language === "it" ? "Tempo stimato" : "Estimated Timing"}
+                    <span>
+                      {language === "it" ? "Tempo stimato" : "Estimated Timing"}
+                    </span>
+
+                    <MetricTooltip
+                      content={{
+                        title:
+                          language === "it"
+                            ? "Tempo stimato al raggiungimento del target"
+                            : "Estimated time to target",
+                        description:
+                          language === "it"
+                            ? "Indica il primo mese in cui il profitto mensile simulato supera l'obiettivo che hai impostato, mantenendo valide le ipotesi dello scenario. Non è una previsione certa né una data garantita."
+                            : "Shows the first month in which simulated monthly profit exceeds the target you set, assuming the scenario assumptions hold. It is not a certain forecast or guaranteed date.",
+                      }}
+                    />
                   </div>
 
                   <div
