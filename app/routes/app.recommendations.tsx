@@ -8,6 +8,7 @@ import {
   hasGrowthAccess,
 } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
@@ -230,11 +231,13 @@ function ActionMetric({
   value,
   note,
   highlight,
+  tooltip,
 }: {
   label: string;
   value: string;
   note: string;
   highlight?: boolean;
+  tooltip?: React.ReactNode;
 }) {
   return (
     <div
@@ -252,6 +255,9 @@ function ActionMetric({
     >
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
           fontSize: 9,
           fontWeight: 950,
           textTransform: "uppercase",
@@ -259,7 +265,8 @@ function ActionMetric({
           color: highlight ? "#4ade80" : "rgba(255,255,255,0.46)",
         }}
       >
-        {label}
+        <span>{label}</span>
+        {tooltip}
       </div>
 
       <div
@@ -438,6 +445,20 @@ function TopPriority({
           value={`${confidenceScore}%`}
           note={
             language === "it" ? "Qualità della stima" : "Estimate reliability"
+          }
+          tooltip={
+            <MetricTooltip
+              content={{
+                title:
+                  language === "it"
+                    ? "Affidabilità della stima"
+                    : "Estimate confidence",
+                description:
+                  language === "it"
+                    ? "Indica quanto MarginLab considera solida questa stima in base alla qualità e alla completezza dei dati disponibili, inclusi costi, copertura COGS e possibilità di confronto con periodi precedenti."
+                    : "Indicates how reliable MarginLab considers this estimate based on the quality and completeness of available data, including costs, COGS coverage and the availability of historical comparison.",
+              }}
+            />
           }
         />
       </div>
@@ -1064,6 +1085,9 @@ export default function RecommendationsPage() {
                   >
                     <div
                       style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 7,
                         color: "#4ade80",
                         fontSize: 10,
                         fontWeight: 950,
@@ -1071,9 +1095,24 @@ export default function RecommendationsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it"
-                        ? "GAP MENSILE STIMATO VERSO IL TARGET"
-                        : "ESTIMATED MONTHLY PROFIT GAP TO TARGET"}
+                      <span>
+                        {language === "it"
+                          ? "GAP MENSILE STIMATO VERSO IL TARGET"
+                          : "ESTIMATED MONTHLY PROFIT GAP TO TARGET"}
+                      </span>
+
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Gap mensile verso il target"
+                              : "Monthly profit gap to target",
+                          description:
+                            language === "it"
+                              ? "Stima della differenza mensile tra il profitto attuale dello store e il profitto ottenibile nello scenario target di MarginLab. È una stima basata sui dati del periodo selezionato, non profitto già recuperato."
+                              : "Estimated monthly difference between the store's current profit and the profit achievable under MarginLab's target scenario. It is based on the selected period and does not represent profit already recovered.",
+                        }}
+                      />
                     </div>
 
                     <button
@@ -1271,6 +1310,10 @@ export default function RecommendationsPage() {
                           <div
                             style={{
                               marginTop: 7,
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              gap: 6,
                               color: businessStatus.color,
                               fontSize: 9,
                               fontWeight: 950,
@@ -1278,9 +1321,24 @@ export default function RecommendationsPage() {
                               letterSpacing: "0.1em",
                             }}
                           >
-                            {language === "it"
-                              ? "Punteggio azioni"
-                              : "Action score"}
+                            <span>
+                              {language === "it"
+                                ? "Punteggio azioni"
+                                : "Action score"}
+                            </span>
+
+                            <MetricTooltip
+                              content={{
+                                title:
+                                  language === "it"
+                                    ? "Punteggio azioni"
+                                    : "Action score",
+                                description:
+                                  language === "it"
+                                    ? "Punteggio sintetico da 0 a 100 che combina quantità di azioni disponibili, valore economico potenziale e priorità media. Un valore alto indica che esistono diverse opportunità operative rilevanti da affrontare."
+                                    : "Summary score from 0 to 100 combining available actions, potential economic value and average priority. A higher score indicates more relevant operational opportunities to address.",
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
@@ -1580,13 +1638,29 @@ export default function RecommendationsPage() {
                   >
                     <div
                       style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 7,
                         color: "#f8fafc",
                         fontSize: 36,
                         fontWeight: 950,
                         lineHeight: 1,
                       }}
                     >
-                      {pct(progressPct)}
+                      <span>{pct(progressPct)}</span>
+
+                      <MetricTooltip
+                        content={{
+                          title:
+                            language === "it"
+                              ? "Avanzamento del piano"
+                              : "Plan progress",
+                          description:
+                            language === "it"
+                              ? "Mostra la percentuale di attività della coda attuale che hai segnato come completate. Misura l'avanzamento operativo del piano, non il profitto effettivamente recuperato."
+                              : "Shows the percentage of actions in the current queue that you have marked as complete. It measures operational progress, not actual recovered profit.",
+                        }}
+                      />
                     </div>
 
                     <div
@@ -1672,6 +1746,9 @@ export default function RecommendationsPage() {
                 >
                   <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
                       color: "#7dd3fc",
                       fontSize: 10,
                       fontWeight: 950,
@@ -1679,7 +1756,22 @@ export default function RecommendationsPage() {
                       letterSpacing: "0.12em",
                     }}
                   >
-                    {language === "it" ? "GAP ANNUALE AL TARGET" : "ANNUAL GAP TO TARGET"}
+                    <span>
+                      {language === "it" ? "GAP ANNUALE AL TARGET" : "ANNUAL GAP TO TARGET"}
+                    </span>
+
+                    <MetricTooltip
+                      content={{
+                        title:
+                          language === "it"
+                            ? "Gap annuale verso il target"
+                            : "Annual gap to target",
+                        description:
+                          language === "it"
+                            ? "Proiezione annuale del gap mensile stimato verso il target, calcolata mantenendo invariato lo scenario corrente per 12 mesi. È una stima teorica, non profitto garantito o già recuperato."
+                            : "Annual projection of the estimated monthly gap to target, assuming the current scenario remains unchanged for 12 months. It is a theoretical estimate, not guaranteed or already recovered profit.",
+                      }}
+                    />
                   </div>
 
                   <div
