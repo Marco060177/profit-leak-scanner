@@ -2,6 +2,7 @@ import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import MetricTooltip from "~/components/ui/MetricTooltip";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
@@ -141,12 +142,14 @@ function KpiCard({
   note,
   color = "#f8fafc",
   highlight = false,
+  tooltip,
 }: {
   label: string;
   value: string;
   note: string;
   color?: string;
   highlight?: boolean;
+  tooltip?: React.ReactNode;
 }) {
   return (
     <div
@@ -164,6 +167,9 @@ function KpiCard({
     >
       <div
         style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
           color: highlight ? "#4ade80" : "rgba(255,255,255,0.45)",
           fontSize: 10,
           fontWeight: 950,
@@ -171,7 +177,8 @@ function KpiCard({
           letterSpacing: "0.12em",
         }}
       >
-        {label}
+        <span>{label}</span>
+        {tooltip}
       </div>
 
       <div
@@ -516,8 +523,8 @@ export default function ProfitAssumptionsPage() {
 
   const largestCostMonthlySaving = largestCost
     ? roundCsvNumber(
-        largestCost.value * monthlyNormalizationMultiplier * 0.1,
-      )
+      largestCost.value * monthlyNormalizationMultiplier * 0.1,
+    )
     : 0;
   const largestCostAnnualSaving = roundCsvNumber(
     largestCostMonthlySaving * 12,
@@ -970,6 +977,20 @@ export default function ProfitAssumptionsPage() {
                   }`}
                 color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
                 highlight
+                tooltip={
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Profitto netto mensile stimato"
+                          : "Estimated monthly net profit",
+                      description:
+                        language === "it"
+                          ? "Stima del profitto mensile dopo aver applicato alla base economica dello store i costi fissi inseriti, le commissioni variabili e l'eventuale riserva fiscale gestionale. È una stima del modello, non un risultato contabile osservato."
+                          : "Estimated monthly profit after applying entered fixed costs, variable fees and any business tax reserve to the store's economic baseline. It is a model estimate, not an observed accounting result.",
+                    }}
+                  />
+                }
               />
 
               <KpiCard
@@ -993,6 +1014,20 @@ export default function ProfitAssumptionsPage() {
                   language === "it"
                     ? "Ricavi mensili minimi stimati"
                     : "Estimated minimum monthly revenue"
+                }
+                tooltip={
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Ricavi di pareggio"
+                          : "Break-even revenue",
+                      description:
+                        language === "it"
+                          ? "Ricavi mensili stimati necessari per coprire i costi fissi e i costi variabili configurati, arrivando a un profitto pari a zero. Sopra questo livello il modello inizia a generare profitto."
+                          : "Estimated monthly revenue required to cover configured fixed and variable costs and reach zero profit. Above this level, the model begins to generate profit.",
+                    }}
+                  />
                 }
               />
 
@@ -1032,6 +1067,20 @@ export default function ProfitAssumptionsPage() {
                     : healthScore >= 60
                       ? "#f59e0b"
                       : "#ff6b4a"
+                }
+                tooltip={
+                  <MetricTooltip
+                    content={{
+                      title:
+                        language === "it"
+                          ? "Salute del modello"
+                          : "Model health",
+                      description:
+                        language === "it"
+                          ? "Punteggio sintetico da 0 a 100 che valuta la solidità del modello economico in base al margine netto stimato, al peso complessivo dei costi e alla concentrazione del costo principale. Un valore più alto indica una struttura economica più sostenibile."
+                          : "Summary score from 0 to 100 that evaluates the strength of the economic model based on estimated net margin, total cost burden and concentration of the largest cost. A higher score indicates a more sustainable economic structure.",
+                    }}
+                  />
                 }
               />
             </div>
@@ -1293,6 +1342,9 @@ export default function ProfitAssumptionsPage() {
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
                   <div
                     style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
                       color: "#4ade80",
                       fontSize: 11,
                       fontWeight: 950,
@@ -1300,9 +1352,24 @@ export default function ProfitAssumptionsPage() {
                       letterSpacing: "0.13em",
                     }}
                   >
-                    {language === "it"
-                      ? "CONTO ECONOMICO STIMATO"
-                      : "ESTIMATED PROFIT MODEL"}
+                    <span>
+                      {language === "it"
+                        ? "CONTO ECONOMICO STIMATO"
+                        : "ESTIMATED PROFIT MODEL"}
+                    </span>
+
+                    <MetricTooltip
+                      content={{
+                        title:
+                          language === "it"
+                            ? "Conto economico stimato"
+                            : "Estimated profit model",
+                        description:
+                          language === "it"
+                            ? "Ricostruzione economica dello store che combina la base osservata con i costi, le commissioni e la riserva gestionale che hai configurato. Il risultato mostra una stima del profitto mensile normalizzata su 30 giorni, non un dato contabile effettivamente registrato."
+                            : "Economic model of the store combining the observed baseline with the costs, fees and business reserve you configured. The result shows an estimated monthly profit normalized to 30 days, not an actual recorded accounting result.",
+                      }}
+                    />
                   </div>
 
                   <button
