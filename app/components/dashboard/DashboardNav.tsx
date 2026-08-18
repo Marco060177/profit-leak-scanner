@@ -24,6 +24,7 @@ type NavId =
   | "tax-profile"
   | "reports-notifications"
   | "glossary"
+  | "support"
   | "billing";
 
 type Props = {
@@ -196,40 +197,42 @@ export default function DashboardNav({
   const labels =
     language === "it"
       ? {
-        alerts: "Alert",
-        growth: "Growth",
-        profitCopilot: "Profit Copilot",
-        profitActionCenter:
-          "Profit Action Center",
-        recoverySimulator:
-          "Recovery Simulator",
-        profitForecast:
-          "Previsioni di profitto",
-        businessModelStudio:
-          "Business Model Studio",
-        taxProfile: "Profilo fiscale",
-        glossary: "Glossario",
-        more: "Altro",
-        growthDescription:
-          "Strumenti avanzati per aumentare il profitto",
-      }
+          alerts: "Alert",
+          growth: "Growth",
+          profitCopilot: "Profit Copilot",
+          profitActionCenter:
+            "Profit Action Center",
+          recoverySimulator:
+            "Recovery Simulator",
+          profitForecast:
+            "Previsioni di profitto",
+          businessModelStudio:
+            "Business Model Studio",
+          taxProfile: "Profilo fiscale",
+          glossary: "Glossario",
+          support: "Assistenza",
+          more: "Altro",
+          growthDescription:
+            "Strumenti avanzati per aumentare il profitto",
+        }
       : {
-        alerts: "Alerts",
-        growth: "Growth",
-        profitCopilot: "Profit Copilot",
-        profitActionCenter:
-          "Profit Action Center",
-        recoverySimulator:
-          "Recovery Simulator",
-        profitForecast: "Profit Forecast",
-        businessModelStudio:
-          "Business Model Studio",
-        taxProfile: "Tax Profile",
-        glossary: "Glossary",
-        more: "More",
-        growthDescription:
-          "Advanced tools to increase profit",
-      };
+          alerts: "Alerts",
+          growth: "Growth",
+          profitCopilot: "Profit Copilot",
+          profitActionCenter:
+            "Profit Action Center",
+          recoverySimulator:
+            "Recovery Simulator",
+          profitForecast: "Profit Forecast",
+          businessModelStudio:
+            "Business Model Studio",
+          taxProfile: "Tax Profile",
+          glossary: "Glossary",
+          support: "Support",
+          more: "More",
+          growthDescription:
+            "Advanced tools to increase profit",
+        };
 
   const changeLanguage = (
     nextLanguage: Language,
@@ -381,11 +384,76 @@ export default function DashboardNav({
     (item) => item.id === active,
   );
 
+  const moreActive =
+    active === "tax-profile" ||
+    active === "reports-notifications" ||
+    active === "glossary" ||
+    active === "support" ||
+    active === "billing";
+
+  const moreItems = [
+    {
+      id: "tax-profile",
+      label: labels.taxProfile,
+      description:
+        language === "it"
+          ? "Regime IVA e impostazioni fiscali"
+          : "VAT regime and tax settings",
+      path: "/app/tax-profile",
+      icon: "◇",
+    },
+    {
+      id: "reports-notifications",
+      label:
+        language === "it"
+          ? "Report e notifiche"
+          : "Reports & Notifications",
+      description:
+        language === "it"
+          ? "Email, report settimanali e alert"
+          : "Email, weekly reports and alerts",
+      path: "/app/reports-notifications",
+      icon: "✉",
+    },
+    {
+      id: "glossary",
+      label: labels.glossary,
+      description:
+        language === "it"
+          ? "Metriche, concetti e termini MarginLab"
+          : "MarginLab metrics, concepts and terms",
+      path: "/app/glossary",
+      icon: "A",
+    },
+    {
+      id: "support",
+      label: labels.support,
+      description:
+        language === "it"
+          ? "Email e assistenza diretta Growth"
+          : "Email and direct Growth support",
+      path: "/app/support",
+      icon: "?",
+    },
+    {
+      id: "billing",
+      label: t.nav.billing,
+      description:
+        language === "it"
+          ? "Piani e abbonamento Shopify"
+          : "Plans and Shopify subscription",
+      path: "/app/billing",
+      icon: "$",
+    },
+  ] as const;
+
   return (
     <div className="navbar">
       <div
         className="logo"
-        onClick={() => openPage("overview", "/app")}
+        onClick={() =>
+          openPage("overview", "/app")
+        }
         style={{ cursor: "pointer" }}
       >
         MARGIN<span>LAB</span>
@@ -408,6 +476,7 @@ export default function DashboardNav({
           </div>
         ))}
 
+        {/* GROWTH */}
         <div
           ref={growthMenuRef}
           style={{
@@ -603,7 +672,8 @@ export default function DashboardNav({
                     >
                       <span>{item.label}</span>
 
-                      {item.id === "alert-center" &&
+                      {item.id ===
+                        "alert-center" &&
                         unreadAlertCount > 0 && (
                           <span
                             aria-label={`${unreadAlertCount} unread alerts`}
@@ -612,11 +682,15 @@ export default function DashboardNav({
                               minWidth: 18,
                               height: 18,
                               padding: "0 5px",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              display:
+                                "inline-flex",
+                              alignItems:
+                                "center",
+                              justifyContent:
+                                "center",
                               borderRadius: 999,
-                              background: "#ff7346",
+                              background:
+                                "#ff7346",
                               border:
                                 "1px solid rgba(255,255,255,0.18)",
                               color: "#ffffff",
@@ -627,7 +701,8 @@ export default function DashboardNav({
                               fontWeight: 950,
                             }}
                           >
-                            {unreadAlertCount > 99
+                            {unreadAlertCount >
+                            99
                               ? "99+"
                               : unreadAlertCount}
                           </span>
@@ -681,24 +756,26 @@ export default function DashboardNav({
           </div>
         </div>
 
+        {/* MORE */}
         <div
           ref={moreMenuRef}
           style={{ position: "relative" }}
           onMouseEnter={openMoreMenu}
-          onMouseLeave={scheduleMoreMenuClose}
+          onMouseLeave={
+            scheduleMoreMenuClose
+          }
         >
           <button
             type="button"
             className={
-              active === "tax-profile" ||
-                active === "reports-notifications" ||
-                active === "glossary" ||
-                active === "billing"
+              moreActive
                 ? "nav-tab active"
                 : "nav-tab"
             }
             onClick={() =>
-              setMoreOpen((current) => !current)
+              setMoreOpen(
+                (current) => !current,
+              )
             }
             aria-expanded={moreOpen}
             aria-haspopup="menu"
@@ -710,6 +787,7 @@ export default function DashboardNav({
             }}
           >
             <span>{labels.more}</span>
+
             <span
               style={{
                 display: "inline-block",
@@ -717,7 +795,8 @@ export default function DashboardNav({
                 transform: moreOpen
                   ? "rotate(180deg)"
                   : "rotate(0deg)",
-                transition: "transform 160ms ease",
+                transition:
+                  "transform 160ms ease",
               }}
             >
               ▼
@@ -730,9 +809,11 @@ export default function DashboardNav({
               position: "absolute",
               top: "100%",
               right: 0,
-              width: 250,
+              width: 270,
               height: 10,
-              pointerEvents: moreOpen ? "auto" : "none",
+              pointerEvents: moreOpen
+                ? "auto"
+                : "none",
             }}
           />
 
@@ -742,7 +823,7 @@ export default function DashboardNav({
               position: "absolute",
               top: "calc(100% + 6px)",
               right: 0,
-              width: 250,
+              width: 270,
               padding: 10,
               borderRadius: 18,
               background:
@@ -752,8 +833,12 @@ export default function DashboardNav({
               boxShadow:
                 "0 26px 70px rgba(0,0,0,0.52)",
               opacity: moreOpen ? 1 : 0,
-              visibility: moreOpen ? "visible" : "hidden",
-              pointerEvents: moreOpen ? "auto" : "none",
+              visibility: moreOpen
+                ? "visible"
+                : "hidden",
+              pointerEvents: moreOpen
+                ? "auto"
+                : "none",
               transform: moreOpen
                 ? "translateY(0)"
                 : "translateY(-7px)",
@@ -762,306 +847,99 @@ export default function DashboardNav({
               zIndex: 100,
             }}
           >
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() =>
-                openPage("tax-profile", "/app/tax-profile")
-              }
-              style={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: "34px minmax(0,1fr)",
-                gap: 10,
-                alignItems: "center",
-                padding: "11px 12px",
-                borderRadius: 14,
-                border:
-                  active === "tax-profile"
-                    ? "1px solid rgba(255,115,60,0.24)"
-                    : "1px solid transparent",
-                background:
-                  active === "tax-profile"
-                    ? "rgba(255,115,60,0.12)"
-                    : "transparent",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 11,
-                  color: "#ff9a70",
-                  background: "rgba(255,115,60,0.09)",
-                  border:
-                    "1px solid rgba(255,115,60,0.16)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                }}
-              >
-                ◇
-              </div>
+            {moreItems.map((item) => {
+              const itemActive =
+                active === item.id;
 
-              <div>
-                <div
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() =>
+                    openPage(
+                      item.id,
+                      item.path,
+                    )
+                  }
                   style={{
-                    color:
-                      active === "tax-profile"
-                        ? "#ffffff"
-                        : "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 900,
+                    width: "100%",
+                    display: "grid",
+                    gridTemplateColumns:
+                      "34px minmax(0,1fr)",
+                    gap: 10,
+                    alignItems: "center",
+                    padding: "11px 12px",
+                    borderRadius: 14,
+                    border: itemActive
+                      ? "1px solid rgba(255,115,60,0.24)"
+                      : "1px solid transparent",
+                    background: itemActive
+                      ? "rgba(255,115,60,0.12)"
+                      : "transparent",
+                    cursor: "pointer",
+                    textAlign: "left",
                   }}
                 >
-                  {labels.taxProfile}
-                </div>
-                <div
-                  style={{
-                    marginTop: 3,
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 10,
-                    lineHeight: 1.35,
-                    fontWeight: 700,
-                  }}
-                >
-                  {language === "it"
-                    ? "Regime IVA e impostazioni fiscali"
-                    : "VAT regime and tax settings"}
-                </div>
-              </div>
-            </button>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: 11,
+                      color:
+                        item.id === "support"
+                          ? "#86efac"
+                          : "#ff9a70",
+                      background:
+                        item.id === "support"
+                          ? "rgba(34,197,94,0.08)"
+                          : "rgba(255,115,60,0.09)",
+                      border:
+                        item.id === "support"
+                          ? "1px solid rgba(34,197,94,0.16)"
+                          : "1px solid rgba(255,115,60,0.16)",
+                      fontSize: 13,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {item.icon}
+                  </div>
 
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() =>
-                openPage(
-                  "reports-notifications",
-                  "/app/reports-notifications",
-                )
-              }
-              style={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: "34px minmax(0,1fr)",
-                gap: 10,
-                alignItems: "center",
-                padding: "11px 12px",
-                borderRadius: 14,
-                border:
-                  active === "reports-notifications"
-                    ? "1px solid rgba(255,115,60,0.24)"
-                    : "1px solid transparent",
-                background:
-                  active === "reports-notifications"
-                    ? "rgba(255,115,60,0.12)"
-                    : "transparent",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 11,
-                  color: "#ff9a70",
-                  background: "rgba(255,115,60,0.09)",
-                  border: "1px solid rgba(255,115,60,0.16)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                }}
-              >
-                ✉
-              </div>
+                  <div>
+                    <div
+                      style={{
+                        color: itemActive
+                          ? "#ffffff"
+                          : "rgba(255,255,255,0.82)",
+                        fontSize: 13,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {item.label}
+                    </div>
 
-              <div>
-                <div
-                  style={{
-                    color:
-                      active === "reports-notifications"
-                        ? "#ffffff"
-                        : "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 900,
-                  }}
-                >
-                  {language === "it"
-                    ? "Report e notifiche"
-                    : "Reports & Notifications"}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 3,
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 10,
-                    lineHeight: 1.35,
-                    fontWeight: 700,
-                  }}
-                >
-                  {language === "it"
-                    ? "Email, report settimanali e alert"
-                    : "Email, weekly reports and alerts"}
-                </div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() =>
-                openPage("glossary", "/app/glossary")
-              }
-              style={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: "34px minmax(0,1fr)",
-                gap: 10,
-                alignItems: "center",
-                padding: "11px 12px",
-                borderRadius: 14,
-                border:
-                  active === "glossary"
-                    ? "1px solid rgba(255,115,60,0.24)"
-                    : "1px solid transparent",
-                background:
-                  active === "glossary"
-                    ? "rgba(255,115,60,0.12)"
-                    : "transparent",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 11,
-                  color: "#ff9a70",
-                  background: "rgba(255,115,60,0.09)",
-                  border:
-                    "1px solid rgba(255,115,60,0.16)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                }}
-              >
-                A
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    color:
-                      active === "glossary"
-                        ? "#ffffff"
-                        : "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 900,
-                  }}
-                >
-                  {labels.glossary}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 3,
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 10,
-                    lineHeight: 1.35,
-                    fontWeight: 700,
-                  }}
-                >
-                  {language === "it"
-                    ? "Metriche, concetti e termini MarginLab"
-                    : "MarginLab metrics, concepts and terms"}
-                </div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() =>
-                openPage("billing", "/app/billing")
-              }
-              style={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: "34px minmax(0,1fr)",
-                gap: 10,
-                alignItems: "center",
-                padding: "11px 12px",
-                borderRadius: 14,
-                border:
-                  active === "billing"
-                    ? "1px solid rgba(255,115,60,0.24)"
-                    : "1px solid transparent",
-                background:
-                  active === "billing"
-                    ? "rgba(255,115,60,0.12)"
-                    : "transparent",
-                cursor: "pointer",
-                textAlign: "left",
-              }}
-            >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  display: "grid",
-                  placeItems: "center",
-                  borderRadius: 11,
-                  color: "#ff9a70",
-                  background: "rgba(255,115,60,0.09)",
-                  border:
-                    "1px solid rgba(255,115,60,0.16)",
-                  fontSize: 13,
-                  fontWeight: 950,
-                }}
-              >
-                $
-              </div>
-
-              <div>
-                <div
-                  style={{
-                    color:
-                      active === "billing"
-                        ? "#ffffff"
-                        : "rgba(255,255,255,0.82)",
-                    fontSize: 13,
-                    fontWeight: 900,
-                  }}
-                >
-                  {t.nav.billing}
-                </div>
-                <div
-                  style={{
-                    marginTop: 3,
-                    color: "rgba(255,255,255,0.42)",
-                    fontSize: 10,
-                    lineHeight: 1.35,
-                    fontWeight: 700,
-                  }}
-                >
-                  {language === "it"
-                    ? "Piani e abbonamento Shopify"
-                    : "Plans and Shopify subscription"}
-                </div>
-              </div>
-            </button>
+                    <div
+                      style={{
+                        marginTop: 3,
+                        color:
+                          "rgba(255,255,255,0.42)",
+                        fontSize: 10,
+                        lineHeight: 1.35,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {item.description}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
+        {/* LANGUAGE */}
         <div
           style={{
             display: "inline-flex",
