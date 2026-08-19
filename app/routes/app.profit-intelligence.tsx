@@ -176,19 +176,37 @@ export default function ProfitIntelligencePage() {
 
   const businessDrivers = [
     {
-      label: "Discounts",
+      label:
+        language === "it"
+          ? "Sconti"
+          : "Discounts",
       value: summary.discounts,
-      description: "Revenue reduced through promotional discounts.",
+      description:
+        language === "it"
+          ? "Ricavi ridotti dagli sconti promozionali."
+          : "Revenue reduced through promotional discounts.",
     },
     {
-      label: "Refunds",
+      label:
+        language === "it"
+          ? "Rimborsi"
+          : "Refunds",
       value: summary.refunds,
-      description: "Revenue reversed through returned orders.",
+      description:
+        language === "it"
+          ? "Ricavi stornati a seguito di ordini rimborsati."
+          : "Revenue reversed through returned orders.",
     },
     {
-      label: "Shipping",
+      label:
+        language === "it"
+          ? "Spedizioni"
+          : "Shipping",
       value: summary.shipping,
-      description: "Shipping charges recorded on orders.",
+      description:
+        language === "it"
+          ? "Costi di spedizione registrati negli ordini."
+          : "Shipping charges recorded on orders.",
     },
   ]
     .filter((driver) => driver.value > 0)
