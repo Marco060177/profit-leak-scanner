@@ -1847,10 +1847,16 @@ Rules:
                           style={{
                             marginTop: 9,
                             color: item.color,
-                            fontSize: 25,
+                            fontSize:
+                              String(item.value).length > 12
+                                ? 19
+                                : String(item.value).length > 9
+                                  ? 22
+                                  : 25,
                             fontWeight: 950,
                             lineHeight: 1,
                             letterSpacing: "-0.03em",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {item.value}
