@@ -185,7 +185,16 @@ function KpiCard({
         style={{
           marginTop: 12,
           color,
-          fontSize: value.length >= 14 ? 21 : value.length >= 10 ? 25 : 30,
+          fontSize:
+            value.length >= 18
+              ? 17
+              : value.length >= 15
+                ? 19
+                : value.length >= 12
+                  ? 22
+                  : value.length >= 9
+                    ? 25
+                    : 30,
           lineHeight: 1,
           fontWeight: 950,
           letterSpacing: "-0.04em",
