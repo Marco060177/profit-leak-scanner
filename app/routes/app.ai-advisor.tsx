@@ -1848,10 +1848,10 @@ Rules:
                             marginTop: 9,
                             color: item.color,
                             fontSize:
-                              String(item.value).length > 12
-                                ? 19
-                                : String(item.value).length > 9
-                                  ? 22
+                              String(item.value).length > 11
+                                ? 17
+                                : String(item.value).length > 8
+                                  ? 20
                                   : 25,
                             fontWeight: 950,
                             lineHeight: 1,
