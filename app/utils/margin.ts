@@ -234,16 +234,16 @@ export type LoaderData = {
 
   taxTreatment?: {
     source:
-      | "shopify_actual_tax"
-      | "shopify_zero_tax"
-      | "tax_profile_fallback"
-      | "insufficient_data";
+    | "shopify_actual_tax"
+    | "shopify_zero_tax"
+    | "tax_profile_fallback"
+    | "insufficient_data";
 
     confidence:
-      | "none"
-      | "low"
-      | "medium"
-      | "high";
+    | "none"
+    | "low"
+    | "medium"
+    | "high";
 
     hasActualTax: boolean;
     shouldUseShopifyTax: boolean;
@@ -271,16 +271,16 @@ export type LoaderData = {
 
   taxAwareEconomics?: {
     source:
-      | "shopify_actual_tax"
-      | "shopify_zero_tax"
-      | "tax_profile_fallback"
-      | "insufficient_data";
+    | "shopify_actual_tax"
+    | "shopify_zero_tax"
+    | "tax_profile_fallback"
+    | "insufficient_data";
 
     confidence:
-      | "none"
-      | "low"
-      | "medium"
-      | "high";
+    | "none"
+    | "low"
+    | "medium"
+    | "high";
 
     grossRevenue: number;
     outputVat: number;
@@ -336,21 +336,23 @@ export function money(
   n: number,
   currencyCode = "USD",
   locale = "en-US",
-  _digits = 2,
+  digits = 2,
 ) {
   return formatMoney(n, {
     currencyCode,
     locale,
+    digits,
   });
 }
 
 export function pct(
   n: number,
   locale = "en-US",
-  _digits = 1,
+  digits = 1,
 ) {
   return formatPercent(n, {
     locale,
+    digits,
   });
 }
 

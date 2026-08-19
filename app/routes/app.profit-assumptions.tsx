@@ -199,6 +199,8 @@ function KpiCard({
           fontWeight: 950,
           letterSpacing: "-0.04em",
           whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "clip",
         }}
       >
         {value}

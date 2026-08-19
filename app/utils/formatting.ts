@@ -31,6 +31,7 @@ export function formatMoney(
       currency: currencyCode,
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
+      useGrouping: true,
     }).format(Number.isFinite(value) ? value : 0);
   } catch {
     return new Intl.NumberFormat(DEFAULT_LOCALE, {
@@ -38,6 +39,7 @@ export function formatMoney(
       currency: DEFAULT_CURRENCY,
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
+      useGrouping: true,
     }).format(Number.isFinite(value) ? value : 0);
   }
 }
