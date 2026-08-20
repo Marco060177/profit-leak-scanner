@@ -61,46 +61,46 @@ export default function Billing() {
 
   const starterFeatures = isIt
     ? [
-        ["Profit Leak Dashboard", "Panoramica immediata di margini, perdite e rischi."],
-        ["Product Risk Analysis", "Prodotti critici, margini deboli, costi mancanti e target price."],
-        ["Profit Intelligence", "Qualità del margine, concentrazione, sconti, rimborsi e shipping."],
-        ["Tax-aware economics", "Economia fiscale integrata e profili avanzati nei mercati supportati."],
-        ["CSV + PDF export", "Porta fuori da MarginLab dati e report pronti da condividere."],
-        ["Product email alerts", "Avviso quando viene venduto un prodotto con problemi di redditività."],
-        ["Weekly Profit Report", "Riepilogo settimanale di numeri, rischi e prossime azioni."],
-        ["Email support", "Assistenza diretta dall'interno di MarginLab."],
+        ["Profit Leak Dashboard", "Una vista immediata su dove il profitto si sta indebolendo e quali aree richiedono attenzione."],
+        ["Product Risk Analysis", "Individua prodotti critici, margini deboli, costi mancanti e gap di prezzo prima che diventino problemi più grandi."],
+        ["Profit Intelligence", "Capisci cosa sta comprimendo la redditività: concentrazione, sconti, rimborsi, shipping e qualità del margine."],
+        ["Tax-Aware Profit Engine", "Calcola profitto e margini considerando IVA, GST e Sales Tax, con valori lordi/netti e imposte recuperabili quando applicabile."],
+        ["CSV + PDF export", "Esporta analisi e report pronti da condividere, archiviare o usare nelle tue decisioni operative."],
+        ["Product email alerts", "MarginLab continua a monitorare lo store e ti avvisa quando viene venduto un prodotto con problemi di redditività."],
+        ["Weekly Profit Report", "Ricevi ogni settimana un riepilogo di performance, rischi e segnali da controllare, anche senza aprire l’app."],
+        ["Email support", "Contatta direttamente MarginLab dall’app quando hai bisogno di chiarimenti o supporto."],
       ]
     : [
-        ["Profit Leak Dashboard", "Immediate view of margins, losses and risks."],
-        ["Product Risk Analysis", "Critical products, weak margins, missing costs and target prices."],
-        ["Profit Intelligence", "Margin quality, concentration, discounts, refunds and shipping."],
-        ["Tax-aware economics", "Integrated tax economics and advanced profiles in supported markets."],
-        ["CSV + PDF export", "Take MarginLab data and share-ready reports outside the app."],
-        ["Product email alerts", "Get notified when a problematic product is sold."],
-        ["Weekly Profit Report", "A weekly summary of numbers, risks and next actions."],
-        ["Email support", "Direct support from inside MarginLab."],
+        ["Profit Leak Dashboard", "See where profit is weakening and which areas deserve attention first."],
+        ["Product Risk Analysis", "Detect critical products, weak margins, missing costs and pricing gaps before they become bigger problems."],
+        ["Profit Intelligence", "Understand what is compressing profitability across concentration, discounts, refunds, shipping and margin quality."],
+        ["Tax-Aware Profit Engine", "Calculate profit and margins with VAT, GST and Sales Tax effects, including gross/net values and recoverable input tax where applicable."],
+        ["CSV + PDF export", "Export analysis and share-ready reports for review, archiving and operational decisions."],
+        ["Product email alerts", "MarginLab keeps monitoring the store and notifies you when a problematic product is sold."],
+        ["Weekly Profit Report", "Receive a weekly profitability summary with performance, risks and signals to review, even when you do not open the app."],
+        ["Email support", "Contact MarginLab directly from inside the app whenever you need product help or clarification."],
       ];
 
   const growthFeatures = isIt
     ? [
-        ["Profit Action Center", "Trasforma i segnali in una coda di priorità operative."],
-        ["Alert Center", "Monitora e gestisci i segnali che richiedono attenzione."],
-        ["AI Advisor Pro", "Interroga i dati dello store e approfondisci decisioni e rischi."],
-        ["Recovery Simulator V2", "Simula prezzi, costi e margini prima di modificare lo store."],
-        ["Profit Forecast V2", "Proietta l'andamento del profitto e confronta scenari futuri."],
-        ["Business Model Studio", "Modella costi, fee e leve economiche oltre il margine prodotto."],
-        ["Advanced recommendations", "Priorità, opportunità di recupero e indicazioni operative evolute."],
-        ["WhatsApp direct support", "Canale diretto di assistenza riservato agli utenti Growth."],
+        ["Profit Action Center", "Trasforma i segnali di redditività in un piano ordinato per impatto, urgenza e priorità."],
+        ["Alert Center", "Centralizza i segnali che richiedono attenzione e gestiscili fino alla risoluzione."],
+        ["AI Advisor Pro", "Interroga i dati reali dello store per capire rischi, priorità e decisioni con maggiore contesto."],
+        ["Recovery Simulator V2", "Prova modifiche a prezzi, costi e vendite e misura l’impatto economico prima di applicarle allo store."],
+        ["Profit Forecast V2", "Proietta il profitto nei mesi successivi e confronta scenari prima di prendere decisioni di crescita."],
+        ["Business Model Studio", "Porta nell’analisi costi operativi, commissioni e riserve per stimare profitto netto e break-even."],
+        ["Advanced recommendations", "Ricevi indicazioni operative più profonde su dove intervenire e quale impatto valutare per primo."],
+        ["WhatsApp direct support", "Accedi a un canale diretto con MarginLab quando vuoi chiarire rapidamente un dubbio sull’app o sulle analisi."],
       ]
     : [
-        ["Profit Action Center", "Turn signals into a prioritized operational queue."],
-        ["Alert Center", "Monitor and manage signals that deserve attention."],
-        ["AI Advisor Pro", "Explore store data and dig deeper into decisions and risks."],
-        ["Recovery Simulator V2", "Simulate prices, costs and margins before changing your store."],
-        ["Profit Forecast V2", "Project profit performance and compare future scenarios."],
-        ["Business Model Studio", "Model costs, fees and economic levers beyond product margin."],
-        ["Advanced recommendations", "Priorities, recovery opportunities and deeper operational guidance."],
-        ["WhatsApp direct support", "A direct support channel reserved for Growth users."],
+        ["Profit Action Center", "Turn profitability signals into a plan ranked by impact, urgency and priority."],
+        ["Alert Center", "Centralize the signals that need attention and manage them through resolution."],
+        ["AI Advisor Pro", "Question your real store data to understand risks, priorities and decisions with more context."],
+        ["Recovery Simulator V2", "Test price, cost and sales changes and measure economic impact before applying them to your store."],
+        ["Profit Forecast V2", "Project profit over the coming months and compare scenarios before making growth decisions."],
+        ["Business Model Studio", "Bring operating costs, fees and reserves into the model to estimate net profit and break-even."],
+        ["Advanced recommendations", "Get deeper operational guidance on where to act and which modeled impact to evaluate first."],
+        ["WhatsApp direct support", "Use a direct MarginLab support channel when you want quick clarification on the app or its analysis."],
       ];
 
   const openShopifyPricing = () => (
@@ -155,14 +155,14 @@ export default function Billing() {
 
           <h1 style={styles.heroTitle}>
             {isIt
-              ? "Capisci dove perdi profitto. Poi decidi cosa fare."
-              : "Understand where profit leaks. Then decide what to do."}
+              ? "Capisci il profitto reale. Poi decidi come migliorarlo."
+              : "Understand your real profit. Then decide how to improve it."}
           </h1>
 
           <p style={styles.heroText}>
             {isIt
-              ? "Starter costruisce una base completa di margin intelligence. Growth aggiunge simulazione, forecasting, AI e un vero sistema operativo per trasformare i segnali in decisioni."
-              : "Starter gives you a complete margin intelligence foundation. Growth adds simulation, forecasting, AI and an operating system for turning signals into decisions."}
+              ? "Starter ti mostra cosa sta succedendo davvero alla redditività dello store. Growth aggiunge priorità, simulazione, forecasting e AI per trasformare quei segnali in decisioni operative."
+              : "Starter shows what is really happening to store profitability. Growth adds prioritization, simulation, forecasting and AI to turn those signals into operational decisions."}
           </p>
 
           <div style={styles.heroPills}>
@@ -189,8 +189,8 @@ export default function Billing() {
             </div>
             <div style={styles.positioningText}>
               {isIt
-                ? "Per merchant che vogliono vedere margini, rischi e problemi economici con chiarezza."
-                : "For merchants who want a clear view of margins, risks and economic problems."}
+                ? "Per merchant che vogliono andare oltre Revenue − COGS e capire margini, rischi e redditività economica con chiarezza."
+                : "For merchants who want to go beyond Revenue − COGS and clearly understand margins, risks and real store economics."}
             </div>
           </div>
 
@@ -203,8 +203,8 @@ export default function Billing() {
             </div>
             <div style={styles.positioningText}>
               {isIt
-                ? "Per merchant che vogliono simulare, prevedere, prioritizzare e agire."
-                : "For merchants who want to simulate, forecast, prioritize and act."}
+                ? "Per merchant che vogliono sapere cosa fare prima, simulare l’impatto e prevedere dove può andare il profitto."
+                : "For merchants who want to know what to do first, simulate impact and forecast where profit can go."}
             </div>
           </div>
         </section>
@@ -226,8 +226,8 @@ export default function Billing() {
 
             <div style={styles.planPromise}>
               {isIt
-                ? "Tutto ciò che serve per capire la redditività reale del tuo store."
-                : "Everything you need to understand the real profitability of your store."}
+                ? "Una base completa per capire dove nasce, dove si perde e quanto vale davvero il profitto del tuo store."
+                : "A complete foundation for understanding where store profit comes from, where it leaks and what it is really worth."}
             </div>
 
             <div style={styles.trialLine}>
@@ -254,12 +254,12 @@ export default function Billing() {
 
             <div style={styles.marketBox}>
               <div style={styles.marketBoxTitle}>
-                {isIt ? "Tax-aware by design" : "Tax-aware by design"}
+                {isIt ? "Profitto reale, non solo Revenue − COGS" : "Profitto reale, non solo Revenue − COGS"}
               </div>
               <div style={styles.marketBoxText}>
                 {isIt
-                  ? "MarginLab integra il trattamento fiscale nell'analisi economica e supporta profili avanzati in 10 mercati, usando i dati fiscali reali Shopify quando disponibili."
-                  : "MarginLab integrates tax treatment into economic analysis and supports advanced profiles across 10 markets, using actual Shopify tax data whenever available."}
+                  ? "MarginLab integra IVA, GST e Sales Tax direttamente nell’analisi economica. Usa i dati fiscali reali Shopify quando disponibili, distingue valori lordi e netti e considera la recuperabilità dell’imposta nei profili supportati, per mostrare margini e profitti più vicini alla reale economia dello store."
+                  : "MarginLab brings VAT, GST and Sales Tax directly into economic analysis. It uses actual Shopify tax data whenever available, separates gross and net values and accounts for recoverable input tax in supported profiles, so margins and profit better reflect real store economics."}
               </div>
             </div>
 
@@ -301,8 +301,8 @@ export default function Billing() {
 
             <div style={styles.planPromise}>
               {isIt
-                ? "Dall'analisi alla decisione: simula, prevedi e lavora sulle priorità che valgono di più."
-                : "From analysis to decision: simulate, forecast and work on the priorities that matter most."}
+                ? "Dall’analisi alla decisione: scopri cosa conta di più, simula prima di agire e misura dove intervenire."
+                : "From analysis to decision: see what matters most, simulate before acting and focus on the changes with the greatest potential impact."}
             </div>
 
             <div style={styles.growthTrialLine}>
@@ -329,12 +329,12 @@ export default function Billing() {
 
             <div style={styles.growthValueBox}>
               <div style={styles.growthValueTitle}>
-                {isIt ? "Non più dashboard da interpretare da solo." : "Not another dashboard you interpret alone."}
+                {isIt ? "Non limitarti a vedere il problema. Decidi cosa fare." : "Do not stop at seeing the problem. Decide what to do next."}
               </div>
               <div style={styles.growthValueText}>
                 {isIt
-                  ? "Growth collega segnali, priorità, simulazioni, forecasting e AI per aiutarti a scegliere dove intervenire prima."
-                  : "Growth connects signals, priorities, simulations, forecasting and AI to help you decide where to act first."}
+                  ? "Growth collega segnali, priorità, simulazioni, forecasting e AI per aiutarti a scegliere quale intervento valutare prima e con quale impatto potenziale."
+                  : "Growth connects signals, priorities, simulations, forecasting and AI to help you decide which intervention to evaluate first and what impact it could have."}
               </div>
             </div>
 
@@ -361,50 +361,50 @@ export default function Billing() {
 
             <div style={styles.compareHint}>
               {isIt
-                ? "Entrambi partono dagli stessi dati Shopify. Growth aggiunge gli strumenti per decidere e intervenire."
-                : "Both start from the same Shopify data. Growth adds the tools to decide and act."}
+                ? "Starter ti aiuta a capire e monitorare la redditività. Growth aggiunge gli strumenti per prioritizzare, simulare, prevedere e decidere."
+                : "Starter helps you understand and monitor profitability. Growth adds the tools to prioritize, simulate, forecast and decide."}
             </div>
           </div>
 
           <div style={styles.compareGrid}>
             {[
               [
-                isIt ? "Vedere dove perdi margine" : "See where margin leaks",
+                isIt ? "Capire dove il profitto si sta indebolendo" : "Understand where profit is weakening",
                 true,
                 true,
               ],
               [
-                isIt ? "Analizzare prodotti e profitto" : "Analyze products and profit",
+                isIt ? "Analizzare prodotti, margini e rischi" : "Analyze products, margins and risks",
                 true,
                 true,
               ],
               [
-                isIt ? "Tax-aware economics" : "Tax-aware economics",
+                isIt ? "Profitto tax-aware oltre Revenue − COGS" : "Profitto tax-aware oltre Revenue − COGS",
                 true,
                 true,
               ],
               [
-                isIt ? "CSV, PDF, alert email e report settimanale" : "CSV, PDF, email alerts and weekly report",
+                isIt ? "Monitoraggio continuo, report, alert ed export" : "Continuous monitoring, reports, alerts and exports",
                 true,
                 true,
               ],
               [
-                isIt ? "Simulare recupero e modifiche" : "Simulate recovery and changes",
+                isIt ? "Simulare l’impatto prima di cambiare prezzi o costi" : "Simulate impact before changing prices or costs",
                 false,
                 true,
               ],
               [
-                isIt ? "Prevedere il profitto futuro" : "Forecast future profit",
+                isIt ? "Prevedere dove può andare il profitto" : "Forecast where profit can go",
                 false,
                 true,
               ],
               [
-                isIt ? "AI Advisor e priorità operative" : "AI Advisor and operational priorities",
+                isIt ? "Capire cosa fare prima con AI e priorità operative" : "Know what to do first with AI and operational priorities",
                 false,
                 true,
               ],
               [
-                isIt ? "Alert Center + WhatsApp diretto" : "Alert Center + direct WhatsApp",
+                isIt ? "Gestire segnali attivi + supporto diretto WhatsApp" : "Manage active signals + direct WhatsApp support",
                 false,
                 true,
               ],
@@ -432,8 +432,8 @@ export default function Billing() {
           <div>
             <div style={styles.finalTitle}>
               {isIt
-                ? "Parti dai numeri. Passa alle decisioni quando ne hai bisogno."
-                : "Start with the numbers. Move to decisions when you need them."}
+                ? "Parti da una lettura credibile del profitto. Passa alle decisioni quando sei pronto."
+                : "Start with a credible view of profit. Move to decisions when you are ready."}
             </div>
             <div style={styles.finalText}>
               {isIt
