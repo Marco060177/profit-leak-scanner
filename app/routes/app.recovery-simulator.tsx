@@ -15,7 +15,7 @@ import {
   money as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
 
@@ -120,7 +120,8 @@ function roundCurrency(value: number) {
 
 export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.recoverySimulatorPage;
   const loaderData = useLoaderData() as LoaderData & {
     growthAccess: boolean;
     assumptions: {
@@ -1006,30 +1007,20 @@ export default function RecoverySimulatorPage() {
             <div className="alert-pill">
               <span className="alert-dot" />
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Anteprima del piano Growth"
-                  : "Growth Plan Preview"}
+                ? copy.auto.s001
+                : copy.auto.s002}
             </div>
 
             <div className="eyebrow">
-              {language === "it"
-                ? "SIMULATORE DI RECUPERO"
-                : "RECOVERY SIMULATOR"}
+              {copy.auto.s003}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Simula una decisione prima di applicarla al tuo store"
-                : "See the profit impact before changing your store"}
+              {copy.auto.s004}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "Modifica prezzo, costo e volume di vendita. MarginLab mostra subito l’impatto sul margine, sul profitto mensile e sul risultato annuale."
-                : "Adjust price, cost and sales volume. MarginLab instantly shows the impact on margin, monthly profit and annual results."}
+              {copy.auto.s005}
             </div>
 
             <div
@@ -1047,9 +1038,7 @@ export default function RecoverySimulatorPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.auto.s006}
             </div>
           </div>
 
@@ -1058,7 +1047,7 @@ export default function RecoverySimulatorPage() {
               className="primary-button recovery-growth-button"
               onClick={() => navigate("/app/billing")}
             >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+              {copy.auto.s007}
             </button>
           )}
         </div>
@@ -1105,7 +1094,7 @@ export default function RecoverySimulatorPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.auto.s008}
                 </div>
 
                 <div
@@ -1117,9 +1106,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Recovery Simulator è incluso nel piano Growth"
-                    : "Recovery Simulator is included with Growth"}
+                  {copy.auto.s009}
                 </div>
 
                 <div
@@ -1131,9 +1118,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per simulare prezzo, costo e volume, confrontare scenari ed esportare le decisioni."
-                    : "Upgrade to Growth to simulate price, cost and volume, compare scenarios and export decisions."}
+                  {copy.auto.s010}
                 </div>
 
                 <button
@@ -1142,7 +1127,7 @@ export default function RecoverySimulatorPage() {
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.auto.s011}
                 </button>
               </div>
             </div>
@@ -1171,9 +1156,7 @@ export default function RecoverySimulatorPage() {
               >
                 <div>
                   <div style={mutedLabelStyle}>
-                    {language === "it"
-                      ? "Selezione prodotto"
-                      : "Product selection"}
+                    {copy.auto.s012}
                   </div>
                   <div
                     style={{
@@ -1183,9 +1166,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it"
-                      ? "Scegli il prodotto da simulare"
-                      : "Choose the product to simulate"}
+                    {copy.auto.s013}
                   </div>
                 </div>
 
@@ -1194,9 +1175,7 @@ export default function RecoverySimulatorPage() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder={
-                      language === "it"
-                        ? "Cerca un prodotto..."
-                        : "Search a product..."
+                      copy.auto.s014
                     }
                     style={{
                       width: "100%",
@@ -1267,7 +1246,7 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {money(product.avgPrice, 2)} · {product.qty}{" "}
-                        {language === "it" ? "unità" : "units"}
+                        {copy.auto.s015}
                       </div>
                     </button>
                   );
@@ -1285,9 +1264,7 @@ export default function RecoverySimulatorPage() {
             >
               <div style={cardStyle}>
                 <div style={mutedLabelStyle}>
-                  {language === "it"
-                    ? "Baseline economica attuale"
-                    : "Current economic baseline"}
+                  {copy.auto.s016}
                 </div>
 
                 <div
@@ -1311,16 +1288,16 @@ export default function RecoverySimulatorPage() {
                 >
                   {[
                     [
-                      language === "it" ? "Prezzo" : "Selling price",
+                      copy.auto.s017,
                       money(currentPrice, 2),
                     ],
-                    [language === "it" ? "Costo" : "Cost", money(currentCost, 2)],
+                    [copy.auto.s018, money(currentCost, 2)],
                     [
-                      language === "it" ? "Vendite mensili" : "Monthly sales",
+                      copy.auto.s019,
                       Math.round(currentMonthlyQty).toString(),
                     ],
                     [
-                      language === "it" ? "Margine" : "Margin",
+                      copy.auto.s020,
                       pct(currentMarginPct),
                     ],
                     [
@@ -1361,13 +1338,9 @@ export default function RecoverySimulatorPage() {
                             <MetricTooltip
                               content={{
                                 title:
-                                  language === "it"
-                                    ? "Profitto mensile attuale"
-                                    : "Current monthly profit",
+                                  copy.auto.s023,
                                 description:
-                                  language === "it"
-                                    ? "Profitto economico del prodotto normalizzato su 30 giorni e al netto delle commissioni variabili configurate in MarginLab. Rappresenta la base di partenza usata dal simulatore."
-                                    : "The product's economic profit normalized to 30 days and reduced by the variable fees configured in MarginLab. This is the starting baseline used by the simulator.",
+                                  copy.auto.s024,
                               }}
                             />
                           )}
@@ -1395,9 +1368,7 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   <div style={mutedLabelStyle}>
-                    {language === "it"
-                      ? "Prezzo di pareggio"
-                      : "Break-even price"}
+                    {copy.auto.s025}
                   </div>
                   <div
                     style={{
@@ -1418,9 +1389,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 750,
                     }}
                   >
-                    {language === "it"
-                      ? "Sotto questo valore il prodotto non copre il costo economico unitario e le commissioni variabili impostate."
-                      : "Below this value, the product does not cover its economic unit cost and configured variable fees."}
+                    {copy.auto.s026}
                   </div>
                 </div>
               </div>
@@ -1443,7 +1412,7 @@ export default function RecoverySimulatorPage() {
                 >
                   <div>
                     <div style={mutedLabelStyle}>
-                      {language === "it" ? "Simulazione live" : "Live simulation"}
+                      {copy.auto.s027}
                     </div>
                     <div
                       style={{
@@ -1453,9 +1422,7 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 950,
                       }}
                     >
-                      {language === "it"
-                        ? "Modifica le tre leve di profitto"
-                        : "Adjust the three profit levers"}
+                      {copy.auto.s028}
                     </div>
                   </div>
 
@@ -1473,20 +1440,12 @@ export default function RecoverySimulatorPage() {
                     }}
                   >
                     {scenario === "custom"
-                      ? language === "it"
-                        ? "Scenario personalizzato"
-                        : "Custom scenario"
+                      ? copy.auto.s029
                       : scenario === "conservative"
-                        ? language === "it"
-                          ? "Prudente"
-                          : "Conservative"
+                        ? copy.auto.s030
                         : scenario === "balanced"
-                          ? language === "it"
-                            ? "Bilanciato"
-                            : "Balanced"
-                          : language === "it"
-                            ? "Aggressivo"
-                            : "Aggressive"}
+                          ? copy.auto.s031
+                          : copy.auto.s032}
                   </div>
                 </div>
 
@@ -1502,9 +1461,7 @@ export default function RecoverySimulatorPage() {
                     >
                       <div>
                         <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                          {language === "it"
-                            ? "Prezzo di vendita"
-                            : "Selling price"}
+                          {copy.auto.s033}
                         </div>
                         <div
                           style={{
@@ -1514,9 +1471,7 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {language === "it"
-                            ? `Attuale ${money(currentPrice, 2)}`
-                            : `Current ${money(currentPrice, 2)}`}
+                          {t("recoverySimulatorPage.currentValue", { value: money(currentPrice, 2) })}
                         </div>
                       </div>
                       <div
@@ -1574,9 +1529,7 @@ export default function RecoverySimulatorPage() {
                     >
                       <div>
                         <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                          {language === "it"
-                            ? "Riduzione del costo"
-                            : "Cost reduction"}
+                          {copy.auto.s034}
                         </div>
                         <div
                           style={{
@@ -1586,9 +1539,7 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {language === "it"
-                            ? `Nuovo costo ${money(simulatedCost, 2)}`
-                            : `New cost ${money(simulatedCost, 2)}`}
+                          {t("recoverySimulatorPage.newCost", { value: money(simulatedCost, 2) })}
                         </div>
                       </div>
                       <div
@@ -1643,9 +1594,7 @@ export default function RecoverySimulatorPage() {
                     >
                       <div>
                         <div style={{ color: "#f8fafc", fontWeight: 900 }}>
-                          {language === "it"
-                            ? "Variazione delle vendite"
-                            : "Sales change"}
+                          {copy.auto.s035}
                         </div>
                         <div
                           style={{
@@ -1655,9 +1604,7 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {language === "it"
-                            ? `${Math.round(simulatedMonthlyQty)} unità mensili stimate`
-                            : `${Math.round(simulatedMonthlyQty)} estimated monthly units`}
+                          {t("recoverySimulatorPage.estimatedUnits", { count: Math.round(simulatedMonthlyQty) })}
                         </div>
                       </div>
                       <div
@@ -1716,16 +1663,10 @@ export default function RecoverySimulatorPage() {
                 const active = scenario === item.key;
                 const label =
                   item.key === "conservative"
-                    ? language === "it"
-                      ? "Prudente"
-                      : "Conservative"
+                    ? copy.auto.s036
                     : item.key === "balanced"
-                      ? language === "it"
-                        ? "Bilanciato"
-                        : "Balanced"
-                      : language === "it"
-                        ? "Aggressivo"
-                        : "Aggressive";
+                      ? copy.auto.s037
+                      : copy.auto.s038;
 
                 return (
                   <button
@@ -1776,9 +1717,11 @@ export default function RecoverySimulatorPage() {
                         fontWeight: 750,
                       }}
                     >
-                      {language === "it"
-                        ? `Prezzo +${item.priceChangePct}% · Costo −${item.costReductionPct}% · Vendite ${formatSignedPct(item.salesChangePct, 0)}`
-                        : `Price +${item.priceChangePct}% · Cost −${item.costReductionPct}% · Sales ${formatSignedPct(item.salesChangePct, 0)}`}
+                      {t("recoverySimulatorPage.scenarioSummary", {
+                        price: item.priceChangePct,
+                        cost: item.costReductionPct,
+                        sales: formatSignedPct(item.salesChangePct, 0),
+                      })}
                     </div>
                   </button>
                 );
@@ -1800,9 +1743,7 @@ export default function RecoverySimulatorPage() {
             >
               <div>
                 <div style={{ ...mutedLabelStyle, color: "#c4b5fd" }}>
-                  {language === "it"
-                    ? "SCENARIO SUGGERITO"
-                    : "SUGGESTED SCENARIO"}
+                  {copy.auto.s039}
                 </div>
                 <div
                   style={{
@@ -1812,9 +1753,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Lascia che MarginLab trovi un equilibrio credibile"
-                    : "Let MarginLab find a credible balance"}
+                  {copy.auto.s040}
                 </div>
                 <div
                   style={{
@@ -1825,9 +1764,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "La proposta usa margine economico, costo economico e volume storico del prodotto, limita l'aumento di prezzo e include una stima prudente della risposta delle vendite."
-                    : "The proposal uses the product's economic margin, economic cost and sales history, caps the price increase and includes a cautious estimate of demand response."}
+                  {copy.auto.s041}
                 </div>
               </div>
               <button
@@ -1846,9 +1783,7 @@ export default function RecoverySimulatorPage() {
                   fontWeight: 950,
                 }}
               >
-                {language === "it"
-                  ? "Applica scenario suggerito"
-                  : "Apply suggested scenario"}
+                {copy.auto.s042}
               </button>
             </div>
 
@@ -1856,14 +1791,10 @@ export default function RecoverySimulatorPage() {
               <div className="section-header">
                 <div>
                   <div className="section-title">
-                    {language === "it"
-                      ? "Risultato in tempo reale"
-                      : "Live result"}
+                    {copy.auto.s043}
                   </div>
                   <div className="section-subtitle">
-                    {language === "it"
-                      ? "Confronto tra la situazione attuale e lo scenario simulato."
-                      : "Comparison between the current situation and the simulated scenario."}
+                    {copy.auto.s044}
                   </div>
                 </div>
                 <button
@@ -1882,7 +1813,7 @@ export default function RecoverySimulatorPage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {language === "it" ? "Esporta scenario CSV" : "Export scenario CSV"}
+                  {copy.auto.s045}
                 </button>
               </div>
 
@@ -1896,40 +1827,32 @@ export default function RecoverySimulatorPage() {
               >
                 {[
                   {
-                    label: language === "it" ? "Nuovo margine" : "New margin",
+                    label: copy.auto.s046,
                     value: pct(simulatedMarginPct),
                     note: formatSignedPct(marginDelta, 1),
                     positive: marginDelta >= 0,
                   },
                   {
                     label:
-                      language === "it"
-                        ? "Nuovo profitto mensile"
-                        : "New monthly profit",
+                      copy.auto.s047,
                     value: money(simulatedMonthlyProfit, 0),
                     note: formatSignedPct(profitDeltaPct, 1),
                     positive: recoveredMonthlyProfit >= 0,
                   },
                   {
                     label:
-                      language === "it"
-                        ? "Recupero mensile netto"
-                        : "Net monthly recovery",
+                      language === "it" ? "Recupero mensile netto" : "Net monthly recovery",
                     value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
                     note:
-                      language === "it" ? "Impatto stimato" : "Estimated impact",
+                      copy.auto.s049,
                     positive: netRecoveredMonthlyProfit >= 0,
                   },
                   {
                     label:
-                      language === "it"
-                        ? "Recupero annuale netto"
-                        : "Net annual recovery",
+                      copy.auto.s050,
                     value: formatSignedMoney(netRecoveredAnnualProfit, 0),
                     note:
-                      language === "it"
-                        ? "Proiezione 12 mesi"
-                        : "12-month projection",
+                      copy.auto.s051,
                     positive: netRecoveredAnnualProfit >= 0,
                   },
                 ].map((item) => (
@@ -1958,19 +1881,13 @@ export default function RecoverySimulatorPage() {
                       <span>{item.label}</span>
 
                       {item.label ===
-                        (language === "it"
-                          ? "Recupero mensile netto"
-                          : "Net monthly recovery") && (
+                        (language === "it" ? "Recupero mensile netto" : "Net monthly recovery") && (
                           <MetricTooltip
                             content={{
                               title:
-                                language === "it"
-                                  ? "Recupero mensile netto"
-                                  : "Net monthly recovery",
+                                copy.auto.s053,
                               description:
-                                language === "it"
-                                  ? "Differenza stimata tra il profitto mensile dello scenario simulato e quello attuale, dopo l'eventuale riserva fiscale gestionale configurata. È un risultato della simulazione, non profitto già realizzato."
-                                  : "Estimated difference between the simulated monthly profit and the current monthly profit, after any configured business-model tax reserve. It is a simulation result, not profit already realized.",
+                                copy.auto.s054,
                             }}
                           />
                         )}
@@ -2019,7 +1936,7 @@ export default function RecoverySimulatorPage() {
               >
                 <div>
                   <div style={mutedLabelStyle}>
-                    {language === "it" ? "SCENARI SALVATI" : "SAVED SCENARIOS"}
+                    {copy.auto.s055}
                   </div>
                   <div
                     style={{
@@ -2029,9 +1946,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it"
-                      ? "Salva e confronta le decisioni"
-                      : "Save and compare decisions"}
+                    {copy.auto.s056}
                   </div>
                 </div>
                 <div
@@ -2046,7 +1961,7 @@ export default function RecoverySimulatorPage() {
                     value={scenarioName}
                     onChange={(event) => setScenarioName(event.target.value)}
                     placeholder={
-                      language === "it" ? "Nome dello scenario" : "Scenario name"
+                      copy.auto.s057
                     }
                     style={{
                       minHeight: 46,
@@ -2074,7 +1989,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it" ? "Salva scenario" : "Save scenario"}
+                    {copy.auto.s058}
                   </button>
                 </div>
               </div>
@@ -2106,9 +2021,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Salva almeno due scenari per confrontare rapidamente margine, profitto e recupero annuale."
-                    : "Save at least two scenarios to quickly compare margin, profit and annual recovery."}
+                  {copy.auto.s059}
                 </div>
               ) : (
                 <div
@@ -2167,9 +2080,7 @@ export default function RecoverySimulatorPage() {
                           type="button"
                           onClick={() => deleteSavedScenario(saved.id)}
                           aria-label={
-                            language === "it"
-                              ? "Elimina scenario"
-                              : "Delete scenario"
+                            copy.auto.s060
                           }
                           style={{
                             width: 30,
@@ -2195,23 +2106,19 @@ export default function RecoverySimulatorPage() {
                       >
                         {[
                           [
-                            language === "it" ? "Margine" : "Margin",
+                            copy.auto.s061,
                             pct(saved.marginPct),
                           ],
                           [
-                            language === "it"
-                              ? "Profitto/mese"
-                              : "Monthly profit",
+                            copy.auto.s062,
                             money(saved.monthlyProfit, 0),
                           ],
                           [
-                            language === "it"
-                              ? "Recupero/anno"
-                              : "Annual recovery",
+                            copy.auto.s063,
                             formatSignedMoney(saved.annualRecovery, 0),
                           ],
                           [
-                            language === "it" ? "Prezzo" : "Price",
+                            copy.auto.s064,
                             money(saved.simulatedPrice, 2),
                           ],
                         ].map(([label, value]) => (
@@ -2261,9 +2168,7 @@ export default function RecoverySimulatorPage() {
                           fontWeight: 900,
                         }}
                       >
-                        {language === "it"
-                          ? "Carica questo scenario"
-                          : "Load this scenario"}
+                        {copy.auto.s065}
                       </button>
                     </div>
                   ))}
@@ -2282,9 +2187,7 @@ export default function RecoverySimulatorPage() {
             >
               <div style={cardStyle}>
                 <div style={mutedLabelStyle}>
-                  {language === "it"
-                    ? "ORIGINE DEL RECUPERO"
-                    : "RECOVERY BREAKDOWN"}
+                  {copy.auto.s066}
                 </div>
                 <div
                   style={{
@@ -2294,9 +2197,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Da dove nasce l'impatto annuale"
-                    : "Where the annual impact comes from"}
+                  {copy.auto.s067}
                 </div>
                 <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
                   {recoveryBreakdown.map((item) => (
@@ -2338,7 +2239,7 @@ export default function RecoverySimulatorPage() {
                     }}
                   >
                     <span>
-                      {language === "it" ? "Totale netto" : "Net total"}
+                      {copy.auto.s068}
                     </span>
                     <span
                       style={{
@@ -2361,18 +2262,14 @@ export default function RecoverySimulatorPage() {
                     gap: 6,
                   }}
                 >
-                  <span>{language === "it" ? "RISCHIO" : "RISK"}</span>
+                  <span>{copy.auto.s069}</span>
 
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Rischio commerciale"
-                          : "Commercial risk",
+                        copy.auto.s070,
                       description:
-                        language === "it"
-                          ? "Stima del rischio commerciale dello scenario basata soprattutto sull'aumento di prezzo ipotizzato e sull'eventuale calo delle vendite. Un rischio più alto indica che lo scenario richiede maggiore cautela e verifica sul campo."
-                          : "Estimate of the scenario's commercial risk, based mainly on the assumed price increase and any expected sales decline. A higher risk means the scenario requires more caution and real-world validation.",
+                        copy.auto.s071,
                     }}
                   />
                 </div>
@@ -2413,15 +2310,16 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? `Aumento prezzo ${formatSignedPct(priceChangePct)} e risposta vendite ${formatSignedPct(salesChangePct)}. Verifica il risultato reale per 30 giorni.`
-                    : `Price change ${formatSignedPct(priceChangePct)} and sales response ${formatSignedPct(salesChangePct)}. Validate the real result for 30 days.`}
+                  {t("recoverySimulatorPage.validationNote", {
+                    price: formatSignedPct(priceChangePct),
+                    sales: formatSignedPct(salesChangePct),
+                  })}
                 </div>
               </div>
 
               <div style={cardStyle}>
                 <div style={mutedLabelStyle}>
-                  {language === "it" ? "TIMELINE" : "TIMELINE"}
+                  {copy.auto.s072}
                 </div>
                 <div
                   style={{
@@ -2431,9 +2329,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Recupero cumulativo"
-                    : "Cumulative recovery"}
+                  {copy.auto.s073}
                 </div>
                 <div style={{ display: "grid", gap: 11, marginTop: 20 }}>
                   {timeline.map((item) => (
@@ -2458,10 +2354,8 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {item.month === 1
-                          ? language === "it"
-                            ? "1 mese"
-                            : "1 month"
-                          : `${item.month} ${language === "it" ? "mesi" : "months"}`}
+                          ? copy.auto.s074
+                          : `${item.month} ${copy.auto.s075}`}
                       </span>
                       <strong
                         style={{
@@ -2486,7 +2380,7 @@ export default function RecoverySimulatorPage() {
             >
               <div style={cardStyle}>
                 <div style={mutedLabelStyle}>
-                  {language === "it" ? "Confronto" : "Comparison"}
+                  {copy.auto.s076}
                 </div>
                 <div
                   style={{
@@ -2496,13 +2390,13 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it" ? "Attuale → Nuovo" : "Current → New"}
+                  {copy.auto.s077}
                 </div>
 
                 <div style={{ display: "grid", gap: 18, marginTop: 24 }}>
                   {[
                     {
-                      label: language === "it" ? "Margine" : "Margin",
+                      label: copy.auto.s078,
                       current: pct(currentMarginPct, 1),
                       next: pct(simulatedMarginPct, 1),
                       currentBar: clamp(currentMarginPct, 0, 60),
@@ -2511,7 +2405,7 @@ export default function RecoverySimulatorPage() {
                     },
                     {
                       label:
-                        language === "it" ? "Profitto mensile" : "Monthly profit",
+                        copy.auto.s079,
                       current: money(currentMonthlyProfit, 0),
                       next: money(simulatedMonthlyProfit, 0),
                       currentBar: Math.max(0, currentMonthlyProfit),
@@ -2524,7 +2418,7 @@ export default function RecoverySimulatorPage() {
                     },
                     {
                       label:
-                        language === "it" ? "Ricavi mensili" : "Monthly revenue",
+                        copy.auto.s080,
                       current: money(currentMonthlyRevenue, 0),
                       next: money(simulatedMonthlyRevenue, 0),
                       currentBar: Math.max(0, currentMonthlyRevenue),
@@ -2659,7 +2553,7 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 <div style={{ ...mutedLabelStyle, color: "#4ade80" }}>
-                  {language === "it" ? "Impatto annuale" : "Annual impact"}
+                  {copy.auto.s081}
                 </div>
                 <div
                   key={`annual-${Math.round(netRecoveredAnnualProfit)}`}
@@ -2684,9 +2578,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? `Profitto netto stimato dopo la riserva fiscale del ${pct(taxReserveRate * 100)}.`
-                    : `Estimated net profit after the ${pct(taxReserveRate * 100)} tax reserve.`}
+                  {t("recoverySimulatorPage.afterTaxReserve", { value: pct(taxReserveRate * 100) })}
                 </div>
 
                 {netRecoveredAnnualProfit > 0 && (
@@ -2696,9 +2588,9 @@ export default function RecoverySimulatorPage() {
                   >
                     <span>↗</span>
                     <span>
-                      {language === "it"
-                        ? `${formatSignedMoney(netRecoveredAnnualProfit, 0)} di profitto annuale netto sbloccato`
-                        : `${formatSignedMoney(netRecoveredAnnualProfit, 0)} net annual profit unlocked`}
+                      {t("recoverySimulatorPage.annualProfitUnlocked", {
+                        value: formatSignedMoney(netRecoveredAnnualProfit, 0),
+                      })}
                     </span>
                   </div>
                 )}
@@ -2728,21 +2620,15 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         <span>
-                          {language === "it"
-                            ? "Salute del profitto"
-                            : "Profit health"}
+                          {copy.auto.s082}
                         </span>
 
                         <MetricTooltip
                           content={{
                             title:
-                              language === "it"
-                                ? "Salute del profitto"
-                                : "Profit health",
+                              copy.auto.s083,
                             description:
-                              language === "it"
-                                ? "Valutazione sintetica del margine simulato. MarginLab classifica lo scenario come in perdita, critico, debole, solido o forte in base al livello di margine raggiunto."
-                                : "Summary assessment of the simulated margin. MarginLab classifies the scenario as loss-making, critical, weak, healthy or strong based on the margin level achieved.",
+                              copy.auto.s084,
                           }}
                         />
                       </div>
@@ -2810,9 +2696,7 @@ export default function RecoverySimulatorPage() {
               >
                 <div>
                   <div style={{ ...mutedLabelStyle, color: "#ff9a70" }}>
-                    {language === "it"
-                      ? "RACCOMANDAZIONE ESECUTIVA"
-                      : "EXECUTIVE RECOMMENDATION"}
+                    {copy.auto.s085}
                   </div>
                   <div
                     style={{
@@ -2822,9 +2706,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it"
-                      ? "La decisione suggerita da MarginLab"
-                      : "MarginLab's suggested decision"}
+                    {copy.auto.s086}
                   </div>
                 </div>
 
@@ -2843,21 +2725,17 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   <span>
-                    {language === "it" ? "Affidabilità" : "Confidence"}:{" "}
+                    {copy.auto.s087}:{" "}
                     {confidenceLabel} · {dataConfidenceScore}% ·{" "}
-                    {language === "it" ? "Rischio" : "Risk"} {riskLabel}
+                    {copy.auto.s088} {riskLabel}
                   </span>
 
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Affidabilità dei dati"
-                          : "Data confidence",
+                        copy.auto.s089,
                       description:
-                        language === "it"
-                          ? "Misura la qualità dei dati utilizzati dalla simulazione, considerando disponibilità dei costi, volume di vendite e completezza dei dati del prodotto. Non rappresenta la probabilità che il profitto simulato venga effettivamente realizzato."
-                          : "Measures the quality of the data used by the simulation, considering cost availability, sales volume and product data completeness. It does not represent the probability that the simulated profit will actually be achieved.",
+                        copy.auto.s090,
                     }}
                   />
                 </div>
@@ -2925,9 +2803,7 @@ export default function RecoverySimulatorPage() {
                       gap: 8,
                     }}
                   >
-                    {language === "it"
-                      ? "Apri prodotto in Shopify"
-                      : "Open product in Shopify"}
+                    {copy.auto.s091}
                     <span style={{ fontSize: 18 }}>↗</span>
                   </a>
                 </div>
@@ -2948,12 +2824,8 @@ export default function RecoverySimulatorPage() {
               }}
             >
               {growthAccess
-                ? language === "it"
-                  ? `Le stime partono dalla base economica tax-aware costruita sui dati Shopify degli ultimi ${periodDays} giorni e sono normalizzate su base mensile. La riserva fiscale gestionale resta un'ipotesi separata del Business Model Studio. Il simulatore non modifica automaticamente prezzi o costi.`
-                  : `Estimates start from the tax-aware economic basis built from Shopify data over the last ${periodDays} days and are normalized to a monthly basis. The business-model tax reserve remains a separate Business Model Studio assumption. The simulator does not automatically change prices or costs.`
-                : language === "it"
-                  ? "Anteprima Growth. Passa a Growth per utilizzare il simulatore completo."
-                  : "Growth preview. Upgrade to Growth to use the full simulator."}
+                ? t("recoverySimulatorPage.methodNote", { periodDays })
+                : copy.auto.s092}
             </div>
           </div>
         </div>

@@ -11,7 +11,7 @@ import {
   money as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
 
@@ -337,7 +337,8 @@ function FieldCard({
 
 export default function ProfitAssumptionsPage() {
   const navigate = useNavigate();
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.profitAssumptionsPage;
   const saveFetcher = useFetcher<{ ok: boolean; error?: string }>();
 
   const {
@@ -813,30 +814,20 @@ export default function ProfitAssumptionsPage() {
             <div className="alert-pill">
               <span className="alert-dot" />
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Funzione Growth"
-                  : "Growth Feature"}
+                ? copy.auto.a001
+                : copy.auto.a002}
             </div>
 
             <div className="eyebrow">
-              {language === "it"
-                ? "BUSINESS MODEL STUDIO"
-                : "BUSINESS MODEL STUDIO"}
+              {copy.auto.a003}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Costruisci il modello economico reale del tuo store"
-                : "Build the real economics of your store"}
+              {copy.auto.a004}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "Definisci costi, commissioni e riserve. MarginLab applica queste ipotesi alla base economica tax-aware per stimare profitto netto, break-even e impatto delle decisioni."
-                : "Define costs, fees and reserves. MarginLab applies these assumptions to the tax-aware economic basis to estimate net profit, break-even and decision impact."}
+              {copy.auto.a005}
             </div>
 
             <div
@@ -854,9 +845,7 @@ export default function ProfitAssumptionsPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.auto.a006}
             </div>
           </div>
 
@@ -869,7 +858,7 @@ export default function ProfitAssumptionsPage() {
                   "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
               }}
             >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+              {copy.auto.a007}
             </button>
           )}
         </div>
@@ -915,7 +904,7 @@ export default function ProfitAssumptionsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.auto.a008}
                 </div>
 
                 <div
@@ -927,9 +916,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Business Model Studio è incluso nel piano Growth"
-                    : "Business Model Studio is included with Growth"}
+                  {copy.auto.a009}
                 </div>
 
                 <div
@@ -941,9 +928,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per salvare costi, commissioni e riserve e alimentare le stime economiche delle funzioni Growth."
-                    : "Upgrade to Growth to save costs, fees and reserves and power the financial estimates used across Growth."}
+                  {copy.auto.a010}
                 </div>
 
                 <button
@@ -952,7 +937,7 @@ export default function ProfitAssumptionsPage() {
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.auto.a011}
                 </button>
               </div>
             </div>
@@ -979,12 +964,10 @@ export default function ProfitAssumptionsPage() {
             >
               <KpiCard
                 label={
-                  language === "it"
-                    ? "Profitto netto mensile stimato"
-                    : "Estimated Monthly Net Profit"
+                  copy.auto.a012
                 }
                 value={money(monthlyEstimatedNetProfit)}
-                note={`${pct(estimatedNetMargin)} ${language === "it" ? "di margine netto" : "net margin"
+                note={`${pct(estimatedNetMargin)} ${copy.auto.a013
                   }`}
                 color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
                 highlight
@@ -992,13 +975,9 @@ export default function ProfitAssumptionsPage() {
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Profitto netto mensile stimato"
-                          : "Estimated monthly net profit",
+                        copy.auto.a014,
                       description:
-                        language === "it"
-                          ? "Stima del profitto mensile dopo aver applicato alla base economica dello store i costi fissi inseriti, le commissioni variabili e l'eventuale riserva fiscale gestionale. È una stima del modello, non un risultato contabile osservato."
-                          : "Estimated monthly profit after applying entered fixed costs, variable fees and any business tax reserve to the store's economic baseline. It is a model estimate, not an observed accounting result.",
+                        copy.auto.a015,
                     }}
                   />
                 }
@@ -1006,37 +985,29 @@ export default function ProfitAssumptionsPage() {
 
               <KpiCard
                 label={
-                  language === "it" ? "Costi mensili totali" : "Total Monthly Costs"
+                  copy.auto.a016
                 }
                 value={money(monthlyEstimatedCosts)}
                 note={
-                  language === "it"
-                    ? "Fissi, commissioni e riserva"
-                    : "Fixed, fees and reserve"
+                  copy.auto.a017
                 }
               />
 
               <KpiCard
                 label={
-                  language === "it" ? "Ricavi di pareggio" : "Break-even Revenue"
+                  copy.auto.a018
                 }
                 value={money(breakEvenRevenue)}
                 note={
-                  language === "it"
-                    ? "Ricavi mensili minimi stimati"
-                    : "Estimated minimum monthly revenue"
+                  copy.auto.a019
                 }
                 tooltip={
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Ricavi di pareggio"
-                          : "Break-even revenue",
+                        copy.auto.a020,
                       description:
-                        language === "it"
-                          ? "Ricavi mensili stimati necessari per coprire i costi fissi e i costi variabili configurati, arrivando a un profitto pari a zero. Sopra questo livello il modello inizia a generare profitto."
-                          : "Estimated monthly revenue required to cover configured fixed and variable costs and reach zero profit. Above this level, the model begins to generate profit.",
+                        copy.auto.a021,
                     }}
                   />
                 }
@@ -1044,32 +1015,28 @@ export default function ProfitAssumptionsPage() {
 
               <KpiCard
                 label={
-                  language === "it"
-                    ? "Profitto dopo commissioni"
-                    : "Profit After Fees"
+                  copy.auto.a022
                 }
                 value={money(profitAfterFees)}
                 note={
-                  language === "it" ? "Prima dei costi fissi" : "Before fixed costs"
+                  copy.auto.a023
                 }
                 color={profitAfterFees >= 0 ? "#f8fafc" : "#ff6b4a"}
               />
 
               <KpiCard
                 label={
-                  language === "it" ? "Profitto netto annuale" : "Annual Net Profit"
+                  copy.auto.a024
                 }
                 value={money(annualNetProfit)}
                 note={
-                  language === "it"
-                    ? "Proiezione su 12 mesi"
-                    : "12-month projection"
+                  copy.auto.a025
                 }
                 color={annualNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
               />
 
               <KpiCard
-                label={language === "it" ? "Salute del modello" : "Model Health"}
+                label={copy.auto.a026}
                 value={`${healthScore}/100`}
                 note={healthLabel}
                 color={
@@ -1083,13 +1050,9 @@ export default function ProfitAssumptionsPage() {
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Salute del modello"
-                          : "Model health",
+                        copy.auto.a027,
                       description:
-                        language === "it"
-                          ? "Punteggio sintetico da 0 a 100 che valuta la solidità del modello economico in base al margine netto stimato, al peso complessivo dei costi e alla concentrazione del costo principale. Un valore più alto indica una struttura economica più sostenibile."
-                          : "Summary score from 0 to 100 that evaluates the strength of the economic model based on estimated net margin, total cost burden and concentration of the largest cost. A higher score indicates a more sustainable economic structure.",
+                        copy.auto.a028,
                     }}
                   />
                 }
@@ -1107,13 +1070,11 @@ export default function ProfitAssumptionsPage() {
             >
               <div className="panel" style={{ margin: 0, padding: 24 }}>
                 <div className="panel-eyebrow">
-                  {language === "it" ? "INPUT DEL MODELLO" : "MODEL INPUTS"}
+                  {copy.auto.a029}
                 </div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
-                  {language === "it"
-                    ? "Definisci costi e commissioni"
-                    : "Define costs and fees"}
+                  {copy.auto.a030}
                 </h2>
 
                 <div
@@ -1125,9 +1086,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 720,
                   }}
                 >
-                  {language === "it"
-                    ? "Le modifiche aggiornano tutti i risultati in tempo reale."
-                    : "Changes update all results in real time."}
+                  {copy.auto.a031}
                 </div>
 
                 <saveFetcher.Form method="post">
@@ -1149,9 +1108,7 @@ export default function ProfitAssumptionsPage() {
                           marginBottom: 10,
                         }}
                       >
-                        {language === "it"
-                          ? "Costi fissi mensili"
-                          : "Monthly Fixed Costs"}
+                        {copy.auto.a032}
                       </div>
 
                       <div
@@ -1162,11 +1119,9 @@ export default function ProfitAssumptionsPage() {
                         }}
                       >
                         <FieldCard
-                          label={language === "it" ? "Pubblicità" : "Advertising"}
+                          label={copy.auto.a033}
                           helper={
-                            language === "it"
-                              ? "Spesa media mensile per campagne."
-                              : "Average monthly campaign spend."
+                            copy.auto.a034
                           }
                           value={monthlyAds}
                           onChange={setMonthlyAds}
@@ -1174,11 +1129,9 @@ export default function ProfitAssumptionsPage() {
                         />
 
                         <FieldCard
-                          label={language === "it" ? "Spedizioni" : "Shipping"}
+                          label={copy.auto.a035}
                           helper={
-                            language === "it"
-                              ? "Costo mensile sostenuto dallo store."
-                              : "Monthly cost paid by the store."
+                            copy.auto.a036
                           }
                           value={monthlyShipping}
                           onChange={setMonthlyShipping}
@@ -1187,14 +1140,10 @@ export default function ProfitAssumptionsPage() {
 
                         <FieldCard
                           label={
-                            language === "it"
-                              ? "Costi operativi"
-                              : "Operating Costs"
+                            copy.auto.a037
                           }
                           helper={
-                            language === "it"
-                              ? "Software, personale e gestione."
-                              : "Software, staff and operations."
+                            copy.auto.a038
                           }
                           value={monthlyOperating}
                           onChange={setMonthlyOperating}
@@ -1214,9 +1163,7 @@ export default function ProfitAssumptionsPage() {
                           marginBottom: 10,
                         }}
                       >
-                        {language === "it"
-                          ? "Commissioni variabili"
-                          : "Variable Fees"}
+                        {copy.auto.a039}
                       </div>
 
                       <div
@@ -1228,14 +1175,10 @@ export default function ProfitAssumptionsPage() {
                       >
                         <FieldCard
                           label={
-                            language === "it"
-                              ? "Commissioni di pagamento"
-                              : "Payment Processing Fee"
+                            copy.auto.a040
                           }
                           helper={
-                            language === "it"
-                              ? "Percentuale sui ricavi elaborati."
-                              : "Percentage of processed revenue."
+                            copy.auto.a041
                           }
                           value={paymentFeePct}
                           onChange={setPaymentFeePct}
@@ -1245,14 +1188,10 @@ export default function ProfitAssumptionsPage() {
 
                         <FieldCard
                           label={
-                            language === "it"
-                              ? "Commissioni sulle transazioni"
-                              : "Transaction Fee"
+                            copy.auto.a042
                           }
                           helper={
-                            language === "it"
-                              ? "Commissione aggiuntiva della piattaforma."
-                              : "Additional platform transaction fee."
+                            copy.auto.a043
                           }
                           value={transactionFeePct}
                           onChange={setTransactionFeePct}
@@ -1273,19 +1212,15 @@ export default function ProfitAssumptionsPage() {
                           marginBottom: 10,
                         }}
                       >
-                        {language === "it" ? "Riserva fiscale gestionale" : "Business Tax Reserve"}
+                        {copy.auto.a044}
                       </div>
 
                       <FieldCard
                         label={
-                          language === "it"
-                            ? "Riserva fiscale gestionale"
-                            : "Business Tax Reserve Percentage"
+                          copy.auto.a045
                         }
                         helper={
-                          language === "it"
-                            ? "Quota prudenziale gestionale applicata ai ricavi economici. Non sostituisce VAT/GST/Sales Tax."
-                            : "Managerial reserve applied to economic revenue. It does not replace VAT/GST/Sales Tax."
+                          copy.auto.a046
                         }
                         value={taxReservePct}
                         onChange={setTaxReservePct}
@@ -1327,16 +1262,10 @@ export default function ProfitAssumptionsPage() {
                     }}
                   >
                     {saveFetcher.state !== "idle"
-                      ? language === "it"
-                        ? "Salvataggio in corso..."
-                        : "Saving..."
+                      ? copy.auto.a047
                       : saveFetcher.data?.ok
-                        ? language === "it"
-                          ? "Modello salvato ✓"
-                          : "Model Saved ✓"
-                        : language === "it"
-                          ? "Salva il modello"
-                          : "Save Model"}
+                        ? copy.auto.a048
+                        : copy.auto.a049}
                   </button>
                 </saveFetcher.Form>
               </div>
@@ -1364,21 +1293,15 @@ export default function ProfitAssumptionsPage() {
                     }}
                   >
                     <span>
-                      {language === "it"
-                        ? "CONTO ECONOMICO STIMATO"
-                        : "ESTIMATED PROFIT MODEL"}
+                      {copy.auto.a050}
                     </span>
 
                     <MetricTooltip
                       content={{
                         title:
-                          language === "it"
-                            ? "Conto economico stimato"
-                            : "Estimated profit model",
+                          copy.auto.a051,
                         description:
-                          language === "it"
-                            ? "Ricostruzione economica dello store che combina la base osservata con i costi, le commissioni e la riserva gestionale che hai configurato. Il risultato mostra una stima del profitto mensile normalizzata su 30 giorni, non un dato contabile effettivamente registrato."
-                            : "Economic model of the store combining the observed baseline with the costs, fees and business reserve you configured. The result shows an estimated monthly profit normalized to 30 days, not an actual recorded accounting result.",
+                          copy.auto.a052,
                       }}
                     />
                   </div>
@@ -1389,9 +1312,7 @@ export default function ProfitAssumptionsPage() {
                     className="secondary-button"
                     style={{ whiteSpace: "nowrap" }}
                   >
-                    {language === "it"
-                      ? "Esporta modello CSV"
-                      : "Export model CSV"}
+                    {copy.auto.a053}
                   </button>
                 </div>
 
@@ -1416,9 +1337,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 800,
                   }}
                 >
-                  {language === "it"
-                    ? "Margine netto stimato"
-                    : "Estimated net margin"}
+                  {copy.auto.a054}
                   : {pct(estimatedNetMargin)}
                 </div>
 
@@ -1431,38 +1350,34 @@ export default function ProfitAssumptionsPage() {
                 >
                   {[
                     {
-                      label: language === "it" ? "Ricavi economici mensili" : "Monthly Economic Revenue",
+                      label: copy.auto.a055,
                       value: money(monthlyEconomicRevenue),
                       color: "#f8fafc",
                     },
                     {
-                      label: language === "it" ? "Profitto economico mensile" : "Monthly Economic Profit",
+                      label: copy.auto.a056,
                       value: money(monthlyEconomicProfit),
                       color: "#22c55e",
                     },
                     {
-                      label: language === "it" ? "Costi fissi mensili" : "Monthly Fixed Costs",
+                      label: copy.auto.a057,
                       value: `-${money(monthlyFixedCosts)}`,
                       color: "#f8fafc",
                     },
                     {
                       label:
-                        language === "it"
-                          ? "Commissioni e riserva mensili"
-                          : "Monthly Fees and Reserve",
+                        copy.auto.a058,
                       value: `-${money(totalVariableCosts * monthlyNormalizationMultiplier)}`,
                       color: "#f8fafc",
                     },
                     {
                       label:
-                        language === "it"
-                          ? "Costi mensili stimati totali"
-                          : "Total Estimated Monthly Costs",
+                        copy.auto.a059,
                       value: `-${money(monthlyEstimatedCosts)}`,
                       color: "#ff9a70",
                     },
                     {
-                      label: language === "it" ? "Profitto netto mensile" : "Monthly Net Profit",
+                      label: copy.auto.a060,
                       value: money(monthlyEstimatedNetProfit),
                       color: estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a",
                     },
@@ -1513,7 +1428,7 @@ export default function ProfitAssumptionsPage() {
                       letterSpacing: "0.11em",
                     }}
                   >
-                    {language === "it" ? "Lettura del modello" : "Model Reading"}
+                    {copy.auto.a061}
                   </div>
 
                   <div
@@ -1526,24 +1441,13 @@ export default function ProfitAssumptionsPage() {
                     }}
                   >
                     {estimatedNetProfit >= 0
-                      ? language === "it"
-                        ? `Il modello genera un profitto netto mensile positivo di ${money(
-                          monthlyEstimatedNetProfit,
-                        )}. Il break-even stimato è ${money(
-                          breakEvenRevenue,
-                        )} di ricavi mensili.`
-                        : `The model generates positive monthly net profit of ${money(
-                          monthlyEstimatedNetProfit,
-                        )}. Estimated break-even is ${money(
-                          breakEvenRevenue,
-                        )} in monthly revenue.`
-                      : language === "it"
-                        ? `Il modello attuale produce una perdita mensile stimata di ${money(
-                          Math.abs(monthlyEstimatedNetProfit),
-                        )}. Riduci i costi o aumenta il margine prima di scalare.`
-                        : `The current model produces an estimated monthly loss of ${money(
-                          Math.abs(monthlyEstimatedNetProfit),
-                        )}. Reduce costs or improve margin before scaling.`}
+                      ? t("profitAssumptionsPage.positiveModel", {
+                        profit: money(monthlyEstimatedNetProfit),
+                        breakEven: money(breakEvenRevenue),
+                      })
+                      : t("profitAssumptionsPage.negativeModel", {
+                        loss: money(Math.abs(monthlyEstimatedNetProfit)),
+                      })}
                   </div>
                 </div>
               </div>
@@ -1559,13 +1463,11 @@ export default function ProfitAssumptionsPage() {
             >
               <div className="panel" style={{ margin: 0, padding: 24 }}>
                 <div className="panel-eyebrow">
-                  {language === "it" ? "STRUTTURA DEI COSTI" : "COST STRUCTURE"}
+                  {copy.auto.a062}
                 </div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
-                  {language === "it"
-                    ? "Dove viene assorbito il profitto"
-                    : "Where profit is being absorbed"}
+                  {copy.auto.a063}
                 </h2>
 
                 <div
@@ -1650,7 +1552,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Costi fissi mensili" : "Monthly Fixed Costs"}
+                      {copy.auto.a064}
                     </div>
 
                     <div
@@ -1681,7 +1583,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Costi annuali" : "Annual Costs"}
+                      {copy.auto.a065}
                     </div>
 
                     <div
@@ -1716,7 +1618,7 @@ export default function ProfitAssumptionsPage() {
                     letterSpacing: "0.13em",
                   }}
                 >
-                  {language === "it" ? "SIMULAZIONI RAPIDE" : "QUICK WHAT-IF"}
+                  {copy.auto.a066}
                 </div>
 
                 <div
@@ -1727,9 +1629,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Quanto vale ogni ottimizzazione"
-                    : "What each optimization is worth"}
+                  {copy.auto.a067}
                 </div>
 
                 <div
@@ -1800,7 +1700,7 @@ export default function ProfitAssumptionsPage() {
                               textTransform: "uppercase",
                             }}
                           >
-                            {language === "it" ? "al mese" : "per month"}
+                            {copy.auto.a068}
                           </div>
                         </div>
                       </div>
@@ -1813,13 +1713,9 @@ export default function ProfitAssumptionsPage() {
                           fontWeight: 760,
                         }}
                       >
-                        {language === "it"
-                          ? `Impatto annuale stimato: +${money(
-                            scenario.impact * 12,
-                          )}`
-                          : `Estimated annual impact: +${money(
-                            scenario.impact * 12,
-                          )}`}
+                        {t("profitAssumptionsPage.annualImpact", {
+                          value: money(scenario.impact * 12),
+                        })}
                       </div>
                     </div>
                   ))}
@@ -1853,7 +1749,7 @@ export default function ProfitAssumptionsPage() {
                     letterSpacing: "0.13em",
                   }}
                 >
-                  {language === "it" ? "CONSIGLIO MARGINLAB" : "MARGINLAB ADVICE"}
+                  {copy.auto.a069}
                 </div>
 
                 <div
@@ -1864,9 +1760,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "La leva economica più importante"
-                    : "Your most important financial lever"}
+                  {copy.auto.a070}
                 </div>
 
                 <div
@@ -1905,7 +1799,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Costo principale" : "Largest Cost"}
+                      {copy.auto.a071}
                     </div>
 
                     <div
@@ -1936,7 +1830,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Risparmio 10%" : "10% Savings"}
+                      {copy.auto.a072}
                     </div>
 
                     <div
@@ -1967,7 +1861,7 @@ export default function ProfitAssumptionsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Impatto annuo" : "Annual Impact"}
+                      {copy.auto.a073}
                     </div>
 
                     <div
@@ -2002,7 +1896,7 @@ export default function ProfitAssumptionsPage() {
                     letterSpacing: "0.13em",
                   }}
                 >
-                  {language === "it" ? "MODULI COLLEGATI" : "CONNECTED MODULES"}
+                  {copy.auto.a074}
                 </div>
 
                 <div
@@ -2013,9 +1907,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Il modello alimenta tutto il Growth"
-                    : "This model powers Growth"}
+                  {copy.auto.a075}
                 </div>
 
                 <div
@@ -2030,25 +1922,19 @@ export default function ProfitAssumptionsPage() {
                       label: "Profit Copilot",
                       route: "/app/ai-advisor",
                       text:
-                        language === "it"
-                          ? "Stima profitto netto e priorità."
-                          : "Estimates net profit and priorities.",
+                        copy.auto.a076,
                     },
                     {
                       label: "Recovery Simulator",
                       route: "/app/recovery-simulator",
                       text:
-                        language === "it"
-                          ? "Confronta scenari prima di agire."
-                          : "Compares scenarios before acting.",
+                        copy.auto.a077,
                     },
                     {
                       label: "Forecasting",
                       route: "/app/forecasting",
                       text:
-                        language === "it"
-                          ? "Proietta il modello nel futuro."
-                          : "Projects the model into the future.",
+                        copy.auto.a078,
                     },
                   ].map((module) => (
                     <button
@@ -2103,9 +1989,7 @@ export default function ProfitAssumptionsPage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? `I valori inseriti manualmente vengono salvati e applicati alla base economica tax-aware osservata sugli ultimi ${periodDays} giorni. I risultati indicati come mensili vengono normalizzati su 30 giorni; le proiezioni annuali derivano da questa base mensile normalizzata. La riserva fiscale gestionale è un'ipotesi separata e non sostituisce il trattamento VAT/GST/Sales Tax del Tax Engine.`
-                : `Manually entered values are saved and applied to the tax-aware economic basis observed over the last ${periodDays} days. Results labeled monthly are normalized to 30 days, and annual projections are derived from that normalized monthly basis. The business tax reserve is a separate assumption and does not replace the Tax Engine's VAT/GST/Sales Tax treatment.`}
+              {t("profitAssumptionsPage.methodNote", { periodDays })}
             </div>
           </div>
         </div>
