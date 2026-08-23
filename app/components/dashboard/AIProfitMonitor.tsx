@@ -2,7 +2,7 @@ import * as React from "react";
 
 import type { ProfitAlert, ProfitAlertSeverity } from "~/utils/profit-monitor";
 
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import { money } from "~/utils/margin";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";
@@ -23,11 +23,11 @@ type SeverityStyle = {
 
 function getSeverityStyle(
   severity: ProfitAlertSeverity,
-  language: "it" | "en",
+  labels: Record<ProfitAlertSeverity, string>,
 ): SeverityStyle {
   const styles: Record<ProfitAlertSeverity, SeverityStyle> = {
     critical: {
-      label: language === "it" ? "Critico" : "Critical",
+      label: labels.critical,
       color: "#ff7b61",
       background: "rgba(255,107,74,0.10)",
       border: "rgba(255,107,74,0.25)",
@@ -35,7 +35,7 @@ function getSeverityStyle(
     },
 
     warning: {
-      label: language === "it" ? "Attenzione" : "Warning",
+      label: labels.warning,
       color: "#fbbf24",
       background: "rgba(245,158,11,0.10)",
       border: "rgba(245,158,11,0.24)",
@@ -43,7 +43,7 @@ function getSeverityStyle(
     },
 
     opportunity: {
-      label: language === "it" ? "Opportunità" : "Opportunity",
+      label: labels.opportunity,
       color: "#4ade80",
       background: "rgba(34,197,94,0.10)",
       border: "rgba(34,197,94,0.24)",
@@ -51,7 +51,7 @@ function getSeverityStyle(
     },
 
     info: {
-      label: language === "it" ? "Informazione" : "Information",
+      label: labels.info,
       color: "#7dd3fc",
       background: "rgba(56,189,248,0.10)",
       border: "rgba(56,189,248,0.24)",
@@ -89,34 +89,45 @@ function getAlertAmount(alert: ProfitAlert) {
   return alert.monthlyImpact;
 }
 
-function getAlertAmountLabel(alert: ProfitAlert, language: "it" | "en") {
+function getAlertAmountLabel(
+  alert: ProfitAlert,
+  labels: {
+    missingCogsRevenue: string;
+    estimatedOpportunity: string;
+    confirmedLoss: string;
+    detectedImpact: string;
+  },
+) {
   if (isMissingCostsAlert(alert)) {
-    return language === "it"
-      ? "Ricavi con COGS mancanti"
-      : "Revenue with missing COGS";
+    return labels.missingCogsRevenue;
   }
 
   if (alert.severity === "opportunity") {
-    return language === "it" ? "Opportunità stimata" : "Estimated opportunity";
+    return labels.estimatedOpportunity;
   }
 
   if (alert.id === "real-losses") {
-    return language === "it" ? "Perdita accertata" : "Confirmed loss";
+    return labels.confirmedLoss;
   }
 
-  return language === "it" ? "Impatto rilevato" : "Detected impact";
+  return labels.detectedImpact;
 }
 
 function AlertCounter({
   severity,
   count,
-  language,
 }: {
   severity: ProfitAlertSeverity;
   count: number;
-  language: "it" | "en";
 }) {
-  const style = getSeverityStyle(severity, language);
+  const { messages } = useI18n();
+  const style = getSeverityStyle(
+    severity,
+    messages.aiProfitMonitor.severityLabels as Record<
+      ProfitAlertSeverity,
+      string
+    >,
+  );
 
   return (
     <div
@@ -183,16 +194,19 @@ function AlertCounter({
 
 function SmallAlertCard({
   alert,
-  language,
   navigate,
 }: {
   alert: ProfitAlert;
-  language: "it" | "en";
   navigate: (path: string) => void;
 }) {
-  const severity = getSeverityStyle(alert.severity, language);
+  const { messages } = useI18n();
+  const copy = messages.aiProfitMonitor;
+  const severity = getSeverityStyle(
+    alert.severity,
+    copy.severityLabels as Record<ProfitAlertSeverity, string>,
+  );
   const displayedAmount = getAlertAmount(alert);
-  const amountLabel = getAlertAmountLabel(alert, language);
+  const amountLabel = getAlertAmountLabel(alert, copy.amountLabels);
 
   return (
     <button
@@ -318,7 +332,8 @@ export default function AIProfitMonitor({
   assessment,
   navigate,
 }: Props) {
-  const language = getStoredLanguage() === "it" ? "it" : "en";
+  const { messages, t } = useI18n();
+  const copy = messages.aiProfitMonitor;
 
   const sortedAlerts = React.useMemo(
     () =>
@@ -372,24 +387,16 @@ export default function AIProfitMonitor({
 
   const monitorSummaryAlert = confirmedLossAlert ?? bestOpportunityAlert;
   const monitorSummaryLabel = monitorSummaryAlert
-    ? getAlertAmountLabel(monitorSummaryAlert, language)
+    ? getAlertAmountLabel(monitorSummaryAlert, copy.amountLabels)
     : null;
 
   const monitorStatus = assessment.requiresAction
-    ? language === "it"
-      ? "Intervento richiesto"
-      : "Action required"
+    ? copy.actionRequired
     : counts.warning > 0
-      ? language === "it"
-        ? "Da controllare"
-        : "Review needed"
+      ? copy.reviewNeeded
       : counts.opportunity > 0
-        ? language === "it"
-          ? "Opportunità rilevate"
-          : "Opportunities detected"
-        : language === "it"
-          ? "Situazione stabile"
-          : "Stable status";
+        ? copy.opportunitiesDetected
+        : copy.stableStatus;
 
   const monitorColor =
     counts.critical > 0
@@ -436,13 +443,9 @@ export default function AIProfitMonitor({
             fontWeight: 950,
           }}
         >
-          {language === "it"
-            ? assessmentUnavailable
-              ? "Valutazione generale non disponibile"
-              : "Nessun rischio rilevato"
-            : assessmentUnavailable
-              ? "Overall assessment unavailable"
-              : "No profit risks detected"}
+          {assessmentUnavailable
+            ? copy.overallAssessmentUnavailable
+            : copy.noProfitRisks}
         </div>
 
         <div
@@ -454,13 +457,12 @@ export default function AIProfitMonitor({
             fontWeight: 720,
           }}
         >
-          {language === "it"
-            ? assessmentUnavailable
-              ? `Sono stati osservati ${assessment.evidence.orderCount} ordini su ${assessment.evidence.activeDays} giorni attivi. Non sono emersi rischi materiali nel periodo, ma i dati non bastano per dichiarare stabile lo store.`
-              : "Margini, costi e opportunità risultano stabili sulla base dei dati disponibili."
-            : assessmentUnavailable
-              ? `${assessment.evidence.orderCount} orders were observed across ${assessment.evidence.activeDays} active days. No material period risks emerged, but the evidence is not sufficient to call the store stable.`
-              : "Margins, costs and opportunities appear stable based on the available data."}
+          {assessmentUnavailable
+            ? t("aiProfitMonitor.insufficientAssessment", {
+                orderCount: assessment.evidence.orderCount,
+                activeDays: assessment.evidence.activeDays,
+              })
+            : copy.stableDescription}
         </div>
       </div>
     );
@@ -468,12 +470,12 @@ export default function AIProfitMonitor({
 
   const highestSeverityStyle = getSeverityStyle(
     highestPriority.severity,
-    language,
+    copy.severityLabels as Record<ProfitAlertSeverity, string>,
   );
   const highestPriorityAmount = getAlertAmount(highestPriority);
   const highestPriorityAmountLabel = getAlertAmountLabel(
     highestPriority,
-    language,
+    copy.amountLabels,
   );
 
   return (
@@ -548,27 +550,16 @@ export default function AIProfitMonitor({
                 letterSpacing: "-0.035em",
               }}
             >
-              {language === "it"
-                ? `${sortedAlerts.length} segnali attivi sulla redditività`
-                : `${sortedAlerts.length} active profitability signals`}
+              {t("aiProfitMonitor.activeSignals", {
+                count: sortedAlerts.length,
+              })}
             </div>
 
             <MetricTooltip
               content={{
-                title:
-                  language === "it"
-                    ? "Segnali di redditività"
-                    : "Profitability signals",
-
-                description:
-                  language === "it"
-                    ? "Problemi, rischi o opportunità che MarginLab ha rilevato analizzando i dati dello store."
-                    : "Problems, risks or opportunities MarginLab detected while analyzing your store data.",
-
-                note:
-                  language === "it"
-                    ? "I segnali vengono ordinati in base alla loro importanza e all'impatto economico."
-                    : "Signals are ranked by importance and economic impact.",
+                title: copy.tooltipTitle,
+                description: copy.tooltipDescription,
+                note: copy.tooltipNote,
               }}
             />
           </div>
@@ -583,9 +574,7 @@ export default function AIProfitMonitor({
               fontWeight: 720,
             }}
           >
-            {language === "it"
-              ? "MarginLab ha analizzato margini, prodotti, costi, sconti, rimborsi e opportunità. Gli eventi sono ordinati automaticamente per urgenza e impatto."
-              : "MarginLab analyzed margins, products, costs, discounts, refunds and opportunities. Events are automatically ranked by urgency and impact."}
+            {copy.description}
           </div>
         </div>
 
@@ -607,7 +596,7 @@ export default function AIProfitMonitor({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it" ? "Stato monitor" : "Monitor status"}
+            {copy.monitorStatus}
           </div>
 
           <div
@@ -655,22 +644,19 @@ export default function AIProfitMonitor({
         <AlertCounter
           severity="critical"
           count={counts.critical}
-          language={language}
         />
 
         <AlertCounter
           severity="warning"
           count={counts.warning}
-          language={language}
         />
 
         <AlertCounter
           severity="opportunity"
           count={counts.opportunity}
-          language={language}
         />
 
-        <AlertCounter severity="info" count={counts.info} language={language} />
+        <AlertCounter severity="info" count={counts.info} />
       </div>
 
       <div
@@ -719,7 +705,7 @@ export default function AIProfitMonitor({
               <span>{highestSeverityStyle.icon}</span>
 
               <span>
-                {language === "it" ? "Priorità principale" : "Highest priority"}
+                {copy.highestPriority}
               </span>
             </div>
 
@@ -730,9 +716,9 @@ export default function AIProfitMonitor({
                 fontWeight: 900,
               }}
             >
-              {language === "it"
-                ? `Priorità ${highestPriority.priority}/100`
-                : `Priority ${highestPriority.priority}/100`}
+              {t("aiProfitMonitor.priority", {
+                priority: highestPriority.priority,
+              })}
             </div>
           </div>
 
@@ -780,7 +766,7 @@ export default function AIProfitMonitor({
                   letterSpacing: "0.09em",
                 }}
               >
-                {language === "it" ? "Prodotto collegato" : "Related product"}
+                {copy.relatedProduct}
               </div>
 
               <div
@@ -867,9 +853,7 @@ export default function AIProfitMonitor({
               fontWeight: 950,
             }}
           >
-            {language === "it"
-              ? "Altri segnali rilevati"
-              : "Other detected signals"}
+            {copy.otherSignals}
           </div>
 
           <div
@@ -880,9 +864,7 @@ export default function AIProfitMonitor({
               fontWeight: 720,
             }}
           >
-            {language === "it"
-              ? "Apri direttamente il modulo corretto."
-              : "Open the correct module directly."}
+            {copy.openCorrectModule}
           </div>
 
           <div
@@ -897,7 +879,6 @@ export default function AIProfitMonitor({
                 <SmallAlertCard
                   key={alert.id}
                   alert={alert}
-                  language={language}
                   navigate={navigate}
                 />
               ))
@@ -914,9 +895,7 @@ export default function AIProfitMonitor({
                   fontWeight: 780,
                 }}
               >
-                {language === "it"
-                  ? "Nessun altro segnale importante rilevato."
-                  : "No additional important signals detected."}
+                {copy.noAdditionalSignals}
               </div>
             )}
           </div>
@@ -933,11 +912,9 @@ export default function AIProfitMonitor({
             fontWeight: 760,
           }}
         >
-          {language === "it"
-            ? `Altri ${sortedAlerts.length - 5
-            } segnali sono stati analizzati dal monitor.`
-            : `${sortedAlerts.length - 5
-            } additional signals were analyzed by the monitor.`}
+          {t("aiProfitMonitor.additionalSignals", {
+            count: sortedAlerts.length - 5,
+          })}
         </div>
       )}
     </section>

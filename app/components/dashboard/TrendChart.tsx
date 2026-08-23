@@ -1,5 +1,5 @@
 import { money, pct } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type ChartPoint = {
@@ -57,7 +57,8 @@ export default function TrendChart({
   maxChartValue,
   visualMarginPct,
 }: Props) {
-  const language = getStoredLanguage();
+  const { messages } = useI18n();
+  const copy = messages.trendChart;
   const chartWidth = 1000;
   const chartHeight = 360;
 
@@ -123,15 +124,11 @@ export default function TrendChart({
       <div className="section-header">
         <div>
           <div className="section-title">
-            {language === "it"
-              ? "Andamento Profitti"
-              : "Profit Trend"}
+            {copy.title}
           </div>
 
           <div className="section-subtitle">
-            {language === "it"
-              ? "Prestazioni attuali basate sugli ordini Shopify."
-              : "Current profit performance based on Shopify orders."}
+            {copy.subtitle}
           </div>
         </div>
 
@@ -166,36 +163,17 @@ export default function TrendChart({
               lineHeight: 1.25,
             }}
           >
-            {language === "it"
-              ? "Margine Profitto"
-              : "Profit Margin"}
+            {copy.profitMargin}
             <br />
-            {language === "it"
-              ? "Periodo Attuale"
-              : "Current Period"}
+            {copy.currentPeriod}
           </div>
 
           <MetricTooltip
             content={{
-              title:
-                language === "it"
-                  ? "Margine di profitto"
-                  : "Profit margin",
-
-              description:
-                language === "it"
-                  ? "La percentuale dei ricavi prodotto che rimane dopo aver sottratto il costo dei prodotti venduti."
-                  : "The percentage of product revenue remaining after subtracting the cost of products sold.",
-
-              formula:
-                language === "it"
-                  ? "(Profitto prodotto ÷ Ricavi prodotto) × 100"
-                  : "(Product profit ÷ Product revenue) × 100",
-
-              note:
-                language === "it"
-                  ? "Può essere diverso dal Margine economico, che considera anche gli eventuali aggiustamenti fiscali."
-                  : "It can differ from Economic Margin, which also considers applicable tax adjustments.",
+              title: copy.profitMarginTooltipTitle,
+              description: copy.profitMarginTooltipDescription,
+              formula: copy.profitMarginTooltipFormula,
+              note: copy.profitMarginTooltipNote,
             }}
           />
         </div>
@@ -237,14 +215,10 @@ export default function TrendChart({
               />
               <div>
                 <div style={{ color: "#f3f4f6", fontWeight: 900 }}>
-                  {language === "it"
-                    ? "Ricavi"
-                    : "Revenue"}
+                  {copy.revenue}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                  {language === "it"
-                    ? "Ricavi totali"
-                    : "Total revenue"}
+                  {copy.totalRevenue}
                 </div>
               </div>
             </div>
@@ -263,9 +237,7 @@ export default function TrendChart({
               <div>
                 <div style={{ color: "#f3f4f6", fontWeight: 900 }}>Profit</div>
                 <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
-                  {language === "it"
-                    ? "Profitto totale"
-                    : "Total profit"}
+                  {copy.totalProfit}
                 </div>
               </div>
             </div>
@@ -282,9 +254,7 @@ export default function TrendChart({
               fontWeight: 850,
             }}
           >
-            {language === "it"
-              ? "Giornaliero"
-              : "Daily"}
+            {copy.daily}
           </div>
         </div>
 
@@ -413,25 +383,19 @@ export default function TrendChart({
         >
           {[
             [
-              language === "it"
-                ? "Ricavi Totali"
-                : "Total Revenue",
+              copy.totalRevenueMetric,
               money(totalRevenue),
               "#60a5fa",
             ],
 
             [
-              language === "it"
-                ? "Profitto Totale"
-                : "Total Profit",
+              copy.totalProfitMetric,
               money(totalProfit),
               "#22c55e",
             ],
 
             [
-              language === "it"
-                ? "Margine Profitto"
-                : "Profit Margin",
+              copy.profitMarginMetric,
               pct(visualMarginPct),
               "#a855f7",
             ],

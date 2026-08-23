@@ -232,4 +232,389 @@ export const en = {
     title: "Margin Breakdown",
     subtitle: "Revenue allocation across costs, profit and detected leaks.",
   },
+  glossary: {
+    knowledgeBase: "MARGINLAB KNOWLEDGE BASE",
+    statsMarginLab: "MarginLab",
+    reference: "MARGINLAB REFERENCE",
+    categories: {
+      profit: "Profit & Margin",
+      costs: "Costs",
+      products: "Products",
+      recovery: "Recovery",
+      forecast: "Forecasting",
+      actions: "Actions",
+      scores: "Scores & Confidence",
+      tax: "Tax & VAT",
+      data: "Shopify Data",
+    },
+    heroTitle: "The language of profitability, made clear.",
+    heroDescription: "Practical definitions of the concepts used by MarginLab. Not a generic finance dictionary: every term is explained in the context of MarginLab analyses, simulations and store decisions.",
+    statsTerms: "Terms",
+    statsAreas: "Areas",
+    statsLanguages: "Languages",
+    searchPlaceholder: "Search for a term, metric or concept...",
+    results: "results",
+    all: "All",
+    howMarginLabUsesIt: "HOW MARGINLAB USES IT",
+    noTermsFound: "No terms found",
+    noTermsHint: "Try another search or clear the category filter.",
+    referenceTitle: "From definition to decision.",
+    referenceDescription: "The Glossary explains the concepts. MarginLab operational modules turn them into analysis and concrete actions.",
+    backToDashboard: "Back to dashboard →",
+    collapse: "Collapse",
+    expand: "Expand",
+    terms: {
+      "action-score": {
+        short: "Summary score indicating how much relevant operational work MarginLab has identified.",
+        detail: "Combines available actions, potential economic value and average priority. A high score does not necessarily mean the store is unhealthy; it means meaningful decisions deserve attention.",
+      },
+      "annual-impact": {
+        short: "12-month projection of an estimated economic impact.",
+        detail: "Usually calculated by annualizing a monthly scenario. It is not realized profit and assumes scenario conditions remain valid.",
+      },
+      "annual-net-profit": {
+        short: "Annualized net profit derived from the model's monthly baseline.",
+        detail: "MarginLab uses it as an economic projection, not as a historical accounting result.",
+      },
+      "average-margin": {
+        short: "Average margin calculated across the revenue and profit being analyzed.",
+        detail: "In Forecasting, it may refer to the average projected margin across the entire selected horizon.",
+      },
+      "baseline": {
+        short: "Starting economic position used as a reference.",
+        detail: "In MarginLab, the baseline comes from Shopify data for the selected period and may be normalized to a monthly basis.",
+      },
+      "break-even-price": {
+        short: "Minimum price required for a product to cover the costs being considered.",
+        detail: "Below this price, the product does not generate economic profit under the model's cost structure.",
+      },
+      "break-even-revenue": {
+        short: "Revenue required to reach zero profit.",
+        detail: "Estimated monthly revenue needed to cover configured fixed and variable costs. Above this level, the model begins to generate profit.",
+      },
+      "business-tax-reserve": {
+        short: "Managerial reserve used as a conservative economic assumption.",
+        detail: "It does not replace VAT, GST, Sales Tax, tax filings or actual tax liabilities. It is a financial assumption used by Business Model Studio.",
+      },
+      "cogs": {
+        short: "Cost of Goods Sold: cost of the products actually sold.",
+        detail: "A core component of profit and margin calculations. MarginLab may economically adjust it through the Tax Engine when tax configuration requires it.",
+      },
+      "cogs-coverage": {
+        short: "Percentage of analyzed data for which MarginLab has usable cost information.",
+        detail: "Higher coverage strengthens profit analysis. Missing costs can reduce estimate reliability.",
+      },
+      "commercial-risk": {
+        short: "Estimate of the commercial risk associated with a scenario.",
+        detail: "In Recovery Simulator, it mainly considers price changes and possible sales response. It is not a statistical demand forecast.",
+      },
+      "confidence": {
+        short: "Indicator of the strength of the data supporting an estimate.",
+        detail: "It does not represent the probability that a projected economic result will happen. It evaluates factors such as cost availability, coverage and usable history.",
+      },
+      "contribution-margin": {
+        short: "Margin remaining after variable costs to help cover fixed costs.",
+        detail: "Useful for understanding how much each unit of revenue contributes to the store's economic structure.",
+      },
+      "cumulative-profit": {
+        short: "Sum of profit generated across multiple consecutive periods.",
+        detail: "In Forecasting, it represents total projected profit accumulated across the selected horizon.",
+      },
+      "cumulative-profit-lift": {
+        short: "Cumulative additional profit generated by a scenario versus today's baseline.",
+        detail: "Difference between scenario profit and the profit that would result from keeping current monthly profit unchanged.",
+      },
+      "data-quality": {
+        short: "Assessment of the completeness and reliability of data used by the model.",
+        detail: "It does not measure scenario success probability. It measures the quality of the information MarginLab is working with.",
+      },
+      "default-tax-rate": {
+        short: "Fallback tax rate used when a more specific tax line is unavailable.",
+        detail: "Actual Shopify tax lines take priority. The default rate does not automatically override taxes recorded on orders.",
+      },
+      "discount-exposure": {
+        short: "Measure of how discounts and promotions affect profitability.",
+        detail: "Helps distinguish revenue growth from genuinely profitable growth.",
+      },
+      "economic-cogs": {
+        short: "Economic product cost after applicable tax adjustments.",
+        detail: "May differ from raw Shopify cost when input tax is included and recoverable.",
+      },
+      "economic-margin": {
+        short: "Margin calculated using the economic basis actually used by MarginLab.",
+        detail: "Reflects adjustments needed to represent economic revenue and costs correctly.",
+      },
+      "economic-profit": {
+        short: "Profit calculated after reconstructing revenue and costs on MarginLab's economic basis.",
+        detail: "Used by many Growth features before additional costs or assumptions are applied.",
+      },
+      "economic-revenue": {
+        short: "Revenue used by MarginLab to measure economic profitability.",
+        detail: "May differ from gross Shopify revenue when tax components need to be separated.",
+      },
+      "estimated-profit-model": {
+        short: "Profit model combining observed data and merchant assumptions.",
+        detail: "In Business Model Studio it includes configured fixed costs, variable fees and reserves. It is not an official accounting P&L.",
+      },
+      "estimated-timing": {
+        short: "First period in which a scenario reaches a configured target.",
+        detail: "Depends entirely on scenario assumptions and is not a guaranteed date.",
+      },
+      "fixed-costs": {
+        short: "Costs the model treats as independent from individual sales volume.",
+        detail: "Typical examples include monthly advertising, software, staff and other operating costs entered in Business Model Studio.",
+      },
+      "forecast-health": {
+        short: "Summary assessment of the economic strength of a future scenario.",
+        detail: "In MarginLab, it is primarily based on projected net margin at the end of the selected horizon.",
+      },
+      "gross-margin": {
+        short: "Percentage of revenue remaining after the cost of goods sold.",
+        detail: "Simplified formula: (Revenue − COGS) / Revenue × 100.",
+      },
+      "gross-profit": {
+        short: "Revenue minus cost of goods sold.",
+        detail: "Does not necessarily include advertising, software, staff, fees or other operating expenses.",
+      },
+      "input-tax-recovery": {
+        short: "Share of tax embedded in costs treated as economically recoverable.",
+        detail: "Used to reconstruct economic cost. It does not determine the merchant's actual legal right to recover tax.",
+      },
+      "low-margin-product": {
+        short: "Product with margin below the economic threshold used by MarginLab.",
+        detail: "Does not necessarily mean the product should be removed; pricing, cost, discounting or strategic role may need review.",
+      },
+      "margin-deterioration": {
+        short: "Decline in margin versus a comparison period.",
+        detail: "May indicate rising costs, heavier discounting, product-mix changes or other issues requiring investigation.",
+      },
+      "margin-improvement": {
+        short: "Assumed increase in margin during a scenario.",
+        detail: "In Forecasting, it is expressed in percentage points and applied progressively across the selected horizon.",
+      },
+      "missing-cost": {
+        short: "Product for which usable cost data is missing.",
+        detail: "Without cost data, MarginLab cannot measure product profit and margin with the same precision.",
+      },
+      "model-health": {
+        short: "Summary score of the sustainability of the economic model.",
+        detail: "Considers estimated net margin, cost burden and concentration of major cost items.",
+      },
+      "monthly-net-profit": {
+        short: "Estimated net profit on a monthly basis.",
+        detail: "Exact meaning depends on the module and may include fixed costs, variable fees and business reserves in addition to the store's economic baseline.",
+      },
+      "monthly-profit-gap": {
+        short: "Estimated monthly difference between the current situation and a target scenario.",
+        detail: "It is a modeled economic opportunity, not already lost or guaranteed profit.",
+      },
+      "net-margin": {
+        short: "Percentage of revenue remaining as net profit after included costs.",
+        detail: "A more complete profitability measure than gross margin when operating costs and fees are included.",
+      },
+      "net-monthly-recovery": {
+        short: "Estimated monthly net improvement generated by a scenario versus baseline.",
+        detail: "It is a simulated result and does not represent money already recovered.",
+      },
+      "opportunity": {
+        short: "Area where MarginLab identifies potential economic improvement.",
+        detail: "An opportunity is not necessarily a problem; it indicates a possible optimization lever.",
+      },
+      "priority": {
+        short: "Indicator used to rank actions by relevance and urgency.",
+        detail: "Helps distinguish what needs immediate attention from what can be planned or simply monitored.",
+      },
+      "profit-action-center": {
+        short: "MarginLab area that turns economic signals into an ordered action queue.",
+        detail: "It does not automatically add all individual action impacts because some opportunities can overlap.",
+      },
+      "profit-health": {
+        short: "Summary classification of the margin level achieved.",
+        detail: "In Recovery Simulator, it may classify a scenario as loss-making, critical, weak, healthy or strong.",
+      },
+      "profit-leak": {
+        short: "Situation where revenue or sales fail to convert into expected economic profit.",
+        detail: "May result from high costs, weak pricing, discounts, refunds, fees or other factors.",
+      },
+      "recoverable-profit": {
+        short: "Potential profit that may be recovered by improving an identified economic situation.",
+        detail: "It is an opportunity estimate and should not be interpreted as guaranteed profit.",
+      },
+      "recovery-opportunities-captured": {
+        short: "Share of recoverable profit a scenario assumes will be realized.",
+        detail: "100% means modeling the full estimated opportunity, not guaranteeing that 100% will actually be recovered.",
+      },
+      "refund-exposure": {
+        short: "Measure of the economic impact of refunds on profitability.",
+        detail: "Helps identify products or periods where refunds are eroding profit.",
+      },
+      "revenue-growth": {
+        short: "Change in revenue over time.",
+        detail: "In Forecasting, it is a scenario assumption, not necessarily observed growth.",
+      },
+      "scenario": {
+        short: "Combination of assumptions used to simulate a possible economic outcome.",
+        detail: "Scenarios support decision-making. They are not guaranteed forecasts and alternative scenarios should not be added together.",
+      },
+      "tax-aware-economic-basis": {
+        short: "Economic basis incorporating available tax treatment from Shopify data and the Tax Profile.",
+        detail: "Helps prevent tax components from being incorrectly treated as economic revenue, cost or profit.",
+      },
+      "tax-lines": {
+        short: "Tax details recorded by Shopify on transactions.",
+        detail: "When available, MarginLab treats them as authoritative over fallback rates configured in the Tax Profile.",
+      },
+      "target-margin": {
+        short: "Margin level used as an economic target in analysis or simulation.",
+        detail: "It does not necessarily represent a universally ideal store margin; it is an operational threshold used by the model.",
+      },
+      "variable-fees": {
+        short: "Fees that rise or fall with revenue or transaction volume.",
+        detail: "Typical examples include payment processing fees and transaction fees.",
+      },
+      "weak-best-seller": {
+        short: "High-selling product with relatively weak profitability.",
+        detail: "Especially important because a high-selling product can generate substantial revenue without contributing proportionally to profit.",
+      },
+    },
+  },
+  trendChart: {
+    title: "Profit Trend",
+    subtitle: "Current profit performance based on Shopify orders.",
+    profitMargin: "Profit Margin",
+    currentPeriod: "Current Period",
+    profitMarginTooltipTitle: "Profit margin",
+    profitMarginTooltipDescription:
+      "The percentage of product revenue remaining after subtracting the cost of products sold.",
+    profitMarginTooltipFormula: "(Product profit ÷ Product revenue) × 100",
+    profitMarginTooltipNote:
+      "It can differ from Economic Margin, which also considers applicable tax adjustments.",
+    revenue: "Revenue",
+    totalRevenue: "Total revenue",
+    totalProfit: "Total profit",
+    daily: "Daily",
+    totalRevenueMetric: "Total Revenue",
+    totalProfitMetric: "Total Profit",
+    profitMarginMetric: "Profit Margin",
+  },
+  scoreCard: {
+    assessmentUnavailable: "Assessment unavailable",
+    healthy: "Healthy",
+    monitor: "Monitor",
+    atRisk: "At risk",
+    critical: "Critical",
+    lossesObserved:
+      "Real losses of {{amount}} were detected in the period. However, the sample is too limited to assess the store's overall health.",
+    incompleteCostsObserved:
+      "Some product costs are missing. The available data does not yet support a reliable store-wide assessment.",
+    marginPressureObserved:
+      "Margin pressure was observed in the period, but the history is too limited to determine whether it is structural.",
+    insufficientEvidence:
+      "The period does not contain enough evidence to calculate a reliable margin health score.",
+    lossesDetected:
+      "The store recorded approximately {{amount}} in losses from products selling below cost in the selected period.",
+    noProductsBelowCost:
+      "No products sold below cost were detected in the selected period.",
+    eyebrow: "MARGIN HEALTH",
+    tooltipTitle: "Margin health",
+    tooltipDescription:
+      "A 0–100 score summarizing how healthy the store's profitability is. It considers losses, margins, cost coverage and data quality.",
+    tooltipNote: "The higher the score, the healthier the margin.",
+    confirmedLoss: "Confirmed loss",
+    productsAtRisk: "Products at risk",
+    productsDetected: "{{count}} detected",
+    margin: "Margin",
+    hiddenScore:
+      "{{orderCount}} orders across {{activeDays}} active days: the score remains hidden until evidence is sufficient.",
+    scoreBasis:
+      "Score based on losses, cost coverage, margins and the reliability of available data.",
+  },
+  businessPriorities: {
+    actionLabels: {
+      action: "Action",
+      review: "Review",
+      optimize: "Optimize",
+      monitor: "Monitor",
+    },
+    effortLabels: {
+      easy: "Easy",
+      medium: "Medium",
+      advanced: "Advanced",
+    },
+    moduleButtons: {
+      "Recovery Simulator": "Open Recovery Simulator",
+      "Profit Intelligence": "Open Profit Intelligence",
+      Products: "Open Products",
+      "Profit Action Center": "Open Profit Action Center",
+      "Profit Forecast": "Open Profit Forecast",
+      "Profit Copilot": "Open Profit Copilot",
+    },
+    openModuleFallback: "Open {{module}}",
+    primaryDecision: "Primary decision",
+    priority: "Priority",
+    relatedProduct: "Related product",
+    monthlyImpact: "Monthly impact",
+    qualitative: "Qualitative",
+    effort: "Effort",
+    estimatedTime: "Estimated time",
+    recommendedModule: "Recommended module",
+    statusText: {
+      action: "Action required",
+      review: "Review needed",
+      optimize: "Optimization available",
+      stable: "Stable status",
+    },
+    statusDescription: {
+      action: "At least one significant issue currently requires a prioritized decision.",
+      review: "There is no broad emergency, but some areas should be reviewed.",
+      optimize: "The business is stable. Current priorities focus on improvement.",
+      stable: "No significant profitability issue requires immediate action.",
+    },
+    eyebrow: "BUSINESS PRIORITIES",
+    title: "The decisions that deserve attention now",
+    description:
+      "MarginLab ranks risks and opportunities by impact, urgency and required effort. Not every priority represents an emergency.",
+    businessStatus: "Business status",
+    displayedPrioritiesImpact: "Monthly impact of displayed priorities",
+    openProfitActionCenter: "Open Profit Action Center →",
+  },
+  aiProfitMonitor: {
+    severityLabels: {
+      critical: "Critical",
+      warning: "Warning",
+      opportunity: "Opportunity",
+      info: "Information",
+    },
+    amountLabels: {
+      missingCogsRevenue: "Revenue with missing COGS",
+      estimatedOpportunity: "Estimated opportunity",
+      confirmedLoss: "Confirmed loss",
+      detectedImpact: "Detected impact",
+    },
+    actionRequired: "Action required",
+    reviewNeeded: "Review needed",
+    opportunitiesDetected: "Opportunities detected",
+    stableStatus: "Stable status",
+    overallAssessmentUnavailable: "Overall assessment unavailable",
+    noProfitRisks: "No profit risks detected",
+    insufficientAssessment:
+      "{{orderCount}} orders were observed across {{activeDays}} active days. No material period risks emerged, but the evidence is not sufficient to call the store stable.",
+    stableDescription:
+      "Margins, costs and opportunities appear stable based on the available data.",
+    activeSignals: "{{count}} active profitability signals",
+    tooltipTitle: "Profitability signals",
+    tooltipDescription:
+      "Problems, risks or opportunities MarginLab detected while analyzing your store data.",
+    tooltipNote: "Signals are ranked by importance and economic impact.",
+    description:
+      "MarginLab analyzed margins, products, costs, discounts, refunds and opportunities. Events are automatically ranked by urgency and impact.",
+    monitorStatus: "Monitor status",
+    highestPriority: "Highest priority",
+    priority: "Priority {{priority}}/100",
+    relatedProduct: "Related product",
+    otherSignals: "Other detected signals",
+    openCorrectModule: "Open the correct module directly.",
+    noAdditionalSignals: "No additional important signals detected.",
+    additionalSignals: "{{count}} additional signals were analyzed by the monitor.",
+  },
 };

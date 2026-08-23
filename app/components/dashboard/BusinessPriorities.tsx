@@ -6,7 +6,7 @@ import type {
   ProfitBusinessAction,
 } from "~/utils/profit-monitor";
 
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import { money } from "~/utils/margin";
 
 type Props = {
@@ -23,34 +23,36 @@ type ActionStyle = {
   icon: string;
 };
 
+type BusinessStatusKey = "action" | "review" | "optimize" | "stable";
+
 function getActionStyle(
   action: ProfitBusinessAction,
-  language: "it" | "en",
+  labels: Record<ProfitBusinessAction, string>,
 ): ActionStyle {
   return {
     action: {
-      label: language === "it" ? "Intervieni" : "Action",
+      label: labels.action,
       color: "#ff7b61",
       background: "rgba(255,107,74,0.10)",
       border: "rgba(255,107,74,0.28)",
       icon: "!",
     },
     review: {
-      label: language === "it" ? "Controlla" : "Review",
+      label: labels.review,
       color: "#fbbf24",
       background: "rgba(245,158,11,0.10)",
       border: "rgba(245,158,11,0.25)",
       icon: "◌",
     },
     optimize: {
-      label: language === "it" ? "Ottimizza" : "Optimize",
+      label: labels.optimize,
       color: "#4ade80",
       background: "rgba(34,197,94,0.10)",
       border: "rgba(34,197,94,0.25)",
       icon: "↗",
     },
     monitor: {
-      label: language === "it" ? "Monitora" : "Monitor",
+      label: labels.monitor,
       color: "#7dd3fc",
       background: "rgba(56,189,248,0.10)",
       border: "rgba(56,189,248,0.25)",
@@ -61,20 +63,14 @@ function getActionStyle(
 
 function getEffortLabel(
   effort: ProfitAlertEffort,
-  language: "it" | "en",
+  labels: Record<ProfitAlertEffort, string>,
 ) {
-  if (language === "it") {
-    if (effort === "easy") return "Facile";
-    if (effort === "medium") return "Media";
-    return "Avanzata";
-  }
-
-  if (effort === "easy") return "Easy";
-  if (effort === "medium") return "Medium";
-  return "Advanced";
+  return labels[effort];
 }
 
-function getBusinessStatus(alerts: ProfitAlert[]) {
+function getBusinessStatus(
+  alerts: ProfitAlert[],
+): { key: BusinessStatusKey; color: string } {
   if (alerts.some((alert) => alert.businessAction === "action")) {
     return { key: "action", color: "#ff6b4a" };
   }
@@ -92,32 +88,17 @@ function getBusinessStatus(alerts: ProfitAlert[]) {
 
 function getModuleButtonLabel(
   alert: ProfitAlert,
-  language: "it" | "en",
+  moduleButtons: Record<string, string>,
+  openModuleFallback: string,
+  t: (key: string, variables?: Record<string, string | number>) => string,
 ) {
-  if (language === "en") return `Open ${alert.recommendedModule}`;
+  const label = moduleButtons[alert.recommendedModule];
+  if (label) return label;
 
-  if (alert.recommendedModule === "Recovery Simulator") {
-    return "Apri Recovery Simulator";
-  }
-
-  if (alert.recommendedModule === "Profit Intelligence") {
-    return "Apri Analisi Profitti";
-  }
-
-  if (alert.recommendedModule === "Products") {
-    return "Apri Prodotti";
-  }
-
-  if (alert.recommendedModule === "Profit Action Center") {
-    return "Apri Profit Action Center";
-  }
-
-  if (alert.recommendedModule === "Profit Forecast") {
-    return "Apri Previsioni";
-  }
-
-  if (alert.recommendedModule === "Profit Copilot") {
-    return "Apri Profit Copilot";
+  if (openModuleFallback) {
+    return t("businessPriorities.openModuleFallback", {
+      module: alert.recommendedModule,
+    });
   }
 
   return alert.actionLabel;
@@ -170,14 +151,17 @@ function Metric({
 
 function PrimaryPriority({
   alert,
-  language,
   navigate,
 }: {
   alert: ProfitAlert;
-  language: "it" | "en";
   navigate: (path: string) => void;
 }) {
-  const style = getActionStyle(alert.businessAction, language);
+  const { messages, t } = useI18n();
+  const copy = messages.businessPriorities;
+  const style = getActionStyle(
+    alert.businessAction,
+    copy.actionLabels as Record<ProfitBusinessAction, string>,
+  );
 
   return (
     <article
@@ -237,9 +221,7 @@ function PrimaryPriority({
         >
           <span>{style.icon}</span>
           <span>
-            {language === "it"
-              ? "Decisione principale"
-              : "Primary decision"}
+            {copy.primaryDecision}
           </span>
         </div>
 
@@ -250,7 +232,7 @@ function PrimaryPriority({
             fontWeight: 900,
           }}
         >
-          {language === "it" ? "Priorità" : "Priority"} {alert.priority}/100
+          {copy.priority} {alert.priority}/100
         </span>
       </div>
 
@@ -316,9 +298,7 @@ function PrimaryPriority({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it"
-              ? "Prodotto coinvolto"
-              : "Related product"}
+            {copy.relatedProduct}
           </div>
 
           <div
@@ -344,15 +324,13 @@ function PrimaryPriority({
         }}
       >
         <Metric
-          label={language === "it" ? "Impatto mensile" : "Monthly impact"}
+          label={copy.monthlyImpact}
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
                 alert.monthlyImpact,
               )}`
-              : language === "it"
-                ? "Qualitativo"
-                : "Qualitative"
+              : copy.qualitative
           }
           color={
             alert.businessAction === "optimize"
@@ -362,12 +340,15 @@ function PrimaryPriority({
         />
 
         <Metric
-          label={language === "it" ? "Difficoltà" : "Effort"}
-          value={getEffortLabel(alert.effort, language)}
+          label={copy.effort}
+          value={getEffortLabel(
+            alert.effort,
+            copy.effortLabels as Record<ProfitAlertEffort, string>,
+          )}
         />
 
         <Metric
-          label={language === "it" ? "Tempo stimato" : "Estimated time"}
+          label={copy.estimatedTime}
           value={`${alert.estimatedMinutes} min`}
           color="#7dd3fc"
         />
@@ -390,9 +371,7 @@ function PrimaryPriority({
             letterSpacing: "0.1em",
           }}
         >
-          {language === "it"
-            ? "Modulo consigliato"
-            : "Recommended module"}
+          {copy.recommendedModule}
           :{" "}
           <strong style={{ color: "#f8fafc" }}>
             {alert.recommendedModule}
@@ -412,7 +391,12 @@ function PrimaryPriority({
           }}
           onClick={() => navigate(alert.route)}
         >
-          {getModuleButtonLabel(alert, language)} →
+          {getModuleButtonLabel(
+            alert,
+            copy.moduleButtons as Record<string, string>,
+            copy.openModuleFallback,
+            t,
+          )} →
         </button>
       </div>
     </article>
@@ -422,15 +406,18 @@ function PrimaryPriority({
 function SecondaryPriority({
   alert,
   index,
-  language,
   navigate,
 }: {
   alert: ProfitAlert;
   index: number;
-  language: "it" | "en";
   navigate: (path: string) => void;
 }) {
-  const style = getActionStyle(alert.businessAction, language);
+  const { messages, t } = useI18n();
+  const copy = messages.businessPriorities;
+  const style = getActionStyle(
+    alert.businessAction,
+    copy.actionLabels as Record<ProfitBusinessAction, string>,
+  );
 
   return (
     <article
@@ -545,7 +532,12 @@ function SecondaryPriority({
           style={{ width: "100%", justifyContent: "center" }}
           onClick={() => navigate(alert.route)}
         >
-          {getModuleButtonLabel(alert, language)} →
+          {getModuleButtonLabel(
+            alert,
+            copy.moduleButtons as Record<string, string>,
+            copy.openModuleFallback,
+            t,
+          )} →
         </button>
       </div>
     </article>
@@ -557,8 +549,8 @@ export default function BusinessPriorities({
   navigate,
   maxItems = 3,
 }: Props) {
-  const language =
-    getStoredLanguage() === "it" ? "it" : "en";
+  const { messages } = useI18n();
+  const copy = messages.businessPriorities;
 
   const priorities = React.useMemo(
     () =>
@@ -590,39 +582,8 @@ export default function BusinessPriorities({
 
   if (!primary) return null;
 
-  const statusText =
-    language === "it"
-      ? status.key === "action"
-        ? "Intervento richiesto"
-        : status.key === "review"
-          ? "Da controllare"
-          : status.key === "optimize"
-            ? "Ottimizzazione disponibile"
-            : "Situazione stabile"
-      : status.key === "action"
-        ? "Action required"
-        : status.key === "review"
-          ? "Review needed"
-          : status.key === "optimize"
-            ? "Optimization available"
-            : "Stable status";
-
-  const statusDescription =
-    language === "it"
-      ? status.key === "action"
-        ? "Esiste almeno una criticità significativa che merita una decisione prioritaria."
-        : status.key === "review"
-          ? "Non emerge un'emergenza generale, ma alcuni aspetti devono essere verificati."
-          : status.key === "optimize"
-            ? "La struttura è stabile. Le priorità attuali riguardano il miglioramento."
-            : "Nessuna criticità significativa richiede un intervento immediato."
-      : status.key === "action"
-        ? "At least one significant issue currently requires a prioritized decision."
-        : status.key === "review"
-          ? "There is no broad emergency, but some areas should be reviewed."
-          : status.key === "optimize"
-            ? "The business is stable. Current priorities focus on improvement."
-            : "No significant profitability issue requires immediate action.";
+  const statusText = copy.statusText[status.key];
+  const statusDescription = copy.statusDescription[status.key];
 
   const visibleImpact = displayed.reduce(
     (sum, alert) =>
@@ -661,9 +622,7 @@ export default function BusinessPriorities({
               textTransform: "uppercase",
             }}
           >
-            {language === "it"
-              ? "PRIORITÀ DI BUSINESS"
-              : "BUSINESS PRIORITIES"}
+            {copy.eyebrow}
           </div>
 
           <h2
@@ -676,9 +635,7 @@ export default function BusinessPriorities({
               letterSpacing: "-0.04em",
             }}
           >
-            {language === "it"
-              ? "Le decisioni che meritano attenzione adesso"
-              : "The decisions that deserve attention now"}
+            {copy.title}
           </h2>
 
           <p
@@ -691,9 +648,7 @@ export default function BusinessPriorities({
               fontWeight: 720,
             }}
           >
-            {language === "it"
-              ? "MarginLab ordina rischi e opportunità per impatto, urgenza e impegno richiesto. Non tutte le priorità rappresentano un'emergenza."
-              : "MarginLab ranks risks and opportunities by impact, urgency and required effort. Not every priority represents an emergency."}
+            {copy.description}
           </p>
         </div>
 
@@ -714,9 +669,7 @@ export default function BusinessPriorities({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it"
-              ? "Stato del business"
-              : "Business status"}
+            {copy.businessStatus}
           </div>
 
           <div
@@ -757,7 +710,6 @@ export default function BusinessPriorities({
       >
         <PrimaryPriority
           alert={primary}
-          language={language}
           navigate={navigate}
         />
 
@@ -774,7 +726,6 @@ export default function BusinessPriorities({
                 key={alert.id}
                 alert={alert}
                 index={index + 1}
-                language={language}
                 navigate={navigate}
               />
             ))}
@@ -808,9 +759,7 @@ export default function BusinessPriorities({
               letterSpacing: "0.1em",
             }}
           >
-            {language === "it"
-              ? "Impatto mensile delle priorità mostrate"
-              : "Monthly impact of displayed priorities"}
+            {copy.displayedPrioritiesImpact}
           </div>
 
           <div
@@ -834,9 +783,7 @@ export default function BusinessPriorities({
             navigate("/app/recommendations")
           }
         >
-          {language === "it"
-            ? "Apri Profit Action Center →"
-            : "Open Profit Action Center →"}
+          {copy.openProfitActionCenter}
         </button>
       </div>
     </section>

@@ -1,5 +1,5 @@
 import { money, pct } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
@@ -12,41 +12,35 @@ type Props = {
 
 function getScorePresentation(
   assessment: MarginAssessment,
-  language: "it" | "en",
+  t: (key: string) => string,
 ) {
   if (!assessment.healthScoreAvailable || assessment.healthScore === null) {
     return {
       score: null,
-      label:
-        language === "it"
-          ? "Valutazione non disponibile"
-          : "Assessment unavailable",
+      label: t("scoreCard.assessmentUnavailable"),
       color: "#7dd3fc",
     };
   }
 
   const presentations = {
     healthy: {
-      label: language === "it" ? "Sano" : "Healthy",
+      label: t("scoreCard.healthy"),
       color: "#22c55e",
     },
     monitor: {
-      label: language === "it" ? "Da monitorare" : "Monitor",
+      label: t("scoreCard.monitor"),
       color: "#fbbf24",
     },
     at_risk: {
-      label: language === "it" ? "A rischio" : "At risk",
+      label: t("scoreCard.atRisk"),
       color: "#fb923c",
     },
     critical: {
-      label: language === "it" ? "Critico" : "Critical",
+      label: t("scoreCard.critical"),
       color: "#ff5a36",
     },
     insufficient_data: {
-      label:
-        language === "it"
-          ? "Valutazione non disponibile"
-          : "Assessment unavailable",
+      label: t("scoreCard.assessmentUnavailable"),
       color: "#7dd3fc",
     },
   } as const;
@@ -63,40 +57,28 @@ function getScorePresentation(
 
 function getAssessmentCopy(
   assessment: MarginAssessment,
-  language: "it" | "en",
   visualLeak: number,
+  t: (key: string, variables?: Record<string, string | number>) => string,
 ) {
   if (!assessment.healthScoreAvailable) {
     if (assessment.observedStatus === "losses_observed") {
-      return language === "it"
-        ? `Sono state rilevate perdite reali per ${money(visualLeak)} nel periodo. Il campione è però troppo limitato per giudicare la salute complessiva dello store.`
-        : `Real losses of ${money(visualLeak)} were detected in the period. However, the sample is too limited to assess the store's overall health.`;
+      return t("scoreCard.lossesObserved", { amount: money(visualLeak) });
     }
 
     if (assessment.observedStatus === "incomplete_costs_observed") {
-      return language === "it"
-        ? "Sono presenti costi prodotto mancanti. I dati disponibili non consentono ancora una valutazione generale affidabile dello store."
-        : "Some product costs are missing. The available data does not yet support a reliable store-wide assessment.";
+      return t("scoreCard.incompleteCostsObserved");
     }
 
     if (assessment.observedStatus === "margin_pressure_observed") {
-      return language === "it"
-        ? "Nel periodo è stata osservata pressione sul margine, ma lo storico è troppo limitato per stabilire se il problema sia strutturale."
-        : "Margin pressure was observed in the period, but the history is too limited to determine whether it is structural.";
+      return t("scoreCard.marginPressureObserved");
     }
 
-    return language === "it"
-      ? "I dati del periodo non sono sufficienti per calcolare un punteggio affidabile di salute del margine."
-      : "The period does not contain enough evidence to calculate a reliable margin health score.";
+    return t("scoreCard.insufficientEvidence");
   }
 
   return visualLeak > 0
-    ? language === "it"
-      ? `Il negozio ha registrato circa ${money(visualLeak)} di perdite da prodotti venduti sotto costo nel periodo selezionato.`
-      : `The store recorded approximately ${money(visualLeak)} in losses from products selling below cost in the selected period.`
-    : language === "it"
-      ? "Non risultano prodotti venduti sotto costo nel periodo selezionato."
-      : "No products sold below cost were detected in the selected period.";
+    ? t("scoreCard.lossesDetected", { amount: money(visualLeak) })
+    : t("scoreCard.noProductsBelowCost");
 }
 
 export default function ScoreCard({
@@ -105,8 +87,9 @@ export default function ScoreCard({
   visualProductsAtRisk,
   visualMarginPct,
 }: Props) {
-  const language = getStoredLanguage() === "it" ? "it" : "en";
-  const presentation = getScorePresentation(assessment, language);
+  const { messages, t } = useI18n();
+  const copy = messages.scoreCard;
+  const presentation = getScorePresentation(assessment, t);
   const score = presentation.score;
   const gaugeScore = score ?? 0;
 
@@ -125,27 +108,14 @@ export default function ScoreCard({
           }}
         >
           <span>
-            {language === "it"
-              ? "SALUTE DEL MARGINE"
-              : "MARGIN HEALTH"}
+            {copy.eyebrow}
           </span>
 
           <MetricTooltip
             content={{
-              title:
-                language === "it"
-                  ? "Salute del margine"
-                  : "Margin health",
-
-              description:
-                language === "it"
-                  ? "Un punteggio da 0 a 100 che riassume quanto è sana la redditività dello store. Tiene conto di perdite, margini, copertura dei costi e qualità dei dati."
-                  : "A 0–100 score summarizing how healthy the store's profitability is. It considers losses, margins, cost coverage and data quality.",
-
-              note:
-                language === "it"
-                  ? "Più il punteggio è alto, migliore è la salute del margine."
-                  : "The higher the score, the healthier the margin.",
+              title: copy.tooltipTitle,
+              description: copy.tooltipDescription,
+              note: copy.tooltipNote,
             }}
           />
         </div>
@@ -160,25 +130,23 @@ export default function ScoreCard({
         </div>
 
         <div className="score-copy">
-          {getAssessmentCopy(assessment, language, visualLeak)}
+          {getAssessmentCopy(assessment, visualLeak, t)}
         </div>
 
         <div className="score-mini-grid">
           {[
             [
-              language === "it" ? "Perdita accertata" : "Confirmed loss",
+              copy.confirmedLoss,
               money(visualLeak),
               "#ff5a36",
             ],
             [
-              language === "it" ? "Prodotti a rischio" : "Products at risk",
-              language === "it"
-                ? `${visualProductsAtRisk} rilevati`
-                : `${visualProductsAtRisk} detected`,
+              copy.productsAtRisk,
+              t("scoreCard.productsDetected", { count: visualProductsAtRisk }),
               "#f59e0b",
             ],
             [
-              language === "it" ? "Margine" : "Margin",
+              copy.margin,
               pct(visualMarginPct),
               "#22c55e",
             ],
@@ -231,12 +199,11 @@ export default function ScoreCard({
 
         <div className="gauge-copy">
           {score === null
-            ? language === "it"
-              ? `${assessment.evidence.orderCount} ordini su ${assessment.evidence.activeDays} giorni attivi: il punteggio resterà nascosto finché l'evidenza non sarà sufficiente.`
-              : `${assessment.evidence.orderCount} orders across ${assessment.evidence.activeDays} active days: the score remains hidden until evidence is sufficient.`
-            : language === "it"
-              ? "Punteggio basato su perdite, copertura dei costi, margini e affidabilità dei dati disponibili."
-              : "Score based on losses, cost coverage, margins and the reliability of available data."}
+            ? t("scoreCard.hiddenScore", {
+                orderCount: assessment.evidence.orderCount,
+                activeDays: assessment.evidence.activeDays,
+              })
+            : copy.scoreBasis}
         </div>
       </div>
     </div>
