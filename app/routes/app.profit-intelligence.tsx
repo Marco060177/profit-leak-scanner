@@ -234,7 +234,13 @@ export default function ProfitIntelligencePage() {
         : dependencyLevel === "Moderate"
           ? "RISCHIO MODERATO"
           : "RISCHIO BASSO"
-      : `${dependencyLevel.toUpperCase()} RISK`;
+      : language === "fr"
+        ? dependencyLevel === "High"
+          ? "RISQUE ÉLEVÉ"
+          : dependencyLevel === "Moderate"
+            ? "RISQUE MODÉRÉ"
+            : "RISQUE FAIBLE"
+        : `${dependencyLevel.toUpperCase()} RISK`;
 
   const sortedProfitRows = [...economicRows].sort((a, b) => b.profit - a.profit);
 
@@ -274,7 +280,13 @@ export default function ProfitIntelligencePage() {
         : profitQualityLevel === "Mixed"
           ? "Mista"
           : "Sana"
-      : profitQualityLevel;
+      : language === "fr"
+        ? profitQualityLevel === "Weak"
+          ? "Faible"
+          : profitQualityLevel === "Mixed"
+            ? "Mixte"
+            : "Saine"
+        : profitQualityLevel;
 
   const intelligenceScore = Math.max(
     0,
@@ -304,6 +316,14 @@ export default function ProfitIntelligencePage() {
         : "#22c55e";
 
   const exportProfitIntelligenceCsv = () => {
+    const exportProfitQualityLevelLabel =
+      language === "it"
+        ? profitQualityLevel === "Weak"
+          ? "Debole"
+          : profitQualityLevel === "Mixed"
+            ? "Mista"
+            : "Sana"
+        : profitQualityLevel;
     const exportLocale = language === "it" ? "it-IT" : "en-US";
     const csvCell = (value: string | number | boolean | null | undefined) => {
       if (value === null || value === undefined) return "";
@@ -371,7 +391,7 @@ export default function ProfitIntelligencePage() {
         ["Indice di redditività", intelligenceScore],
         ["Dipendenza ricavi top 3 %", round2(top3RevenueShare)],
         ["Dipendenza profitti top 3 %", round2(top3ProfitShare)],
-        ["Qualità dei margini", profitQualityLevelLabel],
+        ["Qualità dei margini", exportProfitQualityLevelLabel],
       ]
       : [
         ["Economic revenue", round2(economicRevenue)],
@@ -396,7 +416,7 @@ export default function ProfitIntelligencePage() {
         ["Profit Intelligence Score", intelligenceScore],
         ["Top 3 revenue dependency %", round2(top3RevenueShare)],
         ["Top 3 profit dependency %", round2(top3ProfitShare)],
-        ["Margin quality", profitQualityLevelLabel],
+        ["Margin quality", exportProfitQualityLevelLabel],
       ];
 
     const productHeaders = language === "it"

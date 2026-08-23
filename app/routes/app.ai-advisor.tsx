@@ -1382,6 +1382,32 @@ Rules:
     },
   ];
 
+  const visibleQuestions = dynamicQuestions.map((question) => ({
+    ...question,
+    promptText: question.label,
+    displayLabel:
+      language !== "fr"
+        ? question.label
+        : ({
+          profitRisk: primaryProfitAlert
+            ? `Pourquoi « ${primaryProfitAlert.title} » est-elle la priorité principale ?`
+            : "Quel est le principal risque pour mon bénéfice ?",
+          marginPressure: summary.refunds > 0
+            ? "Dans quelle mesure les remboursements affectent-ils le bénéfice ?"
+            : "Qu'est-ce qui réduit ma marge ?",
+          priority: missionAlert
+            ? `Pourquoi dois-je traiter « ${missionAlert.title} » en priorité ?`
+            : "Que dois-je vérifier en premier ?",
+          fastestImprovement: recoverableProfit > 0
+            ? "Comment puis-je réduire cet écart de bénéfice ?"
+            : "Quelle action améliorerait le bénéfice le plus rapidement ?",
+          productPriorities: "Quels produits dois-je corriger en premier ?",
+          pricingOpportunity: "Quel est le plus grand écart de prix par rapport à l'objectif ?",
+          hiddenCosts: "Quel est mon principal coût caché ?",
+          growthOpportunity: "Où puis-je augmenter le bénéfice le plus rapidement ?",
+        } as Record<string, string>)[question.id],
+  }));
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
@@ -2575,7 +2601,7 @@ Rules:
                     gap: 11,
                   }}
                 >
-                  {dynamicQuestions.map((presetQuestion) => (
+                  {visibleQuestions.map((presetQuestion) => (
                     <button
                       key={presetQuestion.id}
                       type="button"
@@ -2583,11 +2609,11 @@ Rules:
                         setSelectedQuestion(
                           presetQuestion.id as SelectedQuestion,
                         );
-                        setQuestion(presetQuestion.label);
+                        setQuestion(presetQuestion.displayLabel);
 
                         const formData = new FormData();
                         formData.append("intent", "ask");
-                        formData.append("question", presetQuestion.label);
+                        formData.append("question", presetQuestion.promptText);
                         formData.append("language", language);
                         formData.append("period", period);
 
@@ -2615,7 +2641,7 @@ Rules:
                         lineHeight: 1.4,
                       }}
                     >
-                      {presetQuestion.label}
+                      {presetQuestion.displayLabel}
                     </button>
                   ))}
                 </div>

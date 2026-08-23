@@ -318,7 +318,7 @@ function TopPriority({
 }) {
   const { messages } = useI18n();
   const copy = messages.recommendationsPage;
-  const status = getStatusStyle(alert.businessAction, language);
+  const status = getUiStatusStyle(alert.businessAction, language);
 
   return (
     <section
@@ -435,7 +435,7 @@ function TopPriority({
 
         <ActionMetric
           label={copy.auto.r007}
-          value={getEffortLabel(alert.effort, language)}
+          value={getUiEffortLabel(alert.effort, language)}
           note={`${alert.estimatedMinutes} min`}
         />
 
@@ -679,10 +679,10 @@ export default function RecommendationsPage() {
       : 100;
 
   const stageLabels: Record<ActionStage, string> = {
-    now: language === "it" ? "Da affrontare ora" : "Address now",
-    next: language === "it" ? "Prossimo passo" : "Next step",
-    planned: language === "it" ? "Da pianificare" : "Plan next",
-    monitor: language === "it" ? "Monitoraggio" : "Monitoring",
+    now: language === "it" ? "Da affrontare ora" : language === "fr" ? "À traiter maintenant" : "Address now",
+    next: language === "it" ? "Prossimo passo" : language === "fr" ? "Prochaine étape" : "Next step",
+    planned: language === "it" ? "Da pianificare" : language === "fr" ? "À planifier" : "Plan next",
+    monitor: language === "it" ? "Monitoraggio" : language === "fr" ? "Suivi" : "Monitoring",
   };
 
   const strategyText =
@@ -690,11 +690,21 @@ export default function RecommendationsPage() {
       ? topAlert
         ? `La priorità principale è “${topAlert.title}”. MarginLab consiglia di completare prima le attività con priorità più alta, verificare l'effetto nel modulo indicato e soltanto dopo passare alle opportunità di ottimizzazione.`
         : "Non sono state rilevate azioni operative. Mantieni attivo il monitoraggio e verifica nuovamente quando cambiano ordini, costi o margini."
-      : topAlert
+      : language === "fr"
+        ? topAlert
+          ? `La priorité principale est « ${topAlert.title} ». MarginLab recommande de terminer d'abord les tâches les plus prioritaires, de vérifier l'effet dans le module recommandé, puis seulement de passer aux opportunités d'optimisation.`
+          : "Aucune action opérationnelle n'a été détectée. Maintenez le suivi actif et réexaminez la situation lorsque les commandes, les coûts ou les marges évoluent."
+        : topAlert
         ? `The primary priority is “${topAlert.title}”. MarginLab recommends completing higher-priority work first, validating the effect in the recommended module, and only then moving to optimization opportunities.`
         : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
 
   const exportRecommendationsCsv = () => {
+    const exportStageLabels: Record<ActionStage, string> = {
+      now: language === "it" ? "Da affrontare ora" : "Address now",
+      next: language === "it" ? "Prossimo passo" : "Next step",
+      planned: language === "it" ? "Da pianificare" : "Plan next",
+      monitor: language === "it" ? "Monitoraggio" : "Monitoring",
+    };
     const exportLocale = language === "it" ? "it-IT" : "en-US";
     const round = (value: number) =>
       Number.isFinite(value) ? Math.round(value * 100) / 100 : 0;
@@ -842,7 +852,7 @@ export default function RecommendationsPage() {
           alert.description,
           alert.category,
           getStatusStyle(alert.businessAction, language).label,
-          stageLabels[getActionStage(alert)],
+          exportStageLabels[getActionStage(alert)],
           alert.priority,
           labels.economicKinds[alert.economicKind],
           alert.monthlyImpact,
@@ -1348,7 +1358,7 @@ export default function RecommendationsPage() {
                   {queueAlerts.length > 0 ? (
                     queueAlerts.map((alert, index) => {
                       const completed = completedIds.includes(alert.id);
-                      const status = getStatusStyle(alert.businessAction, language);
+                      const status = getUiStatusStyle(alert.businessAction, language);
 
                       return (
                         <article
@@ -1407,7 +1417,7 @@ export default function RecommendationsPage() {
                               </TinyBadge>
 
                               <TinyBadge color="#94a3b8">
-                                {alert.category}
+                                {getUiCategoryLabel(alert.category, language)}
                               </TinyBadge>
                             </div>
 
@@ -1449,7 +1459,7 @@ export default function RecommendationsPage() {
                               </TinyBadge>
 
                               <TinyBadge color="#f59e0b">
-                                {getEffortLabel(alert.effort, language)}
+                                {getUiEffortLabel(alert.effort, language)}
                               </TinyBadge>
 
                               <TinyBadge color="#22c55e">
@@ -2045,4 +2055,20 @@ export default function RecommendationsPage() {
       </div>
     </div>
   );
+}
+
+function getUiStatusStyle(action: ProfitBusinessAction, language: Language) {
+  const style = getStatusStyle(action, language);
+  if (language !== "fr") return style;
+  return { ...style, label: ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<ProfitBusinessAction, string>)[action] };
+}
+
+function getUiEffortLabel(effort: ProfitAlertEffort, language: Language) {
+  if (language !== "fr") return getEffortLabel(effort, language);
+  return effort === "easy" ? "Facile" : effort === "medium" ? "Moyenne" : "Avancée";
+}
+
+function getUiCategoryLabel(category: string, language: Language) {
+  if (language !== "fr") return category;
+  return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
 }

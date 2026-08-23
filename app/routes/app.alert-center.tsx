@@ -155,28 +155,28 @@ function getSeverityStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertSeverity, StatusStyle> = {
     critical: {
-      label: language === "it" ? "Critico" : "Critical",
+      label: language === "it" ? "Critico" : language === "fr" ? "Critique" : "Critical",
       color: "#ff6b4a",
       background: "rgba(255,107,74,0.11)",
       border: "rgba(255,107,74,0.30)",
     },
 
     warning: {
-      label: language === "it" ? "Attenzione" : "Warning",
+      label: language === "it" ? "Attenzione" : language === "fr" ? "Avertissement" : "Warning",
       color: "#f59e0b",
       background: "rgba(245,158,11,0.11)",
       border: "rgba(245,158,11,0.28)",
     },
 
     opportunity: {
-      label: language === "it" ? "Opportunità" : "Opportunity",
+      label: language === "it" ? "Opportunità" : language === "fr" ? "Opportunité" : "Opportunity",
       color: "#22c55e",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
     },
 
     info: {
-      label: language === "it" ? "Informazione" : "Information",
+      label: language === "it" ? "Informazione" : language === "fr" ? "Information" : "Information",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
@@ -192,28 +192,28 @@ function getAlertStatusStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertStatus, StatusStyle> = {
     new: {
-      label: language === "it" ? "Nuovo" : "New",
+      label: language === "it" ? "Nuovo" : language === "fr" ? "Nouveau" : "New",
       color: "#ff875f",
       background: "rgba(255,115,80,0.12)",
       border: "rgba(255,115,80,0.30)",
     },
 
     active: {
-      label: language === "it" ? "Attivo" : "Active",
+      label: language === "it" ? "Attivo" : language === "fr" ? "Actif" : "Active",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
     },
 
     acknowledged: {
-      label: language === "it" ? "Preso in carico" : "Acknowledged",
+      label: language === "it" ? "Preso in carico" : language === "fr" ? "Pris en compte" : "Acknowledged",
       color: "#c084fc",
       background: "rgba(192,132,252,0.11)",
       border: "rgba(192,132,252,0.28)",
     },
 
     resolved: {
-      label: language === "it" ? "Risolto" : "Resolved",
+      label: language === "it" ? "Risolto" : language === "fr" ? "Résolu" : "Resolved",
       color: "#4ade80",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
@@ -225,26 +225,26 @@ function getAlertStatusStyle(
 
 function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (!timestamp) {
-    return language === "it" ? "Adesso" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : "Now";
   }
 
   const date = new Date(timestamp);
 
   if (Number.isNaN(date.getTime())) {
-    return language === "it" ? "Adesso" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : "Now";
   }
 
   const differenceMs = Date.now() - date.getTime();
   const differenceMinutes = Math.max(0, Math.floor(differenceMs / 60000));
 
   if (differenceMinutes < 1) {
-    return language === "it" ? "Adesso" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : "Now";
   }
 
   if (differenceMinutes < 60) {
     return language === "it"
       ? `${differenceMinutes} min fa`
-      : `${differenceMinutes} min ago`;
+      : language === "fr" ? `il y a ${differenceMinutes} min` : `${differenceMinutes} min ago`;
   }
 
   const differenceHours = Math.floor(differenceMinutes / 60);
@@ -252,19 +252,19 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (differenceHours < 24) {
     return language === "it"
       ? `${differenceHours} ore fa`
-      : `${differenceHours}h ago`;
+      : language === "fr" ? `il y a ${differenceHours} h` : `${differenceHours}h ago`;
   }
 
   const differenceDays = Math.floor(differenceHours / 24);
 
   if (differenceDays === 1) {
-    return language === "it" ? "Ieri" : "Yesterday";
+    return language === "it" ? "Ieri" : language === "fr" ? "Hier" : "Yesterday";
   }
 
   if (differenceDays < 7) {
     return language === "it"
       ? `${differenceDays} giorni fa`
-      : `${differenceDays} days ago`;
+      : language === "fr" ? `il y a ${differenceDays} jours` : `${differenceDays} days ago`;
   }
 
   return new Intl.DateTimeFormat(getLanguageLocale(language), {
@@ -272,6 +272,16 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function getAlertCategoryLabel(category: string, language: Language) {
+  if (language !== "fr") return category;
+  return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
+}
+
+function getBusinessActionLabel(action: string, language: Language) {
+  if (language !== "fr") return action;
+  return ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<string, string>)[action] ?? action;
 }
 
 function TinyBadge({
@@ -473,7 +483,7 @@ function AlertCard({
               {lifecycleStyle.label}
             </TinyBadge>
 
-            <TinyBadge color="#94a3b8">{alert.category}</TinyBadge>
+            <TinyBadge color="#94a3b8">{getAlertCategoryLabel(alert.category, language)}</TinyBadge>
           </div>
 
           <h2
@@ -711,7 +721,7 @@ function AlertCard({
               textTransform: "capitalize",
             }}
           >
-            {alert.businessAction}
+            {getBusinessActionLabel(alert.businessAction, language)}
           </div>
         </div>
 

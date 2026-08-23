@@ -104,6 +104,14 @@ export default function ProductRiskTable({
     return "Prezzi e margini risultano stabili sulla base dei dati disponibili.";
   }
 
+  function visibleRiskLabel(row: Row) {
+    if (language !== "fr") return riskLabel(row);
+    if (row.losing) return "Critique";
+    if (row.missingCost) return "Coût manquant";
+    if (row.lowMargin) return "Élevé";
+    return "Sain";
+  }
+
   return (
     <div className="panel" id="products-section">
       <div className="section-header">
@@ -480,7 +488,7 @@ export default function ProductRiskTable({
                           background: riskBackground(row),
                         }}
                       >
-                        {riskLabel(row)}
+                        {visibleRiskLabel(row)}
                       </span>
                     </td>
                   </tr>
