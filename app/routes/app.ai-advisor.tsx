@@ -3,6 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
@@ -22,7 +23,6 @@ import {
 import type { LoaderData } from "~/utils/margin";
 
 import {
-  getStoredLanguage,
   type Language,
 } from "~/utils/i18n";
 
@@ -470,7 +470,8 @@ Do not generate a complete business analysis.
 
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.aiAdvisorPage;
 
   const locale =
     language === "it"
@@ -735,17 +736,11 @@ export default function AiAdvisorPage() {
   );
 
   const healthLabel =
-    language === "it"
-      ? healthScore < 40
-        ? "Rischio elevato"
-        : healthScore < 70
-          ? "Rischio moderato"
-          : "Sano"
-      : healthScore < 40
-        ? "High Risk"
-        : healthScore < 70
-          ? "Moderate Risk"
-          : "Healthy";
+    healthScore < 40
+      ? copy.high_risk
+      : healthScore < 70
+        ? copy.moderate_risk
+        : copy.healthy;
 
   const healthColor =
     healthScore < 40
@@ -830,15 +825,11 @@ export default function AiAdvisorPage() {
   const weeklyReport = {
     title:
       missionAlert?.title ??
-      (language === "it"
-        ? "Continua a monitorare la redditività dello store"
-        : "Continue monitoring store profitability"),
+      (copy.continue_monitoring_store_profitability),
 
     recommendation:
       missionAlert?.actionLabel ??
-      (language === "it"
-        ? "Controlla periodicamente rischi e opportunità"
-        : "Review risks and opportunities regularly"),
+      (copy.review_risks_and_opportunities_regularly),
 
     route:
       missionAlert?.route ?? "/app/recommendations",
@@ -855,12 +846,8 @@ export default function AiAdvisorPage() {
   */
 
   const executiveBrief = primaryProfitAlert
-    ? language === "it"
-      ? `${primaryProfitAlert.title}. ${primaryProfitAlert.description}`
-      : `${primaryProfitAlert.title}. ${primaryProfitAlert.description}`
-    : language === "it"
-      ? "Profit Monitor non ha rilevato rischi urgenti. La struttura di profitto appare stabile sui dati disponibili."
-      : "Profit Monitor detected no urgent risks. The profit structure appears stable based on the available data.";
+    ? `${primaryProfitAlert.title}. ${primaryProfitAlert.description}`
+    : copy.profit_monitor_detected_no_urgent_risks;
 
   /*
   |--------------------------------------------------------------------------
@@ -884,26 +871,18 @@ export default function AiAdvisorPage() {
     severity: string,
   ): string => {
     if (severity === "opportunity") {
-      return language === "it"
-        ? "Nuova opportunità"
-        : "New opportunity";
+      return copy.new_opportunity;
     }
 
     if (severity === "critical") {
-      return language === "it"
-        ? "Priorità immediata"
-        : "Immediate priority";
+      return copy.immediate_priority;
     }
 
     if (severity === "warning") {
-      return language === "it"
-        ? "Da controllare"
-        : "Needs review";
+      return copy.needs_review;
     }
 
-    return language === "it"
-      ? "Segnale attivo"
-      : "Active signal";
+    return copy.active_signal;
   };
 
   const decisionFeed = profitAlerts
@@ -979,18 +958,14 @@ export default function AiAdvisorPage() {
     {
       key: "health",
       label:
-        language === "it"
-          ? "Salute store"
-          : "Store Health",
+        copy.store_health,
       value: healthScore,
       color: healthColor,
     },
     {
       key: "profit",
       label:
-        language === "it"
-          ? "Qualità profitto"
-          : "Profit Quality",
+        copy.profit_quality,
       value: profitQualityScore,
       color:
         profitQualityScore < 40
@@ -1002,9 +977,7 @@ export default function AiAdvisorPage() {
     {
       key: "pricing",
       label:
-        language === "it"
-          ? "Efficienza prezzi"
-          : "Pricing Efficiency",
+        copy.pricing_efficiency,
       value: pricingScore,
       color:
         pricingScore < 40
@@ -1016,9 +989,7 @@ export default function AiAdvisorPage() {
     {
       key: "data",
       label:
-        language === "it"
-          ? "Qualità dei dati"
-          : "Data Quality",
+        copy.data_quality,
       value: dataQualityScore,
       color:
         dataQualityScore < 40
@@ -1030,9 +1001,7 @@ export default function AiAdvisorPage() {
     {
       key: "execution",
       label:
-        language === "it"
-          ? "Prontezza operativa"
-          : "Execution Readiness",
+        copy.execution_readiness,
       value: executionScore,
       color:
         executionScore < 40
@@ -1428,28 +1397,20 @@ Rules:
             <div className="alert-pill">
               <span className="alert-dot" />
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Funzione Growth"
-                  : "Growth Feature"}
+                ? copy.growth_plan_active
+                : copy.growth_feature}
             </div>
 
             <div className="eyebrow">
-              {language === "it" ? "PROFIT COPILOT" : "PROFIT COPILOT"}
+              {copy.profit_copilot}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Il briefing operativo del tuo store, già pronto"
-                : "Your store briefing, already prepared"}
+              {copy.your_store_briefing_already_prepared}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "MarginLab analizza automaticamente redditività, rischi, opportunità e priorità. Prima ti dice cosa conta, poi risponde alle tue domande."
-                : "MarginLab automatically analyzes profitability, risk, opportunities and priorities. It tells you what matters first, then answers your questions."}
+              {copy.marginlab_automatically_analyzes_profitability_risk_opportunities}
             </div>
 
             <div
@@ -1467,9 +1428,7 @@ Rules:
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.tax_aware_economic_basis}
             </div>
           </div>
 
@@ -1482,7 +1441,7 @@ Rules:
                   "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
               }}
             >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+              {copy.unlock_growth}
             </button>
           )}
         </div>
@@ -1528,7 +1487,7 @@ Rules:
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.growth_feature_2}
                 </div>
 
                 <div
@@ -1540,9 +1499,7 @@ Rules:
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Profit Copilot è incluso nel piano Growth"
-                    : "Profit Copilot is included with Growth"}
+                  {copy.profit_copilot_is_included_with_growth}
                 </div>
 
                 <div
@@ -1554,9 +1511,7 @@ Rules:
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per ottenere briefing AI, analisi approfondite e risposte basate sui dati reali di redditività dello store."
-                    : "Upgrade to Growth for AI briefings, deep analysis and answers grounded in your store's real profitability data."}
+                  {copy.upgrade_to_growth_for_ai_briefings}
                 </div>
 
                 <button
@@ -1565,7 +1520,7 @@ Rules:
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.unlock_growth}
                 </button>
               </div>
             </div>
@@ -1612,9 +1567,7 @@ Rules:
                       color: "#ff9a70",
                     }}
                   >
-                    {language === "it"
-                      ? "BRIEFING ESECUTIVO"
-                      : "EXECUTIVE BRIEF"}
+                    {copy.executive_brief}
                   </div>
 
                   <div
@@ -1676,20 +1629,12 @@ Rules:
                         }}
                       >
                         {primaryProfitAlert.severity === "critical"
-                          ? language === "it"
-                            ? "Priorità critica"
-                            : "Critical Priority"
+                          ? copy.critical_priority
                           : primaryProfitAlert.severity === "warning"
-                            ? language === "it"
-                              ? "Priorità da controllare"
-                              : "Priority to Review"
+                            ? copy.priority_to_review
                             : primaryProfitAlert.severity === "opportunity"
-                              ? language === "it"
-                                ? "Opportunità rilevata"
-                                : "Opportunity Detected"
-                              : language === "it"
-                                ? "Segnale Profit Monitor"
-                                : "Profit Monitor Signal"}
+                              ? copy.opportunity_detected
+                              : copy.profit_monitor_signal}
                       </div>
 
                       <div
@@ -1699,9 +1644,7 @@ Rules:
                           fontWeight: 750,
                         }}
                       >
-                        {language === "it"
-                          ? "Priorità determinata dal Profit Monitor"
-                          : "Priority determined by Profit Monitor"}
+                        {copy.priority_determined_by_profit_monitor}
                       </div>
                     </div>
                   )}
@@ -1717,14 +1660,10 @@ Rules:
                     {[
                       {
                         label:
-                          language === "it"
-                            ? "Profitto netto stimato"
-                            : "Estimated Net Profit",
+                          copy.estimated_net_profit,
                         value: modelConfigured
                           ? money(estimatedNetProfit)
-                          : language === "it"
-                            ? "Da configurare"
-                            : "Not configured",
+                          : copy.not_configured,
                         note: modelConfigured
                           ? pct(estimatedNetMargin)
                           : "Business Model Studio",
@@ -1737,63 +1676,45 @@ Rules:
 
                         tooltip: {
                           title:
-                            language === "it"
-                              ? "Profitto netto stimato"
-                              : "Estimated net profit",
+                            copy.estimated_net_profit_2,
 
                           description:
-                            language === "it"
-                              ? "Stima del profitto che rimane dopo aver applicato al profitto prodotto i costi operativi configurati nel Business Model Studio."
-                              : "Estimated profit remaining after applying the operating costs configured in Business Model Studio to product profit.",
+                            copy.estimated_profit_remaining_after_applying_the,
 
                           note:
-                            language === "it"
-                              ? "È una stima gestionale basata sul modello configurato, non il risultato contabile definitivo dello store."
-                              : "This is a management estimate based on the configured model, not the store's final accounting profit.",
+                            copy.this_is_a_management_estimate_based,
                         },
                       },
                       {
                         label:
-                          language === "it"
-                            ? "Gap di profitto al target"
-                            : "Profit Gap to Target",
+                          copy.profit_gap_to_target,
                         value:
                           recoverableProfit > 0
                             ? `+${money(recoverableProfit)}`
                             : money(recoverableProfit),
-                        note:
-                          language === "it"
-                            ? `${prioritizedProducts.length} priorità prodotto`
-                            : `${prioritizedProducts.length} product priorities`,
+                        note: t("aiAdvisorPage.product_priorities_count", {
+                          count: prioritizedProducts.length,
+                        }),
                         color: "#22c55e",
 
                         tooltip: {
                           title:
-                            language === "it"
-                              ? "Gap di profitto al target"
-                              : "Profit gap to target",
+                            copy.profit_gap_to_target_2,
 
                           description:
-                            language === "it"
-                              ? "Stima di quanto profitto aggiuntivo manca per portare i prodotti sotto target fino al margine obiettivo."
-                              : "Estimated additional profit required to bring below-target products up to the target margin.",
+                            copy.estimated_additional_profit_required_to_bring,
 
                           note:
-                            language === "it"
-                              ? "È una stima modellata, non profitto garantito o già disponibile da recuperare."
-                              : "This is a modeled estimate, not guaranteed profit or profit already available to recover.",
+                            copy.this_is_a_modeled_estimate_not,
                         },
                       },
                       {
                         label:
-                          language === "it"
-                            ? "Rischi attivi"
-                            : "Active Risks",
+                          copy.active_risks,
                         value: `${activeRiskAlerts.length}`,
-                        note:
-                          language === "it"
-                            ? `${criticalAlerts.length} critici`
-                            : `${criticalAlerts.length} critical`,
+                        note: t("aiAdvisorPage.critical_count", {
+                          count: criticalAlerts.length,
+                        }),
                         color:
                           criticalAlerts.length > 0
                             ? "#ff6b4a"
@@ -1803,14 +1724,11 @@ Rules:
                       },
                       {
                         label:
-                          language === "it"
-                            ? "Missione settimanale"
-                            : "Weekly Mission",
+                          copy.weekly_mission,
                         value: `${missionActions}`,
-                        note:
-                          language === "it"
-                            ? `${missionMinutes} minuti stimati`
-                            : `${missionMinutes} estimated minutes`,
+                        note: t("aiAdvisorPage.estimated_minutes_count", {
+                          count: missionMinutes,
+                        }),
                         color: "#38bdf8",
                       },
                     ].map((item) => (
@@ -1889,9 +1807,7 @@ Rules:
                       className="primary-button"
                       onClick={() => navigate("/app/recommendations")}
                     >
-                      {language === "it"
-                        ? "Apri il piano operativo →"
-                        : "Open Action Plan →"}
+                      {copy.open_action_plan}
                     </button>
 
                     <button
@@ -1899,9 +1815,7 @@ Rules:
                       className="apply-button"
                       onClick={() => navigate("/app/recovery-simulator")}
                     >
-                      {language === "it"
-                        ? "Simula il recupero"
-                        : "Simulate Recovery"}
+                      {copy.simulate_recovery}
                     </button>
 
                     <button
@@ -1909,9 +1823,7 @@ Rules:
                       className="apply-button"
                       onClick={() => navigate("/app/forecasting")}
                     >
-                      {language === "it"
-                        ? "Verifica la previsione"
-                        : "Open Forecast"}
+                      {copy.open_forecast}
                     </button>
                   </div>
                 </div>
@@ -1980,27 +1892,19 @@ Rules:
                             }}
                           >
                             <span>
-                              {language === "it"
-                                ? "Salute dello store"
-                                : "Store Health"}
+                              {copy.store_health_2}
                             </span>
 
                             <MetricTooltip
                               content={{
                                 title:
-                                  language === "it"
-                                    ? "Salute dello store"
-                                    : "Store health",
+                                  copy.store_health_3,
 
                                 description:
-                                  language === "it"
-                                    ? "Un punteggio da 0 a 100 che riassume lo stato generale della redditività dello store."
-                                    : "A 0–100 score summarizing the store's overall profitability health.",
+                                  copy.a_0_100_score_summarizing_the,
 
                                 note:
-                                  language === "it"
-                                    ? "Tiene conto di prodotti in perdita, costi mancanti e margini deboli. Più è alto, meglio è."
-                                    : "It considers loss-making products, missing costs and weak margins. Higher is better.",
+                                  copy.it_considers_loss_making_products_missing,
                               }}
                             />
                           </div>
@@ -2027,9 +1931,7 @@ Rules:
                         fontWeight: 750,
                       }}
                     >
-                      {language === "it"
-                        ? "Valutazione aggiornata sui dati attuali"
-                        : "Updated from current store data"}
+                      {copy.updated_from_current_store_data}
                     </div>
                   </div>
                 </div>
@@ -2080,76 +1982,46 @@ Rules:
                         card.key === "health"
                           ? {
                             title:
-                              language === "it"
-                                ? "Salute dello store"
-                                : "Store health",
+                              copy.store_health_3,
                             description:
-                              language === "it"
-                                ? "Riassume la salute complessiva della redditività dello store."
-                                : "Summarizes the overall health of the store's profitability.",
+                              copy.summarizes_the_overall_health_of_the,
                             note:
-                              language === "it"
-                                ? "Considera perdite, costi mancanti e margini deboli. Più è alto, meglio è."
-                                : "Considers losses, missing costs and weak margins. Higher is better.",
+                              copy.considers_losses_missing_costs_and_weak,
                           }
                           : card.key === "profit"
                             ? {
                               title:
-                                language === "it"
-                                  ? "Qualità del profitto"
-                                  : "Profit quality",
+                                copy.profit_quality_2,
                               description:
-                                language === "it"
-                                  ? "Misura quanto sono solidi i margini dei prodotti analizzati."
-                                  : "Measures how healthy the margins are across the analyzed products.",
+                                copy.measures_how_healthy_the_margins_are,
                               note:
-                                language === "it"
-                                  ? "Un punteggio alto indica una maggiore presenza di prodotti con margini sani."
-                                  : "A higher score indicates more products with healthy margins.",
+                                copy.a_higher_score_indicates_more_products,
                             }
                             : card.key === "pricing"
                               ? {
                                 title:
-                                  language === "it"
-                                    ? "Efficienza dei prezzi"
-                                    : "Pricing efficiency",
+                                  copy.pricing_efficiency_2,
                                 description:
-                                  language === "it"
-                                    ? "Indica quanto i prezzi attuali riescono a sostenere i margini desiderati."
-                                    : "Shows how effectively current prices support the desired margins.",
+                                  copy.shows_how_effectively_current_prices_support,
                                 note:
-                                  language === "it"
-                                    ? "Un punteggio basso segnala maggiore distanza dai livelli di prezzo necessari per raggiungere i target."
-                                    : "A lower score indicates a larger gap from the pricing levels needed to reach targets.",
+                                  copy.a_lower_score_indicates_a_larger,
                               }
                               : card.key === "data"
                                 ? {
                                   title:
-                                    language === "it"
-                                      ? "Qualità dei dati"
-                                      : "Data quality",
+                                    copy.data_quality_2,
                                   description:
-                                    language === "it"
-                                      ? "Misura quanto i dati disponibili sono completi per effettuare un'analisi affidabile."
-                                      : "Measures how complete the available data is for reliable analysis.",
+                                    copy.measures_how_complete_the_available_data,
                                   note:
-                                    language === "it"
-                                      ? "La presenza dei costi prodotto è uno dei fattori principali."
-                                      : "Product cost coverage is one of the main factors.",
+                                    copy.product_cost_coverage_is_one_of,
                                 }
                                 : {
                                   title:
-                                    language === "it"
-                                      ? "Capacità di intervento"
-                                      : "Execution readiness",
+                                    copy.execution_readiness_2,
                                   description:
-                                    language === "it"
-                                      ? "Indica quanto MarginLab dispone di segnali concreti e utilizzabili per suggerire azioni."
-                                      : "Shows how much actionable evidence MarginLab has available to recommend actions.",
+                                    copy.shows_how_much_actionable_evidence_marginlab,
                                   note:
-                                    language === "it"
-                                      ? "Più è alto, maggiore è la possibilità di trasformare l'analisi in interventi concreti."
-                                      : "Higher scores indicate more opportunities to turn the analysis into concrete actions.",
+                                    copy.higher_scores_indicate_more_opportunities_to,
                                 }
                       }
                     />
@@ -2238,9 +2110,7 @@ Rules:
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "MISSIONE DELLA SETTIMANA"
-                    : "WEEKLY MISSION"}
+                  {copy.weekly_mission_2}
                 </div>
 
                 <div
@@ -2277,19 +2147,19 @@ Rules:
                 >
                   {[
                     {
-                      label: language === "it" ? "Azioni" : "Actions",
+                      label: copy.actions,
                       value: `${missionActions}`,
                       color: "#f8fafc",
                     },
                     {
                       label:
-                        language === "it" ? "Tempo stimato" : "Estimated Time",
+                        copy.estimated_time,
                       value: `${missionMinutes}m`,
                       color: "#38bdf8",
                     },
                     {
                       label:
-                        language === "it" ? "Potenziale" : "Potential",
+                        copy.potential,
                       value:
                         recoverableProfit > 0
                           ? `+${money(recoverableProfit)}`
@@ -2298,19 +2168,13 @@ Rules:
 
                       tooltip: {
                         title:
-                          language === "it"
-                            ? "Potenziale della missione"
-                            : "Mission potential",
+                          copy.mission_potential,
 
                         description:
-                          language === "it"
-                            ? "Stima dell'opportunità di profitto associata ai prodotti inclusi nella missione settimanale."
-                            : "Estimated profit opportunity associated with the products included in the weekly mission.",
+                          copy.estimated_profit_opportunity_associated_with_the,
 
                         note:
-                          language === "it"
-                            ? "È un potenziale modellato sui dati disponibili, non profitto garantito."
-                            : "This is modeled potential based on available data, not guaranteed profit.",
+                          copy.this_is_modeled_potential_based_on,
                       },
                     },
                   ].map((item) => (
@@ -2366,23 +2230,17 @@ Rules:
                   onClick={() => navigate(weeklyReport.route)}
                 >
                   {missionAlert?.actionLabel ??
-                    (language === "it"
-                      ? "Apri il piano operativo →"
-                      : "Open Action Plan →")}
+                    (copy.open_action_plan)}
                 </button>
               </div>
 
               <div className="panel" style={{ margin: 0, padding: 24 }}>
                 <div className="panel-eyebrow">
-                  {language === "it"
-                    ? "FEED DELLE DECISIONI"
-                    : "DECISION FEED"}
+                  {copy.decision_feed}
                 </div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
-                  {language === "it"
-                    ? "I segnali che richiedono attenzione"
-                    : "Signals that need attention"}
+                  {copy.signals_that_need_attention}
                 </h2>
 
                 <div
@@ -2494,9 +2352,7 @@ Rules:
                         fontWeight: 800,
                       }}
                     >
-                      {language === "it"
-                        ? "Nessun nuovo segnale critico."
-                        : "No new critical signals."}
+                      {copy.no_new_critical_signals}
                     </div>
                   )}
                 </div>
@@ -2531,9 +2387,7 @@ Rules:
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it"
-                        ? "ANALISI APPROFONDITA"
-                        : "DEEP ANALYSIS"}
+                      {copy.deep_analysis}
                     </div>
 
                     <div
@@ -2544,9 +2398,7 @@ Rules:
                         fontWeight: 950,
                       }}
                     >
-                      {language === "it"
-                        ? "Genera il report completo del consulente"
-                        : "Generate the full advisor report"}
+                      {copy.generate_the_full_advisor_report}
                     </div>
 
                     <div
@@ -2557,9 +2409,7 @@ Rules:
                         fontWeight: 730,
                       }}
                     >
-                      {language === "it"
-                        ? "L'AI utilizzerà tutti i dati reali già caricati nella pagina."
-                        : "AI will use all real store data already loaded on this page."}
+                      {copy.ai_will_use_all_real_store}
                     </div>
 
                     <div
@@ -2570,17 +2420,11 @@ Rules:
                       }}
                     >
                       {[
-                        language === "it"
-                          ? "Analizza il rischio principale rilevato"
-                          : "Analyzes the highest-priority business risk",
+                        copy.analyzes_the_highest_priority_business_risk,
 
-                        language === "it"
-                          ? "Individua i prodotti da correggere per primi"
-                          : "Identifies the first products to fix",
+                        copy.identifies_the_first_products_to_fix,
 
-                        language === "it"
-                          ? "Stima i gap di profitto e le azioni consigliate"
-                          : "Estimates profit gaps and recommended actions",
+                        copy.estimates_profit_gaps_and_recommended_actions,
                       ].map((item) => (
                         <div
                           key={item}
@@ -2624,12 +2468,8 @@ Rules:
                       disabled={aiFetcher.state !== "idle"}
                     >
                       {aiFetcher.state !== "idle"
-                        ? language === "it"
-                          ? "Analisi in corso..."
-                          : "Analyzing..."
-                        : language === "it"
-                          ? "Genera analisi AI →"
-                          : "Generate AI Analysis →"}
+                        ? copy.analyzing
+                        : copy.generate_ai_analysis}
                     </button>
 
                     <div
@@ -2640,9 +2480,10 @@ Rules:
                         fontWeight: 750,
                       }}
                     >
-                      {language === "it"
-                        ? `${aiUsage.used} di ${aiUsage.limit} richieste AI utilizzate questo mese`
-                        : `${aiUsage.used} of ${aiUsage.limit} AI requests used this month`}
+                      {t("aiAdvisorPage.ai_requests_used", {
+                        used: aiUsage.used,
+                        limit: aiUsage.limit,
+                      })}
                     </div>
                   </aiFetcher.Form>
                 </div>
@@ -2679,9 +2520,7 @@ Rules:
                           downloadAiReportPdf(String(aiFetcher.data?.text), language)
                         }
                       >
-                        {language === "it"
-                          ? "Scarica report PDF ↓"
-                          : "Download PDF report ↓"}
+                        {copy.download_pdf_report}
                       </button>
                     </div>
                   </div>
@@ -2707,7 +2546,7 @@ Rules:
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "CHIEDI AL COPILOTA" : "ASK THE COPILOT"}
+                  {copy.ask_the_copilot}
                 </div>
 
                 <div
@@ -2718,9 +2557,7 @@ Rules:
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Approfondisci una decisione specifica"
-                    : "Explore a specific decision"}
+                  {copy.explore_a_specific_decision}
                 </div>
 
                 <div
@@ -2732,9 +2569,7 @@ Rules:
                     lineHeight: 1.5,
                   }}
                 >
-                  {language === "it"
-                    ? "Le domande cambiano in base ai rischi e alle opportunità rilevate nello store."
-                    : "Questions adapt to the risks and opportunities detected in your store."}
+                  {copy.questions_adapt_to_the_risks_and}
                 </div>
 
                 <div
@@ -2808,9 +2643,7 @@ Rules:
                       value={question}
                       onChange={(event) => setQuestion(event.target.value)}
                       placeholder={
-                        language === "it"
-                          ? "Fai una domanda sulla redditività..."
-                          : "Ask a profitability question..."
+                        copy.ask_a_profitability_question
                       }
                       style={{
                         width: "100%",
@@ -2830,12 +2663,8 @@ Rules:
                       disabled={askFetcher.state !== "idle" || !question.trim()}
                     >
                       {askFetcher.state !== "idle"
-                        ? language === "it"
-                          ? "Elaborazione..."
-                          : "Thinking..."
-                        : language === "it"
-                          ? "Chiedi all'AI →"
-                          : "Ask AI →"}
+                        ? copy.thinking
+                        : copy.ask_ai}
                     </button>
                   </div>
                 </askFetcher.Form>
@@ -2873,9 +2702,7 @@ Rules:
                   fontWeight: 700,
                 }}
               >
-                {language === "it"
-                  ? "Profit Copilot utilizza la base economica tax-aware derivata dai dati Shopify, le ipotesi gestionali salvate nel Business Model Studio e i segnali del Profit Monitor. La riserva fiscale gestionale resta separata dal trattamento VAT/GST/Sales Tax. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne."
-                  : "Profit Copilot uses the tax-aware economic basis derived from Shopify data, managerial assumptions saved in Business Model Studio and Profit Monitor signals. The business tax reserve remains separate from VAT/GST/Sales Tax treatment. Recommendations support decisions and do not automatically change products, pricing or campaigns."}
+                {copy.profit_copilot_uses_the_tax_aware}
               </div>
             </div>
           </div>
