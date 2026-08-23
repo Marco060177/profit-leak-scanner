@@ -18,6 +18,7 @@ import {
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import {
   generateProfitAlerts,
   type ProfitAlert,
@@ -315,6 +316,8 @@ function TopPriority({
   money: (value: number) => string;
   confidenceScore: number;
 }) {
+  const { messages } = useI18n();
+  const copy = messages.recommendationsPage;
   const status = getStatusStyle(alert.businessAction, language);
 
   return (
@@ -365,7 +368,7 @@ function TopPriority({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "PRIORITÀ PRINCIPALE" : "TOP PRIORITY"}
+            {copy.auto.r001}
           </div>
 
           <h2
@@ -410,53 +413,45 @@ function TopPriority({
         }}
       >
         <ActionMetric
-          label={language === "it" ? "Impatto mensile" : "Monthly impact"}
+          label={copy.auto.r002}
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
                 alert.monthlyImpact,
               )}`
-              : language === "it"
-                ? "Qualitativo"
-                : "Qualitative"
+              : copy.auto.r003
           }
           note={
-            language === "it"
-              ? "Stima del segnale corrente"
-              : "Current signal estimate"
+            copy.auto.r004
           }
           highlight={alert.monthlyImpact > 0}
         />
 
         <ActionMetric
-          label={language === "it" ? "Priorità" : "Priority"}
+          label={copy.auto.r005}
           value={`${alert.priority}/100`}
-          note={language === "it" ? "Urgenza e valore" : "Urgency and value"}
+          note={copy.auto.r006}
         />
 
         <ActionMetric
-          label={language === "it" ? "Difficoltà" : "Difficulty"}
+          label={copy.auto.r007}
           value={getEffortLabel(alert.effort, language)}
           note={`${alert.estimatedMinutes} min`}
         />
 
         <ActionMetric
-          label={language === "it" ? "Affidabilità" : "Confidence"}
+          label={copy.auto.r008}
           value={`${confidenceScore}%`}
           note={
-            language === "it" ? "Qualità della stima" : "Estimate reliability"
+            copy.auto.r009
           }
           tooltip={
             <MetricTooltip
               content={{
                 title:
-                  language === "it"
-                    ? "Affidabilità della stima"
-                    : "Estimate confidence",
+                  copy.auto.r010,
                 description:
-                  language === "it"
-                    ? "Indica quanto MarginLab considera solida questa stima in base alla qualità e alla completezza dei dati disponibili, inclusi costi, copertura COGS e possibilità di confronto con periodi precedenti."
-                    : "Indicates how reliable MarginLab considers this estimate based on the quality and completeness of available data, including costs, COGS coverage and the availability of historical comparison.",
+                  copy.auto.r011,
               }}
             />
           }
@@ -480,12 +475,8 @@ function TopPriority({
           onClick={onToggle}
         >
           {completed
-            ? language === "it"
-              ? "✓ Segnata come completata"
-              : "✓ Marked complete"
-            : language === "it"
-              ? "Segna come completata"
-              : "Mark as complete"}
+            ? copy.auto.r012
+            : copy.auto.r013}
         </button>
 
         <button
@@ -514,7 +505,8 @@ export default function RecommendationsPage() {
       growthAccess: boolean;
     };
   const navigate = useNavigate();
-  const language = getStoredLanguage() === "it" ? "it" : "en";
+  const { language, messages, t } = useI18n();
+  const copy = messages.recommendationsPage;
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
@@ -580,16 +572,10 @@ export default function RecommendationsPage() {
   const confidenceScore = snapshotConfidence?.score ?? 0;
   const confidenceLevelLabel =
     snapshotConfidence?.level === "high"
-      ? language === "it"
-        ? "Alta"
-        : "High"
+      ? copy.confidence.high
       : snapshotConfidence?.level === "medium"
-        ? language === "it"
-          ? "Media"
-          : "Medium"
-        : language === "it"
-          ? "Bassa"
-          : "Low";
+        ? copy.confidence.medium
+        : copy.confidence.low;
 
   const totalMinutes = queueAlerts.reduce(
     (sum, alert) => sum + alert.estimatedMinutes,
@@ -629,39 +615,17 @@ export default function RecommendationsPage() {
 
   const businessStatus = getBusinessStatus(profitAlerts);
 
-  const businessStatusLabel =
-    language === "it"
-      ? businessStatus.key === "action"
-        ? "Intervento richiesto"
-        : businessStatus.key === "review"
-          ? "Verifica consigliata"
-          : businessStatus.key === "optimize"
-            ? "Ottimizzazione disponibile"
-            : "Situazione stabile"
-      : businessStatus.key === "action"
-        ? "Action required"
-        : businessStatus.key === "review"
-          ? "Review recommended"
-          : businessStatus.key === "optimize"
-            ? "Optimization available"
-            : "Stable status";
+  const businessStatusCopy =
+    businessStatus.key === "action"
+      ? copy.businessStatus.action
+      : businessStatus.key === "review"
+        ? copy.businessStatus.review
+        : businessStatus.key === "optimize"
+          ? copy.businessStatus.optimize
+          : copy.businessStatus.stable;
 
-  const businessStatusDescription =
-    language === "it"
-      ? businessStatus.key === "action"
-        ? "È presente almeno una criticità significativa che richiede una decisione prioritaria."
-        : businessStatus.key === "review"
-          ? "Non emerge un'emergenza generale, ma alcuni segnali meritano una verifica."
-          : businessStatus.key === "optimize"
-            ? "La struttura è relativamente stabile. Le priorità attuali riguardano il miglioramento."
-            : "Nessuna criticità significativa richiede un intervento immediato."
-      : businessStatus.key === "action"
-        ? "At least one significant issue requires a prioritized decision."
-        : businessStatus.key === "review"
-          ? "There is no broad emergency, but some signals deserve review."
-          : businessStatus.key === "optimize"
-            ? "The business is relatively stable. Current priorities focus on improvement."
-            : "No significant profitability issue requires immediate action.";
+  const businessStatusLabel = businessStatusCopy.label;
+  const businessStatusDescription = businessStatusCopy.description;
 
   const storageKey = `marginlab:recommendations:${shopHandle || "store"}`;
   const [completedIds, setCompletedIds] = React.useState<string[]>([]);
@@ -918,30 +882,20 @@ export default function RecommendationsPage() {
             <div className="alert-pill">
               <span className="alert-dot" />
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Funzione Growth"
-                  : "Growth Feature"}
+                ? copy.auto.r014
+                : copy.auto.r015}
             </div>
 
             <div className="eyebrow">
-              {language === "it"
-                ? "PROFIT ACTION CENTER"
-                : "PROFIT ACTION CENTER"}
+              {copy.auto.r016}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Il piano operativo della tua redditività"
-                : "Your profitability action plan"}
+              {copy.auto.r017}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "MarginLab trasforma i segnali dello store in priorità concrete. Intervieni solo quando serve, ottimizza quando esiste un'opportunità e monitora il resto."
-                : "MarginLab turns store signals into concrete priorities. Act only when needed, optimize when opportunity exists, and monitor the rest."}
+              {copy.auto.r018}
             </div>
           </div>
 
@@ -951,7 +905,7 @@ export default function RecommendationsPage() {
                 className="primary-button"
                 onClick={() => navigate("/app/billing")}
               >
-                {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                {copy.auto.r019}
               </button>
             </div>
           )}
@@ -998,7 +952,7 @@ export default function RecommendationsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.auto.r020}
                 </div>
 
                 <div
@@ -1010,9 +964,7 @@ export default function RecommendationsPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Profit Action Center è incluso nel piano Growth"
-                    : "Profit Action Center is included with Growth"}
+                  {copy.auto.r021}
                 </div>
 
                 <div
@@ -1024,9 +976,7 @@ export default function RecommendationsPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per trasformare i segnali dello store in priorità operative, organizzare le azioni ed esportare il piano."
-                    : "Upgrade to Growth to turn store signals into operational priorities, organize actions and export your plan."}
+                  {copy.auto.r022}
                 </div>
 
                 <button
@@ -1035,7 +985,7 @@ export default function RecommendationsPage() {
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.auto.r023}
                 </button>
               </div>
             </div>
@@ -1096,21 +1046,15 @@ export default function RecommendationsPage() {
                       }}
                     >
                       <span>
-                        {language === "it"
-                          ? "GAP MENSILE STIMATO VERSO IL TARGET"
-                          : "ESTIMATED MONTHLY PROFIT GAP TO TARGET"}
+                        {copy.auto.r024}
                       </span>
 
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Gap mensile verso il target"
-                              : "Monthly profit gap to target",
+                            copy.auto.r025,
                           description:
-                            language === "it"
-                              ? "Stima della differenza mensile tra il profitto attuale dello store e il profitto ottenibile nello scenario target di MarginLab. È una stima basata sui dati del periodo selezionato, non profitto già recuperato."
-                              : "Estimated monthly difference between the store's current profit and the profit achievable under MarginLab's target scenario. It is based on the selected period and does not represent profit already recovered.",
+                            copy.auto.r026,
                         }}
                       />
                     </div>
@@ -1120,7 +1064,7 @@ export default function RecommendationsPage() {
                       onClick={exportRecommendationsCsv}
                       style={{ padding: "10px 14px", fontSize: 12 }}
                     >
-                      {language === "it" ? "Esporta CSV" : "Export CSV"}
+                      {copy.auto.r027}
                     </button>
                   </div>
 
@@ -1147,13 +1091,10 @@ export default function RecommendationsPage() {
                       fontWeight: 760,
                     }}
                   >
-                    {language === "it"
-                      ? `${actionableCount} priorità operative sono disponibili. Il gap annuale stimato verso il target, sulla base dello scenario corrente, è ${money(
-                        annualOpportunity,
-                      )}.`
-                      : `${actionableCount} operational priorities are available. The estimated annual profit gap to target, based on the current scenario, is ${money(
-                        annualOpportunity,
-                      )}.`}
+                    {t("recommendationsPage.operationalPriorities", {
+                      count: actionableCount,
+                      opportunity: money(annualOpportunity),
+                    })}
                   </p>
 
                   {snapshotConfidence && (
@@ -1175,11 +1116,11 @@ export default function RecommendationsPage() {
                               : "#fb7185"
                         }
                       >
-                        {language === "it" ? "Affidabilità" : "Confidence"}: {confidenceScore}% · {confidenceLevelLabel}
+                        {copy.auto.r028}: {confidenceScore}% · {confidenceLevelLabel}
                       </TinyBadge>
 
                       <TinyBadge color="#60a5fa">
-                        {language === "it" ? "Copertura COGS" : "COGS coverage"}: {pct(snapshotConfidence.cogsCoveragePct)}
+                        {copy.auto.r029}: {pct(snapshotConfidence.cogsCoveragePct)}
                       </TinyBadge>
 
                       <TinyBadge
@@ -1190,12 +1131,8 @@ export default function RecommendationsPage() {
                         }
                       >
                         {snapshotConfidence.comparisonAvailable
-                          ? language === "it"
-                            ? "Confronto disponibile"
-                            : "Comparison available"
-                          : language === "it"
-                            ? "Confronto non disponibile"
-                            : "Comparison unavailable"}
+                          ? copy.auto.r030
+                          : copy.auto.r031}
                       </TinyBadge>
                     </div>
                   )}
@@ -1210,48 +1147,38 @@ export default function RecommendationsPage() {
                   >
                     <ActionMetric
                       label={
-                        language === "it" ? "Impatto annuale" : "Annual impact"
+                        copy.auto.r032
                       }
                       value={`+${compactMoney(annualOpportunity, currencyCode, locale)}`}
                       note={
-                        language === "it"
-                          ? "Basato sul gap complessivo verso il target"
-                          : "Based on the overall gap to target"
+                        copy.auto.r033
                       }
                       highlight
                     />
 
                     <ActionMetric
                       label={
-                        language === "it"
-                          ? "Priorità operative"
-                          : "Operational priorities"
+                        copy.auto.r034
                       }
                       value={`${actionableCount}`}
                       note={
-                        language === "it"
-                          ? "Esclude il semplice monitoraggio"
-                          : "Excludes monitoring-only signals"
+                        copy.auto.r035
                       }
                     />
 
                     <ActionMetric
-                      label={language === "it" ? "Tempo stimato" : "Estimated time"}
+                      label={copy.auto.r036}
                       value={`${totalMinutes} min`}
                       note={
-                        language === "it"
-                          ? "Per l'intera coda"
-                          : "For the full queue"
+                        copy.auto.r037
                       }
                     />
 
                     <ActionMetric
-                      label={language === "it" ? "Vittorie rapide" : "Quick wins"}
+                      label={copy.auto.r038}
                       value={`${quickWins.length}`}
                       note={
-                        language === "it"
-                          ? "Facili e sotto 10 minuti"
-                          : "Easy and under 10 minutes"
+                        copy.auto.r039
                       }
                     />
                   </div>
@@ -1322,21 +1249,15 @@ export default function RecommendationsPage() {
                             }}
                           >
                             <span>
-                              {language === "it"
-                                ? "Punteggio azioni"
-                                : "Action score"}
+                              {copy.auto.r040}
                             </span>
 
                             <MetricTooltip
                               content={{
                                 title:
-                                  language === "it"
-                                    ? "Punteggio azioni"
-                                    : "Action score",
+                                  copy.auto.r041,
                                 description:
-                                  language === "it"
-                                    ? "Punteggio sintetico da 0 a 100 che combina quantità di azioni disponibili, valore economico potenziale e priorità media. Un valore alto indica che esistono diverse opportunità operative rilevanti da affrontare."
-                                    : "Summary score from 0 to 100 combining available actions, potential economic value and average priority. A higher score indicates more relevant operational opportunities to address.",
+                                  copy.auto.r042,
                               }}
                             />
                           </div>
@@ -1404,19 +1325,17 @@ export default function RecommendationsPage() {
                 >
                   <div>
                     <div className="panel-eyebrow">
-                      {language === "it" ? "CODA DELLE PRIORITÀ" : "PRIORITY QUEUE"}
+                      {copy.auto.r043}
                     </div>
 
                     <h2 className="panel-title" style={{ marginTop: 6 }}>
-                      {language === "it"
-                        ? "Le attività da affrontare in ordine"
-                        : "Work through priorities in order"}
+                      {copy.auto.r044}
                     </h2>
                   </div>
 
                   <TinyBadge color="#22c55e">
                     {completedAlerts.length}/{queueAlerts.length}{" "}
-                    {language === "it" ? "completate" : "completed"}
+                    {copy.auto.r045}
                   </TinyBadge>
                 </div>
 
@@ -1535,7 +1454,7 @@ export default function RecommendationsPage() {
                               </TinyBadge>
 
                               <TinyBadge color="#22c55e">
-                                {language === "it" ? "Affidabilità" : "Confidence"}{" "}
+                                {copy.auto.r046}{" "}
                                 {confidenceScore}%
                               </TinyBadge>
 
@@ -1564,9 +1483,7 @@ export default function RecommendationsPage() {
                             >
                               {alert.monthlyImpact > 0
                                 ? money(alert.monthlyImpact)
-                                : language === "it"
-                                  ? "Qualitativo"
-                                  : "Qualitative"}
+                                : copy.auto.r047}
                             </div>
 
                             <button
@@ -1592,9 +1509,7 @@ export default function RecommendationsPage() {
                         fontWeight: 850,
                       }}
                     >
-                      {language === "it"
-                        ? "Nessuna azione operativa rilevata. Continua il monitoraggio."
-                        : "No operational action detected. Continue monitoring."}
+                      {copy.auto.r048}
                     </div>
                   )}
                 </div>
@@ -1624,7 +1539,7 @@ export default function RecommendationsPage() {
                       letterSpacing: "0.12em",
                     }}
                   >
-                    {language === "it" ? "AVANZAMENTO DEL PIANO" : "PLAN PROGRESS"}
+                    {copy.auto.r049}
                   </div>
 
                   <div
@@ -1652,13 +1567,9 @@ export default function RecommendationsPage() {
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Avanzamento del piano"
-                              : "Plan progress",
+                            copy.auto.r050,
                           description:
-                            language === "it"
-                              ? "Mostra la percentuale di attività della coda attuale che hai segnato come completate. Misura l'avanzamento operativo del piano, non il profitto effettivamente recuperato."
-                              : "Shows the percentage of actions in the current queue that you have marked as complete. It measures operational progress, not actual recovered profit.",
+                            copy.auto.r051,
                         }}
                       />
                     </div>
@@ -1704,32 +1615,24 @@ export default function RecommendationsPage() {
                   >
                     <ActionMetric
                       label={
-                        language === "it"
-                          ? "Azioni completate"
-                          : "Completed actions"
+                        copy.auto.r052
                       }
                       value={`${completedAlerts.length}`}
                       note={
-                        language === "it"
-                          ? "Segnate come completate"
-                          : "Marked as complete"
+                        copy.auto.r053
                       }
                     />
 
                     <ActionMetric
                       label={
-                        language === "it"
-                          ? "Azioni rimanenti"
-                          : "Remaining actions"
+                        copy.auto.r054
                       }
                       value={`${Math.max(
                         0,
                         queueAlerts.length - completedAlerts.length,
                       )}`}
                       note={
-                        language === "it"
-                          ? "Non ancora completate"
-                          : "Not yet completed"
+                        copy.auto.r055
                       }
                     />
                   </div>
@@ -1757,19 +1660,15 @@ export default function RecommendationsPage() {
                     }}
                   >
                     <span>
-                      {language === "it" ? "GAP ANNUALE AL TARGET" : "ANNUAL GAP TO TARGET"}
+                      {copy.auto.r056}
                     </span>
 
                     <MetricTooltip
                       content={{
                         title:
-                          language === "it"
-                            ? "Gap annuale verso il target"
-                            : "Annual gap to target",
+                          copy.auto.r057,
                         description:
-                          language === "it"
-                            ? "Proiezione annuale del gap mensile stimato verso il target, calcolata mantenendo invariato lo scenario corrente per 12 mesi. È una stima teorica, non profitto garantito o già recuperato."
-                            : "Annual projection of the estimated monthly gap to target, assuming the current scenario remains unchanged for 12 months. It is a theoretical estimate, not guaranteed or already recovered profit.",
+                          copy.auto.r058,
                       }}
                     />
                   </div>
@@ -1795,9 +1694,7 @@ export default function RecommendationsPage() {
                       fontWeight: 850,
                     }}
                   >
-                    {language === "it"
-                      ? "gap annuale stimato verso il target"
-                      : "estimated annual profit gap to target"}
+                    {copy.auto.r059}
                   </div>
                 </section>
               </aside>
@@ -1813,13 +1710,11 @@ export default function RecommendationsPage() {
             >
               <section className="panel" style={{ margin: 0, padding: 24 }}>
                 <div className="panel-eyebrow">
-                  {language === "it" ? "VITTORIE RAPIDE" : "QUICK WINS"}
+                  {copy.auto.r060}
                 </div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
-                  {language === "it"
-                    ? "Più valore con meno lavoro"
-                    : "More value with less work"}
+                  {copy.auto.r061}
                 </h2>
 
                 <div
@@ -1903,9 +1798,7 @@ export default function RecommendationsPage() {
                         fontWeight: 760,
                       }}
                     >
-                      {language === "it"
-                        ? "Nessuna vittoria rapida rilevata."
-                        : "No quick wins detected."}
+                      {copy.auto.r062}
                     </div>
                   )}
                 </div>
@@ -1929,7 +1822,7 @@ export default function RecommendationsPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "STRATEGIA MARGINLAB" : "MARGINLAB STRATEGY"}
+                  {copy.auto.r063}
                 </div>
 
                 <h2
@@ -1941,9 +1834,7 @@ export default function RecommendationsPage() {
                     letterSpacing: "-0.02em",
                   }}
                 >
-                  {language === "it"
-                    ? "Concentra il lavoro dove il ritorno è maggiore"
-                    : "Focus effort where the return is highest"}
+                  {copy.auto.r064}
                 </h2>
 
                 <p
@@ -1967,37 +1858,31 @@ export default function RecommendationsPage() {
                   }}
                 >
                   <ActionMetric
-                    label={language === "it" ? "Prima priorità" : "Top priority"}
+                    label={copy.auto.r065}
                     value={
                       topAlert?.recommendedModule ??
-                      (language === "it" ? "Monitoraggio" : "Monitoring")
+                      (copy.auto.r066)
                     }
                     note={
-                      language === "it"
-                        ? "Modulo da aprire per primo"
-                        : "Module to open first"
+                      copy.auto.r067
                     }
                   />
 
                   <ActionMetric
                     label={
-                      language === "it" ? "Priorità media" : "Average priority"
+                      copy.auto.r068
                     }
                     value={`${Math.round(averagePriority)}/100`}
                     note={
-                      language === "it"
-                        ? "Della coda attuale"
-                        : "Across the current queue"
+                      copy.auto.r069
                     }
                   />
 
                   <ActionMetric
-                    label={language === "it" ? "Tempo totale" : "Total time"}
+                    label={copy.auto.r070}
                     value={`${totalMinutes} min`}
                     note={
-                      language === "it"
-                        ? "Stima dell'intera coda"
-                        : "Full queue estimate"
+                      copy.auto.r071
                     }
                   />
                 </div>
@@ -2013,13 +1898,11 @@ export default function RecommendationsPage() {
               }}
             >
               <div className="panel-eyebrow">
-                {language === "it" ? "PIANIFICAZIONE" : "ACTION PLANNING"}
+                {copy.auto.r072}
               </div>
 
               <h2 className="panel-title" style={{ marginTop: 6 }}>
-                {language === "it"
-                  ? "Come organizzare le priorità attuali"
-                  : "How to organize current priorities"}
+                {copy.auto.r073}
               </h2>
 
               <div
@@ -2133,9 +2016,7 @@ export default function RecommendationsPage() {
                                 background: "rgba(255,255,255,0.02)",
                               }}
                             >
-                              {language === "it"
-                                ? "Nessuna attività"
-                                : "No actions"}
+                              {copy.auto.r074}
                             </div>
                           )}
                         </div>
@@ -2158,9 +2039,7 @@ export default function RecommendationsPage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? "I gap e gli scenari mostrati sono stime costruite sui dati Shopify del periodo selezionato. Segnare un’attività come completata registra l’avanzamento operativo, non dimostra profitto recuperato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-                : "Displayed gaps and scenarios are estimates built from Shopify data for the selected period. Marking an action complete records operational progress; it does not prove recovered profit. MarginLab does not automatically change products, pricing, costs or campaigns."}
+              {copy.auto.r075}
             </div>
           </div>
         </div>

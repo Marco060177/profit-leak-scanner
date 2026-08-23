@@ -13,6 +13,7 @@ import {
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
 
@@ -353,7 +354,8 @@ function MetricCard({
 
 export default function ForecastingPage() {
   const navigate = useNavigate();
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.forecastingPage;
 
   const {
     summary,
@@ -948,30 +950,20 @@ export default function ForecastingPage() {
             <div className="alert-pill">
               <span className="alert-dot" />
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Funzione Growth"
-                  : "Growth Feature"}
+                ? copy.auto.f001
+                : copy.auto.f002}
             </div>
 
             <div className="eyebrow">
-              {language === "it"
-                ? "PREVISIONE DEL PROFITTO"
-                : "PROFIT FORECASTING"}
+              {copy.auto.f003}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Guarda dove può arrivare il tuo profitto"
-                : "See where your profit can go"}
+              {copy.auto.f004}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "Modella crescita, margini, costi e opportunità di recupero. MarginLab trasforma i dati attuali dello store in una previsione operativa a 3, 6 o 12 mesi."
-                : "Model growth, margins, costs and recovery opportunities. MarginLab turns current store data into an actionable 3, 6 or 12 month forecast."}
+              {copy.auto.f005}
             </div>
 
             <div
@@ -989,9 +981,7 @@ export default function ForecastingPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.auto.f006}
             </div>
           </div>
 
@@ -1004,7 +994,7 @@ export default function ForecastingPage() {
                   "0 12px 30px rgba(255,115,80,0.28), 0 0 28px rgba(255,115,80,0.16)",
               }}
             >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+              {copy.auto.f007}
             </button>
           )}
         </div>
@@ -1051,7 +1041,7 @@ export default function ForecastingPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.auto.f008}
                 </div>
 
                 <div
@@ -1063,9 +1053,7 @@ export default function ForecastingPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Profit Forecasting è incluso nel piano Growth"
-                    : "Profit Forecasting is included with Growth"}
+                  {copy.auto.f009}
                 </div>
 
                 <div
@@ -1077,9 +1065,7 @@ export default function ForecastingPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per costruire scenari, modificare le leve, confrontare le previsioni ed esportare i risultati."
-                    : "Upgrade to Growth to build scenarios, adjust levers, compare forecasts and export results."}
+                  {copy.auto.f010}
                 </div>
 
                 <button
@@ -1088,7 +1074,7 @@ export default function ForecastingPage() {
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.auto.f011}
                 </button>
               </div>
             </div>
@@ -1115,27 +1101,19 @@ export default function ForecastingPage() {
             >
               <MetricCard
                 label={
-                  language === "it"
-                    ? "Profitto netto mensile"
-                    : "Monthly Net Profit"
+                  copy.auto.f012
                 }
                 value={money(currentMonthlyNetProfit)}
                 note={
-                  language === "it"
-                    ? `${pct(currentNetMargin)} di margine netto sulla base economica`
-                    : `${pct(currentNetMargin)} net margin on the economic basis`
+                  t("forecastingPage.netMarginBasis", { value: pct(currentNetMargin) })
                 }
                 tooltip={
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Profitto netto mensile"
-                          : "Monthly net profit",
+                        copy.auto.f013,
                       description:
-                        language === "it"
-                          ? "Profitto mensile stimato sulla base economica attuale dello store, dopo costi fissi, commissioni variabili e l'eventuale riserva fiscale gestionale configurata. È il punto di partenza usato per costruire la previsione."
-                          : "Estimated monthly profit based on the store's current economic baseline, after fixed costs, variable fees and any configured business-model tax reserve. It is the starting point used to build the forecast.",
+                        copy.auto.f014,
                     }}
                   />
                 }
@@ -1143,24 +1121,18 @@ export default function ForecastingPage() {
 
               <MetricCard
                 label={
-                  language === "it"
-                    ? `Profitto al mese ${horizon}`
-                    : `Profit in Month ${horizon}`
+                  t("forecastingPage.profitAtMonth", { horizon })
                 }
                 value={money(finalPoint.netProfit)}
                 note={
-                  language === "it"
-                    ? `${pct(finalPoint.netMargin)} di margine netto previsto`
-                    : `${pct(finalPoint.netMargin)} projected net margin`
+                  t("forecastingPage.projectedNetMargin", { value: pct(finalPoint.netMargin) })
                 }
                 positive={finalPoint.netProfit >= currentMonthlyNetProfit}
               />
 
               <MetricCard
                 label={
-                  language === "it"
-                    ? "Profitto aggiuntivo cumulativo"
-                    : "Cumulative Profit Lift"
+                  copy.auto.f015
                 }
                 value={
                   finalPoint.cumulativeLift > 0
@@ -1168,22 +1140,16 @@ export default function ForecastingPage() {
                     : money(finalPoint.cumulativeLift)
                 }
                 note={
-                  language === "it"
-                    ? `Impatto totale nei prossimi ${horizon} mesi`
-                    : `Total impact across the next ${horizon} months`
+                  t("forecastingPage.totalImpact", { horizon })
                 }
                 highlighted={finalPoint.cumulativeLift >= 0}
                 tooltip={
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Profitto aggiuntivo cumulativo"
-                          : "Cumulative profit lift",
+                        copy.auto.f016,
                       description:
-                        language === "it"
-                          ? "Differenza totale tra il profitto netto previsto dallo scenario e il profitto che otterresti mantenendo invariato l'attuale profitto mensile per tutto l'orizzonte selezionato. È una stima di scenario, non profitto già realizzato."
-                          : "Total difference between the net profit projected by the scenario and the profit you would generate by keeping current monthly profit unchanged over the selected horizon. It is a scenario estimate, not profit already realized.",
+                        copy.auto.f017,
                     }}
                   />
                 }
@@ -1191,13 +1157,11 @@ export default function ForecastingPage() {
 
               <MetricCard
                 label={
-                  language === "it" ? "Ricavi previsti" : "Projected Revenue"
+                  copy.auto.f018
                 }
                 value={compactMoney(totalProjectedRevenue)}
                 note={
-                  language === "it"
-                    ? `Totale previsto su ${horizon} mesi`
-                    : `Forecast total across ${horizon} months`
+                  t("forecastingPage.forecastTotal", { horizon })
                 }
               />
             </div>
@@ -1229,9 +1193,7 @@ export default function ForecastingPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it"
-                    ? "Costruisci lo scenario"
-                    : "Build the Scenario"}
+                  {copy.auto.f019}
                 </div>
 
                 <div
@@ -1243,9 +1205,7 @@ export default function ForecastingPage() {
                     letterSpacing: "-0.03em",
                   }}
                 >
-                  {language === "it"
-                    ? "Decidi come vuoi crescere"
-                    : "Choose how you want to grow"}
+                  {copy.auto.f020}
                 </div>
 
                 <div
@@ -1257,9 +1217,7 @@ export default function ForecastingPage() {
                     fontWeight: 700,
                   }}
                 >
-                  {language === "it"
-                    ? "Gli scenari applicano ipotesi diverse. Puoi poi modificare ogni leva manualmente."
-                    : "Scenarios apply different assumptions. You can then fine-tune every lever manually."}
+                  {copy.auto.f021}
                 </div>
 
                 <div
@@ -1274,13 +1232,13 @@ export default function ForecastingPage() {
                     [
                       [
                         "worst",
-                        language === "it" ? "Caso peggiore" : "Worst Case",
+                        copy.auto.f022,
                       ],
                       [
                         "expected",
-                        language === "it" ? "Caso atteso" : "Expected Case",
+                        copy.auto.f023,
                       ],
-                      ["best", language === "it" ? "Caso migliore" : "Best Case"],
+                      ["best", copy.auto.f024],
                     ] as Array<[Exclude<ScenarioKey, "custom">, string]>
                   ).map(([key, label]) => {
                     const active = selectedScenario === key;
@@ -1319,9 +1277,7 @@ export default function ForecastingPage() {
                       fontWeight: 850,
                     }}
                   >
-                    {language === "it"
-                      ? "Scenario personalizzato"
-                      : "Custom scenario"}
+                    {copy.auto.f025}
                   </div>
                 )}
 
@@ -1334,9 +1290,7 @@ export default function ForecastingPage() {
                 >
                   <SliderControl
                     label={
-                      language === "it"
-                        ? "Crescita mensile dei ricavi"
-                        : "Monthly Revenue Growth"
+                      copy.auto.f026
                     }
                     value={monthlyRevenueGrowth}
                     min={-5}
@@ -1344,9 +1298,7 @@ export default function ForecastingPage() {
                     step={0.5}
                     suffix="%"
                     helper={
-                      language === "it"
-                        ? "Variazione prevista delle vendite mese su mese."
-                        : "Expected month-over-month sales change."
+                      copy.auto.f027
                     }
                     onChange={(value) =>
                       setCustomValue(setMonthlyRevenueGrowth, value)
@@ -1355,9 +1307,7 @@ export default function ForecastingPage() {
 
                   <SliderControl
                     label={
-                      language === "it"
-                        ? "Miglioramento del margine"
-                        : "Margin Improvement"
+                      copy.auto.f028
                     }
                     value={marginImprovement}
                     min={0}
@@ -1365,9 +1315,7 @@ export default function ForecastingPage() {
                     step={0.5}
                     suffix=" pt"
                     helper={
-                      language === "it"
-                        ? "Aumento progressivo del margine economico entro l'orizzonte scelto."
-                        : "Progressive economic-margin lift by the selected horizon."
+                      copy.auto.f029
                     }
                     onChange={(value) =>
                       setCustomValue(setMarginImprovement, value)
@@ -1377,9 +1325,7 @@ export default function ForecastingPage() {
 
                   <SliderControl
                     label={
-                      language === "it"
-                        ? "Crescita mensile dei costi"
-                        : "Monthly Cost Growth"
+                      copy.auto.f030
                     }
                     value={monthlyCostGrowth}
                     min={-2}
@@ -1387,9 +1333,7 @@ export default function ForecastingPage() {
                     step={0.5}
                     suffix="%"
                     helper={
-                      language === "it"
-                        ? "Evoluzione prevista di advertising, spedizioni e costi operativi."
-                        : "Expected change in ads, shipping and operating costs."
+                      copy.auto.f031
                     }
                     onChange={(value) =>
                       setCustomValue(setMonthlyCostGrowth, value)
@@ -1399,9 +1343,7 @@ export default function ForecastingPage() {
 
                   <SliderControl
                     label={
-                      language === "it"
-                        ? "Opportunità recuperate"
-                        : "Recovery Opportunities Captured"
+                      copy.auto.f032
                     }
                     value={recoveryCapture}
                     min={0}
@@ -1409,9 +1351,7 @@ export default function ForecastingPage() {
                     step={5}
                     suffix="%"
                     helper={
-                      language === "it"
-                        ? "Quota del profitto recuperabile che prevedi di realizzare."
-                        : "Share of recoverable profit you expect to realize."
+                      copy.auto.f033
                     }
                     onChange={(value) =>
                       setCustomValue(setRecoveryCapture, value)
@@ -1421,13 +1361,9 @@ export default function ForecastingPage() {
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Opportunità recuperate"
-                              : "Recovery opportunities captured",
+                            copy.auto.f034,
                           description:
-                            language === "it"
-                              ? "Percentuale del profitto recuperabile identificato da MarginLab che stai ipotizzando di riuscire effettivamente a ottenere nello scenario. Il 100% rappresenta il recupero completo dell'opportunità stimata, non un risultato garantito."
-                              : "Percentage of the recoverable profit identified by MarginLab that you assume will actually be achieved in the scenario. 100% means capturing the full estimated opportunity, not a guaranteed outcome.",
+                            copy.auto.f035,
                         }}
                       />
                     }
@@ -1464,9 +1400,7 @@ export default function ForecastingPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it"
-                        ? "Traiettoria prevista"
-                        : "Forecast Trajectory"}
+                      {copy.auto.f036}
                     </div>
 
                     <div
@@ -1478,9 +1412,7 @@ export default function ForecastingPage() {
                         letterSpacing: "-0.03em",
                       }}
                     >
-                      {language === "it"
-                        ? "Il percorso del profitto mese per mese"
-                        : "Your month-by-month profit path"}
+                      {copy.auto.f037}
                     </div>
                   </div>
 
@@ -1505,7 +1437,7 @@ export default function ForecastingPage() {
                         fontWeight: 900,
                       }}
                     >
-                      {language === "it" ? "Esporta previsione CSV" : "Export forecast CSV"}
+                      {copy.auto.f038}
                     </button>
 
                     <div
@@ -1568,7 +1500,7 @@ export default function ForecastingPage() {
                     return (
                       <div
                         key={item.month}
-                        title={`${language === "it" ? "Mese" : "Month"} ${item.month}: ${money(item.netProfit)}`}
+                        title={`${copy.auto.f039} ${item.month}: ${money(item.netProfit)}`}
                         style={{
                           flex: 1,
                           minWidth: 0,
@@ -1667,7 +1599,7 @@ export default function ForecastingPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Mese migliore" : "Best Month"}
+                      {copy.auto.f040}
                     </div>
                     <div
                       style={{
@@ -1707,7 +1639,7 @@ export default function ForecastingPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      {language === "it" ? "Margine medio" : "Average Margin"}
+                      {copy.auto.f041}
                     </div>
                     <div
                       style={{
@@ -1727,9 +1659,7 @@ export default function ForecastingPage() {
                         fontSize: 12,
                       }}
                     >
-                      {language === "it"
-                        ? "sull'intero periodo"
-                        : "across the period"}
+                      {copy.auto.f042}
                     </div>
                   </div>
 
@@ -1753,19 +1683,15 @@ export default function ForecastingPage() {
                       }}
                     >
                       <span>
-                        {language === "it" ? "Salute prevista" : "Forecast Health"}
+                        {copy.auto.f043}
                       </span>
 
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Salute prevista"
-                              : "Forecast health",
+                            copy.auto.f044,
                           description:
-                            language === "it"
-                              ? "Valutazione sintetica del margine netto previsto alla fine dell'orizzonte selezionato. MarginLab classifica lo scenario come molto solido, in miglioramento, fragile o a rischio in base al livello di margine raggiunto."
-                              : "Summary assessment of the projected net margin at the end of the selected horizon. MarginLab classifies the scenario as very strong, improving, fragile or at risk based on the margin level reached.",
+                            copy.auto.f045,
                         }}
                       />
                     </div>
@@ -1818,9 +1744,7 @@ export default function ForecastingPage() {
                   letterSpacing: "0.13em",
                 }}
               >
-                {language === "it"
-                  ? "Confronto degli scenari"
-                  : "Scenario Comparison"}
+                {copy.auto.f046}
               </div>
 
               <div
@@ -1831,9 +1755,7 @@ export default function ForecastingPage() {
                   fontWeight: 950,
                 }}
               >
-                {language === "it"
-                  ? `Tre possibili risultati a ${horizon} mesi`
-                  : `Three possible outcomes over ${horizon} months`}
+                {t("forecastingPage.possibleOutcomes", { horizon })}
               </div>
 
               <div
@@ -1848,16 +1770,10 @@ export default function ForecastingPage() {
                   const active = selectedScenario === scenario.key;
                   const label =
                     scenario.key === "worst"
-                      ? language === "it"
-                        ? "Caso peggiore"
-                        : "Worst Case"
+                      ? copy.auto.f047
                       : scenario.key === "expected"
-                        ? language === "it"
-                          ? "Caso atteso"
-                          : "Expected Case"
-                        : language === "it"
-                          ? "Caso migliore"
-                          : "Best Case";
+                        ? copy.auto.f048
+                        : copy.auto.f049;
                   const accent =
                     scenario.key === "worst"
                       ? "#fb7185"
@@ -1898,25 +1814,19 @@ export default function ForecastingPage() {
 
                       {[
                         [
-                          language === "it"
-                            ? "Profitto mensile finale"
-                            : "Final Monthly Profit",
+                          copy.auto.f050,
                           money(scenario.finalNetProfit),
                         ],
                         [
-                          language === "it" ? "Margine finale" : "Final Margin",
+                          copy.auto.f051,
                           pct(scenario.finalNetMargin),
                         ],
                         [
-                          language === "it"
-                            ? "Profitto cumulativo"
-                            : "Cumulative Profit",
+                          copy.auto.f052,
                           money(scenario.cumulativeNetProfit),
                         ],
                         [
-                          language === "it"
-                            ? "Differenza vs oggi"
-                            : "Difference vs Today",
+                          copy.auto.f053,
                           `${scenario.differenceFromCurrent >= 0 ? "+" : ""}${money(
                             scenario.differenceFromCurrent,
                           )}`,
@@ -1946,9 +1856,7 @@ export default function ForecastingPage() {
                             style={{
                               color:
                                 metricLabel ===
-                                  (language === "it"
-                                    ? "Differenza vs oggi"
-                                    : "Difference vs Today") &&
+                                  (copy.auto.f054) &&
                                   scenario.differenceFromCurrent < 0
                                   ? "#fb7185"
                                   : "#f8fafc",
@@ -2003,9 +1911,7 @@ export default function ForecastingPage() {
                         letterSpacing: "0.13em",
                       }}
                     >
-                      {language === "it"
-                        ? "Raccomandazione MarginLab"
-                        : "MarginLab Recommendation"}
+                      {copy.auto.f055}
                     </div>
                     <div
                       style={{
@@ -2015,9 +1921,7 @@ export default function ForecastingPage() {
                         fontWeight: 950,
                       }}
                     >
-                      {language === "it"
-                        ? "Il percorso più credibile verso più profitto"
-                        : "The most credible path to more profit"}
+                      {copy.auto.f056}
                     </div>
                   </div>
 
@@ -2036,21 +1940,15 @@ export default function ForecastingPage() {
                     }}
                   >
                     <span>
-                      {language === "it"
-                        ? `Qualità dei dati ${pct(dataConfidence, 0)}`
-                        : `Data Quality ${pct(dataConfidence, 0)}`}
+                      {t("forecastingPage.dataQuality", { value: pct(dataConfidence, 0) })}
                     </span>
 
                     <MetricTooltip
                       content={{
                         title:
-                          language === "it"
-                            ? "Qualità dei dati"
-                            : "Data quality",
+                          copy.auto.f057,
                         description:
-                          language === "it"
-                            ? "Misura quanto sono solidi e completi i dati utilizzati per costruire la previsione, considerando storico disponibile, copertura dei dati e configurazione dei costi. Non indica la probabilità che lo scenario previsto si realizzi."
-                            : "Measures how complete and reliable the data used to build the forecast are, based on available history, data coverage and cost configuration. It does not indicate the probability that the projected scenario will occur.",
+                          copy.auto.f058,
                       }}
                     />
                   </div>
@@ -2138,7 +2036,7 @@ export default function ForecastingPage() {
                     letterSpacing: "0.13em",
                   }}
                 >
-                  {language === "it" ? "Obiettivo mensile" : "Monthly Goal"}
+                  {copy.auto.f059}
                 </div>
 
                 <div
@@ -2149,9 +2047,7 @@ export default function ForecastingPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Quando raggiungerai il tuo obiettivo?"
-                    : "When will you reach your target?"}
+                  {copy.auto.f060}
                 </div>
 
                 <div
@@ -2171,9 +2067,7 @@ export default function ForecastingPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {language === "it"
-                      ? "Profitto netto mensile desiderato"
-                      : "Target Monthly Net Profit"}
+                    {copy.auto.f061}
                   </div>
 
                   <input
@@ -2227,19 +2121,15 @@ export default function ForecastingPage() {
                     }}
                   >
                     <span>
-                      {language === "it" ? "Tempo stimato" : "Estimated Timing"}
+                      {copy.auto.f062}
                     </span>
 
                     <MetricTooltip
                       content={{
                         title:
-                          language === "it"
-                            ? "Tempo stimato al raggiungimento del target"
-                            : "Estimated time to target",
+                          copy.auto.f063,
                         description:
-                          language === "it"
-                            ? "Indica il primo mese in cui il profitto mensile simulato supera l'obiettivo che hai impostato, mantenendo valide le ipotesi dello scenario. Non è una previsione certa né una data garantita."
-                            : "Shows the first month in which simulated monthly profit exceeds the target you set, assuming the scenario assumptions hold. It is not a certain forecast or guaranteed date.",
+                          copy.auto.f064,
                       }}
                     />
                   </div>
@@ -2254,12 +2144,8 @@ export default function ForecastingPage() {
                     }}
                   >
                     {firstGoalMonth !== undefined
-                      ? language === "it"
-                        ? `Mese ${firstGoalMonth}`
-                        : `Month ${firstGoalMonth}`
-                      : language === "it"
-                        ? "Oltre l'orizzonte"
-                        : "Beyond horizon"}
+                      ? t("forecastingPage.month", { month: firstGoalMonth })
+                      : copy.auto.f065}
                   </div>
 
                   <div
@@ -2272,20 +2158,11 @@ export default function ForecastingPage() {
                     }}
                   >
                     {firstGoalMonth !== undefined
-                      ? language === "it"
-                        ? `Con queste ipotesi il profitto mensile supera ${money(
-                          profitGoal,
-                        )}.`
-                        : `Under these assumptions, monthly profit exceeds ${money(
-                          profitGoal,
-                        )}.`
-                      : language === "it"
-                        ? `Lo scenario non raggiunge ${money(
-                          profitGoal,
-                        )} entro ${horizon} mesi.`
-                        : `The scenario does not reach ${money(
-                          profitGoal,
-                        )} within ${horizon} months.`}
+                      ? t("forecastingPage.goalReached", { goal: money(profitGoal) })
+                      : t("forecastingPage.goalNotReached", {
+                        goal: money(profitGoal),
+                        horizon,
+                      })}
                   </div>
                 </div>
               </div>
@@ -2304,9 +2181,7 @@ export default function ForecastingPage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? `Le previsioni partono dalla base economica tax-aware costruita sui dati Shopify degli ultimi ${periodDays} giorni e normalizzata su base mensile. Costi, commissioni e riserva fiscale gestionale del Business Model Studio restano ipotesi separate applicate alla previsione. Sono scenari decisionali, non risultati garantiti.`
-                : `Forecasts start from the tax-aware economic basis built from the last ${periodDays} days of Shopify data and normalized monthly. Costs, fees and the Business Model Studio tax reserve remain separate assumptions applied to the forecast. These are decision scenarios, not guaranteed outcomes.`}
+              {t("forecastingPage.methodNote", { periodDays })}
             </div>
           </div>
         </div>
