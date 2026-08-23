@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import ScoreCard from "~/components/dashboard/ScoreCard";
@@ -358,7 +358,8 @@ export default function DashboardV2() {
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.dashboardPage;
 
   const locale = language === "it" ? "it-IT" : "en-US";
 
@@ -436,20 +437,7 @@ export default function DashboardV2() {
 
   const primaryAlert = alerts[0] ?? null;
 
-  const analysisSteps =
-    language === "it"
-      ? [
-        "Analisi ordini Shopify...",
-        "Controllo costi prodotto...",
-        "Ricerca perdite di margine...",
-        "Analisi completata...",
-      ]
-      : [
-        "Scanning Shopify orders...",
-        "Checking product costs...",
-        "Detecting pricing leaks...",
-        "Analysis complete...",
-      ];
+  const analysisSteps = copy.analysisSteps;
 
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
 
@@ -583,10 +571,8 @@ export default function DashboardV2() {
       ? {
         icon: "⚠️",
         issue:
-          language === "it"
-            ? "Prodotti venduti sotto costo"
-            : "Products selling below cost",
-        severity: language === "it" ? "Alta" : "High",
+          copy.auto.d001,
+        severity: copy.auto.d002,
         loss: money(visualLeak),
       }
       : null,
@@ -595,14 +581,10 @@ export default function DashboardV2() {
       ? {
         icon: "📦",
         issue:
-          language === "it"
-            ? "Prodotti senza costo"
-            : "Products missing cost data",
-        severity: language === "it" ? "Moderata" : "Moderate",
+          copy.auto.d003,
+        severity: copy.auto.d004,
         loss:
-          language === "it"
-            ? `${visualMissingCostCount} prodotti`
-            : `${visualMissingCostCount} products`,
+          t("dashboardPage.productsCount", { count: visualMissingCostCount }),
       }
       : null,
 
@@ -610,14 +592,10 @@ export default function DashboardV2() {
       ? {
         icon: "🏷️",
         issue:
-          language === "it"
-            ? "Prodotti a basso margine rilevati"
-            : "Low-margin products detected",
-        severity: language === "it" ? "Moderata" : "Moderate",
+          copy.auto.d005,
+        severity: copy.auto.d006,
         loss:
-          language === "it"
-            ? `${lowMarginCount} prodotti`
-            : `${lowMarginCount} products`,
+          t("dashboardPage.productsCount", { count: lowMarginCount }),
       }
       : null,
 
@@ -625,14 +603,10 @@ export default function DashboardV2() {
       ? {
         icon: "🔥",
         issue:
-          language === "it"
-            ? "Prodotti da controllare"
-            : "Products requiring margin review",
-        severity: language === "it" ? "Minore" : "Low",
+          copy.auto.d007,
+        severity: copy.auto.d008,
         loss:
-          language === "it"
-            ? `${productsAtRisk} a rischio`
-            : `${productsAtRisk} at risk`,
+          t("dashboardPage.atRiskCount", { count: productsAtRisk }),
       }
       : null,
   ].filter(Boolean) as {
@@ -796,26 +770,18 @@ export default function DashboardV2() {
     hasWeakBestSeller
       ? {
         eyebrow:
-          getStoredLanguage() === "it"
-            ? "INSIGHT CRITICO"
-            : "CRITICAL INSIGHT",
+          copy.auto.d009,
         title:
-          getStoredLanguage() === "it"
-            ? "Il tuo prodotto più venduto potrebbe ridurre la redditività"
-            : "Your best-selling product may be reducing profitability",
-        badge: getStoredLanguage() === "it" ? "Margine basso" : "Low margin",
+          copy.auto.d010,
+        badge: copy.auto.d011,
         description: (
           <>
             <strong>{weakBestSeller.productTitle}</strong>{" "}
-            {getStoredLanguage() === "it" ? "ha generato" : "generated"}{" "}
+            {copy.auto.d012}{" "}
             <strong>{money(weakBestSeller.revenue)}</strong>{" "}
-            {getStoredLanguage() === "it"
-              ? "di ricavi con solo"
-              : "revenue with only"}{" "}
+            {copy.auto.d013}{" "}
             <strong>{pct(weakBestSellerMargin)}</strong>{" "}
-            {getStoredLanguage() === "it"
-              ? "di margine. Questo prodotto potrebbe ridurre la redditività complessiva del negozio."
-              : "margin. This product may be reducing your overall store profitability."}
+            {copy.auto.d014}
           </>
         ),
       }
@@ -824,25 +790,17 @@ export default function DashboardV2() {
     marginDelta < -3
       ? {
         eyebrow:
-          getStoredLanguage() === "it"
-            ? "PEGGIORAMENTO MARGINE"
-            : "MARGIN DETERIORATION",
+          copy.auto.d015,
         title:
-          getStoredLanguage() === "it"
-            ? "La redditività del negozio sta diminuendo"
-            : "Store profitability is decreasing",
+          copy.auto.d016,
         badge: pct(marginDelta),
         description: (
           <>
-            {getStoredLanguage() === "it"
-              ? "Il margine del negozio è sceso da"
-              : "Your store margin dropped from"}{" "}
+            {copy.auto.d017}{" "}
             <strong>{pct(summary.previousMarginPct)}</strong>{" "}
-            {getStoredLanguage() === "it" ? "a" : "to"}{" "}
+            {copy.auto.d018}{" "}
             <strong>{pct(summary.marginPct)}</strong>{" "}
-            {getStoredLanguage() === "it"
-              ? "rispetto al periodo precedente. Controlla prezzi, sconti e costi prodotto per evitare ulteriore erosione dei margini."
-              : "compared to the previous period. Review pricing, discounts and product costs to avoid further margin erosion."}
+            {copy.auto.d019}
           </>
         ),
       }
@@ -851,30 +809,20 @@ export default function DashboardV2() {
     hasRecoveryOpportunity
       ? {
         eyebrow:
-          getStoredLanguage() === "it"
-            ? "OPPORTUNITÀ DI RECUPERO"
-            : "RECOVERY OPPORTUNITY",
+          copy.auto.d020,
         title:
-          getStoredLanguage() === "it"
-            ? "MarginLab ha rilevato un gap di profitto verso il target"
-            : "MarginLab detected a profit gap to target",
+          copy.auto.d021,
         badge: money(profitGapToTarget),
         description: (
           <>
-            {getStoredLanguage() === "it"
-              ? "Profit Leak Scanner ha rilevato"
-              : "Profit Leak Scanner detected"}{" "}
+            {copy.auto.d022}{" "}
             <strong>
               {recoveryProducts.length}{" "}
-              {getStoredLanguage() === "it" ? "prodotti" : "products"}
+              {copy.auto.d023}
             </strong>{" "}
-            {getStoredLanguage() === "it"
-              ? "con gap di prezzo. Il gap mensile stimato verso il target è"
-              : "with pricing gaps. The estimated monthly profit gap to target is"}{" "}
+            {copy.auto.d024}{" "}
             <strong>{money(profitGapToTarget)}</strong>{" "}
-            {getStoredLanguage() === "it"
-              ? ". È una stima modellata, non profitto garantito o già recuperato."
-              : ". This is a modeled estimate, not guaranteed or already recovered profit."}
+            {copy.auto.d025}
           </>
         ),
       }
@@ -883,28 +831,18 @@ export default function DashboardV2() {
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
         eyebrow:
-          getStoredLanguage() === "it" ? "AVVISO CRESCITA" : "GROWTH WARNING",
+          copy.auto.d026,
         title:
-          getStoredLanguage() === "it"
-            ? "La crescita dei ricavi sta superando la crescita dei margini"
-            : "Revenue growth is outpacing margin growth",
+          copy.auto.d027,
         badge:
-          getStoredLanguage() === "it"
-            ? `${pct(summary.revenueDeltaPct)} ricavi`
-            : `${pct(summary.revenueDeltaPct)} revenue`,
+          t("dashboardPage.revenueBadge", { value: pct(summary.revenueDeltaPct) }),
         description: (
           <>
-            {getStoredLanguage() === "it"
-              ? "I ricavi del negozio sono aumentati del"
-              : "Store revenue increased by"}{" "}
+            {copy.auto.d028}{" "}
             <strong>{pct(summary.revenueDeltaPct)}</strong>
-            {getStoredLanguage() === "it"
-              ? ", ma il margine è sceso del"
-              : ", but margin dropped by"}{" "}
+            {copy.auto.d029}{" "}
             <strong>{pct(Math.abs(summary.marginDelta))}</strong>
-            {getStoredLanguage() === "it"
-              ? ". Una crescita rapida con margini in calo può indicare sconti aggressivi, costi in aumento o bestseller sottoprezzati."
-              : ". Rapid growth combined with weakening margins may indicate aggressive discounts, rising costs or underpriced best sellers."}
+            {copy.auto.d030}
           </>
         ),
       }
@@ -1060,9 +998,7 @@ export default function DashboardV2() {
                   letterSpacing: "0.11em",
                 }}
               >
-                {language === "it"
-                  ? "PROFILO FISCALE AVANZATO"
-                  : "ADVANCED TAX PROFILE"}
+                {copy.auto.d031}
               </div>
 
               <div
@@ -1073,9 +1009,7 @@ export default function DashboardV2() {
                   fontWeight: 950,
                 }}
               >
-                {language === "it"
-                  ? "Completa il profilo fiscale avanzato"
-                  : "Complete your advanced Tax Profile"}
+                {copy.auto.d032}
               </div>
 
               <div
@@ -1088,9 +1022,7 @@ export default function DashboardV2() {
                   maxWidth: 760,
                 }}
               >
-                {language === "it"
-                  ? `MarginLab ha rilevato un profilo ${taxSystemLabel} avanzato disponibile per questo store. Configura il trattamento fiscale di prezzi, costi e spedizioni per migliorare la precisione del profitto economico.`
-                  : `MarginLab detected an advanced ${taxSystemLabel} profile available for this store. Configure tax treatment for prices, costs and shipping to improve economic profit accuracy.`}
+                {t("dashboardPage.advancedTaxDescription", { taxSystem: taxSystemLabel })}
               </div>
             </div>
 
@@ -1102,9 +1034,7 @@ export default function DashboardV2() {
                 whiteSpace: "nowrap",
               }}
             >
-              {language === "it"
-                ? "Configura profilo fiscale →"
-                : "Configure tax profile →"}
+              {copy.auto.d033}
             </button>
           </div>
         ) : null}
@@ -1144,113 +1074,73 @@ export default function DashboardV2() {
           items={[
             {
               label:
-                language === "it"
-                  ? "Ricavi economici"
-                  : "Economic revenue",
+                copy.auto.d034,
               value: money(economicRevenue),
               note:
-                language === "it"
-                  ? `Base tax-aware · ultimi ${period} giorni`
-                  : `Tax-aware basis · last ${period} days`,
+                t("dashboardPage.taxAwarePeriod", { period }),
               icon: "¤",
               tone: "positive",
               tooltip: {
                 title:
-                  language === "it"
-                    ? "Ricavi economici"
-                    : "Economic revenue",
+                  copy.auto.d035,
                 description:
-                  language === "it"
-                    ? "I ricavi effettivamente disponibili per misurare la redditività, dopo la normalizzazione fiscale applicabile. MarginLab privilegia le imposte realmente registrate da Shopify e utilizza il profilo fiscale configurato solo quando necessario e supportato."
-                    : "Revenue available for profitability analysis after applicable tax normalization. MarginLab prioritizes transaction tax actually recorded by Shopify and uses the configured tax profile only when necessary and supported.",
+                  copy.auto.d036,
                 formula:
-                  language === "it"
-                    ? "Ricavi prodotto − imposte incluse nel prezzo che devono essere escluse dai ricavi"
-                    : "Product revenue − tax included in price that must be excluded from revenue",
+                  copy.auto.d037,
                 note:
-                  language === "it"
-                    ? "Le imposte aggiunte al checkout non vengono sottratte nuovamente dai ricavi prodotto."
-                    : "Tax added on top at checkout is not deducted again from product revenue.",
+                  copy.auto.d038,
               },
             },
             {
               label:
-                language === "it"
-                  ? "Profitto economico"
-                  : "Economic profit",
+                copy.auto.d039,
               value: money(economicProfit),
               note:
-                language === "it"
-                  ? `${pct(economicMarginPct)} margine economico`
-                  : `${pct(economicMarginPct)} economic margin`,
+                t("dashboardPage.economicMarginNote", { value: pct(economicMarginPct) }),
               icon: "+",
               tone: economicProfit >= 0 ? "positive" : "danger",
               tooltip: {
                 title:
-                  language === "it"
-                    ? "Profitto economico"
-                    : "Economic profit",
+                  copy.auto.d040,
 
                 description:
-                  language === "it"
-                    ? "Quanto rimane dei ricavi economici dopo aver considerato il costo economico dei prodotti venduti."
-                    : "What remains from economic revenue after accounting for the economic cost of the products sold.",
+                  copy.auto.d041,
 
                 formula:
-                  language === "it"
-                    ? "Ricavi economici − COGS economici"
-                    : "Economic revenue − Economic COGS",
+                  copy.auto.d042,
 
                 note:
-                  language === "it"
-                    ? "È la misura di profitto principale utilizzata da MarginLab."
-                    : "This is MarginLab's primary profit measure.",
+                  copy.auto.d043,
               },
             },
             {
               label:
-                language === "it"
-                  ? "Margine economico"
-                  : "Economic margin",
+                copy.auto.d044,
               value: pct(economicMarginPct),
               note:
-                language === "it"
-                  ? `${money(economicAdjustment)} vs profitto prodotto`
-                  : `${money(economicAdjustment)} vs product profit`,
+                t("dashboardPage.productProfitComparison", { value: money(economicAdjustment) }),
               icon: "%",
               tone: economicMarginPct >= 20 ? "positive" : "warning",
               tooltip: {
                 title:
-                  language === "it"
-                    ? "Margine economico"
-                    : "Economic margin",
+                  copy.auto.d045,
 
                 description:
-                  language === "it"
-                    ? "La percentuale dei ricavi economici che rimane come profitto dopo il costo dei prodotti."
-                    : "The percentage of economic revenue that remains as profit after product costs.",
+                  copy.auto.d046,
 
                 formula:
-                  language === "it"
-                    ? "(Profitto economico ÷ Ricavi economici) × 100"
-                    : "(Economic profit ÷ Economic revenue) × 100",
+                  copy.auto.d047,
 
                 note:
-                  language === "it"
-                    ? "Più è alto, maggiore è la redditività dello store."
-                    : "The higher it is, the more profitable the store is.",
+                  copy.auto.d048,
               },
             },
             {
               label:
-                language === "it"
-                  ? "Prodotti analizzati"
-                  : "Products analyzed",
+                copy.auto.d049,
               value: String(sourceRows.length),
               note:
-                language === "it"
-                  ? `${visualProductsAtRisk} da controllare`
-                  : `${visualProductsAtRisk} require review`,
+                t("dashboardPage.requireReview", { count: visualProductsAtRisk }),
               icon: "◈",
               tone: visualProductsAtRisk > 0 ? "warning" : "positive",
             },
@@ -1262,49 +1152,33 @@ export default function DashboardV2() {
           items={[
             {
               label:
-                language === "it"
-                  ? "Perdita principale"
-                  : "Biggest profit leak",
+                copy.auto.d050,
               value: worstProduct
                 ? worstProduct.productTitle
-                : language === "it"
-                  ? "Nessuna perdita rilevata"
-                  : "No losses detected",
+                : copy.auto.d051,
               note: worstProduct
-                ? language === "it"
-                  ? `${money(Math.abs(worstProduct.profit))} perdita stimata`
-                  : `${money(Math.abs(worstProduct.profit))} estimated loss`
-                : language === "it"
-                  ? "Tutti i prodotti sono profittevoli"
-                  : "All products are profitable",
+                ? t("dashboardPage.estimatedLoss", { value: money(Math.abs(worstProduct.profit)) })
+                : copy.auto.d052,
               icon: worstProduct ? "↓" : "✓",
               tone: worstProduct ? "danger" : "positive",
             },
             {
               label:
-                language === "it"
-                  ? "Prodotti a basso margine"
-                  : "Low margin products",
+                copy.auto.d053,
               value: String(
                 sourceRows.filter((row) => row.lowMargin).length,
               ),
               note:
-                language === "it"
-                  ? "Margine prodotto sotto il 10%"
-                  : "Product margin below 10%",
+                copy.auto.d054,
               icon: "↓",
               tone: "warning",
             },
             {
               label:
-                language === "it"
-                  ? "Costi mancanti"
-                  : "Missing costs",
+                copy.auto.d055,
               value: String(visualMissingCostCount),
               note:
-                language === "it"
-                  ? "Da correggere per una lettura affidabile"
-                  : "Fix required for reliable analysis",
+                copy.auto.d056,
               icon: "⚠",
               tone:
                 visualMissingCostCount > 0
@@ -1313,31 +1187,21 @@ export default function DashboardV2() {
             },
             {
               label:
-                language === "it"
-                  ? "Gap di profitto al target"
-                  : "Profit gap to target",
+                copy.auto.d057,
               value: money(profitGapToTarget),
               note:
-                language === "it"
-                  ? "Stima modellata verso il margine target"
-                  : "Modeled estimate toward target margin",
+                copy.auto.d058,
               icon: "+",
               tone: "warning",
               tooltip: {
                 title:
-                  language === "it"
-                    ? "Gap di profitto al target"
-                    : "Profit gap to target",
+                  copy.auto.d059,
 
                 description:
-                  language === "it"
-                    ? "Quanto profitto manca, in teoria, per portare i prodotti sotto target fino al margine obiettivo."
-                    : "The estimated profit shortfall required to bring below-target products up to the target margin.",
+                  copy.auto.d060,
 
                 note:
-                  language === "it"
-                    ? "È una stima di opportunità, non una previsione o un profitto garantito."
-                    : "This is an opportunity estimate, not a forecast or guaranteed profit.",
+                  copy.auto.d061,
               },
             },
           ]}
@@ -1383,9 +1247,7 @@ export default function DashboardV2() {
                     letterSpacing: "0.11em",
                   }}
                 >
-                  {language === "it"
-                    ? "BASE DI REDDITIVITÀ"
-                    : "PROFITABILITY BASIS"}
+                  {copy.auto.d062}
                 </div>
 
                 <div
@@ -1404,27 +1266,19 @@ export default function DashboardV2() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it"
-                      ? "Normalizzazione fiscale e dei costi"
-                      : "Tax & cost normalization"}
+                    {copy.auto.d063}
                   </div>
 
                   <MetricTooltip
                     content={{
                       title:
-                        language === "it"
-                          ? "Normalizzazione fiscale e dei costi"
-                          : "Tax & cost normalization",
+                        copy.auto.d064,
 
                       description:
-                        language === "it"
-                          ? "Mostra come imposte e costi modificano il profitto utilizzato da MarginLab per valutare la redditività reale dello store."
-                          : "Shows how taxes and costs affect the profit MarginLab uses to evaluate the store's underlying profitability.",
+                        copy.auto.d065,
 
                       note:
-                        language === "it"
-                          ? "Per il dettaglio completo del calcolo consulta il Glossario."
-                          : "See the Glossary for the full calculation methodology.",
+                        copy.auto.d066,
                     }}
                   />
                 </div>
@@ -1439,9 +1293,7 @@ export default function DashboardV2() {
                     maxWidth: 820,
                   }}
                 >
-                  {language === "it"
-                    ? `Questa sezione spiega come MarginLab passa dal profitto prodotto osservato al profitto economico tax-aware, utilizzando i dati fiscali Shopify e, quando disponibile, un profilo ${taxSystemLabel} avanzato per i costi.`
-                    : `This section explains how MarginLab moves from observed product profit to tax-aware economic profit, using Shopify tax data and, when available, an advanced ${taxSystemLabel} profile for costs.`}
+                  {t("dashboardPage.taxBasisDescription", { taxSystem: taxSystemLabel })}
                 </div>
               </div>
 
@@ -1457,20 +1309,12 @@ export default function DashboardV2() {
                 }}
               >
                 {taxAwareEconomics.source === "shopify_actual_tax"
-                  ? language === "it"
-                    ? `${taxSystemLabel} Shopify rilevata`
-                    : `Shopify ${taxSystemLabel} detected`
+                  ? t("dashboardPage.shopifyTaxDetected", { taxSystem: taxSystemLabel })
                   : taxAwareEconomics.source === "shopify_zero_tax"
-                    ? language === "it"
-                      ? `Nessuna ${taxSystemLabel} applicata`
-                      : `No ${taxSystemLabel} applied`
+                    ? t("dashboardPage.noTaxApplied", { taxSystem: taxSystemLabel })
                     : taxAwareEconomics.source === "tax_profile_fallback"
-                      ? language === "it"
-                        ? `${taxSystemLabel} da profilo avanzato`
-                        : `${taxSystemLabel} from advanced profile`
-                      : language === "it"
-                        ? "Trattamento fiscale prudenziale"
-                        : "Conservative tax treatment"}
+                      ? t("dashboardPage.taxFromProfile", { taxSystem: taxSystemLabel })
+                      : copy.auto.d067}
               </div>
             </div>
 
@@ -1499,9 +1343,7 @@ export default function DashboardV2() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  {language === "it"
-                    ? "Profitto prima della normalizzazione"
-                    : "Profit before normalization"}
+                  {copy.auto.d068}
                 </div>
                 <div
                   style={{
@@ -1532,7 +1374,7 @@ export default function DashboardV2() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  {language === "it" ? "Profitto economico" : "Economic profit"}
+                  {copy.auto.d069}
                 </div>
                 <div
                   style={{
@@ -1556,7 +1398,7 @@ export default function DashboardV2() {
                   }}
                 >
                   {pct(taxAwareEconomics.realMarginPct)}{" "}
-                  {language === "it" ? "margine economico" : "economic margin"}
+                  {copy.auto.d070}
                 </div>
               </div>
 
@@ -1583,9 +1425,7 @@ export default function DashboardV2() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  {language === "it"
-                    ? "Impatto della normalizzazione"
-                    : "Normalization impact"}
+                  {copy.auto.d071}
                 </div>
                 <div
                   style={{
@@ -1608,9 +1448,7 @@ export default function DashboardV2() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Differenza rispetto al profitto prodotto osservato"
-                    : "Difference versus observed product profit"}
+                  {copy.auto.d072}
                 </div>
               </div>
             </div>
@@ -1635,9 +1473,7 @@ export default function DashboardV2() {
                     fontWeight: 850,
                   }}
                 >
-                  {language === "it"
-                    ? "Imposta acquisti recuperabile"
-                    : "Recoverable input tax"}
+                  {copy.auto.d073}
                   {" · "}
                   {taxContext.inputVatRecoveryPct}%
                 </div>
@@ -1653,7 +1489,7 @@ export default function DashboardV2() {
                     fontWeight: 850,
                   }}
                 >
-                  {language === "it" ? "Sistema fiscale" : "Tax system"}
+                  {copy.auto.d074}
                   {" · "}
                   {taxSystemLabel}
                 </div>
@@ -1670,12 +1506,10 @@ export default function DashboardV2() {
                   fontWeight: 850,
                 }}
               >
-                {language === "it" ? "Affidabilità" : "Confidence"}
+                {copy.auto.d075}
                 {" · "}
                 {taxAwareEconomics.confidence === "high"
-                  ? language === "it"
-                    ? "Alta"
-                    : "High"
+                  ? copy.auto.d076
                   : taxAwareEconomics.confidence}
               </div>
 
@@ -1690,7 +1524,7 @@ export default function DashboardV2() {
                   fontWeight: 850,
                 }}
               >
-                {language === "it" ? "COGS economici" : "Economic COGS"}
+                {copy.auto.d077}
                 {" · "}
                 {money(taxAwareEconomics.economicCogs)}
               </div>
@@ -1709,16 +1543,14 @@ export default function DashboardV2() {
         >
           <div>
             <div className="section-eyebrow">
-              {language === "it" ? "RIEPILOGO ESECUTIVO" : "EXECUTIVE SUMMARY"}
+              {copy.auto.d078}
             </div>
 
             <div
               className="section-title"
               style={{ marginTop: 8, fontSize: 28 }}
             >
-              {language === "it"
-                ? "Le informazioni che contano oggi"
-                : "What matters today"}
+              {copy.auto.d079}
             </div>
 
             <div
@@ -1731,9 +1563,12 @@ export default function DashboardV2() {
                 fontWeight: 720,
               }}
             >
-              {language === "it"
-                ? `MarginLab ha rilevato ${alertCounts.critical} rischi critici, ${alertCounts.warning} avvisi e ${alertCounts.opportunity} opportunità. Il gap mensile stimato verso il target è ${money(profitGapToTarget)}.`
-                : `MarginLab detected ${alertCounts.critical} critical risks, ${alertCounts.warning} warnings and ${alertCounts.opportunity} opportunities. Estimated monthly profit gap to target is ${money(profitGapToTarget)}.`}
+              {t("dashboardPage.executiveSummary", {
+                critical: alertCounts.critical,
+                warning: alertCounts.warning,
+                opportunity: alertCounts.opportunity,
+                gap: money(profitGapToTarget),
+              })}
             </div>
 
             <div
@@ -1746,22 +1581,22 @@ export default function DashboardV2() {
             >
               {[
                 {
-                  label: language === "it" ? "Critici" : "Critical",
+                  label: copy.auto.d080,
                   value: alertCounts.critical,
                   color: "#ff6b4a",
                 },
                 {
-                  label: language === "it" ? "Avvisi" : "Warnings",
+                  label: copy.auto.d081,
                   value: alertCounts.warning,
                   color: "#f59e0b",
                 },
                 {
-                  label: language === "it" ? "Opportunità" : "Opportunities",
+                  label: copy.auto.d082,
                   value: alertCounts.opportunity,
                   color: "#22c55e",
                 },
                 {
-                  label: language === "it" ? "A rischio" : "At risk",
+                  label: copy.auto.d083,
                   value: visualProductsAtRisk,
                   color: "#38bdf8",
                 },
@@ -1824,7 +1659,7 @@ export default function DashboardV2() {
                   letterSpacing: "0.11em",
                 }}
               >
-                {language === "it" ? "PROSSIMA DECISIONE" : "NEXT DECISION"}
+                {copy.auto.d084}
               </div>
 
               <div
@@ -1837,9 +1672,7 @@ export default function DashboardV2() {
                 }}
               >
                 {primaryAlert?.title ??
-                  (language === "it"
-                    ? "Nessuna azione urgente rilevata"
-                    : "No urgent action detected")}
+                  (copy.auto.d085)}
               </div>
 
               <div
@@ -1852,9 +1685,7 @@ export default function DashboardV2() {
                 }}
               >
                 {primaryAlert?.description ??
-                  (language === "it"
-                    ? "Continua a monitorare margini, costi e opportunità."
-                    : "Continue monitoring margins, costs and opportunities.")}
+                  (copy.auto.d086)}
               </div>
             </div>
 
@@ -1865,9 +1696,7 @@ export default function DashboardV2() {
               onClick={() => navigate(primaryAlert?.route ?? "/app/ai-advisor")}
             >
               {primaryAlert?.actionLabel ??
-                (language === "it"
-                  ? "Apri Profit Copilot"
-                  : "Open Profit Copilot")}
+                (copy.auto.d087)}
               {" →"}
             </button>
           </div>

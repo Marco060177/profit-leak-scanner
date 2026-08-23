@@ -14,7 +14,7 @@ import {
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 export const links = () => [{ rel: "stylesheet", href: dashboardStylesUrl }];
 
@@ -66,7 +66,8 @@ export default function ProfitIntelligencePage() {
 
   const navigate = useNavigate();
 
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.profitIntelligencePage;
   const locale =
     language === "it" ? "it-IT" : "en-US";
 
@@ -176,37 +177,19 @@ export default function ProfitIntelligencePage() {
 
   const businessDrivers = [
     {
-      label:
-        language === "it"
-          ? "Sconti"
-          : "Discounts",
+      label: copy.businessDrivers.discounts.label,
       value: summary.discounts,
-      description:
-        language === "it"
-          ? "Ricavi ridotti dagli sconti promozionali."
-          : "Revenue reduced through promotional discounts.",
+      description: copy.businessDrivers.discounts.description,
     },
     {
-      label:
-        language === "it"
-          ? "Rimborsi"
-          : "Refunds",
+      label: copy.businessDrivers.refunds.label,
       value: summary.refunds,
-      description:
-        language === "it"
-          ? "Ricavi stornati a seguito di ordini rimborsati."
-          : "Revenue reversed through returned orders.",
+      description: copy.businessDrivers.refunds.description,
     },
     {
-      label:
-        language === "it"
-          ? "Spedizioni"
-          : "Shipping",
+      label: copy.businessDrivers.shipping.label,
       value: summary.shipping,
-      description:
-        language === "it"
-          ? "Costi di spedizione registrati negli ordini."
-          : "Shipping charges recorded on orders.",
+      description: copy.businessDrivers.shipping.description,
     },
   ]
     .filter((driver) => driver.value > 0)
@@ -240,13 +223,11 @@ export default function ProfitIntelligencePage() {
         : "Low";
 
   const dependencyLevelLabel =
-    language === "it"
-      ? dependencyLevel === "High"
-        ? "Elevata"
-        : dependencyLevel === "Moderate"
-          ? "Moderata"
-          : "Bassa"
-      : dependencyLevel;
+    dependencyLevel === "High"
+      ? copy.dependencyLevels.high
+      : dependencyLevel === "Moderate"
+        ? copy.dependencyLevels.moderate
+        : copy.dependencyLevels.low;
 
   const dependencyRiskLabel =
     language === "it"
@@ -512,21 +493,15 @@ export default function ProfitIntelligencePage() {
         >
           <div>
             <div className="eyebrow">
-              {language === "it"
-                ? "ANALISI PROFITTI"
-                : "PROFIT INTELLIGENCE"}
+              {copy.auto.p001}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Analisi Profitti"
-                : "Profit Intelligence"}
+              {copy.auto.p002}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "MarginLab analizza come vengono generati ricavi e profitti e valuta la qualità dei margini del tuo business Shopify."
-                : "Understand revenue concentration, profit dependency and margin quality across your Shopify business."}
+              {copy.auto.p003}
             </div>
           </div>
 
@@ -549,9 +524,7 @@ export default function ProfitIntelligencePage() {
               boxShadow: "0 12px 30px rgba(0,0,0,0.24)",
             }}
           >
-            {language === "it"
-              ? "Esporta Profit Intelligence CSV"
-              : "Export Profit Intelligence CSV"}
+            {copy.auto.p004}
           </button>
         </div>
 
@@ -574,27 +547,19 @@ export default function ProfitIntelligencePage() {
                 }}
               >
                 <span>
-                  {language === "it"
-                    ? "INDICE DI REDDITIVITA'"
-                    : "PROFIT INTELLIGENCE SCORE"}
+                  {copy.auto.p005}
                 </span>
 
                 <MetricTooltip
                   content={{
                     title:
-                      language === "it"
-                        ? "Indice di redditività"
-                        : "Profit Intelligence Score",
+                      copy.auto.p006,
 
                     description:
-                      language === "it"
-                        ? "Un punteggio da 0 a 100 che riassume quanto la redditività dello store è solida e ben distribuita tra i prodotti."
-                        : "A 0–100 score summarizing how stable and well distributed the store's profitability is across products.",
+                      copy.auto.p007,
 
                     note:
-                      language === "it"
-                        ? "Tiene conto della concentrazione dei ricavi, della dipendenza dai profitti e dei prodotti con margini deboli. Più è alto, meglio è."
-                        : "It considers revenue concentration, profit dependency and weak-margin products. Higher is better.",
+                      copy.auto.p008,
                   }}
                 />
               </div>
@@ -621,9 +586,9 @@ export default function ProfitIntelligencePage() {
                   color: statusColor,
                 }}
               >
-                {language === "it"
-                  ? `${dependencyLevelLabel} dipendenza da pochi prodotti`
-                  : `${dependencyLevel} concentration risk`}
+                {t("profitIntelligencePage.concentrationRisk", {
+                  level: dependencyLevelLabel,
+                })}
               </div>
 
               <p
@@ -635,9 +600,7 @@ export default function ProfitIntelligencePage() {
                   fontSize: 15,
                 }}
               >
-                {language === "it"
-                  ? "MarginLab analizza la concentrazione dei ricavi, la dipendenza dai profitti e i punti deboli della redditività per valutare la stabilità complessiva del business."
-                  : "MarginLab evaluates revenue concentration, profit dependency and weak profit drivers to estimate business stability."}
+                {copy.auto.p009}
               </p>
 
               <div
@@ -654,57 +617,39 @@ export default function ProfitIntelligencePage() {
                   {
                     key: "revenue-dependency",
                     label:
-                      language === "it"
-                        ? "Dipendenza dai ricavi"
-                        : "Revenue dependency",
+                      copy.auto.p010,
                     value: pct(top3RevenueShare),
                     tooltip: {
                       title:
-                        language === "it"
-                          ? "Dipendenza dai ricavi"
-                          : "Revenue dependency",
+                        copy.auto.p011,
 
                       description:
-                        language === "it"
-                          ? "Indica quale percentuale dei ricavi economici dello store proviene dai tre prodotti che generano più ricavi."
-                          : "Shows what percentage of the store's economic revenue comes from its three highest-revenue products.",
+                        copy.auto.p012,
 
                       note:
-                        language === "it"
-                          ? "Una percentuale elevata significa che una parte importante del business dipende da pochi prodotti."
-                          : "A high percentage means a significant part of the business depends on only a few products.",
+                        copy.auto.p013,
                     },
                   },
                   {
                     key: "profit-dependency",
                     label:
-                      language === "it"
-                        ? "Dipendenza dai profitti"
-                        : "Profit dependency",
+                      copy.auto.p014,
                     value: pct(top3ProfitShare),
                     tooltip: {
                       title:
-                        language === "it"
-                          ? "Dipendenza dai profitti"
-                          : "Profit dependency",
+                        copy.auto.p015,
 
                       description:
-                        language === "it"
-                          ? "Indica quanto del profitto economico totale è generato dai tre prodotti più profittevoli."
-                          : "Shows how much of total economic profit is generated by the three most profitable products.",
+                        copy.auto.p016,
 
                       note:
-                        language === "it"
-                          ? "Può superare il 100% quando altri prodotti generano perdite e riducono il profitto totale dello store."
-                          : "It can exceed 100% when other products generate losses that reduce the store's total profit.",
+                        copy.auto.p017,
                     },
                   },
                   {
                     key: "weak-products",
                     label:
-                      language === "it"
-                        ? "Prodotti poco redditizi"
-                        : "Weak products",
+                      copy.auto.p018,
                     value: `${weakProfitProducts}`,
                   },
                 ].map((item) => (
@@ -832,9 +777,7 @@ export default function ProfitIntelligencePage() {
             fontWeight: 700,
           }}
         >
-          {language === "it"
-            ? "COGS e profitto descrivono la composizione della base economica. La perdita di margine è un indicatore separato: quota dei ricavi associata a profitto economico negativo nel periodo selezionato."
-            : "COGS and profit describe the economic composition. Margin loss is a separate indicator: the share of revenue represented by negative economic profit in the selected period."}
+          {copy.auto.p019}
         </div>
 
         <div
@@ -850,14 +793,10 @@ export default function ProfitIntelligencePage() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">
-                {language === "it"
-                  ? "BASE ECONOMICA DELLO STORE"
-                  : "STORE ECONOMIC BASIS"}
+                {copy.auto.p020}
               </div>
               <h2 className="panel-title">
-                {language === "it"
-                  ? "Redditività normalizzata"
-                  : "Normalized profitability"}
+                {copy.auto.p021}
               </h2>
               <div
                 style={{
@@ -867,9 +806,7 @@ export default function ProfitIntelligencePage() {
                   maxWidth: 760,
                 }}
               >
-                {language === "it"
-                  ? "Vista basata sul motore economico centrale di MarginLab. Le analisi prodotto sottostanti utilizzano la stessa base economica normalizzata disponibile per ciascun prodotto."
-                  : "View based on MarginLab's central economic engine. Product analytics below use the same normalized economic basis available for each product."}
+                {copy.auto.p022}
               </div>
             </div>
 
@@ -888,10 +825,8 @@ export default function ProfitIntelligencePage() {
               }}
             >
               {hasEconomicNormalization
-                ? `${taxSystemLabel} · ${language === "it" ? "motore attivo" : "engine active"}`
-                : language === "it"
-                  ? "Fallback disponibile"
-                  : "Fallback available"}
+                ? `${taxSystemLabel} · ${copy.auto.p023}`
+                : copy.auto.p024}
             </div>
           </div>
 
@@ -907,81 +842,53 @@ export default function ProfitIntelligencePage() {
               {
                 key: "economic-revenue",
                 label:
-                  language === "it"
-                    ? "Ricavi economici"
-                    : "Economic revenue",
+                  copy.auto.p025,
                 value: money(economicRevenue),
                 tooltip: {
                   title:
-                    language === "it"
-                      ? "Ricavi economici"
-                      : "Economic revenue",
+                    copy.auto.p026,
                   description:
-                    language === "it"
-                      ? "I ricavi che MarginLab considera realmente disponibili per misurare la redditività, dopo gli eventuali aggiustamenti fiscali."
-                      : "The revenue MarginLab considers actually available for measuring profitability, after any applicable tax adjustments.",
+                    copy.auto.p027,
                 },
               },
               {
                 key: "economic-cogs",
                 label:
-                  language === "it"
-                    ? "COGS economici"
-                    : "Economic COGS",
+                  copy.auto.p028,
                 value: money(economicCogs),
                 tooltip: {
                   title:
-                    language === "it"
-                      ? "COGS economici"
-                      : "Economic COGS",
+                    copy.auto.p029,
                   description:
-                    language === "it"
-                      ? "Il costo economico dei prodotti venduti dopo gli eventuali aggiustamenti fiscali applicabili ai costi."
-                      : "The economic cost of products sold after any applicable tax adjustments to product costs.",
+                    copy.auto.p030,
                 },
               },
               {
                 key: "economic-profit",
                 label:
-                  language === "it"
-                    ? "Profitto economico"
-                    : "Economic profit",
+                  copy.auto.p031,
                 value: money(economicProfit),
                 tooltip: {
                   title:
-                    language === "it"
-                      ? "Profitto economico"
-                      : "Economic profit",
+                    copy.auto.p032,
                   description:
-                    language === "it"
-                      ? "Quanto rimane dei ricavi economici dopo aver sottratto i COGS economici."
-                      : "What remains from economic revenue after subtracting economic COGS.",
+                    copy.auto.p033,
                   formula:
-                    language === "it"
-                      ? "Ricavi economici − COGS economici"
-                      : "Economic revenue − Economic COGS",
+                    copy.auto.p034,
                 },
               },
               {
                 key: "economic-margin",
                 label:
-                  language === "it"
-                    ? "Margine economico"
-                    : "Economic margin",
+                  copy.auto.p035,
                 value: pct(economicMarginPct),
                 tooltip: {
                   title:
-                    language === "it"
-                      ? "Margine economico"
-                      : "Economic margin",
+                    copy.auto.p036,
                   description:
-                    language === "it"
-                      ? "La percentuale dei ricavi economici che rimane come profitto dopo i COGS economici."
-                      : "The percentage of economic revenue remaining as profit after economic COGS.",
+                    copy.auto.p037,
                   formula:
-                    language === "it"
-                      ? "(Profitto economico ÷ Ricavi economici) × 100"
-                      : "(Economic profit ÷ Economic revenue) × 100",
+                    copy.auto.p038,
                 },
               },
             ].map((item) => (
@@ -1034,15 +941,11 @@ export default function ProfitIntelligencePage() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">
-                {language === "it"
-                  ? "ANALISI DELLA REDDITIVITA'"
-                  : "BUSINESS IMPACT ANALYSIS"}
+                {copy.auto.p039}
               </div>
 
               <h2 className="panel-title">
-                {language === "it"
-                  ? "Cosa sta riducendo i tuoi profitti?"
-                  : "Where is profit being eroded?"}
+                {copy.auto.p040}
               </h2>
             </div>
           </div>
@@ -1098,9 +1001,7 @@ export default function ProfitIntelligencePage() {
                         color: "rgba(255,255,255,0.55)",
                       }}
                     >
-                      {language === "it"
-                        ? `${pct(driver.impactPct)} di impatto`
-                        : `${pct(driver.impactPct)} impact`}
+                      {t("profitIntelligencePage.impact", { value: pct(driver.impactPct) })}
                     </div>
                   </div>
                 </div>
@@ -1118,9 +1019,7 @@ export default function ProfitIntelligencePage() {
                 lineHeight: 1.6,
               }}
             >
-              {language === "it"
-                ? "Nel periodo selezionato non sono stati rilevati sconti, rimborsi o costi di spedizione che abbiano inciso sui margini. Il profitto calcolato corrisponde attualmente al margine lordo dei prodotti."
-                : "No discounts, refunds or shipping impact were detected in the selected period. Contribution profit currently matches product-level gross profit."}
+              {copy.auto.p041}
             </div>
           )}
         </div>
@@ -1130,15 +1029,11 @@ export default function ProfitIntelligencePage() {
             <div className="panel-header">
               <div>
                 <div className="panel-eyebrow">
-                  {language === "it"
-                    ? "PEGGIORAMENTO DEI MARGINI"
-                    : "MARGIN DETERIORATION"}
+                  {copy.auto.p042}
                 </div>
 
                 <h2 className="panel-title">
-                  {language === "it"
-                    ? "Prodotti che stanno perdendo redditività"
-                    : "Products losing profitability"}
+                  {copy.auto.p043}
                 </h2>
               </div>
             </div>
@@ -1170,9 +1065,7 @@ export default function ProfitIntelligencePage() {
                         lineHeight: 1.5,
                       }}
                     >
-                      {language === "it"
-                        ? "Il margine di questo prodotto è diminuito rispetto al periodo precedente."
-                        : "Product margin declined compared to the previous selected period."}
+                      {copy.auto.p044}
                     </div>
                   </div>
 
@@ -1217,15 +1110,11 @@ export default function ProfitIntelligencePage() {
             <div className="panel-header">
               <div>
                 <div className="panel-eyebrow">
-                  {language === "it"
-                    ? "IMPATTO DEGLI SCONTI"
-                    : "DISCOUNT EXPOSURE"}
+                  {copy.auto.p045}
                 </div>
 
                 <h2 className="panel-title">
-                  {language === "it"
-                    ? "Prodotti maggiormente penalizzati dagli sconti"
-                    : "Products most affected by discounts"}
+                  {copy.auto.p046}
                 </h2>
               </div>
             </div>
@@ -1265,9 +1154,7 @@ export default function ProfitIntelligencePage() {
                           lineHeight: 1.5,
                         }}
                       >
-                        {language === "it"
-                          ? "Totale degli sconti applicati a questo prodotto nel periodo selezionato."
-                          : "Discount absorbed by this product during the selected period."}
+                        {copy.auto.p047}
                       </div>
 
                       <div
@@ -1278,9 +1165,7 @@ export default function ProfitIntelligencePage() {
                           fontWeight: 800,
                         }}
                       >
-                        {language === "it"
-                          ? `${pct(discountPct)} dei ricavi del prodotto`
-                          : `${pct(discountPct)} of product revenue`}
+                        {t("profitIntelligencePage.productRevenueShare", { value: pct(discountPct) })}
                       </div>
                     </div>
 
@@ -1305,15 +1190,11 @@ export default function ProfitIntelligencePage() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">
-                {language === "it"
-                  ? "ANALISI TEMPORALE"
-                  : "TIMELINE INTELLIGENCE"}
+                {copy.auto.p048}
               </div>
 
               <h2 className="panel-title">
-                {language === "it"
-                  ? "Andamento della redditività"
-                  : "Profit trend signals"}
+                {copy.auto.p049}
               </h2>
             </div>
           </div>
@@ -1328,75 +1209,33 @@ export default function ProfitIntelligencePage() {
           >
             {[
               {
-                label: language === "it" ? "Andamento dei margini" : "Margin direction",
+                label: copy.auto.p050,
                 value:
-                  language === "it"
-                    ? marginDeteriorating
-                      ? "In calo"
-                      : "Stabile"
-                    : marginDeteriorating
-                      ? "Deteriorating"
-                      : "Stable",
+                  marginDeteriorating ? copy.timeline.marginDown : copy.timeline.stable,
                 text:
-                  language === "it"
-                    ? marginDeteriorating
-                      ? `Il margine è diminuito del ${pct(
-                        Math.abs(summary.marginDelta),
-                      )} rispetto al periodo precedente.`
-                      : "Il margine è stabile rispetto al periodo precedente."
-                    : marginDeteriorating
-                      ? `Margin dropped by ${pct(
-                        Math.abs(summary.marginDelta),
-                      )} compared to the previous period.`
-                      : "Margin is stable compared to the previous period.",
+                  marginDeteriorating
+                    ? t("profitIntelligencePage.timeline.marginDropped", { value: pct(Math.abs(summary.marginDelta)) })
+                    : copy.timeline.marginStable,
                 color: marginDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
-                label: language === "it" ? "Andamento dei profitti" : "Profit movement",
+                label: copy.auto.p051,
                 value:
-                  language === "it"
-                    ? profitDeteriorating
-                      ? "In calo"
-                      : "Stabile"
-                    : profitDeteriorating
-                      ? "Declining"
-                      : "Stable",
+                  profitDeteriorating ? copy.timeline.profitDown : copy.timeline.stable,
                 text:
-                  language === "it"
-                    ? profitDeteriorating
-                      ? `I profitti sono diminuiti del ${pct(
-                        Math.abs(profitTrendPct),
-                      )} nel periodo analizzato.`
-                      : `I profitti sono variati del ${pct(
-                        profitTrendPct,
-                      )} nel periodo analizzato.`
-                    : profitDeteriorating
-                      ? `Profit declined by ${pct(
-                        Math.abs(profitTrendPct),
-                      )} across the selected trend window.`
-                      : `Profit changed by ${pct(
-                        profitTrendPct,
-                      )} across the selected trend window.`,
+                  profitDeteriorating
+                    ? t("profitIntelligencePage.timeline.profitDeclined", { value: pct(Math.abs(profitTrendPct)) })
+                    : t("profitIntelligencePage.timeline.profitChanged", { value: pct(profitTrendPct) }),
                 color: profitDeteriorating ? "#ff6b4a" : "#22c55e",
               },
               {
-                label: language === "it" ? "Qualità della crescita" : "Growth quality",
+                label: copy.auto.p052,
                 value:
-                  language === "it"
-                    ? revenueGrowingWhileProfitFalls
-                      ? "In peggioramento"
-                      : "Coerente"
-                    : revenueGrowingWhileProfitFalls
-                      ? "Weakening"
-                      : "Aligned",
+                  revenueGrowingWhileProfitFalls ? copy.timeline.weakening : copy.timeline.aligned,
                 text:
-                  language === "it"
-                    ? revenueGrowingWhileProfitFalls
-                      ? "I ricavi stanno aumentando mentre i profitti diminuiscono. La qualità della crescita potrebbe essere in peggioramento."
-                      : "Ricavi e profitti stanno seguendo un andamento coerente."
-                    : revenueGrowingWhileProfitFalls
-                      ? "Revenue is growing while profit is falling. Growth quality may be weakening."
-                      : "Revenue and profit movement do not currently show a major divergence.",
+                  revenueGrowingWhileProfitFalls
+                    ? copy.timeline.growthWeakening
+                    : copy.timeline.growthAligned,
                 color: revenueGrowingWhileProfitFalls ? "#f59e0b" : "#22c55e",
               },
             ].map((item) => (
@@ -1474,39 +1313,27 @@ export default function ProfitIntelligencePage() {
           <ConcentrationCard
             pct={pct}
             eyebrow={
-              language === "it"
-                ? "DIPENDENZA DAI RICAVI"
-                : "REVENUE DEPENDENCY"
+              copy.auto.p053
             }
             tooltip={{
               title:
-                language === "it"
-                  ? "Dipendenza dai ricavi"
-                  : "Revenue dependency",
+                copy.auto.p054,
 
               description:
-                language === "it"
-                  ? "Mostra quanto i ricavi dello store dipendono dai prodotti che vendono di più."
-                  : "Shows how much of the store's revenue depends on its highest-revenue products.",
+                copy.auto.p055,
 
               note:
-                language === "it"
-                  ? "Una percentuale elevata significa che pochi prodotti pesano molto sul fatturato totale."
-                  : "A high percentage means a small number of products account for a large share of total revenue.",
+                copy.auto.p056,
             }}
             title={
-              language === "it"
-                ? "Distribuzione dei ricavi"
-                : "Revenue concentration"
+              copy.auto.p057
             }
             status={
-              language === "it"
-                ? dependencyLevel === "High"
-                  ? "Ricavi molto concentrati"
-                  : dependencyLevel === "Moderate"
-                    ? "Ricavi moderatamente concentrati"
-                    : "Ricavi ben distribuiti"
-                : `${dependencyLevel} dependency`
+              dependencyLevel === "High"
+                ? copy.concentration.revenueHigh
+                : dependencyLevel === "Moderate"
+                  ? copy.concentration.revenueModerate
+                  : copy.concentration.revenueLow
             }
             statusColor={
               dependencyLevel === "High"
@@ -1517,15 +1344,15 @@ export default function ProfitIntelligencePage() {
             }
             rows={[
               [
-                language === "it" ? "Prodotto principale" : "Top product",
+                copy.auto.p058,
                 topProductRevenueShare,
               ],
               [
-                language === "it" ? "Primi 3 prodotti" : "Top 3 products",
+                copy.auto.p059,
                 top3RevenueShare,
               ],
               [
-                language === "it" ? "Primi 5 prodotti" : "Top 5 products",
+                copy.auto.p060,
                 top5RevenueShare,
               ],
             ]}
@@ -1534,44 +1361,27 @@ export default function ProfitIntelligencePage() {
           <ConcentrationCard
             pct={pct}
             eyebrow={
-              language === "it"
-                ? "DIPENDENZA DAI PROFITTI"
-                : "PROFIT CONCENTRATION"
+              copy.auto.p061
             }
             tooltip={{
               title:
-                language === "it"
-                  ? "Dipendenza dai profitti"
-                  : "Profit dependency",
+                copy.auto.p062,
 
               description:
-                language === "it"
-                  ? "Mostra quanto il profitto dello store dipende dai prodotti che generano più profitto."
-                  : "Shows how much of the store's profit depends on its most profitable products.",
+                copy.auto.p063,
 
               note:
-                language === "it"
-                  ? "Può superare il 100% se altri prodotti generano perdite e riducono il profitto totale."
-                  : "It can exceed 100% when other products generate losses that reduce total store profit.",
+                copy.auto.p064,
             }}
             title={
-              language === "it"
-                ? "Distribuzione dei profitti"
-                : "Profit dependency"
+              copy.auto.p065
             }
             status={
-              language === "it"
-                ? top3ProfitShare > 60
-                  ? "Profitti molto concentrati"
-                  : top3ProfitShare > 35
-                    ? "Profitti moderatamente concentrati"
-                    : "Profitti ben distribuiti"
-                : `${top3ProfitShare > 60
-                  ? "High"
-                  : top3ProfitShare > 35
-                    ? "Moderate"
-                    : "Low"
-                } profit dependency`
+              top3ProfitShare > 60
+                ? copy.concentration.profitHigh
+                : top3ProfitShare > 35
+                  ? copy.concentration.profitModerate
+                  : copy.concentration.profitLow
             }
             statusColor={
               top3ProfitShare > 60
@@ -1582,15 +1392,11 @@ export default function ProfitIntelligencePage() {
             }
             rows={[
               [
-                language === "it"
-                  ? "Prodotto principale"
-                  : "Top product",
+                copy.auto.p066,
                 topProductProfitShare,
               ],
               [
-                language === "it"
-                  ? "Primi 3 prodotti"
-                  : "Top 3 products",
+                copy.auto.p067,
                 top3ProfitShare,
               ],
             ]}
@@ -1615,15 +1421,11 @@ export default function ProfitIntelligencePage() {
             }}
           >
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "PRINCIPALI PERDITE DI MARGINE"
-                : "TOP PROFIT LEAKS"}
+              {copy.auto.p068}
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              {language === "it"
-                ? "Prodotti che stanno riducendo i margini"
-                : "Products creating margin pressure"}
+              {copy.auto.p069}
             </h2>
 
             <div
@@ -1635,9 +1437,7 @@ export default function ProfitIntelligencePage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? "Prodotti con ricavi elevati ma margini bassi possono aumentare le vendite senza generare profitti proporzionati."
-                : "High-revenue products with weak margins can make sales look strong while reducing profit quality."}
+              {copy.auto.p070}
             </div>
 
             <div style={{ marginTop: 24, display: "grid", gap: 12 }}>
@@ -1706,13 +1506,13 @@ export default function ProfitIntelligencePage() {
                         }}
                       >
                         <span>
-                          {language === "it" ? "Ricavi" : "Revenue"} {money(row.revenue)}
+                          {copy.auto.p071} {money(row.revenue)}
                         </span>
 
                         <span>•</span>
 
                         <span>
-                          {language === "it" ? "Profitto" : "Profit"} {money(row.profit)}
+                          {copy.auto.p072} {money(row.profit)}
                         </span>
                       </div>
                     </div>
@@ -1739,7 +1539,7 @@ export default function ProfitIntelligencePage() {
                           color: "rgba(255,255,255,0.44)",
                         }}
                       >
-                        {language === "it" ? "Margine" : "Margin"}
+                        {copy.auto.p073}
                       </div>
                     </div>
                   </div>
@@ -1756,9 +1556,7 @@ export default function ProfitIntelligencePage() {
                     fontWeight: 700,
                   }}
                 >
-                  {language === "it"
-                    ? "Non sono stati rilevati prodotti che stanno riducendo in modo significativo i profitti nel periodo corrente."
-                    : "No major weak profit drivers detected in the current period."}
+                  {copy.auto.p074}
                 </div>
               )}
             </div>
@@ -1781,35 +1579,25 @@ export default function ProfitIntelligencePage() {
               }}
             >
               <span>
-                {language === "it"
-                  ? "QUALITÀ DEI MARGINI"
-                  : "PROFIT QUALITY"}
+                {copy.auto.p075}
               </span>
 
               <MetricTooltip
                 content={{
                   title:
-                    language === "it"
-                      ? "Qualità dei margini"
-                      : "Profit quality",
+                    copy.auto.p076,
 
                   description:
-                    language === "it"
-                      ? "Riassume quanto sono solidi i margini dei prodotti dello store, distinguendo quelli sani da quelli che richiedono attenzione."
-                      : "Summarizes how healthy product margins are across the store, separating strong-margin products from those requiring attention.",
+                    copy.auto.p077,
 
                   note:
-                    language === "it"
-                      ? "MarginLab considera sani i prodotti con margine almeno del 30% e deboli quelli sotto il 15%."
-                      : "MarginLab treats products with at least 30% margin as healthy and products below 15% as weak.",
+                    copy.auto.p078,
                 }}
               />
             </div>
 
             <h2 className="panel-title" style={{ marginTop: 8 }}>
-              {language === "it"
-                ? "Stato di salute dei margini"
-                : "Margin health signal"}
+              {copy.auto.p079}
             </h2>
 
             <div
@@ -1853,9 +1641,7 @@ export default function ProfitIntelligencePage() {
                 color: "rgba(255,255,255,0.42)",
               }}
             >
-              {language === "it"
-                ? "Prodotti con margini ottimali"
-                : "Healthy margin products"}
+              {copy.auto.p080}
             </div>
 
             <p
@@ -1866,9 +1652,10 @@ export default function ProfitIntelligencePage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? `${healthyProfitProducts} prodotti hanno margini soddisfacenti, mentre ${weakProfitProducts} richiedono attenzione per migliorare la redditività.`
-                : `${healthyProfitProducts} products show healthy margins, while ${weakProfitProducts} products show weak profit quality.`}
+              {t("profitIntelligencePage.marginHealth", {
+                healthy: healthyProfitProducts,
+                weak: weakProfitProducts,
+              })}
             </p>
 
             <div
