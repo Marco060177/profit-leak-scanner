@@ -10,7 +10,7 @@ import MetricTooltip from "~/components/ui/MetricTooltip";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import { money } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import {
   generateProfitAlerts,
@@ -379,6 +379,8 @@ function AlertCard({
   onOpen: (alert: ProfitAlert) => void;
   onAcknowledge: (alertId: string) => void;
 }) {
+  const { messages } = useI18n();
+  const copy = messages.alertCenterPage;
   const state = alertStates[alert.id];
   const economicKind = alert.economicKind;
 
@@ -539,9 +541,7 @@ function AlertCard({
           >
             {alert.monthlyImpact > 0
               ? money(alert.monthlyImpact)
-              : language === "it"
-                ? "Segnale qualitativo"
-                : "Qualitative signal"}
+              : copy.qualitative_signal}
           </div>
 
           <div
@@ -560,53 +560,31 @@ function AlertCard({
             <span>
               {alert.monthlyImpact > 0
                 ? economicKind === "loss"
-                  ? language === "it"
-                    ? "Perdita mensile stimata"
-                    : "Estimated monthly loss"
+                  ? copy.estimated_monthly_loss
                   : economicKind === "exposure"
-                    ? language === "it"
-                      ? "Esposizione mensile stimata"
-                      : "Estimated monthly exposure"
+                    ? copy.estimated_monthly_exposure
                     : economicKind === "opportunity"
-                      ? language === "it"
-                        ? "Gap mensile stimato verso il target"
-                        : "Estimated monthly profit gap to target"
-                      : language === "it"
-                        ? "Valore mensile indicativo"
-                        : "Indicative monthly value"
-                : language === "it"
-                  ? "Impatto da verificare"
-                  : "Impact to review"}
+                      ? copy.estimated_monthly_profit_gap_to_target
+                      : copy.indicative_monthly_value
+                : copy.impact_to_review}
             </span>
 
             <MetricTooltip
               content={{
                 title:
-                  language === "it"
-                    ? "Impatto economico dell'alert"
-                    : "Alert economic impact",
+                  copy.alert_economic_impact,
 
                 description:
-                  language === "it"
-                    ? economicKind === "loss"
-                      ? "Stima della perdita economica mensile associata al problema rilevato."
-                      : economicKind === "exposure"
-                        ? "Valore economico mensile esposto al problema rilevato. Non significa che questo importo sia già perso."
-                        : economicKind === "opportunity"
-                          ? "Stima del profitto mensile aggiuntivo necessario per raggiungere il target modellato."
-                          : "Valore economico indicativo associato al segnale."
-                    : economicKind === "loss"
-                      ? "Estimated monthly economic loss associated with the detected issue."
-                      : economicKind === "exposure"
-                        ? "Monthly economic value exposed to the detected issue. It does not mean this amount has already been lost."
-                        : economicKind === "opportunity"
-                          ? "Estimated additional monthly profit required to reach the modeled target."
-                          : "Indicative economic value associated with the signal.",
+                  economicKind === "loss"
+                    ? copy.economic_loss_description
+                    : economicKind === "exposure"
+                      ? copy.economic_exposure_description
+                      : economicKind === "opportunity"
+                        ? copy.economic_opportunity_description
+                        : copy.economic_qualitative_description,
 
                 note:
-                  language === "it"
-                    ? "È una stima basata sui dati osservati e non rappresenta un risultato futuro garantito."
-                    : "This is an estimate based on observed data and does not represent a guaranteed future result.",
+                  copy.this_is_an_estimate_based_on,
               }}
             />
           </div>
@@ -623,7 +601,7 @@ function AlertCard({
               className="primary-button"
               onClick={() => onOpen(alert)}
             >
-              {language === "it" ? "Apri modulo →" : "Open module →"}
+              {copy.open_module}
             </button>
 
             {!isAcknowledged && (
@@ -632,7 +610,7 @@ function AlertCard({
                 className="apply-button"
                 onClick={() => onAcknowledge(alert.id)}
               >
-                {language === "it" ? "Prendi in carico" : "Acknowledge"}
+                {copy.acknowledge}
               </button>
             )}
           </div>
@@ -663,25 +641,19 @@ function AlertCard({
             }}
           >
             <span>
-              {language === "it" ? "Priorità" : "Priority"}
+              {copy.priority}
             </span>
 
             <MetricTooltip
               content={{
                 title:
-                  language === "it"
-                    ? "Priorità dell'alert"
-                    : "Alert priority",
+                  copy.alert_priority,
 
                 description:
-                  language === "it"
-                    ? "Un punteggio da 0 a 100 che indica quanto rapidamente questo segnale merita attenzione rispetto agli altri."
-                    : "A 0–100 score showing how urgently this signal deserves attention compared with the others.",
+                  copy.a_0_100_score_showing_how,
 
                 note:
-                  language === "it"
-                    ? "Più alto è il punteggio, maggiore è la priorità. Non rappresenta una percentuale di perdita o di rischio."
-                    : "The higher the score, the higher the priority. It is not a percentage of loss or risk.",
+                  copy.the_higher_the_score_the_higher,
               }}
             />
           </div>
@@ -712,25 +684,19 @@ function AlertCard({
             }}
           >
             <span>
-              {language === "it" ? "Azione" : "Business action"}
+              {copy.business_action}
             </span>
 
             <MetricTooltip
               content={{
                 title:
-                  language === "it"
-                    ? "Tipo di azione"
-                    : "Business action",
+                  copy.business_action_2,
 
                 description:
-                  language === "it"
-                    ? "Indica che tipo di intervento MarginLab considera più adatto per questo segnale."
-                    : "Shows the type of response MarginLab considers most appropriate for this signal.",
+                  copy.shows_the_type_of_response_marginlab,
 
                 note:
-                  language === "it"
-                    ? "Action richiede un intervento diretto, Review una verifica e Optimize un miglioramento."
-                    : "Action calls for direct intervention, Review for investigation, and Optimize for improvement.",
+                  copy.action_calls_for_direct_intervention_review,
               }}
             />
           </div>
@@ -758,7 +724,7 @@ function AlertCard({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "Prodotto" : "Product"}
+            {copy.product}
           </div>
 
           <div
@@ -773,7 +739,7 @@ function AlertCard({
             }}
           >
             {alert.productTitle ??
-              (language === "it" ? "Intero store" : "Store-wide")}
+              (copy.store_wide)}
           </div>
         </div>
       </div>
@@ -797,7 +763,8 @@ export default function AlertCenterPage() {
   const alertStateFetcher = useFetcher<typeof action>();
   const migrationFetcher = useFetcher<typeof action>();
 
-  const language = getStoredLanguage() === "it" ? "it" : "en";
+  const { language, messages } = useI18n();
+  const copy = messages.alertCenterPage;
 
   const alerts = React.useMemo(
     () =>
@@ -910,16 +877,10 @@ export default function AlertCenterPage() {
 
   const confidenceLabel =
     dataConfidence.level === "high"
-      ? language === "it"
-        ? "Alta"
-        : "High"
+      ? copy.high
       : dataConfidence.level === "medium"
-        ? language === "it"
-          ? "Media"
-          : "Medium"
-        : language === "it"
-          ? "Bassa"
-          : "Low";
+        ? copy.medium
+        : copy.low;
 
   const confidenceColor =
     dataConfidence.level === "high"
@@ -937,41 +898,31 @@ export default function AlertCenterPage() {
   const businessStatus =
     criticalCount > 0
       ? {
-        label: language === "it" ? "Intervento richiesto" : "Action required",
+        label: copy.action_required,
         description:
-          language === "it"
-            ? "È presente almeno un rischio critico che richiede una verifica prioritaria."
-            : "At least one critical profitability risk requires priority review.",
+          copy.at_least_one_critical_profitability_risk,
         color: "#ff6b4a",
       }
       : warningCount > 0
         ? {
           label:
-            language === "it" ? "Verifica consigliata" : "Review recommended",
+            copy.review_recommended,
           description:
-            language === "it"
-              ? "Non emerge un'emergenza generale, ma alcuni segnali meritano attenzione."
-              : "There is no broad emergency, but some signals deserve attention.",
+            copy.there_is_no_broad_emergency_but,
           color: "#f59e0b",
         }
         : severityCounts.opportunity > 0
           ? {
             label:
-              language === "it"
-                ? "Opportunità disponibili"
-                : "Opportunities available",
+              copy.opportunities_available,
             description:
-              language === "it"
-                ? "La situazione è relativamente stabile e sono disponibili opportunità di ottimizzazione."
-                : "The business is relatively stable and optimization opportunities are available.",
+              copy.the_business_is_relatively_stable_and,
             color: "#22c55e",
           }
           : {
-            label: language === "it" ? "Situazione stabile" : "Stable status",
+            label: copy.stable_status,
             description:
-              language === "it"
-                ? "Nessun rischio significativo richiede un intervento immediato."
-                : "No significant profitability risk requires immediate action.",
+              copy.no_significant_profitability_risk_requires_immediate,
             color: "#38bdf8",
           };
 
@@ -1336,31 +1287,31 @@ export default function AlertCenterPage() {
   }> = [
       {
         id: "all",
-        label: language === "it" ? "Tutti" : "All",
+        label: copy.all,
         count: severityCounts.total,
         color: "#f8fafc",
       },
       {
         id: "critical",
-        label: language === "it" ? "Critici" : "Critical",
+        label: copy.critical,
         count: severityCounts.critical,
         color: "#ff6b4a",
       },
       {
         id: "warning",
-        label: language === "it" ? "Attenzione" : "Warnings",
+        label: copy.warnings,
         count: severityCounts.warning,
         color: "#f59e0b",
       },
       {
         id: "opportunity",
-        label: language === "it" ? "Opportunità" : "Opportunities",
+        label: copy.opportunities,
         count: severityCounts.opportunity,
         color: "#22c55e",
       },
       {
         id: "info",
-        label: language === "it" ? "Informazioni" : "Information",
+        label: copy.information,
         count: severityCounts.info,
         color: "#38bdf8",
       },
@@ -1377,26 +1328,18 @@ export default function AlertCenterPage() {
               <span className="alert-dot" />
 
               {growthAccess
-                ? language === "it"
-                  ? "Piano Growth attivo"
-                  : "Growth Plan Active"
-                : language === "it"
-                  ? "Funzione Growth"
-                  : "Growth Feature"}
+                ? copy.growth_plan_active
+                : copy.growth_feature}
             </div>
 
             <div className="eyebrow">ALERT CENTER</div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "I segnali che meritano la tua attenzione"
-                : "The signals that deserve your attention"}
+              {copy.the_signals_that_deserve_your_attention}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "MarginLab controlla margini, costi, rimborsi e opportunità. Qui trovi soltanto i segnali che possono influenzare realmente la redditività dello store."
-                : "MarginLab monitors margins, costs, refunds and opportunities. Here you only see signals that can materially affect store profitability."}
+              {copy.marginlab_monitors_margins_costs_refunds_and}
             </div>
 
             <div
@@ -1414,9 +1357,7 @@ export default function AlertCenterPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.tax_aware_economic_basis}
             </div>
           </div>
 
@@ -1430,9 +1371,7 @@ export default function AlertCenterPage() {
                 opacity: lifecycleCounts.unread === 0 ? 0.55 : 1,
               }}
             >
-              {language === "it"
-                ? "Segna tutti come letti"
-                : "Mark all as read"}
+              {copy.mark_all_as_read}
             </button>
           ) : (
             <button
@@ -1440,7 +1379,7 @@ export default function AlertCenterPage() {
               className="primary-button"
               onClick={() => navigate("/app/billing")}
             >
-              {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+              {copy.unlock_growth}
             </button>
           )}
         </div>
@@ -1486,7 +1425,7 @@ export default function AlertCenterPage() {
                     textTransform: "uppercase",
                   }}
                 >
-                  {language === "it" ? "FUNZIONE GROWTH" : "GROWTH FEATURE"}
+                  {copy.growth_feature_2}
                 </div>
 
                 <div
@@ -1498,9 +1437,7 @@ export default function AlertCenterPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? "Alert Center è incluso nel piano Growth"
-                    : "Alert Center is included with Growth"}
+                  {copy.alert_center_is_included_with_growth}
                 </div>
 
                 <div
@@ -1512,9 +1449,7 @@ export default function AlertCenterPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {language === "it"
-                    ? "Passa a Growth per gestire gli alert, segnare le priorità, mantenere lo storico ed esportare il monitoraggio."
-                    : "Upgrade to Growth to manage alerts, track priorities, keep alert history and export monitoring data."}
+                  {copy.upgrade_to_growth_to_manage_alerts}
                 </div>
 
                 <button
@@ -1523,7 +1458,7 @@ export default function AlertCenterPage() {
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
-                  {language === "it" ? "Sblocca Growth →" : "Unlock Growth →"}
+                  {copy.unlock_growth}
                 </button>
               </div>
             </div>
@@ -1570,9 +1505,7 @@ export default function AlertCenterPage() {
                       textTransform: "uppercase",
                     }}
                   >
-                    {language === "it"
-                      ? "STATO DEL MONITORAGGIO"
-                      : "MONITORING STATUS"}
+                    {copy.monitoring_status}
                   </div>
 
                   <h2
@@ -1612,17 +1545,17 @@ export default function AlertCenterPage() {
                   >
                     <TinyBadge color={businessStatus.color}>
                       {lifecycleCounts.unread}{" "}
-                      {language === "it" ? "non letti" : "unread"}
+                      {copy.unread}
                     </TinyBadge>
 
                     <TinyBadge color="#38bdf8">
                       {lifecycleCounts.active}{" "}
-                      {language === "it" ? "attivi" : "active"}
+                      {copy.active}
                     </TinyBadge>
 
                     <TinyBadge color="#c084fc">
                       {lifecycleCounts.acknowledged}{" "}
-                      {language === "it" ? "presi in carico" : "acknowledged"}
+                      {copy.acknowledged}
                     </TinyBadge>
                   </div>
                 </div>
@@ -1648,27 +1581,19 @@ export default function AlertCenterPage() {
                     }}
                   >
                     <span>
-                      {language === "it"
-                        ? "IMPATTI ECONOMICI MENSILI"
-                        : "MONTHLY ECONOMIC IMPACTS"}
+                      {copy.monthly_economic_impacts}
                     </span>
 
                     <MetricTooltip
                       content={{
                         title:
-                          language === "it"
-                            ? "Impatti economici mensili"
-                            : "Monthly economic impacts",
+                          copy.monthly_economic_impacts_2,
 
                         description:
-                          language === "it"
-                            ? "Mostra tre valori distinti: perdita stimata, esposizione economica e gap di profitto verso il target."
-                            : "Shows three separate values: estimated loss, economic exposure and profit gap to target.",
+                          copy.shows_three_separate_values_estimated_loss,
 
                         note:
-                          language === "it"
-                            ? "Questi valori non vanno sommati tra loro perché rappresentano fenomeni economici diversi."
-                            : "These values should not be added together because they represent different economic effects.",
+                          copy.these_values_should_not_be_added,
                       }}
                     />
                   </div>
@@ -1713,9 +1638,7 @@ export default function AlertCenterPage() {
                       fontWeight: 750,
                     }}
                   >
-                    {language === "it"
-                      ? "Perdita · esposizione · gap verso il target. Valori distinti e non sommabili."
-                      : "Loss · exposure · profit gap to target. Separate, non-additive values."}
+                    {copy.loss_exposure_profit_gap_to_target}
                   </div>
 
                   <div
@@ -1735,27 +1658,19 @@ export default function AlertCenterPage() {
                       }}
                     >
                       <TinyBadge color={confidenceColor}>
-                        {language === "it"
-                          ? `AFFIDABILITÀ ${dataConfidence.score}% · ${confidenceLabel}`
-                          : `CONFIDENCE ${dataConfidence.score}% · ${confidenceLabel}`}
+                        {copy.confidence_badge} {dataConfidence.score}% · {confidenceLabel}
                       </TinyBadge>
 
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Affidabilità dei dati"
-                              : "Data confidence",
+                            copy.data_confidence,
 
                           description:
-                            language === "it"
-                              ? "Indica quanto MarginLab considera affidabile l'analisi in base alla completezza e alla qualità dei dati disponibili."
-                              : "Shows how reliable MarginLab considers the analysis based on the completeness and quality of the available data.",
+                            copy.shows_how_reliable_marginlab_considers_the,
 
                           note:
-                            language === "it"
-                              ? "Un valore più alto significa che l'analisi si basa su dati più completi e utilizzabili."
-                              : "A higher value means the analysis is based on more complete and usable data.",
+                            copy.a_higher_value_means_the_analysis,
                         }}
                       />
                     </div>
@@ -1768,36 +1683,26 @@ export default function AlertCenterPage() {
                       }}
                     >
                       <TinyBadge color="#60a5fa">
-                        {language === "it"
-                          ? `COPERTURA COGS ${Math.round(dataConfidence.cogsCoveragePct)}%`
-                          : `COGS COVERAGE ${Math.round(dataConfidence.cogsCoveragePct)}%`}
+                        {copy.cogs_coverage_badge} {Math.round(dataConfidence.cogsCoveragePct)}%
                       </TinyBadge>
 
                       <MetricTooltip
                         content={{
                           title:
-                            language === "it"
-                              ? "Copertura COGS"
-                              : "COGS coverage",
+                            copy.cogs_coverage,
 
                           description:
-                            language === "it"
-                              ? "Indica quale parte dei dati analizzati dispone di costi prodotto sufficienti per calcolare la redditività in modo affidabile."
-                              : "Shows how much of the analyzed data has sufficient product cost information for reliable profitability calculations.",
+                            copy.shows_how_much_of_the_analyzed,
 
                           note:
-                            language === "it"
-                              ? "Una copertura bassa può rendere meno affidabili margini, perdite e priorità."
-                              : "Low coverage can make margins, losses and priorities less reliable.",
+                            copy.low_coverage_can_make_margins_losses,
                         }}
                       />
                     </div>
 
                     {!dataConfidence.comparisonAvailable ? (
                       <TinyBadge color="#94a3b8">
-                        {language === "it"
-                          ? "CONFRONTO NON DISPONIBILE"
-                          : "COMPARISON UNAVAILABLE"}
+                        {copy.comparison_unavailable}
                       </TinyBadge>
                     ) : null}
                   </div>
@@ -1814,36 +1719,34 @@ export default function AlertCenterPage() {
               }}
             >
               <SummaryCard
-                label={language === "it" ? "Critici" : "Critical"}
+                label={copy.critical}
                 value={`${severityCounts.critical}`}
                 note={
-                  language === "it" ? "Richiedono priorità" : "Require priority"
+                  copy.require_priority
                 }
                 color="#ff6b4a"
               />
 
               <SummaryCard
-                label={language === "it" ? "Attenzione" : "Warnings"}
+                label={copy.warnings}
                 value={`${severityCounts.warning}`}
-                note={language === "it" ? "Da controllare" : "Need review"}
+                note={copy.need_review}
                 color="#f59e0b"
               />
 
               <SummaryCard
-                label={language === "it" ? "Opportunità" : "Opportunities"}
+                label={copy.opportunities}
                 value={`${severityCounts.opportunity}`}
                 note={
-                  language === "it"
-                    ? "Possibile miglioramento"
-                    : "Potential improvement"
+                  copy.potential_improvement
                 }
                 color="#22c55e"
               />
 
               <SummaryCard
-                label={language === "it" ? "Non letti" : "Unread"}
+                label={copy.unread_2}
                 value={`${lifecycleCounts.unread}`}
-                note={language === "it" ? "Nuovi segnali" : "New signals"}
+                note={copy.new_signals}
                 color="#38bdf8"
               />
             </div>
@@ -1866,11 +1769,11 @@ export default function AlertCenterPage() {
               >
                 <div>
                   <div className="panel-eyebrow">
-                    {language === "it" ? "SEGNALI ATTIVI" : "ACTIVE SIGNALS"}
+                    {copy.active_signals}
                   </div>
 
                   <h2 className="panel-title" style={{ marginTop: 6 }}>
-                    {language === "it" ? "Profit Alert Feed" : "Profit Alert Feed"}
+                    {copy.profit_alert_feed}
                   </h2>
                 </div>
 
@@ -1903,9 +1806,7 @@ export default function AlertCenterPage() {
                       }
                     />
 
-                    {language === "it"
-                      ? "Mostra presi in carico"
-                      : "Show acknowledged"}
+                    {copy.show_acknowledged}
                   </label>
 
                   <button
@@ -1913,7 +1814,7 @@ export default function AlertCenterPage() {
                     className="apply-button"
                     onClick={handleExportCsv}
                   >
-                    {language === "it" ? "Esporta CSV" : "Export CSV"}
+                    {copy.export_csv}
                   </button>
                 </div>
               </div>
@@ -1995,9 +1896,7 @@ export default function AlertCenterPage() {
                       fontWeight: 760,
                     }}
                   >
-                    {language === "it"
-                      ? "Nessun alert corrisponde ai filtri selezionati."
-                      : "No alerts match the selected filters."}
+                    {copy.no_alerts_match_the_selected_filters}
                   </div>
                 )}
               </div>
@@ -2017,9 +1916,7 @@ export default function AlertCenterPage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? "Gli alert vengono generati usando la base economica tax-aware costruita sui dati Shopify del periodo selezionato. Perdita, esposizione e gap verso il target sono stime distinte e non rappresentano profitto perso o recuperato già verificato. MarginLab non modifica automaticamente prodotti, prezzi, costi o campagne."
-                : "Alerts are generated using the tax-aware economic basis built from Shopify data for the selected period. Loss, exposure and profit gap to target are separate estimates and do not represent verified lost or recovered profit. MarginLab does not automatically modify products, prices, costs or campaigns."}
+              {copy.alerts_are_generated_using_the_tax}
             </div>
           </div>
         </div>
