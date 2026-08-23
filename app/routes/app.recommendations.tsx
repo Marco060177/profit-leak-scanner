@@ -17,7 +17,7 @@ import {
   money as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { getStoredLanguage, type Language } from "~/utils/i18n";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import {
   generateProfitAlerts,
@@ -96,7 +96,7 @@ function compactMoney(value: number, currencyCode: string, locale: string) {
 
 function getStatusStyle(
   action: ProfitBusinessAction,
-  language: "it" | "en",
+  language: Language,
 ): ActionStatusStyle {
   return {
     action: {
@@ -126,7 +126,7 @@ function getStatusStyle(
   }[action];
 }
 
-function getEffortLabel(effort: ProfitAlertEffort, language: "it" | "en") {
+function getEffortLabel(effort: ProfitAlertEffort, language: Language) {
   if (language === "it") {
     if (effort === "easy") return "Facile";
     if (effort === "medium") return "Media";
@@ -309,7 +309,7 @@ function TopPriority({
   confidenceScore,
 }: {
   alert: ProfitAlert;
-  language: "it" | "en";
+  language: Language;
   navigate: (path: string) => void;
   completed: boolean;
   onToggle: () => void;

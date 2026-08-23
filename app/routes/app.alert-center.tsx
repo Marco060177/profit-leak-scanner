@@ -11,6 +11,7 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import { money } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import type { Language } from "~/utils/i18n";
 
 import {
   generateProfitAlerts,
@@ -150,7 +151,7 @@ type StatusStyle = {
 
 function getSeverityStyle(
   severity: ProfitAlertSeverity,
-  language: "it" | "en",
+  language: Language,
 ): StatusStyle {
   const styles: Record<ProfitAlertSeverity, StatusStyle> = {
     critical: {
@@ -187,7 +188,7 @@ function getSeverityStyle(
 
 function getAlertStatusStyle(
   status: ProfitAlertStatus,
-  language: "it" | "en",
+  language: Language,
 ): StatusStyle {
   const styles: Record<ProfitAlertStatus, StatusStyle> = {
     new: {
@@ -222,7 +223,7 @@ function getAlertStatusStyle(
   return styles[status];
 }
 
-function formatTimestamp(timestamp: string | undefined, language: "it" | "en") {
+function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (!timestamp) {
     return language === "it" ? "Adesso" : "Now";
   }
@@ -375,7 +376,7 @@ function AlertCard({
 }: {
   alert: ProfitAlert;
   alertStates: ProfitAlertStateMap;
-  language: "it" | "en";
+  language: Language;
   onOpen: (alert: ProfitAlert) => void;
   onAcknowledge: (alertId: string) => void;
 }) {

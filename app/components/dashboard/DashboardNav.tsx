@@ -864,7 +864,7 @@ export default function DashboardNav({
             gap: 4,
           }}
         >
-          {(["en", "it"] as const).map(
+          {(["en", "it", "fr"] as const).map(
             (lang) => (
               <button
                 key={lang}

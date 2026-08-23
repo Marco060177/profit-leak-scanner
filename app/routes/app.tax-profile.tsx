@@ -3,6 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import type { Language } from "~/utils/i18n";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   getStoreTaxContext,
@@ -286,7 +287,7 @@ function getRateOptionsForCountry(countryCode: string) {
 
 function getCountryName(
   countryCode: string,
-  language: "it" | "en",
+  language: Language,
 ) {
   const config = getCountryUiConfig(countryCode);
 
@@ -311,7 +312,7 @@ function getRegimeOptions({
   language,
 }: {
   countryCode: string;
-  language: "it" | "en";
+  language: Language;
 }): RegimeOption[] {
   const config = getCountryUiConfig(countryCode);
 
