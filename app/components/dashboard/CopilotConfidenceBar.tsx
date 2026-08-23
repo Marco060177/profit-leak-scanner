@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 type Props = {
   language: "it" | "en";
@@ -6,9 +7,9 @@ type Props = {
 };
 
 export default function CopilotConfidenceBar({
-  language,
   score,
 }: Props) {
+  const { messages } = useI18n();
   const safeScore = Math.max(0, Math.min(100, Math.round(score)));
 
   const color =
@@ -45,9 +46,7 @@ export default function CopilotConfidenceBar({
             letterSpacing: "0.1em",
           }}
         >
-          {language === "it"
-            ? "Affidabilità complessiva"
-            : "Overall confidence"}
+          {messages.copilotConfidenceBar.overallConfidence}
         </div>
 
         <div

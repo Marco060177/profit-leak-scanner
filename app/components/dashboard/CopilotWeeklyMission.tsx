@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { useI18n } from "~/components/i18n/I18nProvider";
 import { money as formatStoreMoney } from "~/utils/margin";
 
 type Props = {
@@ -21,23 +22,14 @@ export default function CopilotWeeklyMission({
   recoverableProfit,
   navigate,
 }: Props) {
+  const { messages } = useI18n();
+  const copy = messages.copilotWeeklyMission;
   const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
     formatStoreMoney(value, currencyCode, locale);
 
-  const tasks =
-    language === "it"
-      ? [
-          "Controlla la priorità principale",
-          "Verifica prezzo e costo del prodotto",
-          "Conferma l'azione nel Profit Action Center",
-        ]
-      : [
-          "Review the primary priority",
-          "Verify product price and cost",
-          "Confirm the action in Profit Action Center",
-        ];
+  const tasks = copy.tasks;
 
   const visibleTasks = tasks.slice(
     0,
@@ -63,9 +55,7 @@ export default function CopilotWeeklyMission({
           textTransform: "uppercase",
         }}
       >
-        {language === "it"
-          ? "MISSIONE DELLA SETTIMANA"
-          : "WEEKLY MISSION"}
+        {copy.eyebrow}
       </div>
 
       <h3
@@ -160,9 +150,7 @@ export default function CopilotWeeklyMission({
               textTransform: "uppercase",
             }}
           >
-            {language === "it"
-              ? "Tempo stimato"
-              : "Estimated time"}
+            {copy.estimatedTime}
           </div>
 
           <div
@@ -193,7 +181,7 @@ export default function CopilotWeeklyMission({
               textTransform: "uppercase",
             }}
           >
-            {language === "it" ? "Potenziale" : "Potential"}
+            {copy.potential}
           </div>
 
           <div
@@ -215,9 +203,7 @@ export default function CopilotWeeklyMission({
         style={{ width: "100%", marginTop: 17 }}
         onClick={() => navigate("/app/recommendations")}
       >
-        {language === "it"
-          ? "Apri la missione →"
-          : "Open Mission →"}
+        {copy.openMission}
       </button>
     </div>
   );

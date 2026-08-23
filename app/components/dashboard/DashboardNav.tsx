@@ -183,45 +183,7 @@ export default function DashboardNav({
     };
   }, []);
 
-  const labels =
-    language === "it"
-      ? {
-          alerts: "Alert",
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter:
-            "Profit Action Center",
-          recoverySimulator:
-            "Recovery Simulator",
-          profitForecast:
-            "Previsioni di profitto",
-          businessModelStudio:
-            "Business Model Studio",
-          taxProfile: "Profilo fiscale",
-          glossary: "Glossario",
-          support: "Assistenza",
-          more: "Altro",
-          growthDescription:
-            "Strumenti avanzati per aumentare il profitto",
-        }
-      : {
-          alerts: "Alerts",
-          growth: "Growth",
-          profitCopilot: "Profit Copilot",
-          profitActionCenter:
-            "Profit Action Center",
-          recoverySimulator:
-            "Recovery Simulator",
-          profitForecast: "Profit Forecast",
-          businessModelStudio:
-            "Business Model Studio",
-          taxProfile: "Tax Profile",
-          glossary: "Glossary",
-          support: "Support",
-          more: "More",
-          growthDescription:
-            "Advanced tools to increase profit",
-        };
+  const labels = t.dashboardNav;
 
   const changeLanguage = (
     nextLanguage: Language,
@@ -309,60 +271,42 @@ export default function DashboardNav({
     {
       id: "alert-center",
       label: labels.alerts,
-      description:
-        language === "it"
-          ? "Monitoraggio, priorità e alert di profitto"
-          : "Profit monitoring, priorities and alerts",
+      description: labels.alertsDescription,
       path: "/app/alert-center",
       icon: "♢",
     },
     {
       id: "ai-advisor",
       label: labels.profitCopilot,
-      description:
-        language === "it"
-          ? "Briefing, priorità e consulenza AI"
-          : "AI briefing, priorities and advice",
+      description: labels.profitCopilotDescription,
       path: "/app/ai-advisor",
       icon: "✦",
     },
     {
       id: "recommendations",
       label: labels.profitActionCenter,
-      description:
-        language === "it"
-          ? "Azioni ordinate per impatto e urgenza"
-          : "Actions ranked by impact and urgency",
+      description: labels.profitActionCenterDescription,
       path: "/app/recommendations",
       icon: "✓",
     },
     {
       id: "recovery-simulator",
       label: labels.recoverySimulator,
-      description:
-        language === "it"
-          ? "Simula prezzi, costi e vendite"
-          : "Simulate pricing, costs and sales",
+      description: labels.recoverySimulatorDescription,
       path: "/app/recovery-simulator",
       icon: "↗",
     },
     {
       id: "forecasting",
       label: labels.profitForecast,
-      description:
-        language === "it"
-          ? "Previsioni a 3, 6 e 12 mesi"
-          : "3, 6 and 12-month forecasts",
+      description: labels.profitForecastDescription,
       path: "/app/forecasting",
       icon: "⌁",
     },
     {
       id: "profit-assumptions",
       label: labels.businessModelStudio,
-      description:
-        language === "it"
-          ? "Costi, commissioni e break-even"
-          : "Costs, fees and break-even",
+      description: labels.businessModelStudioDescription,
       path: "/app/profit-assumptions",
       icon: "◇",
     },
@@ -383,53 +327,35 @@ export default function DashboardNav({
     {
       id: "tax-profile",
       label: labels.taxProfile,
-      description:
-        language === "it"
-          ? "Regime IVA e impostazioni fiscali"
-          : "VAT regime and tax settings",
+      description: labels.taxProfileDescription,
       path: "/app/tax-profile",
       icon: "◇",
     },
     {
       id: "reports-notifications",
-      label:
-        language === "it"
-          ? "Report e notifiche"
-          : "Reports & Notifications",
-      description:
-        language === "it"
-          ? "Email, report settimanali e alert"
-          : "Email, weekly reports and alerts",
+      label: labels.reportsNotifications,
+      description: labels.reportsNotificationsDescription,
       path: "/app/reports-notifications",
       icon: "✉",
     },
     {
       id: "glossary",
       label: labels.glossary,
-      description:
-        language === "it"
-          ? "Metriche, concetti e termini MarginLab"
-          : "MarginLab metrics, concepts and terms",
+      description: labels.glossaryDescription,
       path: "/app/glossary",
       icon: "A",
     },
     {
       id: "support",
       label: labels.support,
-      description:
-        language === "it"
-          ? "Email e assistenza diretta Growth"
-          : "Email and direct Growth support",
+      description: labels.supportDescription,
       path: "/app/support",
       icon: "?",
     },
     {
       id: "billing",
       label: t.nav.billing,
-      description:
-        language === "it"
-          ? "Piani e abbonamento Shopify"
-          : "Plans and Shopify subscription",
+      description: labels.billingDescription,
       path: "/app/billing",
       icon: "$",
     },
@@ -737,9 +663,7 @@ export default function DashboardNav({
                 fontWeight: 950,
               }}
             >
-              {language === "it"
-                ? "Scopri il piano Growth →"
-                : "Explore Growth Plan →"}
+              {labels.exploreGrowthPlan}
             </button>
           </div>
         </div>

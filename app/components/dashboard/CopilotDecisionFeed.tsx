@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 type FeedItem = {
   when: string;
@@ -13,21 +14,18 @@ type Props = {
 };
 
 export default function CopilotDecisionFeed({
-  language,
   items,
 }: Props) {
+  const { messages } = useI18n();
+  const copy = messages.copilotDecisionFeed;
   return (
     <div className="panel" style={{ margin: 0, padding: 25 }}>
       <div className="panel-eyebrow">
-        {language === "it"
-          ? "FEED DELLE DECISIONI"
-          : "DECISION FEED"}
+        {copy.eyebrow}
       </div>
 
       <h2 className="panel-title" style={{ marginTop: 6 }}>
-        {language === "it"
-          ? "I segnali che richiedono attenzione"
-          : "Signals that need attention"}
+        {copy.title}
       </h2>
 
       <div
@@ -133,9 +131,7 @@ export default function CopilotDecisionFeed({
               fontWeight: 800,
             }}
           >
-            {language === "it"
-              ? "Nessun nuovo segnale critico."
-              : "No new critical signals."}
+            {copy.emptyState}
           </div>
         )}
       </div>

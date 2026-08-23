@@ -1,4 +1,4 @@
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 type Leak = {
   icon: string;
@@ -20,22 +20,19 @@ export default function TopLeaksPanel({
   severityBackground,
   severityBorder,
 }: Props) {
-  const language = getStoredLanguage();
+  const { messages } = useI18n();
+  const copy = messages.topLeaksPanel;
 
   return (
     <div className="panel" id="leaks-section">
       <div className="section-header">
         <div>
           <div className="section-title">
-            {language === "it"
-              ? "Principali Perdite di Profitto Rilevate"
-              : "Top Profit Leaks Detected"}
+            {copy.title}
           </div>
 
           <div className="section-subtitle">
-            {language === "it"
-              ? "Problemi prioritari rilevati dai dati reali degli ordini Shopify."
-              : "Prioritized issues found from your real Shopify order data."}
+            {copy.subtitle}
           </div>
         </div>
 
@@ -52,15 +49,13 @@ export default function TopLeaksPanel({
             }
           }}
         >
-          {language === "it" ? "Analizza prodotti" : "Analyze products"}
+          {copy.analyzeProducts}
         </button>
       </div>
 
       {topLeaks.length === 0 ? (
         <div className="clean-state">
-          {language === "it"
-            ? "✅ Nessuna perdita di profitto rilevante nel periodo selezionato."
-            : "✅ No major profit leaks detected in the selected period."}
+          {copy.noMajorLeaks}
         </div>
       ) : (
         <div className="leaks-list">
@@ -73,9 +68,7 @@ export default function TopLeaksPanel({
                   <div className="leak-title">{issue}</div>
 
                   <div className="leak-subtitle">
-                    {language === "it"
-                      ? "Opportunità di ottimizzazione margine rilevata"
-                      : "Margin optimization opportunity detected"}
+                    {copy.optimizationOpportunity}
                   </div>
                 </div>
               </div>
@@ -97,9 +90,7 @@ export default function TopLeaksPanel({
                 <div>{loss}</div>
 
                 <span>
-                  {language === "it"
-                    ? "impatto stimato"
-                    : "estimated impact"}
+                  {copy.estimatedImpact}
                 </span>
               </div>
             </div>

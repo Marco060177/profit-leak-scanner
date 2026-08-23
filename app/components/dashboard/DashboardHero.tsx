@@ -1,5 +1,5 @@
 import DashboardNav from "./DashboardNav";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 type Props = {
   period: string;
@@ -26,7 +26,8 @@ export default function DashboardHero({
   setAnalysisLoading,
   setAnalysisText,
 }: Props) {
-  const language = getStoredLanguage();
+  const { messages } = useI18n();
+  const copy = messages.dashboardHero;
   return (
     <>
       <DashboardNav
@@ -37,21 +38,15 @@ export default function DashboardHero({
       <div className="hero-header">
         <div>
           <div className="eyebrow">
-            {language === "it"
-              ? "Analizzatore Perdite di Margine"
-              : "Profit Leak Scanner"}
+            {copy.eyebrow}
           </div>
 
           <div className="hero-title">
-            {language === "it"
-              ? "Dashboard Perdite di Profitto"
-              : "Profit Leak Dashboard"}
+            {copy.title}
           </div>
 
           <div className="hero-description">
-            {language === "it"
-              ? "Monitora margini nascosti, prodotti sottoprezzati e problemi di prezzo che influenzano la redditività del tuo negozio Shopify."
-              : "Track hidden margin leaks, underpriced products and pricing issues affecting your Shopify store profitability."}
+            {copy.description}
           </div>
 
           <div className="period-tabs">
@@ -69,7 +64,7 @@ export default function DashboardHero({
                   }
                 >
                   {item}
-                  {language === "it" ? "g" : "d"}
+                  {copy.periodSuffix}
                 </button>
               ),
             )}
@@ -119,9 +114,7 @@ export default function DashboardHero({
           <span>
             {analysisLoading
               ? analysisText
-              : language === "it"
-                ? "Avvia analisi"
-                : "Run analysis"}
+              : copy.runAnalysis}
           </span>
         </button>
       </div>

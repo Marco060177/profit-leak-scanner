@@ -1,4 +1,4 @@
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import { pct } from "~/utils/margin";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
@@ -13,79 +13,41 @@ export default function MarginBreakdown({
   profitPercentage,
   leakPercentage,
 }: Props) {
-  const language = getStoredLanguage();
+  const { messages } = useI18n();
+  const copy = messages.marginBreakdown;
 
   const items = [
     {
       label: "COGS",
       value: cogsPercentage,
       color: "#3b82f6",
-      description:
-        language === "it"
-          ? "Quota dei ricavi assorbita dai costi dei prodotti."
-          : "Revenue absorbed by product costs.",
+      description: copy.cogsDescription,
       tooltip: {
-        title:
-          language === "it"
-            ? "COGS"
-            : "COGS",
-        description:
-          language === "it"
-            ? "Indica quale parte dei ricavi viene assorbita dal costo dei prodotti venduti."
-            : "Shows what share of revenue is absorbed by the cost of products sold.",
-        note:
-          language === "it"
-            ? "Una percentuale più alta lascia meno spazio al profitto."
-            : "A higher percentage leaves less room for profit.",
+        title: copy.cogsTooltipTitle,
+        description: copy.cogsTooltipDescription,
+        note: copy.cogsTooltipNote,
       },
     },
     {
-      label: language === "it" ? "Profitto" : "Profit",
+      label: copy.profitLabel,
       value: profitPercentage,
       color: "#22c55e",
-      description:
-        language === "it"
-          ? "Quota dei ricavi che genera profitto."
-          : "Revenue retained as gross profit.",
+      description: copy.profitDescription,
       tooltip: {
-        title:
-          language === "it"
-            ? "Profitto"
-            : "Profit",
-        description:
-          language === "it"
-            ? "Indica quale percentuale dei ricavi rimane come profitto dopo i COGS."
-            : "Shows what percentage of revenue remains as profit after COGS.",
-        note:
-          language === "it"
-            ? "In questa sezione il valore è calcolato sulla base economica normalizzata."
-            : "In this section the value is calculated using the normalized economic basis.",
+        title: copy.profitTooltipTitle,
+        description: copy.profitTooltipDescription,
+        note: copy.profitTooltipNote,
       },
     },
     {
-      label:
-        language === "it"
-          ? "Perdite di margine"
-          : "Margin Loss",
+      label: copy.marginLossLabel,
       value: leakPercentage,
       color: "#ef4444",
-      description:
-        language === "it"
-          ? "Margini persi a causa delle inefficienze rilevate."
-          : "Detected margin leakage across products.",
+      description: copy.marginLossDescription,
       tooltip: {
-        title:
-          language === "it"
-            ? "Perdita di margine"
-            : "Margin loss",
-        description:
-          language === "it"
-            ? "Indica la quota dei ricavi associata a prodotti che hanno generato profitto economico negativo nel periodo."
-            : "Shows the share of revenue associated with products that generated negative economic profit during the period.",
-        note:
-          language === "it"
-            ? "Non è una seconda voce di costo e non va sommata a COGS e Profitto."
-            : "It is not a second cost category and should not be added to COGS and Profit.",
+        title: copy.marginLossTooltipTitle,
+        description: copy.marginLossTooltipDescription,
+        note: copy.marginLossTooltipNote,
       },
     },
   ];
@@ -95,15 +57,11 @@ export default function MarginBreakdown({
       <div className="section-header">
         <div>
           <div className="section-title">
-            {language === "it"
-              ? "Composizione dei margini"
-              : "Margin Breakdown"}
+            {copy.title}
           </div>
 
           <div className="section-subtitle">
-            {language === "it"
-              ? "Distribuzione dei ricavi tra costi, profitti e perdite di margine rilevate."
-              : "Revenue allocation across costs, profit and detected leaks."}
+            {copy.subtitle}
           </div>
         </div>
       </div>
