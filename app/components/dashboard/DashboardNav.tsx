@@ -1,10 +1,6 @@
 import * as React from "react";
-import {
-  getStoredLanguage,
-  setStoredLanguage,
-  translations,
-  type Language,
-} from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
+import type { Language } from "~/utils/i18n";
 
 import {
   getStoredProfitAlertStates,
@@ -36,8 +32,7 @@ export default function DashboardNav({
   active,
   navigate,
 }: Props) {
-  const [language, setLanguage] =
-    React.useState<Language>("en");
+  const { language, messages: t, setLanguage } = useI18n();
 
   const [growthOpen, setGrowthOpen] =
     React.useState(false);
@@ -101,10 +96,6 @@ export default function DashboardNav({
       setMoreOpen(false);
     }, 220);
   };
-
-  React.useEffect(() => {
-    setLanguage(getStoredLanguage());
-  }, []);
 
   React.useEffect(() => {
     const refreshUnreadAlertCount = () => {
@@ -192,8 +183,6 @@ export default function DashboardNav({
     };
   }, []);
 
-  const t = translations[language];
-
   const labels =
     language === "it"
       ? {
@@ -238,7 +227,6 @@ export default function DashboardNav({
     nextLanguage: Language,
   ) => {
     setLanguage(nextLanguage);
-    setStoredLanguage(nextLanguage);
 
     const params = new URLSearchParams(
       window.location.search,

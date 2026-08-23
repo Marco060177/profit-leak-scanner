@@ -3,6 +3,21 @@ import { it } from "~/locales/it";
 
 export type Language = "en" | "it";
 
+export const DEFAULT_LANGUAGE: Language = "en";
+export const LANGUAGE_STORAGE_KEY = "marginlab-language";
+
+export function isLanguage(value: unknown): value is Language {
+  return value === "en" || value === "it";
+}
+
+export function normalizeLanguage(value: unknown): Language {
+  return isLanguage(value) ? value : DEFAULT_LANGUAGE;
+}
+
+export function getLanguageLocale(language: Language) {
+  return language === "it" ? "it-IT" : "en-US";
+}
+
 export const translations = {
   en,
   it,
@@ -10,16 +25,12 @@ export const translations = {
 
 export function getStoredLanguage(): Language {
   if (typeof window === "undefined") {
-    return "en";
+    return DEFAULT_LANGUAGE;
   }
 
-  const stored = window.localStorage.getItem("marginlab-language");
-
-  if (stored === "it" || stored === "en") {
-    return stored;
-  }
-
-  return "en";
+  return normalizeLanguage(
+    window.localStorage.getItem(LANGUAGE_STORAGE_KEY),
+  );
 }
 
 export function setStoredLanguage(language: Language) {
@@ -27,5 +38,6 @@ export function setStoredLanguage(language: Language) {
     return;
   }
 
-  window.localStorage.setItem("marginlab-language", language);
+  window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  document.cookie = `${LANGUAGE_STORAGE_KEY}=${language}; Path=/; Max-Age=31536000; SameSite=Lax`;
 }
