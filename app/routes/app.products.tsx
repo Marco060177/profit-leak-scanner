@@ -65,10 +65,8 @@ export default function ProductsPage() {
   } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.productsPage;
-  const locale =
-    language === "it" ? "it-IT" : "en-US";
 
   const money = React.useCallback(
     (value: number) =>

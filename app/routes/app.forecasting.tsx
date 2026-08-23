@@ -12,7 +12,6 @@ import {
   money as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
 import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
@@ -145,7 +144,7 @@ function SliderControl({
   accent?: string;
   tooltip?: React.ReactNode;
 }) {
-  const locale = getStoredLanguage() === "it" ? "it-IT" : "en-US";
+  const { locale } = useI18n();
   const progress = ((value - min) / (max - min)) * 100;
 
   return (
@@ -354,7 +353,7 @@ function MetricCard({
 
 export default function ForecastingPage() {
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.forecastingPage;
 
   const {
@@ -372,8 +371,6 @@ export default function ForecastingPage() {
       assumptions: Assumptions;
       forecastPeriod: number;
     };
-
-  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);

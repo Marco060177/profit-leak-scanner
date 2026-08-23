@@ -358,10 +358,8 @@ export default function DashboardV2() {
   const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.dashboardPage;
-
-  const locale = language === "it" ? "it-IT" : "en-US";
 
   const economicRevenue =
     summary.economicRevenue ?? summary.revenue;

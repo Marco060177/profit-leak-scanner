@@ -22,9 +22,8 @@ export default function CopilotWeeklyMission({
   recoverableProfit,
   navigate,
 }: Props) {
-  const { messages } = useI18n();
+  const { locale, messages } = useI18n();
   const copy = messages.copilotWeeklyMission;
-  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
     formatStoreMoney(value, currencyCode, locale);

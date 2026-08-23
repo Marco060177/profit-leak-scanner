@@ -66,10 +66,8 @@ export default function ProfitIntelligencePage() {
 
   const navigate = useNavigate();
 
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.profitIntelligencePage;
-  const locale =
-    language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
     formatStoreMoney(
@@ -306,6 +304,7 @@ export default function ProfitIntelligencePage() {
         : "#22c55e";
 
   const exportProfitIntelligenceCsv = () => {
+    const exportLocale = language === "it" ? "it-IT" : "en-US";
     const csvCell = (value: string | number | boolean | null | undefined) => {
       if (value === null || value === undefined) return "";
 
@@ -337,7 +336,7 @@ export default function ProfitIntelligencePage() {
         ["Periodo (giorni)", period],
         ["Valuta", currencyCode],
         ["Lingua", "Italiano"],
-        ["Generato il", new Date().toLocaleString(locale)],
+        ["Generato il", new Date().toLocaleString(exportLocale)],
       ]
       : [
         ["Report", "Profit Intelligence"],
@@ -345,7 +344,7 @@ export default function ProfitIntelligencePage() {
         ["Period (days)", period],
         ["Currency", currencyCode],
         ["Language", "English"],
-        ["Generated at", new Date().toLocaleString(locale)],
+        ["Generated at", new Date().toLocaleString(exportLocale)],
       ];
 
     const summaryRows = language === "it"

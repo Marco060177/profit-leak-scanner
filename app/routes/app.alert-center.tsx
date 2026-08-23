@@ -11,7 +11,7 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import { money } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
-import type { Language } from "~/utils/i18n";
+import { getLanguageLocale, type Language } from "~/utils/i18n";
 
 import {
   generateProfitAlerts,
@@ -267,7 +267,7 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
       : `${differenceDays} days ago`;
   }
 
-  return new Intl.DateTimeFormat(language === "it" ? "it-IT" : "en-US", {
+  return new Intl.DateTimeFormat(getLanguageLocale(language), {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -764,7 +764,7 @@ export default function AlertCenterPage() {
   const alertStateFetcher = useFetcher<typeof action>();
   const migrationFetcher = useFetcher<typeof action>();
 
-  const { language, messages } = useI18n();
+  const { language, locale, messages } = useI18n();
   const copy = messages.alertCenterPage;
 
   const alerts = React.useMemo(
@@ -890,7 +890,6 @@ export default function AlertCenterPage() {
         ? "#f59e0b"
         : "#ff6b4a";
 
-  const locale = language === "it" ? "it-IT" : "en-US";
   const storeMoney = (value: number) => money(value, currencyCode, locale);
 
   const criticalCount = severityCounts.critical;
@@ -1001,6 +1000,8 @@ export default function AlertCenterPage() {
       return;
     }
 
+    const exportLocale = language === "it" ? "it-IT" : "en-US";
+
     const round2 = (value: number) =>
       Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
 
@@ -1024,7 +1025,7 @@ export default function AlertCenterPage() {
     const dateTime = (value: string | undefined) => {
       if (!value) return "";
       const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? "" : date.toLocaleString(locale);
+      return Number.isNaN(date.getTime()) ? "" : date.toLocaleString(exportLocale);
     };
 
     const severityLabel = (severity: ProfitAlertSeverity) =>
@@ -1205,7 +1206,7 @@ export default function AlertCenterPage() {
       csvRow([labels.period, period]),
       csvRow([labels.currency, currencyCode]),
       csvRow([labels.language, language === "it" ? "Italiano" : "English"]),
-      csvRow([labels.generated, new Date().toLocaleString(locale)]),
+      csvRow([labels.generated, new Date().toLocaleString(exportLocale)]),
       csvRow([labels.storage, labels.storageValue]),
       "",
       csvRow([labels.summary]),

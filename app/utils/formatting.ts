@@ -1,4 +1,6 @@
-export type AppLocale = "it-IT" | "en-US";
+import { getLanguageLocale, normalizeLanguage } from "~/utils/i18n";
+
+export type AppLocale = "it-IT" | "en-US" | "fr-FR";
 
 export type FormattingOptions = {
   currencyCode?: string;
@@ -12,7 +14,7 @@ const DEFAULT_LOCALE = "en-US";
 const DEFAULT_TIME_ZONE = "UTC";
 
 export function resolveLocale(language?: string): AppLocale {
-  return language === "it" ? "it-IT" : "en-US";
+  return getLanguageLocale(normalizeLanguage(language));
 }
 
 export function formatMoney(

@@ -505,10 +505,8 @@ export default function RecommendationsPage() {
       growthAccess: boolean;
     };
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.recommendationsPage;
-
-  const locale = language === "it" ? "it-IT" : "en-US";
 
   const money = (value: number) =>
     formatStoreMoney(value, currencyCode, locale);
@@ -697,6 +695,7 @@ export default function RecommendationsPage() {
         : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
 
   const exportRecommendationsCsv = () => {
+    const exportLocale = language === "it" ? "it-IT" : "en-US";
     const round = (value: number) =>
       Number.isFinite(value) ? Math.round(value * 100) / 100 : 0;
 
@@ -815,7 +814,7 @@ export default function RecommendationsPage() {
       csvRow([labels.period, period]),
       csvRow([labels.currency, currencyCode]),
       csvRow([labels.language, language === "it" ? "Italiano" : "English"]),
-      csvRow([labels.generated, new Date().toLocaleString(locale)]),
+      csvRow([labels.generated, new Date().toLocaleString(exportLocale)]),
       "",
       csvRow([labels.summary]),
       csvRow([labels.metric, labels.value]),

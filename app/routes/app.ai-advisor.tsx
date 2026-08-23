@@ -470,13 +470,8 @@ Do not generate a complete business analysis.
 
 export default function AiAdvisorPage() {
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.aiAdvisorPage;
-
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
 
   const money = (value: number) =>
     formatStoreMoney(
