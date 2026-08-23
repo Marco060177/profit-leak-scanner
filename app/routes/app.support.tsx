@@ -8,7 +8,7 @@ import {
   getBillingStatus,
   hasGrowthAccess,
 } from "~/utils/billing.server";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
 
@@ -200,8 +200,8 @@ export default function SupportPage() {
     ReturnType<typeof loader>
   >;
 
-  const language =
-    getStoredLanguage() === "it" ? "it" : "en";
+  const { language, messages } = useI18n();
+  const copy = messages.supportPage;
 
   const sending = supportFetcher.state !== "idle";
 
@@ -285,9 +285,7 @@ export default function SupportPage() {
                   }}
                 />
 
-                {language === "it"
-                  ? "MARGINLAB SUPPORT"
-                  : "MARGINLAB SUPPORT"}
+                {copy.eyebrow}
               </div>
 
               <h1
@@ -301,9 +299,7 @@ export default function SupportPage() {
                   letterSpacing: "-0.05em",
                 }}
               >
-                {language === "it"
-                  ? "Hai bisogno di aiuto? Parla con MarginLab."
-                  : "Need help? Talk to MarginLab."}
+                {copy.title}
               </h1>
 
               <p
@@ -317,9 +313,7 @@ export default function SupportPage() {
                   fontWeight: 720,
                 }}
               >
-                {language === "it"
-                  ? "Supporto per configurazione, utilizzo dell'app, interpretazione delle analisi e problemi tecnici. Gli utenti Growth hanno anche accesso all'assistenza diretta via WhatsApp."
-                  : "Support for setup, product usage, understanding MarginLab analyses and technical issues. Growth users also receive direct WhatsApp support."}
+                {copy.description}
               </p>
             </div>
 
@@ -476,9 +470,7 @@ export default function SupportPage() {
                 letterSpacing: "-0.025em",
               }}
             >
-              {language === "it"
-                ? "Scrivi direttamente a MarginLab"
-                : "Message MarginLab directly"}
+              {copy.emailTitle}
             </h2>
 
             <p
@@ -491,9 +483,7 @@ export default function SupportPage() {
                 fontWeight: 720,
               }}
             >
-              {language === "it"
-                ? "Il messaggio viene inviato direttamente al supporto MarginLab senza dipendere dal programma di posta installato sul tuo dispositivo."
-                : "Your message is sent directly to MarginLab support without relying on an email application installed on your device."}
+              {copy.emailDescription}
             </p>
 
             <supportFetcher.Form
@@ -527,9 +517,7 @@ export default function SupportPage() {
                       marginBottom: 7,
                     }}
                   >
-                    {language === "it"
-                      ? "La tua email"
-                      : "Your email"}
+                    {copy.yourEmail}
                   </div>
 
                   <input
@@ -567,9 +555,7 @@ export default function SupportPage() {
                       marginBottom: 7,
                     }}
                   >
-                    {language === "it"
-                      ? "Argomento"
-                      : "Topic"}
+                    {copy.topic}
                   </div>
 
                   <select
@@ -592,39 +578,25 @@ export default function SupportPage() {
                     }}
                   >
                     <option value="" disabled>
-                      {language === "it"
-                        ? "Seleziona..."
-                        : "Select..."}
+                      {copy.selectTopic}
                     </option>
                     <option value="Setup & configuration">
-                      {language === "it"
-                        ? "Configurazione"
-                        : "Setup & configuration"}
+                      {copy.topics.setup}
                     </option>
                     <option value="Metrics & analysis">
-                      {language === "it"
-                        ? "Metriche e analisi"
-                        : "Metrics & analysis"}
+                      {copy.topics.metrics}
                     </option>
                     <option value="Features & usage">
-                      {language === "it"
-                        ? "Funzionalità e utilizzo"
-                        : "Features & usage"}
+                      {copy.topics.features}
                     </option>
                     <option value="Technical issue">
-                      {language === "it"
-                        ? "Problema tecnico"
-                        : "Technical issue"}
+                      {copy.topics.technical}
                     </option>
                     <option value="Billing">
-                      {language === "it"
-                        ? "Piani e fatturazione"
-                        : "Plans & billing"}
+                      {copy.topics.billing}
                     </option>
                     <option value="Other">
-                      {language === "it"
-                        ? "Altro"
-                        : "Other"}
+                      {copy.topics.other}
                     </option>
                   </select>
                 </div>
@@ -642,9 +614,7 @@ export default function SupportPage() {
                     marginBottom: 7,
                   }}
                 >
-                  {language === "it"
-                    ? "Oggetto"
-                    : "Subject"}
+                  {copy.subject}
                 </div>
 
                 <input
@@ -652,11 +622,7 @@ export default function SupportPage() {
                   name="subject"
                   required
                   maxLength={140}
-                  placeholder={
-                    language === "it"
-                      ? "Descrivi brevemente la richiesta"
-                      : "Briefly describe your request"
-                  }
+                  placeholder={copy.subjectPlaceholder}
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
@@ -686,9 +652,7 @@ export default function SupportPage() {
                     marginBottom: 7,
                   }}
                 >
-                  {language === "it"
-                    ? "Messaggio"
-                    : "Message"}
+                  {copy.message}
                 </div>
 
                 <textarea
@@ -696,11 +660,7 @@ export default function SupportPage() {
                   required
                   minLength={10}
                   maxLength={6000}
-                  placeholder={
-                    language === "it"
-                      ? "Spiega cosa ti serve o descrivi il problema..."
-                      : "Tell us what you need or describe the issue..."
-                  }
+                  placeholder={copy.messagePlaceholder}
                   style={{
                     width: "100%",
                     boxSizing: "border-box",
@@ -737,9 +697,7 @@ export default function SupportPage() {
                   }}
                 >
                   ✓{" "}
-                  {language === "it"
-                    ? "Messaggio inviato correttamente a MarginLab."
-                    : "Your message was sent successfully to MarginLab."}
+                  {copy.sentSuccessfully}
                 </div>
               )}
 
@@ -788,13 +746,7 @@ export default function SupportPage() {
                   fontWeight: 950,
                 }}
               >
-                {sending
-                  ? language === "it"
-                    ? "Invio..."
-                    : "Sending..."
-                  : language === "it"
-                    ? "Invia messaggio"
-                    : "Send message"}
+                {sending ? copy.sending : copy.sendMessage}
                 {!sending && <span>→</span>}
               </button>
             </supportFetcher.Form>
@@ -868,9 +820,7 @@ export default function SupportPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "DIRECT WHATSAPP SUPPORT"
-                : "DIRECT WHATSAPP SUPPORT"}
+              {copy.whatsappEyebrow}
             </div>
 
             <h2
@@ -882,9 +832,7 @@ export default function SupportPage() {
                 letterSpacing: "-0.025em",
               }}
             >
-              {language === "it"
-                ? "Parla direttamente con noi"
-                : "Talk directly with us"}
+              {copy.whatsappTitle}
             </h2>
 
             <p
@@ -897,9 +845,7 @@ export default function SupportPage() {
                 fontWeight: 720,
               }}
             >
-              {language === "it"
-                ? "Gli utenti Growth possono contattare MarginLab direttamente via WhatsApp per assistenza sull'utilizzo dell'app e sulle analisi disponibili."
-                : "Growth users can contact MarginLab directly on WhatsApp for help with the app and understanding available analyses."}
+              {copy.whatsappDescription}
             </p>
 
             {growthAccess ? (
@@ -923,9 +869,7 @@ export default function SupportPage() {
                     }}
                   >
                     ✓{" "}
-                    {language === "it"
-                      ? "Incluso nel tuo piano Growth"
-                      : "Included in your Growth plan"}
+                    {copy.includedGrowth}
                   </div>
                 </div>
 
@@ -953,9 +897,7 @@ export default function SupportPage() {
                       fontWeight: 950,
                     }}
                   >
-                    {language === "it"
-                      ? "Apri WhatsApp"
-                      : "Open WhatsApp"}
+                    {copy.openWhatsapp}
                     <span>↗</span>
                   </a>
                 ) : (
@@ -969,9 +911,7 @@ export default function SupportPage() {
                       fontWeight: 720,
                     }}
                   >
-                    {language === "it"
-                      ? "Il canale WhatsApp sarà disponibile non appena il numero di assistenza verrà configurato."
-                      : "WhatsApp support will become available once the support number is configured."}
+                    {copy.whatsappUnavailable}
                   </div>
                 )}
               </>
@@ -997,9 +937,7 @@ export default function SupportPage() {
                       letterSpacing: "0.08em",
                     }}
                   >
-                    {language === "it"
-                      ? "FUNZIONE GROWTH"
-                      : "GROWTH FEATURE"}
+                    {copy.growthFeature}
                   </div>
 
                   <div
@@ -1012,9 +950,7 @@ export default function SupportPage() {
                       fontWeight: 720,
                     }}
                   >
-                    {language === "it"
-                      ? "Passa a Growth per aggiungere l'assistenza diretta via WhatsApp agli strumenti avanzati MarginLab."
-                      : "Upgrade to Growth to add direct WhatsApp support to MarginLab's advanced tools."}
+                    {copy.growthDescription}
                   </div>
                 </div>
 
@@ -1028,9 +964,7 @@ export default function SupportPage() {
                     marginTop: 20,
                   }}
                 >
-                  {language === "it"
-                    ? "Scopri Growth →"
-                    : "Explore Growth →"}
+                  {copy.exploreGrowth}
                 </button>
               </>
             )}
@@ -1058,9 +992,7 @@ export default function SupportPage() {
               textTransform: "uppercase",
             }}
           >
-            {language === "it"
-              ? "COME POSSIAMO AIUTARTI"
-              : "HOW WE CAN HELP"}
+            {copy.helpEyebrow}
           </div>
 
           <div
@@ -1071,9 +1003,7 @@ export default function SupportPage() {
               fontWeight: 950,
             }}
           >
-            {language === "it"
-              ? "Supporto pratico sull'utilizzo di MarginLab"
-              : "Practical help using MarginLab"}
+            {copy.helpTitle}
           </div>
 
           <div
@@ -1086,45 +1016,13 @@ export default function SupportPage() {
             }}
           >
             {[
-              {
-                icon: "⚙",
-                it: "Configurazione",
-                en: "Setup",
-                descIt:
-                  "Impostazioni, costi, Tax Profile e configurazione iniziale.",
-                descEn:
-                  "Settings, costs, Tax Profile and initial setup.",
-              },
-              {
-                icon: "↗",
-                it: "Analisi",
-                en: "Analysis",
-                descIt:
-                  "Comprendere metriche, margini e segnali MarginLab.",
-                descEn:
-                  "Understand MarginLab metrics, margins and signals.",
-              },
-              {
-                icon: "◇",
-                it: "Funzionalità",
-                en: "Features",
-                descIt:
-                  "Aiuto con simulatori, forecasting, report e strumenti.",
-                descEn:
-                  "Help with simulators, forecasting, reports and tools.",
-              },
-              {
-                icon: "!",
-                it: "Problemi tecnici",
-                en: "Technical issues",
-                descIt:
-                  "Segnalazione di errori o comportamenti inattesi dell'app.",
-                descEn:
-                  "Report errors or unexpected app behavior.",
-              },
-            ].map((item) => (
+              { key: "Setup", icon: "⚙" },
+              { key: "Analysis", icon: "↗" },
+              { key: "Features", icon: "◇" },
+              { key: "Technical issues", icon: "!" },
+            ].map((item, index) => (
               <div
-                key={item.en}
+                key={item.key}
                 style={{
                   padding: 17,
                   borderRadius: 17,
@@ -1158,9 +1056,7 @@ export default function SupportPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {language === "it"
-                    ? item.it
-                    : item.en}
+                  {copy.helpItems[index].title}
                 </div>
 
                 <div
@@ -1173,9 +1069,7 @@ export default function SupportPage() {
                     fontWeight: 700,
                   }}
                 >
-                  {language === "it"
-                    ? item.descIt
-                    : item.descEn}
+                  {copy.helpItems[index].description}
                 </div>
               </div>
             ))}
@@ -1200,9 +1094,7 @@ export default function SupportPage() {
             fontWeight: 700,
           }}
         >
-          {language === "it"
-            ? "L'assistenza MarginLab riguarda il funzionamento e l'interpretazione del prodotto. MarginLab non sostituisce consulenza fiscale, contabile o professionale."
-            : "MarginLab support covers product usage and interpretation. MarginLab does not replace tax, accounting or professional advice."}
+          {copy.footerNote}
         </div>
       </div>
     </div>

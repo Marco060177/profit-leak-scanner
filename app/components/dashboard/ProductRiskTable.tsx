@@ -1,6 +1,6 @@
 import * as React from "react";
 import { money, pct, type Row } from "~/utils/margin";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
 type Props = {
@@ -77,7 +77,8 @@ export default function ProductRiskTable({
   currencyCode,
 }: Props) {
 
-  const language = getStoredLanguage();
+  const { language, messages } = useI18n();
+  const copy = messages.productRiskTable;
 
   function translatedSuggestion(row: Row) {
     if (row.missingCost) {
@@ -108,21 +109,15 @@ export default function ProductRiskTable({
       <div className="section-header">
         <div>
           <div className="panel-eyebrow">
-            {language === "it"
-              ? "CLASSIFICA RISCHIO PRODOTTI"
-              : "PRODUCT RISK RANKING"}
+            {copy.eyebrow}
           </div>
 
           <div className="section-title" style={{ marginTop: 8 }}>
-            {language === "it"
-              ? "Revisione prioritaria prodotti"
-              : "Prioritized product review"}
+            {copy.title}
           </div>
 
           <div className="section-subtitle">
-            {language === "it"
-              ? "Prodotti ordinati per rischio di margine, costi mancanti e potenziali perdite di profitto."
-              : "Products ranked by margin risk, missing cost data and potential profit leakage."}
+            {copy.description}
           </div>
 
           <div className="table-filters">
@@ -131,7 +126,7 @@ export default function ProductRiskTable({
               className={onlyLosing ? "table-filter-btn" : "table-filter-btn active"}
               onClick={() => setOnlyLosing(false)}
             >
-              {language === "it" ? "Tutti i prodotti" : "All products"}
+              {copy.allProducts}
             </button>
 
             <button
@@ -139,7 +134,7 @@ export default function ProductRiskTable({
               className={onlyLosing ? "table-filter-btn active" : "table-filter-btn"}
               onClick={() => setOnlyLosing(true)}
             >
-              {language === "it" ? "Solo in perdita" : "Losing only"}
+              {copy.losingOnly}
             </button>
           </div>
         </div>
@@ -220,7 +215,7 @@ export default function ProductRiskTable({
             window.setTimeout(() => URL.revokeObjectURL(url), 0);
           }}
         >
-          {language === "it" ? "Esporta CSV" : "Export CSV"}
+          {copy.exportCsv}
         </button>
       </div>
 
@@ -231,7 +226,7 @@ export default function ProductRiskTable({
               {[
                 {
                   key: "product",
-                  label: language === "it" ? "Prodotto" : "Product",
+                  label: copy.columns.product,
                 },
                 {
                   key: "revenue",
@@ -243,97 +238,52 @@ export default function ProductRiskTable({
                 },
                 {
                   key: "profit",
-                  label: language === "it" ? "Profitto" : "Profit",
+                  label: copy.columns.profit,
                 },
                 {
                   key: "target-price",
-                  label:
-                    language === "it"
-                      ? "Prezzo target"
-                      : "Target Price",
+                  label: copy.columns.targetPrice,
                   tooltip: {
-                    title:
-                      language === "it"
-                        ? "Prezzo target"
-                        : "Target price",
+                    title: copy.tooltips.targetPrice.title,
 
-                    description:
-                      language === "it"
-                        ? "Il prezzo di vendita stimato necessario per raggiungere il margine target mantenendo invariato il costo attuale del prodotto."
-                        : "The estimated selling price required to reach the target margin while keeping the product's current cost unchanged.",
+                    description: copy.tooltips.targetPrice.description,
 
-                    formula:
-                      language === "it"
-                        ? "Costo medio ÷ (1 − margine target)"
-                        : "Average cost ÷ (1 − target margin)",
+                    formula: copy.tooltips.targetPrice.formula,
 
-                    note:
-                      language === "it"
-                        ? "È un riferimento modellato per l'analisi del prezzo, non un prezzo di vendita garantito o automaticamente consigliato."
-                        : "It is a modeled pricing reference, not a guaranteed or automatically recommended selling price.",
+                    note: copy.tooltips.targetPrice.note,
                   },
                 },
                 {
                   key: "delta",
                   label: "Delta",
                   tooltip: {
-                    title:
-                      language === "it"
-                        ? "Delta prezzo"
-                        : "Price delta",
+                    title: copy.tooltips.delta.title,
 
-                    description:
-                      language === "it"
-                        ? "La differenza tra il prezzo medio attuale del prodotto e il prezzo target calcolato da MarginLab."
-                        : "The difference between the product's current average selling price and the target price calculated by MarginLab.",
+                    description: copy.tooltips.delta.description,
 
-                    formula:
-                      language === "it"
-                        ? "Prezzo target − Prezzo medio attuale"
-                        : "Target price − Current average price",
+                    formula: copy.tooltips.delta.formula,
 
-                    note:
-                      language === "it"
-                        ? "Un valore positivo indica quanto dovrebbe aumentare il prezzo, a costi invariati, per raggiungere il margine target."
-                        : "A positive value indicates how much the price would need to increase, with costs unchanged, to reach the target margin.",
+                    note: copy.tooltips.delta.note,
                   },
                 },
                 {
                   key: "margin",
-                  label:
-                    language === "it"
-                      ? "Margine"
-                      : "Margin",
+                  label: copy.columns.margin,
                 },
                 {
                   key: "risk-score",
-                  label:
-                    language === "it"
-                      ? "Punteggio"
-                      : "Risk Score",
+                  label: copy.columns.riskScore,
                   tooltip: {
-                    title:
-                      language === "it"
-                        ? "Punteggio di rischio"
-                        : "Risk score",
+                    title: copy.tooltips.riskScore.title,
 
-                    description:
-                      language === "it"
-                        ? "Un punteggio da 0 a 100 che indica quanto un prodotto richiede attenzione in base a perdite, margine, costi mancanti e distanza dal prezzo target."
-                        : "A 0–100 score indicating how much attention a product requires based on losses, margin, missing costs and distance from its target price.",
+                    description: copy.tooltips.riskScore.description,
 
-                    note:
-                      language === "it"
-                        ? "Più alto è il punteggio, maggiore è la priorità di revisione del prodotto."
-                        : "The higher the score, the higher the product's review priority.",
+                    note: copy.tooltips.riskScore.note,
                   },
                 },
                 {
                   key: "risk",
-                  label:
-                    language === "it"
-                      ? "Rischio"
-                      : "Risk",
+                  label: copy.columns.risk,
                 },
               ].map((header) => (
                 <th
@@ -405,9 +355,9 @@ export default function ProductRiskTable({
                           <div className="product-name">{row.productTitle}</div>
 
                           <div className="product-subtitle">
-                            {language === "it" ? "Prezzo medio" : "Avg price"} {money(row.avgPrice)}
+                            {copy.avgPrice} {money(row.avgPrice)}
                             {" • "}
-                            {language === "it" ? "Costo medio" : "Avg cost"} {money(row.avgCost)}
+                            {copy.avgCost} {money(row.avgCost)}
 
                             {row.missingCost && row.productId ? (
                               <>
@@ -419,7 +369,7 @@ export default function ProductRiskTable({
                                   rel="noreferrer"
                                   className="shopify-link"
                                 >
-                                  {language === "it" ? "Imposta costo" : "Set cost"}
+                                  {copy.setCost}
                                 </a>
                               </>
                             ) : null}
@@ -474,11 +424,7 @@ export default function ProductRiskTable({
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {row.missingCost
-                          ? language === "it"
-                            ? "Mancante"
-                            : "Missing"
-                          : pct(row.marginPct)}
+                        {row.missingCost ? copy.missing : pct(row.marginPct)}
                       </div>
                     </td>
 
@@ -553,9 +499,7 @@ export default function ProductRiskTable({
                           }}
                         >
                           <div className="suggestion-title">
-                            {language === "it"
-                              ? "AZIONE CONSIGLIATA DALL'AI"
-                              : "AI Recommended Action"}
+                            {copy.aiRecommendedAction}
                           </div>
 
                           <div
@@ -568,9 +512,7 @@ export default function ProductRiskTable({
                             }}
                           >
                             {row.missingCost
-                              ? language === "it"
-                                ? "Manca il costo di questo prodotto. Inserisci il costo in Shopify per ottenere un monitoraggio accurato dei margini e un'analisi del rischio affidabile."
-                                : "Cost data is missing for this product. Add product cost in Shopify to unlock accurate margin tracking and risk analysis."
+                              ? copy.missingCostRecommendation
                               : language === "it"
                                 ? row.profit < 0
                                   ? row.targetDelta > 0
@@ -596,13 +538,7 @@ export default function ProductRiskTable({
                                   gap: 8,
                                 }}
                               >
-                                {row.missingCost
-                                  ? language === "it"
-                                    ? "Apri in Shopify"
-                                    : "Open in Shopify"
-                                  : language === "it"
-                                    ? "Apri in Shopify"
-                                    : "Open in Shopify"}
+                                {copy.openInShopify}
                                 <span style={{ fontSize: 18 }}>↗</span>
                               </a>
                             </div>

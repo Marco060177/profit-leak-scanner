@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 
@@ -65,7 +65,8 @@ export default function ProductsPage() {
   } = useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
-  const language = getStoredLanguage();
+  const { language, messages, t } = useI18n();
+  const copy = messages.productsPage;
   const locale =
     language === "it" ? "it-IT" : "en-US";
 
@@ -277,21 +278,15 @@ export default function ProductsPage() {
         <div className="hero-header">
           <div>
             <div className="eyebrow">
-              {language === "it"
-                ? "VALUTAZIONE PRODOTTI"
-                : "PRODUCTS INTELLIGENCE"}
+              {copy.eyebrow}
             </div>
 
             <div className="hero-title">
-              {language === "it"
-                ? "Analisi Rischio Prodotti"
-                : "Product Risk Analysis"}
+              {copy.title}
             </div>
 
             <div className="hero-description">
-              {language === "it"
-                ? "Analizza prodotti a basso margine, costi mancanti, rischi di prezzo e opportunità di profitto usando la base economica tax-aware di MarginLab."
-                : "Analyze low-margin products, missing costs, pricing risks and profit opportunities using MarginLab's tax-aware economic basis."}
+              {copy.description}
             </div>
 
             <div
@@ -309,9 +304,7 @@ export default function ProductsPage() {
                 textTransform: "uppercase",
               }}
             >
-              {language === "it"
-                ? "Base economica tax-aware"
-                : "Tax-aware economic basis"}
+              {copy.taxAwareBasis}
             </div>
           </div>
         </div>
@@ -335,27 +328,16 @@ export default function ProductsPage() {
                 }}
               >
                 <span>
-                  {language === "it"
-                    ? "PUNTEGGIO ANALISI PRODOTTI"
-                    : "PRODUCT INTELLIGENCE SCORE"}
+                  {copy.score.eyebrow}
                 </span>
 
                 <MetricTooltip
                   content={{
-                    title:
-                      language === "it"
-                        ? "Punteggio analisi prodotti"
-                        : "Product Intelligence Score",
+                    title: copy.score.tooltipTitle,
 
-                    description:
-                      language === "it"
-                        ? "Un punteggio da 0 a 100 che riassume lo stato di redditività del catalogo in base ai prodotti critici e a quelli che richiedono attenzione."
-                        : "A 0–100 score summarizing catalog profitability health based on critical products and products requiring attention.",
+                    description: copy.score.tooltipDescription,
 
-                    note:
-                      language === "it"
-                        ? "Un punteggio più alto indica un catalogo complessivamente più sano."
-                        : "A higher score indicates a healthier overall catalog.",
+                    note: copy.score.tooltipNote,
                   }}
                 />
               </div>
@@ -394,16 +376,10 @@ export default function ProductsPage() {
                 }}
               >
                 {criticalProducts > 0
-                  ? language === "it"
-                    ? "Rilevato un prodotto critico"
-                    : "Critical Product Detected"
+                  ? copy.score.critical
                   : highProducts > 0
-                    ? language === "it"
-                      ? "Rischio catalogo moderato"
-                      : "Moderate Catalog Risk"
-                    : language === "it"
-                      ? "Catalogo in ottimo stato"
-                      : "Healthy Catalog"}
+                    ? copy.score.moderate
+                    : copy.score.healthy}
               </div>
 
               <p
@@ -415,9 +391,7 @@ export default function ProductsPage() {
                   fontSize: 15,
                 }}
               >
-                {language === "it"
-                  ? "MarginLab classifica i prodotti usando ricavi, COGS, profitto e margine economici quando disponibili, mantenendo separati sconti, rimborsi e qualità dei dati."
-                  : "MarginLab ranks products using economic revenue, COGS, profit and margin when available, while keeping discounts, refunds and data quality separate."}
+                {copy.score.description}
               </p>
 
               <div
@@ -432,30 +406,22 @@ export default function ProductsPage() {
               >
                 {[
                   [
-                    language === "it"
-                      ? "Prodotti a rischio"
-                      : "Products at risk",
+                    copy.summary.productsAtRisk,
                     `${criticalProducts + highProducts}`,
                   ],
 
                   [
-                    language === "it"
-                      ? "Prodotti critici"
-                      : "Critical products",
+                    copy.summary.criticalProducts,
                     `${criticalProducts}`,
                   ],
 
                   [
-                    language === "it"
-                      ? "Perdite economiche"
-                      : "Economic losses",
+                    copy.summary.economicLosses,
                     money(economicLeak),
                   ],
 
                   [
-                    language === "it"
-                      ? "Prodotti in ottimo stato"
-                      : "Healthy products",
+                    copy.summary.healthyProducts,
                     `${healthyProducts}`,
                   ],
                 ].map(([label, value]) => (
@@ -519,17 +485,11 @@ export default function ProductsPage() {
                       : "#22c55e";
 
                 const productScoreLabel =
-                  language === "it"
-                    ? productScore < 40
-                      ? "Rischio alto"
-                      : productScore < 70
-                        ? "Rischio moderato"
-                        : "Ottimo"
-                    : productScore < 40
-                      ? "High risk"
-                      : productScore < 70
-                        ? "Moderate risk"
-                        : "Healthy";
+                  productScore < 40
+                    ? copy.score.highRisk
+                    : productScore < 70
+                      ? copy.score.moderateRisk
+                      : copy.score.healthyLabel;
 
                 return (
                   <div
@@ -602,9 +562,7 @@ export default function ProductsPage() {
             }}
           >
             <div className="panel-eyebrow">
-              {language === "it"
-                ? "PRODOTTO A MAGGIOR RISCHIO"
-                : "BIGGEST PRODUCT RISK"}
+              {copy.biggestRisk.eyebrow}
             </div>
 
             <h2
@@ -624,9 +582,7 @@ export default function ProductsPage() {
                 fontWeight: 700,
               }}
             >
-              {language === "it"
-                ? "Prodotto con la maggiore esposizione economica, attualmente al di sotto della soglia di margine target."
-                : "Product with the highest economic exposure currently operating below the target margin threshold."}
+              {copy.biggestRisk.description}
             </div>
 
             <div
@@ -639,22 +595,22 @@ export default function ProductsPage() {
             >
               {[
                 [
-                  language === "it" ? "Ricavi" : "Revenue",
+                  copy.labels.revenue,
                   money(biggestRiskProduct.revenue),
                   "#f3f4f6",
                 ],
                 [
-                  language === "it" ? "Margine" : "Margin",
+                  copy.labels.margin,
                   pct(biggestRiskProduct.marginPct),
                   "#ff6b4a",
                 ],
                 [
-                  language === "it" ? "Gap di profitto" : "Profit Gap",
+                  copy.labels.profitGapTitle,
                   money(biggestRiskProduct.riskValue),
                   "#22c55e",
                 ],
                 [
-                  language === "it" ? "Gap di margine" : "Margin Gap",
+                  copy.labels.marginGap,
                   `${new Intl.NumberFormat(locale, {
                     minimumFractionDigits: 1,
                     maximumFractionDigits: 1,
@@ -705,15 +661,11 @@ export default function ProductsPage() {
           <div className="panel-header">
             <div>
               <div className="panel-eyebrow">
-                {language === "it"
-                  ? "DISTRIBUZIONE RISCHIO PRODOTTI"
-                  : "PRODUCT RISK DISTRIBUTION"}
+                {copy.distribution.eyebrow}
               </div>
 
               <h2 className="panel-title">
-                {language === "it"
-                  ? "Panoramica rischio catalogo"
-                  : "Catalog risk overview"}
+                {copy.distribution.title}
               </h2>
             </div>
           </div>
@@ -728,34 +680,28 @@ export default function ProductsPage() {
           >
             {[
               {
-                label: language === "it" ? "Critico" : "Critical",
+                label: copy.distribution.critical.label,
                 count: criticalProducts,
                 pct: criticalPct,
                 color: "#ff6b4a",
                 description:
-                  language === "it"
-                    ? "Prodotti con margini negativi o molto deboli."
-                    : "Products with negative or severely weak margins.",
+                  copy.distribution.critical.description,
               },
               {
-                label: language === "it" ? "Alta" : "High",
+                label: copy.distribution.high.label,
                 count: highProducts,
                 pct: highPct,
                 color: "#f59e0b",
                 description:
-                  language === "it"
-                    ? "Prodotti che richiedono una revisione di prezzo o costo."
-                    : "Products requiring pricing or cost review.",
+                  copy.distribution.high.description,
               },
               {
-                label: language === "it" ? "Ottimo" : "Healthy",
+                label: copy.distribution.healthy.label,
                 count: healthyProducts,
                 pct: healthyPct,
                 color: "#22c55e",
                 description:
-                  language === "it"
-                    ? "Prodotti attualmente entro margini sani."
-                    : "Products currently operating within healthy margins.",
+                  copy.distribution.healthy.description,
               },
             ].map((item) => (
               <div
@@ -821,9 +767,7 @@ export default function ProductsPage() {
                     fontWeight: 850,
                   }}
                 >
-                  {language === "it"
-                    ? `${pct(item.pct)} del catalogo`
-                    : `${pct(item.pct)} of catalog`}
+                  {t("productsPage.distribution.catalogShare", { value: pct(item.pct) })}
                 </div>
 
                 <div
@@ -874,53 +818,30 @@ export default function ProductsPage() {
                 }}
               >
                 <span>
-                  {language === "it"
-                    ? "RICAVI A RISCHIO"
-                    : "REVENUE AT RISK"}
+                  {copy.revenueAtRisk.eyebrow}
                 </span>
 
                 <MetricTooltip
                   content={{
-                    title:
-                      language === "it"
-                        ? "Ricavi a rischio"
-                        : "Revenue at risk",
+                    title: copy.revenueAtRisk.tooltipTitle,
 
-                    description:
-                      language === "it"
-                        ? "Ricavi generati da prodotti che stanno lavorando sotto il margine target. Non significa che questi ricavi siano persi."
-                        : "Revenue generated by products currently operating below the target margin. It does not mean this revenue has been lost.",
+                    description: copy.revenueAtRisk.tooltipDescription,
 
-                    note:
-                      language === "it"
-                        ? "MarginLab li evidenzia perché piccoli miglioramenti di prezzo, costo o margine possono avere un impatto economico rilevante."
-                        : "MarginLab highlights them because improvements in price, cost or margin may have a meaningful economic impact.",
+                    note: copy.revenueAtRisk.tooltipNote,
                   }}
                 />
               </div>
 
               <h2 className="panel-title">
-                {language === "it"
-                  ? "Prodotti ad alto ricavo e basso margine"
-                  : "High revenue, low margin products"}
+                {copy.revenueAtRisk.title}
               </h2>
 
               <p className="panel-subtitle">
-                {language === "it"
-                  ? `${money(
-                    totalRevenueAtRisk,
-                  )} di ricavi economici stanno attualmente lavorando sotto il margine target del ${pct(
-                    targetMarginPct,
-                  )}, con un gap di profitto stimato verso il target pari a ${money(
-                    totalRevenueAtRiskOpportunity,
-                  )}.`
-                  : `${money(
-                    totalRevenueAtRisk,
-                  )} in economic revenue is currently operating below the ${pct(
-                    targetMarginPct,
-                  )} target margin, with an estimated ${money(
-                    totalRevenueAtRiskOpportunity,
-                  )} profit gap to target.`}
+                {t("productsPage.revenueAtRisk.description", {
+                  revenue: money(totalRevenueAtRisk),
+                  target: pct(targetMarginPct),
+                  gap: money(totalRevenueAtRiskOpportunity),
+                })}
               </p>
             </div>
           </div>
@@ -936,15 +857,13 @@ export default function ProductsPage() {
             {revenueAtRisk.length > 0 ? (
               revenueAtRisk.slice(0, 5).map((product) => {
                 const translatedRiskLevel =
-                  language === "it"
-                    ? product.riskLevel === "Critical"
-                      ? "Critico"
-                      : product.riskLevel === "High"
-                        ? "Alto"
-                        : product.riskLevel === "Medium"
-                          ? "Moderato"
-                          : product.riskLevel
-                    : product.riskLevel;
+                  product.riskLevel === "Critical"
+                    ? copy.riskLevels.critical
+                    : product.riskLevel === "High"
+                      ? copy.riskLevels.high
+                      : product.riskLevel === "Medium"
+                        ? copy.riskLevels.medium
+                        : product.riskLevel;
 
                 return (
                   <div
@@ -1006,7 +925,7 @@ export default function ProductsPage() {
                         color: "rgba(255,255,255,0.42)",
                       }}
                     >
-                      {language === "it" ? "Ricavi" : "Revenue"}
+                      {copy.labels.revenue}
                     </div>
 
                     <div
@@ -1031,7 +950,7 @@ export default function ProductsPage() {
                         fontWeight: 800,
                       }}
                     >
-                      <span>{language === "it" ? "Margine" : "Margin"}</span>
+                      <span>{copy.labels.margin}</span>
                       <span style={{ color: "#ff6b4a" }}>
                         {pct(product.marginPct)}
                       </span>
@@ -1049,7 +968,7 @@ export default function ProductsPage() {
                       }}
                     >
                       <span>
-                        {language === "it" ? "Gap di profitto" : "Profit gap"}
+                        {copy.labels.profitGap}
                       </span>
                       <span>{money(product.riskValue)}</span>
                     </div>
@@ -1064,9 +983,7 @@ export default function ProductsPage() {
                         lineHeight: 1.55,
                       }}
                     >
-                      {language === "it"
-                        ? "Prodotto ad alto ricavo economico che lavora sotto il margine target del 20%. Il valore mostrato indica il gap di profitto necessario per raggiungere il target, non profitto garantito."
-                        : "High economic-revenue product operating below the 20% target margin. The value shown is the profit gap required to reach the target, not guaranteed recoverable profit."}
+                      {copy.revenueAtRisk.cardDescription}
                     </div>
                   </div>
                 );
@@ -1083,9 +1000,7 @@ export default function ProductsPage() {
                   fontWeight: 800,
                 }}
               >
-                {language === "it"
-                  ? "Nessun prodotto ad alto ricavo è attualmente sotto il margine target."
-                  : "No high-revenue products are currently below the target margin."}
+                {copy.revenueAtRisk.empty}
               </div>
             )}
           </div>
@@ -1110,7 +1025,7 @@ export default function ProductsPage() {
               }
               onClick={() => setVisibleLimit(limit as 10 | 20 | 50)}
             >
-              {language === "it" ? `Mostra ${limit}` : `Show ${limit}`}
+              {t("productsPage.showLimit", { limit })}
             </button>
           ))}
         </div>
