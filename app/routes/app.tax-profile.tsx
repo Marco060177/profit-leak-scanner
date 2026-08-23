@@ -2,7 +2,7 @@ import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   getStoreTaxContext,
@@ -663,8 +663,8 @@ export default function TaxProfilePage() {
 
   const navigate = useNavigate();
 
-  const language =
-    getStoredLanguage() === "it" ? "it" : "en";
+  const { language, messages, t } = useI18n();
+  const copy = messages.taxProfilePage;
 
   const countryCode =
     taxContext.effectiveCountryCode;
@@ -801,9 +801,7 @@ export default function TaxProfilePage() {
             style={styles.backBtn}
             onClick={() => navigate("/app")}
           >
-            {language === "it"
-              ? "Torna alla dashboard"
-              : "Back to dashboard"}
+            {copy.back_to_dashboard}
           </button>
         </div>
 
@@ -811,29 +809,21 @@ export default function TaxProfilePage() {
           <div>
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
-              {language === "it"
-                ? "PROFILO FISCALE AVANZATO"
-                : "ADVANCED TAX PROFILE"}
+              {copy.advanced_tax_profile}
             </div>
 
             <h1 style={styles.title}>
-              {language === "it"
-                ? "Configura come MarginLab interpreta imposte, prezzi e costi."
-                : "Configure how MarginLab interprets taxes, prices and costs."}
+              {copy.configure_how_marginlab_interprets_taxes_prices_and}
             </h1>
 
             <p style={styles.subtitle}>
-              {language === "it"
-                ? "Una configurazione a livello store che completa i dati fiscali reali Shopify e migliora la base economica usata da MarginLab."
-                : "A store-level configuration that complements real Shopify tax data and improves the economic basis used by MarginLab."}
+              {copy.a_store_level_configuration_that_complements_real}
             </p>
           </div>
 
           <div style={styles.statusCard}>
             <div style={styles.kicker}>
-              {language === "it"
-                ? "GIURISDIZIONE"
-                : "JURISDICTION"}
+              {copy.jurisdiction}
             </div>
 
             <div style={styles.countryRow}>
@@ -852,12 +842,10 @@ export default function TaxProfilePage() {
                 <div style={styles.countryText}>
                   {taxContext.shopCountryCode !==
                     taxContext.effectiveCountryCode
-                    ? language === "it"
-                      ? `Ambiente test · Shopify rileva ${taxContext.shopCountryCode || "—"}`
-                      : `Test environment · Shopify reports ${taxContext.shopCountryCode || "—"}`
-                    : language === "it"
-                      ? "Rilevata da Shopify"
-                      : "Detected from Shopify"}
+                    ? t("taxProfilePage.test_environment_shopify_reports", {
+                      country: taxContext.shopCountryCode || "—",
+                    })
+                    : copy.detected_from_shopify}
                 </div>
               </div>
             </div>
@@ -865,9 +853,7 @@ export default function TaxProfilePage() {
             <div style={styles.statusGrid}>
               <div style={styles.miniCard}>
                 <div style={styles.miniLabel}>
-                  {language === "it"
-                    ? "Sistema"
-                    : "System"}
+                  {copy.system}
                 </div>
 
                 <div style={styles.miniValue}>
@@ -877,9 +863,7 @@ export default function TaxProfilePage() {
 
               <div style={styles.miniCard}>
                 <div style={styles.miniLabel}>
-                  {language === "it"
-                    ? "Profilo avanzato"
-                    : "Advanced profile"}
+                  {copy.advanced_profile}
                 </div>
 
                 <div
@@ -894,15 +878,9 @@ export default function TaxProfilePage() {
                 >
                   {supported
                     ? taxContext.configured
-                      ? language === "it"
-                        ? "Configurato"
-                        : "Configured"
-                      : language === "it"
-                        ? "Da completare"
-                        : "Incomplete"
-                    : language === "it"
-                      ? "Non disponibile"
-                      : "Not available"}
+                      ? copy.configured
+                      : copy.incomplete
+                    : copy.not_available}
                 </div>
               </div>
             </div>
@@ -912,21 +890,17 @@ export default function TaxProfilePage() {
         {!supported ? (
           <section style={styles.section}>
             <div style={styles.kicker}>
-              {language === "it"
-                ? "MOTORE GLOBALE ATTIVO"
-                : "GLOBAL ENGINE ACTIVE"}
+              {copy.global_engine_active}
             </div>
 
             <div style={styles.sectionTitle}>
-              {language === "it"
-                ? `MarginLab utilizza già i dati ${taxSystemLabel || "fiscali"} reali di Shopify.`
-                : `MarginLab already uses real Shopify ${taxSystemLabel || "tax"} data.`}
+              {t("taxProfilePage.marginlab_already_uses_shopify_tax_data", {
+                taxSystem: taxSystemLabel || copy.tax,
+              })}
             </div>
 
             <p style={styles.sectionText}>
-              {language === "it"
-                ? "Il profilo fiscale avanzato specifico per questa giurisdizione non è ancora disponibile. MarginLab non inventa aliquote o recuperi fiscali: utilizza i dati transazionali Shopify e applica un trattamento prudenziale quando le informazioni non sono sufficienti."
-                : "An advanced country-specific tax profile is not available for this jurisdiction yet. MarginLab does not manufacture tax rates or recoverability assumptions: it uses Shopify transaction data and applies conservative treatment when evidence is insufficient."}
+              {copy.an_advanced_country_specific_tax_profile_is}
             </p>
           </section>
         ) : (
@@ -981,21 +955,15 @@ export default function TaxProfilePage() {
 
             <section style={styles.section}>
               <div style={styles.kicker}>
-                {language === "it"
-                  ? "1 · REGIME FISCALE"
-                  : "1 · TAX REGIME"}
+                {copy.text_1_tax_regime}
               </div>
 
               <div style={styles.sectionTitle}>
-                {language === "it"
-                  ? "Come opera fiscalmente lo store?"
-                  : "How does the store operate for tax purposes?"}
+                {copy.how_does_the_store_operate_for_tax}
               </div>
 
               <p style={styles.sectionText}>
-                {language === "it"
-                  ? "Shopify può rilevare il paese e le imposte applicate agli ordini, ma non il regime fiscale o la recuperabilità dell'imposta sugli acquisti. Queste informazioni devono essere confermate dal merchant."
-                  : "Shopify can detect the country and taxes applied to orders, but not the merchant's tax regime or input-tax recoverability. The merchant must confirm these settings."}
+                {copy.shopify_can_detect_the_country_and_taxes}
               </p>
 
               <div style={styles.regimeGrid}>
@@ -1049,15 +1017,11 @@ export default function TaxProfilePage() {
 
             <section style={styles.section}>
               <div style={styles.kicker}>
-                {language === "it"
-                  ? `2 · CONFIGURAZIONE ${taxSystemLabel}`
-                  : `2 · ${taxSystemLabel} CONFIGURATION`}
+                {t("taxProfilePage.tax_configuration_step", { taxSystem: taxSystemLabel })}
               </div>
 
               <div style={styles.sectionTitle}>
-                {language === "it"
-                  ? "Definisci la base economica di prezzi e costi"
-                  : "Define the economic basis of prices and costs"}
+                {copy.define_the_economic_basis_of_prices_and}
               </div>
 
               {standardRegime ? (
@@ -1081,29 +1045,21 @@ export default function TaxProfilePage() {
                         }}
                       >
                         <span>
-                          {language === "it"
-                            ? `Aliquota ${taxSystemLabel} predefinita`
-                            : `Default ${taxSystemLabel} rate`}
+                          {t("taxProfilePage.default_tax_rate", { taxSystem: taxSystemLabel })}
                         </span>
 
                         <MetricTooltip
                           content={{
                             title:
-                              language === "it"
-                                ? `Aliquota ${taxSystemLabel} predefinita`
-                                : `Default ${taxSystemLabel} rate`,
+                              t("taxProfilePage.default_tax_rate", { taxSystem: taxSystemLabel }),
                             description:
-                              language === "it"
-                                ? `Aliquota di fallback usata da MarginLab solo quando Shopify non fornisce una tax line più specifica e il profilo consente una stima. Non sostituisce né modifica automaticamente le imposte reali registrate sugli ordini Shopify.`
-                                : `Fallback rate used by MarginLab only when Shopify does not provide a more specific tax line and the profile allows an estimate. It does not replace or automatically modify the actual taxes recorded on Shopify orders.`,
+                              copy.fallback_rate_used_by_marginlab_only_when,
                           }}
                         />
                       </div>
 
                       <div style={styles.fieldText}>
-                        {language === "it"
-                          ? "Fallback utilizzato solo quando il motore non dispone di un'aliquota Shopify più specifica e il profilo avanzato consente una stima."
-                          : "Fallback used only when the engine lacks a more specific Shopify rate and the advanced profile permits an estimate."}
+                        {copy.fallback_used_only_when_the_engine_lacks}
                       </div>
                     </div>
 
@@ -1152,14 +1108,10 @@ export default function TaxProfilePage() {
                       checked={pricesIncludeVat}
                       onChange={setPricesIncludeVat}
                       label={
-                        language === "it"
-                          ? `I prezzi Shopify includono ${taxSystemLabel}`
-                          : `Shopify prices include ${taxSystemLabel}`
+                        t("taxProfilePage.shopify_prices_include_tax_system", { taxSystem: taxSystemLabel })
                       }
                       description={
-                        language === "it"
-                          ? "I prezzi vendita analizzati comprendono già l'imposta."
-                          : "Analyzed selling prices already include tax."
+                        copy.analyzed_selling_prices_already_include_tax
                       }
                     />
 
@@ -1167,14 +1119,10 @@ export default function TaxProfilePage() {
                       checked={costsIncludeVat}
                       onChange={setCostsIncludeVat}
                       label={
-                        language === "it"
-                          ? `I COGS Shopify includono ${taxSystemLabel}`
-                          : `Shopify COGS include ${taxSystemLabel}`
+                        t("taxProfilePage.shopify_cogs_include_tax_system", { taxSystem: taxSystemLabel })
                       }
                       description={
-                        language === "it"
-                          ? "I costi unitari salvati in Shopify comprendono già l'imposta sugli acquisti."
-                          : "Unit costs stored in Shopify already include input tax."
+                        copy.unit_costs_stored_in_shopify_already_include
                       }
                     />
 
@@ -1189,29 +1137,21 @@ export default function TaxProfilePage() {
                           }}
                         >
                           <span>
-                            {language === "it"
-                              ? "Recuperabilità imposta sugli acquisti"
-                              : "Input tax recovery"}
+                            {copy.input_tax_recovery}
                           </span>
 
                           <MetricTooltip
                             content={{
                               title:
-                                language === "it"
-                                  ? "Recuperabilità imposta sugli acquisti"
-                                  : "Input tax recovery",
+                                copy.input_tax_recovery,
                               description:
-                                language === "it"
-                                  ? "Indica quale percentuale dell'imposta inclusa nei costi MarginLab deve considerare recuperabile e quindi non parte del costo economico definitivo. Questa impostazione serve al modello di marginalità e non determina il diritto fiscale effettivo alla detrazione."
-                                  : "Indicates what percentage of tax included in costs MarginLab should treat as recoverable and therefore not part of the final economic cost. This setting is used for margin analysis and does not determine the merchant's actual legal entitlement to recover input tax.",
+                                copy.indicates_what_percentage_of_tax_included_in,
                             }}
                           />
                         </div>
 
                         <div style={styles.fieldText}>
-                          {language === "it"
-                            ? "Definisci quanta imposta contenuta nei costi può essere recuperata economicamente."
-                            : "Define how much tax embedded in costs can be economically recovered."}
+                          {copy.define_how_much_tax_embedded_in_costs}
                         </div>
                       </div>
 
@@ -1233,9 +1173,7 @@ export default function TaxProfilePage() {
                               styles.recoveryOptionTitle
                             }
                           >
-                            {language === "it"
-                              ? "Nessuna"
-                              : "None"}
+                            {copy.none}
                           </div>
 
                           <div
@@ -1265,9 +1203,7 @@ export default function TaxProfilePage() {
                               styles.recoveryOptionTitle
                             }
                           >
-                            {language === "it"
-                              ? "Completa"
-                              : "Full"}
+                            {copy.full}
                           </div>
 
                           <div
@@ -1303,9 +1239,7 @@ export default function TaxProfilePage() {
                               styles.recoveryOptionTitle
                             }
                           >
-                            {language === "it"
-                              ? "Parziale"
-                              : "Partial"}
+                            {copy.partial}
                           </div>
 
                           <div
@@ -1332,17 +1266,13 @@ export default function TaxProfilePage() {
                               <div
                                 style={styles.fieldLabel}
                               >
-                                {language === "it"
-                                  ? "Percentuale recuperabile"
-                                  : "Recoverable percentage"}
+                                {copy.recoverable_percentage}
                               </div>
 
                               <div
                                 style={styles.fieldText}
                               >
-                                {language === "it"
-                                  ? "Inserisci la percentuale effettivamente recuperabile."
-                                  : "Enter the percentage that is actually recoverable."}
+                                {copy.enter_the_percentage_that_is_actually_recoverable}
                               </div>
                             </div>
 
@@ -1419,27 +1349,18 @@ export default function TaxProfilePage() {
                       <div
                         style={styles.recoverySummary}
                       >
-                        {language === "it"
-                          ? inputVatRecoveryPct === 0
-                            ? "L'imposta sugli acquisti resta interamente nel costo economico."
-                            : inputVatRecoveryPct === 100
-                              ? "L'imposta sugli acquisti viene considerata interamente recuperabile."
-                              : `MarginLab considera recuperabile il ${inputVatRecoveryPct}% dell'imposta sugli acquisti.`
-                          : inputVatRecoveryPct === 0
-                            ? "Input tax remains fully included in economic cost."
-                            : inputVatRecoveryPct ===
-                              100
-                              ? "Input tax is treated as fully recoverable."
-                              : `MarginLab treats ${inputVatRecoveryPct}% of input tax as recoverable.`}
+                        {inputVatRecoveryPct === 0
+                          ? copy.input_tax_fully_included
+                          : inputVatRecoveryPct === 100
+                            ? copy.input_tax_fully_recoverable
+                            : t("taxProfilePage.input_tax_partially_recoverable", { value: inputVatRecoveryPct })}
                       </div>
                     </div>
                   </div>
                 </>
               ) : (
                 <div style={styles.notice}>
-                  {language === "it"
-                    ? `Per questo profilo l'output ${taxSystemLabel} viene impostato a 0% nel fallback MarginLab e non viene applicato recupero dell'imposta sugli acquisti. I dati fiscali reali Shopify continuano ad avere priorità quando disponibili.`
-                    : `For this profile, fallback output ${taxSystemLabel} is set to 0% and no input-tax recovery is applied. Real Shopify tax data still takes priority when available.`}
+                  {t("taxProfilePage.nonstandard_profile_notice", { taxSystem: taxSystemLabel })}
                 </div>
               )}
 
@@ -1449,14 +1370,10 @@ export default function TaxProfilePage() {
                     checked={costsIncludeVat}
                     onChange={setCostsIncludeVat}
                     label={
-                      language === "it"
-                        ? "I costi Shopify comprendono imposte"
-                        : "Shopify costs include tax"
+                      copy.shopify_costs_include_tax
                     }
                     description={
-                      language === "it"
-                        ? "Questa informazione resta utile per descrivere correttamente la base dei costi, anche quando il profilo non consente recupero dell'imposta."
-                        : "This remains useful for describing the cost basis correctly, even when the profile does not allow input-tax recovery."
+                      copy.this_remains_useful_for_describing_the_cost
                     }
                   />
                 </div>
@@ -1465,15 +1382,11 @@ export default function TaxProfilePage() {
 
             <section style={styles.section}>
               <div style={styles.kicker}>
-                {language === "it"
-                  ? "3 · SPEDIZIONI"
-                  : "3 · SHIPPING"}
+                {copy.text_3_shipping}
               </div>
 
               <div style={styles.sectionTitle}>
-                {language === "it"
-                  ? "Trattamento fiscale dei ricavi da spedizione"
-                  : "Tax treatment of shipping revenue"}
+                {copy.tax_treatment_of_shipping_revenue}
               </div>
 
               {standardRegime ? (
@@ -1484,22 +1397,16 @@ export default function TaxProfilePage() {
                       setShippingIncludeVat
                     }
                     label={
-                      language === "it"
-                        ? `La spedizione include ${taxSystemLabel}`
-                        : `Shipping charge includes ${taxSystemLabel}`
+                      t("taxProfilePage.shipping_includes_tax_system", { taxSystem: taxSystemLabel })
                     }
                     description={
-                      language === "it"
-                        ? "Il prezzo di spedizione pagato dal cliente comprende già l'imposta."
-                        : "The customer-paid shipping charge already includes tax."
+                      copy.the_customer_paid_shipping_charge_already_includes
                     }
                   />
 
                   <div style={styles.ratePanel}>
                     <div style={styles.fieldLabel}>
-                      {language === "it"
-                        ? "Aliquota spedizione"
-                        : "Shipping tax rate"}
+                      {copy.shipping_tax_rate}
                     </div>
 
                     <div
@@ -1552,57 +1459,41 @@ export default function TaxProfilePage() {
                 </div>
               ) : (
                 <div style={styles.notice}>
-                  {language === "it"
-                    ? "Nel profilo selezionato MarginLab non applica una stima fiscale alla spedizione. Le tax line Shopify effettive restano comunque utilizzabili dal motore globale."
-                    : "In the selected profile, MarginLab does not estimate tax on shipping. Actual Shopify tax lines remain available to the global engine."}
+                  {copy.in_the_selected_profile_marginlab_does_not}
                 </div>
               )}
             </section>
 
             <section style={styles.engineSection}>
               <div style={styles.kicker}>
-                {language === "it"
-                  ? "BASE DI CALCOLO MARGINLAB"
-                  : "MARGINLAB CALCULATION BASIS"}
+                {copy.marginlab_calculation_basis}
               </div>
 
               <div style={styles.sectionTitle}>
-                {language === "it"
-                  ? "Come il profilo completa il motore fiscale globale"
-                  : "How the profile complements the global tax engine"}
+                {copy.how_the_profile_complements_the_global_tax}
               </div>
 
               <div style={styles.flowGrid}>
                 {[
                   [
                     "01",
-                    language === "it"
-                      ? "Vendite Shopify"
-                      : "Shopify sales",
+                    copy.shopify_sales,
                   ],
                   [
                     "02",
-                    language === "it"
-                      ? "Tax line reali"
-                      : "Actual tax lines",
+                    copy.actual_tax_lines,
                   ],
                   [
                     "03",
-                    language === "it"
-                      ? "Profilo costi"
-                      : "Cost profile",
+                    copy.cost_profile,
                   ],
                   [
                     "04",
-                    language === "it"
-                      ? "COGS economici"
-                      : "Economic COGS",
+                    copy.economic_cogs,
                   ],
                   [
                     "05",
-                    language === "it"
-                      ? "Profitto economico"
-                      : "Economic profit",
+                    copy.economic_profit,
                   ],
                 ].map(([n, label]) => (
                   <div
@@ -1627,9 +1518,7 @@ export default function TaxProfilePage() {
 
             {fetcher.data?.ok && (
               <div style={styles.success}>
-                {language === "it"
-                  ? "Profilo fiscale salvato correttamente. MarginLab userà questa configurazione insieme ai dati fiscali reali Shopify."
-                  : "Tax Profile saved successfully. MarginLab will use this configuration together with real Shopify tax data."}
+                {copy.tax_profile_saved_successfully_marginlab_will_use}
               </div>
             )}
 
@@ -1642,15 +1531,11 @@ export default function TaxProfilePage() {
             <div style={styles.saveBar}>
               <div>
                 <div style={styles.saveTitle}>
-                  {language === "it"
-                    ? "Salva il profilo fiscale"
-                    : "Save Tax Profile"}
+                  {copy.save_tax_profile}
                 </div>
 
                 <div style={styles.saveText}>
-                  {language === "it"
-                    ? "Configurazione a livello store disponibile sia su Starter sia su Growth."
-                    : "Store-level configuration available on both Starter and Growth."}
+                  {copy.store_level_configuration_available_on_both_starter}
                 </div>
               </div>
 
@@ -1663,21 +1548,15 @@ export default function TaxProfilePage() {
                 }}
               >
                 {saving
-                  ? language === "it"
-                    ? "Salvataggio..."
-                    : "Saving..."
-                  : language === "it"
-                    ? "Salva configurazione"
-                    : "Save configuration"}
+                  ? copy.saving
+                  : copy.save_configuration}
               </button>
             </div>
           </fetcher.Form>
         )}
 
         <div style={styles.disclaimer}>
-          {language === "it"
-            ? "Tax Profile serve a migliorare la base economica delle analisi MarginLab. Non sostituisce contabilità, dichiarazioni fiscali o consulenza professionale e non determina automaticamente gli obblighi tributari del merchant."
-            : "Tax Profile improves the economic basis used by MarginLab. It does not replace accounting, tax filings or professional tax advice and does not automatically determine the merchant's tax obligations."}
+          {copy.tax_profile_improves_the_economic_basis_used}
         </div>
       </div>
     </div>
