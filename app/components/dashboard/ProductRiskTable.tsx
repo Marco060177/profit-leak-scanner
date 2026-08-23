@@ -77,7 +77,7 @@ export default function ProductRiskTable({
   currencyCode,
 }: Props) {
 
-  const { language, messages } = useI18n();
+  const { language, messages, t } = useI18n();
   const copy = messages.productRiskTable;
 
   function translatedSuggestion(row: Row) {
@@ -513,15 +513,15 @@ export default function ProductRiskTable({
                           >
                             {row.missingCost
                               ? copy.missingCostRecommendation
-                              : language === "it"
-                                ? row.profit < 0
+                              : language !== "it"
+                                ? translatedSuggestion(row)
+                                : row.profit < 0
                                   ? row.targetDelta > 0
-                                    ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
-                                    : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti."
+                                    ? t("productRiskTable.increasePriceForHealthierMargin", { price: money(row.targetPrice) })
+                                    : copy.criticalMarginsRecommendation
                                   : row.targetDelta > 0
-                                    ? `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`
-                                    : "Prezzi e margini risultano stabili sulla base dei dati disponibili."
-                                : translatedSuggestion(row)}
+                                    ? t("productRiskTable.considerPriceIncrease", { price: money(row.targetPrice) })
+                                    : copy.stablePricesRecommendation}
                           </div>
 
                           {row.productId ? (

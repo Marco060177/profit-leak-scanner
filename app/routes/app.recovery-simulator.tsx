@@ -337,19 +337,13 @@ export default function RecoverySimulatorPage() {
           <div className="hero-header">
             <div>
               <div className="eyebrow">
-                {language === "it"
-                  ? "SIMULATORE DI RECUPERO"
-                  : "RECOVERY SIMULATOR"}
+                {copy.emptyEyebrow}
               </div>
               <div className="hero-title">
-                {language === "it"
-                  ? "Nessun prodotto disponibile per la simulazione"
-                  : "No products available for simulation"}
+                {copy.emptyTitle}
               </div>
               <div className="hero-description">
-                {language === "it"
-                  ? "MarginLab necessita di almeno un prodotto con prezzo e vendite registrate nel periodo selezionato."
-                  : "MarginLab needs at least one product with a selling price and recorded sales in the selected period."}
+                {copy.emptyDescription}
               </div>
             </div>
           </div>
@@ -733,18 +727,11 @@ export default function RecoverySimulatorPage() {
     );
     setCostReductionPct(suggestedCostReduction);
     setSalesChangePct(-Math.round(suggestedPriceIncrease * 0.35 * 10) / 10);
-    setSaveMessage(
-      language === "it"
-        ? "Scenario suggerito applicato"
-        : "Suggested scenario applied",
-    );
+    setSaveMessage(copy.suggestedScenarioApplied);
   };
 
   const saveCurrentScenario = () => {
-    const defaultName =
-      language === "it"
-        ? `Scenario ${savedScenarios.length + 1}`
-        : `Scenario ${savedScenarios.length + 1}`;
+    const defaultName = `Scenario ${savedScenarios.length + 1}`;
     const saved: SavedScenario = {
       id: `${Date.now()}-${selectedProduct.productId}`,
       name: scenarioName.trim() || defaultName,
@@ -761,7 +748,7 @@ export default function RecoverySimulatorPage() {
 
     setSavedScenarios((current) => [saved, ...current].slice(0, 6));
     setScenarioName("");
-    setSaveMessage(language === "it" ? "Scenario salvato" : "Scenario saved");
+    setSaveMessage(copy.scenarioSaved);
   };
 
   const loadSavedScenario = (saved: SavedScenario) => {
@@ -779,7 +766,7 @@ export default function RecoverySimulatorPage() {
       setPendingScenario(saved);
       setSelectedProductId(saved.productId);
     }
-    setSaveMessage(language === "it" ? "Scenario caricato" : "Scenario loaded");
+    setSaveMessage(copy.scenarioLoaded);
   };
 
   const deleteSavedScenario = (id: string) => {

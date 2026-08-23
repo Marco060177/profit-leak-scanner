@@ -13,7 +13,7 @@ import {
   getOrCreateNotificationPreferences,
   updateNotificationPreferences,
 } from "~/services/notification.server";
-import { getStoredLanguage } from "~/utils/i18n";
+import { useI18n } from "~/components/i18n/I18nProvider";
 
 import "~/styles/dashboard.css";
 
@@ -41,15 +41,7 @@ function normalizeLanguage(
   return value === "it" ? "it" : "en";
 }
 
-const dayOptions = [
-  { value: 0, en: "Sunday", it: "Domenica" },
-  { value: 1, en: "Monday", it: "Lunedì" },
-  { value: 2, en: "Tuesday", it: "Martedì" },
-  { value: 3, en: "Wednesday", it: "Mercoledì" },
-  { value: 4, en: "Thursday", it: "Giovedì" },
-  { value: 5, en: "Friday", it: "Venerdì" },
-  { value: 6, en: "Saturday", it: "Sabato" },
-];
+const dayOptions = [0, 1, 2, 3, 4, 5, 6];
 
 export async function loader({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
@@ -193,91 +185,9 @@ export default function ReportsNotificationsPage() {
   const navigation = useNavigation();
   const navigate = useNavigate();
 
-  const language = getStoredLanguage() === "it" ? "it" : "en";
+  const { language, messages } = useI18n();
   const saving = navigation.state !== "idle";
-
-  const labels =
-    language === "it"
-      ? {
-          eyebrow: "REPORT E NOTIFICHE",
-          title: "Scegli cosa ricevere e dove",
-          description:
-            "Configura il Weekly Profit Report e gli alert email di MarginLab. Queste preferenze vengono usate direttamente dal sistema di notifica dello store.",
-          recipient: "Email destinataria",
-          recipientNote:
-            "Indirizzo a cui MarginLab invierà report e alert.",
-          weeklyTitle: "Weekly Profit Report",
-          weeklyDescription:
-            "Ricevi ogni settimana il riepilogo degli ultimi 7 giorni con redditività, rischi e prossime azioni.",
-          weeklyEnabled: "Attiva Weekly Profit Report",
-          weeklyEnabledDesc:
-            "Invia automaticamente il report settimanale all'indirizzo configurato.",
-          language: "Lingua email",
-          day: "Giorno di invio",
-          hour: "Ora di invio",
-          timezone: "Fuso orario",
-          timezoneNote:
-            "Usato per interpretare giorno e ora del report.",
-          alertsTitle: "Profit Monitor via email",
-          alertsDescription:
-            "Scegli quali segnali del Profit Monitor possono generare una notifica email.",
-          alertsEnabled: "Attiva alert email",
-          alertsEnabledDesc:
-            "Consente a MarginLab di inviare notifiche quando emergono nuovi segnali rilevanti.",
-          critical: "Alert critici",
-          criticalDesc:
-            "Problemi che richiedono una verifica prioritaria.",
-          warnings: "Avvisi",
-          warningsDesc:
-            "Segnali da controllare prima che diventino più importanti.",
-          opportunities: "Opportunità",
-          opportunitiesDesc:
-            "Gap e scenari di ottimizzazione che meritano una valutazione.",
-          save: "Salva preferenze",
-          saving: "Salvataggio...",
-          note:
-            "MarginLab non invia automaticamente report o alert senza un indirizzo email configurato.",
-        }
-      : {
-          eyebrow: "REPORTS & NOTIFICATIONS",
-          title: "Choose what to receive and where",
-          description:
-            "Configure the Weekly Profit Report and MarginLab email alerts. These preferences are used directly by the store notification system.",
-          recipient: "Recipient email",
-          recipientNote:
-            "Address where MarginLab will send reports and alerts.",
-          weeklyTitle: "Weekly Profit Report",
-          weeklyDescription:
-            "Receive a weekly summary of the last 7 days with profitability, risks and next actions.",
-          weeklyEnabled: "Enable Weekly Profit Report",
-          weeklyEnabledDesc:
-            "Automatically sends the weekly report to the configured email address.",
-          language: "Email language",
-          day: "Delivery day",
-          hour: "Delivery time",
-          timezone: "Time zone",
-          timezoneNote:
-            "Used to interpret the report delivery day and time.",
-          alertsTitle: "Profit Monitor by email",
-          alertsDescription:
-            "Choose which Profit Monitor signals are allowed to generate email notifications.",
-          alertsEnabled: "Enable email alerts",
-          alertsEnabledDesc:
-            "Allows MarginLab to send notifications when relevant new signals appear.",
-          critical: "Critical alerts",
-          criticalDesc:
-            "Issues that require prioritized review.",
-          warnings: "Warnings",
-          warningsDesc:
-            "Signals to review before they become more important.",
-          opportunities: "Opportunities",
-          opportunitiesDesc:
-            "Optimization gaps and modeled scenarios worth evaluating.",
-          save: "Save preferences",
-          saving: "Saving...",
-          note:
-            "MarginLab does not send reports or alerts automatically without a configured email address.",
-        };
+  const labels = messages.reportsNotificationsPage;
 
   return (
     <div className="dashboard-shell">
@@ -301,7 +211,7 @@ export default function ReportsNotificationsPage() {
           <div style={{ display: "grid", gap: 22 }}>
             <section className="panel" style={{ margin: 0, padding: 24 }}>
               <div className="panel-eyebrow">
-                {language === "it" ? "DESTINATARIO" : "RECIPIENT"}
+                {labels.recipientEyebrow}
               </div>
 
               <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -341,7 +251,7 @@ export default function ReportsNotificationsPage() {
 
             <section className="panel" style={{ margin: 0, padding: 24 }}>
               <div className="panel-eyebrow">
-                {language === "it" ? "REPORT SETTIMANALE" : "WEEKLY REPORT"}
+                {labels.weeklyEyebrow}
               </div>
 
               <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -433,8 +343,8 @@ export default function ReportsNotificationsPage() {
                     }}
                   >
                     {dayOptions.map((day) => (
-                      <option key={day.value} value={day.value}>
-                        {language === "it" ? day.it : day.en}
+                      <option key={day} value={day}>
+                        {labels.days[day]}
                       </option>
                     ))}
                   </select>
@@ -517,7 +427,7 @@ export default function ReportsNotificationsPage() {
 
             <section className="panel" style={{ margin: 0, padding: 24 }}>
               <div className="panel-eyebrow">
-                {language === "it" ? "ALERT EMAIL" : "EMAIL ALERTS"}
+                {labels.alertsEyebrow}
               </div>
 
               <h2 className="panel-title" style={{ marginTop: 6 }}>
