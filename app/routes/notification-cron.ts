@@ -2,6 +2,14 @@ import { timingSafeEqual } from "node:crypto";
 
 import { runNotificationScheduler } from "~/services/notification-scheduler.server";
 
+function sanitizeLogMessage(value: string) {
+  return value
+    .replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, "[redacted-email]")
+    .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+    .replace(/[\r\n]+/g, " ")
+    .slice(0, 500);
+}
+
 function authorized(request: Request) {
   const expected =
     process.env.NOTIFICATION_CRON_SECRET?.trim() ?? "";
@@ -59,6 +67,28 @@ export async function action({
 
   try {
     const result = await runNotificationScheduler();
+
+    console.info("MarginLab notification scheduler completed", {
+      runAt: result.runAt,
+      eligibleShops: result.eligibleShops,
+      dueShops: result.dueShops,
+      preparedReports: result.preparedReports,
+      alreadyPreparedReports: result.alreadyPreparedReports,
+      failedReports: result.failedReports,
+      deliveriesSent: result.deliveries.sent,
+      deliveriesFailed: result.deliveries.failed,
+    });
+
+    for (const failure of [
+      ...result.errors,
+      ...result.deliveries.errors,
+    ]) {
+      console.error("MarginLab notification scheduler item failed", {
+        shop: failure.shop,
+        stage: failure.stage,
+        message: sanitizeLogMessage(failure.message),
+      });
+    }
 
     return Response.json({
       ok: true,

@@ -180,13 +180,15 @@ export function buildAlertDeduplicationKey({
 export function buildWeeklyReportDeduplicationKey({
   shop,
   weekKey,
+  namespace = "weekly",
 }: {
   shop: string;
   weekKey: string;
+  namespace?: "weekly" | "weekly-test";
 }) {
   return [
     sanitizeKeyPart(shop),
-    "weekly",
+    namespace,
     sanitizeKeyPart(weekKey),
   ].join(":");
 }
@@ -257,6 +259,7 @@ export async function createWeeklyReportDelivery({
   subject,
   payload,
   scheduledFor,
+  deduplicationNamespace = "weekly",
 }: {
   shop: string;
   recipient: string;
@@ -264,32 +267,76 @@ export async function createWeeklyReportDelivery({
   subject?: string;
   payload?: unknown;
   scheduledFor?: Date;
+  deduplicationNamespace?: "weekly" | "weekly-test";
 }) {
   const deduplicationKey = buildWeeklyReportDeduplicationKey({
     shop,
     weekKey,
+    namespace: deduplicationNamespace,
   });
 
   const existing =
     await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
+  if (
+    existing?.status === "failed" &&
+    existing.notificationType === "weekly_profit_report" &&
+    existing.scheduledFor === null
+  ) {
+    const retryAt = new Date();
+    const retryResult = await prisma.notificationDelivery.updateMany({
+      where: {
+        id: existing.id,
+        status: "failed",
+        scheduledFor: null,
+        sentAt: null,
+      },
+      data: {
+        status: "pending",
+        scheduledFor: retryAt,
+        failedAt: null,
+        errorMessage: null,
+      },
+    });
+
+    if (retryResult.count === 1) {
+      const delivery = await prisma.notificationDelivery.findUniqueOrThrow({
+        where: { id: existing.id },
+      });
+      return { created: false as const, retried: true as const, delivery };
+    }
+  }
+
   if (existing) {
     return { created: false as const, delivery: existing };
   }
 
-  const delivery = await prisma.notificationDelivery.create({
-    data: {
-      shop,
-      channel: "email",
-      notificationType: "weekly_profit_report",
-      recipient: normalizeEmail(recipient) ?? recipient.trim(),
-      deduplicationKey,
-      subject: subject ?? null,
-      payloadJson: safeJsonStringify(payload),
-      status: "pending",
-      scheduledFor: scheduledFor ?? null,
-    },
-  });
+  let delivery;
+
+  try {
+    delivery = await prisma.notificationDelivery.create({
+      data: {
+        shop,
+        channel: "email",
+        notificationType: "weekly_profit_report",
+        recipient: normalizeEmail(recipient) ?? recipient.trim(),
+        deduplicationKey,
+        subject: subject ?? null,
+        payloadJson: safeJsonStringify(payload),
+        status: "pending",
+        scheduledFor: scheduledFor ?? null,
+      },
+    });
+  } catch (error) {
+    const concurrentDelivery =
+      await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
+
+    if (concurrentDelivery) {
+      return { created: false as const, delivery: concurrentDelivery };
+    }
+
+    throw error;
+  }
 
   return { created: true as const, delivery };
 }
@@ -313,6 +360,20 @@ export async function markNotificationDeliverySent({
       errorMessage: null,
     },
   });
+}
+
+export async function claimPendingNotificationDelivery(id: string) {
+  const result = await prisma.notificationDelivery.updateMany({
+    where: {
+      id,
+      status: "pending",
+    },
+    data: {
+      status: "processing",
+    },
+  });
+
+  return result.count === 1;
 }
 
 export async function markNotificationDeliveryFailed({

@@ -110,10 +110,12 @@ export async function prepareWeeklyProfitReport({
   admin,
   session,
   now = new Date(),
+  deliveryMode = "scheduled",
 }: {
   admin: any;
   session: any;
   now?: Date;
+  deliveryMode?: "scheduled" | "test";
 }) {
   const preferences = await getNotificationPreferences(session.shop);
 
@@ -206,13 +208,24 @@ export async function prepareWeeklyProfitReport({
   const result = await createWeeklyReportDelivery({
     shop: session.shop,
     recipient: preferences.recipientEmail,
-    weekKey,
+    weekKey:
+      deliveryMode === "test"
+        ? `${weekKey}-${now.getTime()}`
+        : weekKey,
     payload,
+    deduplicationNamespace:
+      deliveryMode === "test" ? "weekly-test" : "weekly",
   });
 
+  const retried = "retried" in result && result.retried;
+
   return {
-    prepared: result.created,
-    reason: result.created ? "created" : "already_prepared",
+    prepared: result.created || retried,
+    reason: result.created
+      ? "created"
+      : retried
+        ? "retry_prepared"
+        : "already_prepared",
     weekKey,
     delivery: result.delivery,
   } as const;

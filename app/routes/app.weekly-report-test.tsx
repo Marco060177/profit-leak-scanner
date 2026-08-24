@@ -15,6 +15,7 @@ export async function action({ request }: { request: Request }) {
   const result = await prepareWeeklyProfitReport({
     admin,
     session,
+    deliveryMode: "test",
   });
 
   return result;

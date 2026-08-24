@@ -109,7 +109,7 @@ export function isWeeklyReportDue({
   return (
     local.weekday ===
       clampInt(preference.weeklyReportDay, 0, 6) &&
-    local.hour ===
+    local.hour >=
       clampInt(preference.weeklyReportHour, 0, 23)
   );
 }
@@ -147,6 +147,7 @@ export async function runNotificationScheduler({
 
   const errors: Array<{
     shop: string;
+    stage: "prepare";
     message: string;
   }> = [];
 
@@ -184,6 +185,7 @@ export async function runNotificationScheduler({
 
       errors.push({
         shop: preference.shop,
+        stage: "prepare",
         message:
           error instanceof Error
             ? error.message

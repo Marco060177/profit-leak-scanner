@@ -1,4 +1,5 @@
 import {
+  claimPendingNotificationDelivery,
   listPendingNotificationDeliveries,
   markNotificationDeliveryFailed,
   markNotificationDeliverySent,
@@ -840,6 +841,11 @@ export async function processPendingNotificationDeliveries({
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  const errors: Array<{
+    shop: string;
+    stage: "delivery";
+    message: string;
+  }> = [];
 
   for (const delivery of deliveries) {
     if (delivery.channel !== "email") {
@@ -851,6 +857,13 @@ export async function processPendingNotificationDeliveries({
       delivery.notificationType !== "profit_alert" &&
       delivery.notificationType !== "weekly_profit_report"
     ) {
+      skipped += 1;
+      continue;
+    }
+
+    const claimed = await claimPendingNotificationDelivery(delivery.id);
+
+    if (!claimed) {
       skipped += 1;
       continue;
     }
@@ -922,12 +935,20 @@ export async function processPendingNotificationDeliveries({
     } catch (error) {
       failed += 1;
 
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Unknown notification delivery error.";
+
+      errors.push({
+        shop: delivery.shop,
+        stage: "delivery",
+        message: errorMessage,
+      });
+
       await markNotificationDeliveryFailed({
         id: delivery.id,
-        errorMessage:
-          error instanceof Error
-            ? error.message
-            : "Unknown notification delivery error.",
+        errorMessage,
       });
     }
   }
@@ -937,5 +958,6 @@ export async function processPendingNotificationDeliveries({
     sent,
     failed,
     skipped,
+    errors,
   };
 }
