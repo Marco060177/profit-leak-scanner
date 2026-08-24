@@ -1221,9 +1221,9 @@ export const en = {
     showLimit: "Show {{limit}}",
   },
   productRiskTable: {
-    increasePriceForHealthierMargin: "Increase the price to {price} to reach a healthier margin.",
+    increasePriceForHealthierMargin: "Increase the price to {{price}} to reach a healthier margin.",
     criticalMarginsRecommendation: "Current margins are critically below target. Review product costs, pricing structure and discounts.",
-    considerPriceIncrease: "Consider increasing the price to {price} to improve the product margin.",
+    considerPriceIncrease: "Consider increasing the price to {{price}} to improve the product margin.",
     stablePricesRecommendation: "Pricing and margins appear stable based on available data.",
     eyebrow: "PRODUCT RISK RANKING",
     title: "Prioritized product review",

@@ -1334,9 +1334,9 @@ export const fr = {
     "showLimit": "Afficher {{limit}}"
   },
   "productRiskTable": {
-    "increasePriceForHealthierMargin": "Augmentez le prix à {price} pour atteindre une marge plus saine.",
+    "increasePriceForHealthierMargin": "Augmentez le prix à {{price}} pour atteindre une marge plus saine.",
     "criticalMarginsRecommendation": "Les marges actuelles sont nettement inférieures à l’objectif. Examinez les coûts des produits, la structure des prix et les remises.",
-    "considerPriceIncrease": "Envisagez d'augmenter le prix à {price} pour améliorer la marge du produit.",
+    "considerPriceIncrease": "Envisagez d'augmenter le prix à {{price}} pour améliorer la marge du produit.",
     "stablePricesRecommendation": "Les prix et les marges semblent stables sur la base des données disponibles.",
     "eyebrow": "CLASSEMENT DES RISQUES PRODUIT",
     "title": "Revue de produit prioritaire",

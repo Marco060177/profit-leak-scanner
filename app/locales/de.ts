@@ -1221,9 +1221,9 @@ export const de = {
     showLimit: "{{limit}} anzeigen",
   },
   productRiskTable: {
-    increasePriceForHealthierMargin: "Erhöhen Sie den Preis auf {price}, um eine gesündere Marge zu erzielen.",
+    increasePriceForHealthierMargin: "Erhöhen Sie den Preis auf {{price}}, um eine gesündere Marge zu erzielen.",
     criticalMarginsRecommendation: "Die aktuellen Margen liegen deutlich unter dem Zielwert. Überprüfen Sie Produktkosten, Preisstruktur und Rabatte.",
-    considerPriceIncrease: "Erwägen Sie eine Erhöhung des Preises auf {price}, um die Produktmarge zu verbessern.",
+    considerPriceIncrease: "Erwägen Sie eine Erhöhung des Preises auf {{price}}, um die Produktmarge zu verbessern.",
     stablePricesRecommendation: "Preise und Margen scheinen auf Grundlage der verfügbaren Daten stabil zu sein.",
     eyebrow: "RANGLISTE DES PRODUKTRISIKOS",
     title: "Priorisierte Produktbewertung",

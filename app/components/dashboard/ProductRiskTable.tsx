@@ -77,7 +77,7 @@ export default function ProductRiskTable({
   currencyCode,
 }: Props) {
 
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.productRiskTable;
 
   function translatedSuggestion(row: Row) {
@@ -559,10 +559,10 @@ export default function ProductRiskTable({
                                 ? translatedSuggestion(row)
                                 : row.profit < 0
                                   ? row.targetDelta > 0
-                                    ? t("productRiskTable.increasePriceForHealthierMargin", { price: money(row.targetPrice) })
+                                    ? t("productRiskTable.increasePriceForHealthierMargin", { price: money(row.targetPrice, currencyCode, locale) })
                                     : copy.criticalMarginsRecommendation
                                   : row.targetDelta > 0
-                                    ? t("productRiskTable.considerPriceIncrease", { price: money(row.targetPrice) })
+                                    ? t("productRiskTable.considerPriceIncrease", { price: money(row.targetPrice, currencyCode, locale) })
                                     : copy.stablePricesRecommendation}
                           </div>
 
