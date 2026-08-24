@@ -8,6 +8,8 @@ import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import {
   type LoaderData,
@@ -31,11 +33,8 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
-  const language =
-    url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const locale =
-    language === "it" ? "it-IT" : "en-US";
+  const language = getRequestLanguage(request);
+  const locale = getLanguageLocale(language);
 
   const { admin, session } = await authenticate.admin(request);
 

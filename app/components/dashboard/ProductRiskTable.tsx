@@ -84,32 +84,50 @@ export default function ProductRiskTable({
     if (row.missingCost) {
       return language === "it"
         ? "Inserisci il costo del prodotto in Shopify"
+        : language === "de"
+          ? "Produktkosten in Shopify eintragen"
         : "Add the product cost in Shopify";
     }
 
-    if (language !== "it") {
+    if (language !== "it" && language !== "de") {
       return row.suggestion;
     }
 
     if (row.profit < 0) {
-      return row.targetDelta > 0
-        ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
-        : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti.";
+      return language === "de"
+        ? row.targetDelta > 0
+          ? `Erhöhen Sie den Preis auf ${money(row.targetPrice)}, um eine gesündere Marge zu erreichen.`
+          : "Die aktuellen Margen liegen kritisch unter dem Zielwert. Prüfen Sie Produktkosten, Preisstruktur und Rabatte."
+        : row.targetDelta > 0
+          ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
+          : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti.";
     }
 
     if (row.targetDelta > 0) {
-      return `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`;
+      return language === "de"
+        ? `Erwägen Sie eine Preiserhöhung auf ${money(row.targetPrice)}, um die Produktmarge zu verbessern.`
+        : `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`;
     }
 
-    return "Prezzi e margini risultano stabili sulla base dei dati disponibili.";
+    return language === "de"
+      ? "Preise und Margen sind auf Grundlage der verfügbaren Daten stabil."
+      : "Prezzi e margini risultano stabili sulla base dei dati disponibili.";
   }
 
   function visibleRiskLabel(row: Row) {
-    if (language !== "fr") return riskLabel(row);
-    if (row.losing) return "Critique";
-    if (row.missingCost) return "Coût manquant";
-    if (row.lowMargin) return "Élevé";
-    return "Sain";
+    if (language === "fr") {
+      if (row.losing) return "Critique";
+      if (row.missingCost) return "Coût manquant";
+      if (row.lowMargin) return "Élevé";
+      return "Sain";
+    }
+    if (language === "de") {
+      if (row.losing) return "Kritisch";
+      if (row.missingCost) return "Fehlende Kosten";
+      if (row.lowMargin) return "Hoch";
+      return "Gesund";
+    }
+    return riskLabel(row);
   }
 
   return (

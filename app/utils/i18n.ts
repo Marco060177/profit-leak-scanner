@@ -1,14 +1,15 @@
 import { en } from "~/locales/en";
 import { it } from "~/locales/it";
 import { fr } from "~/locales/fr";
+import { de } from "~/locales/de";
 
-export type Language = "en" | "it" | "fr";
+export type Language = "en" | "it" | "fr" | "de";
 
 export const DEFAULT_LANGUAGE: Language = "en";
 export const LANGUAGE_STORAGE_KEY = "marginlab-language";
 
 export function isLanguage(value: unknown): value is Language {
-  return value === "en" || value === "it" || value === "fr";
+  return value === "en" || value === "it" || value === "fr" || value === "de";
 }
 
 export const isSupportedLanguage = isLanguage;
@@ -20,6 +21,7 @@ export function normalizeLanguage(value: unknown): Language {
 export function getLanguageLocale(language: Language) {
   if (language === "it") return "it-IT";
   if (language === "fr") return "fr-FR";
+  if (language === "de") return "de-DE";
   return "en-US";
 }
 
@@ -27,6 +29,7 @@ export const translations = {
   en,
   it,
   fr,
+  de,
 };
 
 export function getStoredLanguage(): Language {

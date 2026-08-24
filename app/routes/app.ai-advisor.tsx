@@ -1386,9 +1386,8 @@ Rules:
     ...question,
     promptText: question.label,
     displayLabel:
-      language !== "fr"
-        ? question.label
-        : ({
+      language === "fr"
+        ? ({
           profitRisk: primaryProfitAlert
             ? `Pourquoi « ${primaryProfitAlert.title} » est-elle la priorité principale ?`
             : "Quel est le principal risque pour mon bénéfice ?",
@@ -1405,7 +1404,27 @@ Rules:
           pricingOpportunity: "Quel est le plus grand écart de prix par rapport à l'objectif ?",
           hiddenCosts: "Quel est mon principal coût caché ?",
           growthOpportunity: "Où puis-je augmenter le bénéfice le plus rapidement ?",
-        } as Record<string, string>)[question.id],
+        } as Record<string, string>)[question.id]
+        : language === "de"
+          ? ({
+            profitRisk: primaryProfitAlert
+              ? `Warum hat „${primaryProfitAlert.title}“ die höchste Priorität?`
+              : "Was ist das größte Risiko für meinen Gewinn?",
+            marginPressure: summary.refunds > 0
+              ? "Wie stark belasten Erstattungen meinen Gewinn?"
+              : "Was verringert meine Marge?",
+            priority: missionAlert
+              ? `Warum sollte ich „${missionAlert.title}“ zuerst bearbeiten?`
+              : "Was sollte ich zuerst prüfen?",
+            fastestImprovement: recoverableProfit > 0
+              ? "Wie kann ich diese Gewinnlücke verringern?"
+              : "Welche Maßnahme verbessert den Gewinn am schnellsten?",
+            productPriorities: "Welche Produkte sollte ich zuerst korrigieren?",
+            pricingOpportunity: "Wo besteht die größte Preislücke zum Zielwert?",
+            hiddenCosts: "Was sind meine größten versteckten Kosten?",
+            growthOpportunity: "Wo kann ich den Gewinn am schnellsten steigern?",
+          } as Record<string, string>)[question.id]
+          : question.label,
   }));
 
   return (

@@ -1,6 +1,6 @@
 import { getLanguageLocale, normalizeLanguage } from "~/utils/i18n";
 
-export type AppLocale = "it-IT" | "en-US" | "fr-FR";
+export type AppLocale = "it-IT" | "en-US" | "fr-FR" | "de-DE";
 
 export type FormattingOptions = {
   currencyCode?: string;

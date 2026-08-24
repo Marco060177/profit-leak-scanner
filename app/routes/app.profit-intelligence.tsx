@@ -15,6 +15,8 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 export const links = () => [{ rel: "stylesheet", href: dashboardStylesUrl }];
 
@@ -26,11 +28,8 @@ export const loader = async ({
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
-  const language =
-    url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const locale =
-    language === "it" ? "it-IT" : "en-US";
+  const language = getRequestLanguage(request);
+  const locale = getLanguageLocale(language);
 
   const { admin, session } = await authenticate.admin(request);
 
@@ -240,6 +239,12 @@ export default function ProfitIntelligencePage() {
           : dependencyLevel === "Moderate"
             ? "RISQUE MODÉRÉ"
             : "RISQUE FAIBLE"
+        : language === "de"
+          ? dependencyLevel === "High"
+            ? "HOHES RISIKO"
+            : dependencyLevel === "Moderate"
+              ? "MITTLERES RISIKO"
+              : "NIEDRIGES RISIKO"
         : `${dependencyLevel.toUpperCase()} RISK`;
 
   const sortedProfitRows = [...economicRows].sort((a, b) => b.profit - a.profit);
@@ -286,6 +291,12 @@ export default function ProfitIntelligencePage() {
           : profitQualityLevel === "Mixed"
             ? "Mixte"
             : "Saine"
+        : language === "de"
+          ? profitQualityLevel === "Weak"
+            ? "Schwach"
+            : profitQualityLevel === "Mixed"
+              ? "Gemischt"
+              : "Gesund"
         : profitQualityLevel;
 
   const intelligenceScore = Math.max(

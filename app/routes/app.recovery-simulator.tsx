@@ -16,6 +16,8 @@ import {
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
 
@@ -25,9 +27,8 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
-  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const language = getRequestLanguage(request);
+  const locale = getLanguageLocale(language);
 
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
@@ -687,16 +688,19 @@ export default function RecoverySimulatorPage() {
     },
   ].filter((item) => item.visible);
 
-  const displayRecoveryBreakdown = language !== "fr" ? recoveryBreakdown : recoveryBreakdown.map((item) => ({
+  const displayRecoveryBreakdown = language === "fr" ? recoveryBreakdown.map((item) => ({
     ...item,
     label: ({ price: "Variation du prix", cost: "Réduction du coût", volume: "Variation du volume", fees: "Impact des frais variables", "tax-reserve": `Réserve fiscale du modèle (${formatStorePercent(taxReserveRate * 100, "fr-FR", 1)})` } as Record<string, string>)[item.key] ?? item.label,
-  }));
+  })) : language === "de" ? recoveryBreakdown.map((item) => ({
+    ...item,
+    label: ({ price: "Preisänderung", cost: "Kostensenkung", volume: "Volumenänderung", fees: "Auswirkung variabler Gebühren", "tax-reserve": `Steuerrücklage des Modells (${formatStorePercent(taxReserveRate * 100, "de-DE", 1)})` } as Record<string, string>)[item.key] ?? item.label,
+  })) : recoveryBreakdown;
 
-  const displayRiskLabel = language !== "fr" ? riskLabel : commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible";
-  const displayConfidenceLabel = language !== "fr" ? confidenceLabel : dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible";
-  const displayProfitHealth = language !== "fr" ? profitHealth : simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte";
+  const displayRiskLabel = language === "fr" ? commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible" : language === "de" ? commercialRiskScore >= 65 ? "Hoch" : commercialRiskScore >= 35 ? "Mittel" : "Niedrig" : riskLabel;
+  const displayConfidenceLabel = language === "fr" ? dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible" : language === "de" ? dataConfidenceScore >= 80 ? "Hoch" : dataConfidenceScore >= 55 ? "Mittel" : "Niedrig" : confidenceLabel;
+  const displayProfitHealth = language === "fr" ? simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte" : language === "de" ? simulatedMarginPct < 0 ? "Verlustbringend" : simulatedMarginPct < 10 ? "Kritisch" : simulatedMarginPct < 20 ? "Schwach" : simulatedMarginPct < 35 ? "Gesund" : "Stark" : profitHealth;
 
-  const displayRecommendation = language !== "fr" ? recommendation : (() => {
+  const displayRecommendation = language === "fr" ? (() => {
     const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
     if (simulatedMonthlyProfit <= currentMonthlyProfit) {
       return `Ce scénario réduit le bénéfice mensuel estimé. La variation des ventes ne compense pas le nouvel équilibre entre prix et coût. Réduisez l'hypothèse de baisse des ventes ou augmentez le prix au-dessus de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
@@ -708,14 +712,31 @@ export default function RecoverySimulatorPage() {
       return `Porter le prix à ${money(simulatedPrice, 2)} crée un impact important, mais l'augmentation de ${pct(displayPriceIncreasePct)} est significative. Testez-la sur une courte période ou sur une partie du trafic afin de mesurer la réaction de la demande.`;
     }
     return `Porter le prix à ${money(simulatedPrice, 2)} et réduire le coût de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)}. Au volume supposé, la récupération estimée est de ${formatSignedMoney(netRecoveredAnnualProfit, 0)} par an. Il s'agit d'un équilibre crédible entre rentabilité et risque commercial.`;
-  })();
+  })() : language === "de" ? (() => {
+    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
+    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+      return `Dieses Szenario senkt den geschätzten monatlichen Gewinn. Die Umsatzänderung gleicht das neue Verhältnis von Preis und Kosten nicht aus. Verringern Sie den angenommenen Absatzrückgang oder erhöhen Sie den Preis über ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+    }
+    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+      return `Die Kostensenkung ist in diesem Szenario der wirksamste Hebel. Eine Senkung um ${pct(costReductionPct)} erhöht die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)} bei nur begrenzter Preiserhöhung. Verhandeln Sie zunächst mit dem Lieferanten, bevor Sie den Verkaufspreis ändern.`;
+    }
+    if (displayPriceIncreasePct >= 8) {
+      return `Ein Preis von ${money(simulatedPrice, 2)} hat eine deutliche Wirkung, die Erhöhung um ${pct(displayPriceIncreasePct)} ist jedoch erheblich. Testen Sie sie für einen kurzen Zeitraum oder bei einem Teil des Traffics, um die Nachfragereaktion zu messen.`;
+    }
+    return `Ein Preis von ${money(simulatedPrice, 2)} und eine Kostensenkung um ${pct(costReductionPct)} erhöhen die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)}. Beim angenommenen Volumen beträgt der geschätzte jährliche Gewinnzuwachs ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Dies ist ein glaubwürdiger Ausgleich zwischen Rentabilität und Geschäftsrisiko.`;
+  })() : recommendation;
 
-  const displaySuggestedActions = language !== "fr" ? suggestedActions : [
+  const displaySuggestedActions = language === "fr" ? [
     { visible: simulatedPrice > currentPrice, text: `Évaluer un prix de vente de ${money(simulatedPrice, 2)}` },
     { visible: costReductionPct > 0, text: `Négocier une réduction de coût de ${pct(costReductionPct)}` },
     { visible: salesChangePct < 0, text: "Surveiller une éventuelle baisse de conversion après le changement de prix" },
     { visible: salesChangePct >= 0, text: "Surveiller les ventes et la marge pour confirmer l'impact réel" },
-  ].filter((item) => item.visible);
+  ].filter((item) => item.visible) : language === "de" ? [
+    { visible: simulatedPrice > currentPrice, text: `Verkaufspreis von ${money(simulatedPrice, 2)} prüfen` },
+    { visible: costReductionPct > 0, text: `Kostensenkung um ${pct(costReductionPct)} verhandeln` },
+    { visible: salesChangePct < 0, text: "Möglichen Conversion-Rückgang nach der Preisänderung beobachten" },
+    { visible: salesChangePct >= 0, text: "Umsatz und Marge beobachten, um die tatsächliche Wirkung zu bestätigen" },
+  ].filter((item) => item.visible) : suggestedActions;
 
   const handleManualPriceChange = (value: number) => {
     setScenario("custom");
@@ -1316,7 +1337,7 @@ export default function RecoverySimulatorPage() {
                       pct(currentMarginPct),
                     ],
                     [
-                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : "Monthly profit",
+                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : "Monthly profit",
                       money(currentMonthlyProfit, 0),
                     ],
                   ].map(([label, value]) => (
@@ -1349,7 +1370,7 @@ export default function RecoverySimulatorPage() {
                         </span>
 
                         {label ===
-                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : "Monthly profit") && (
+                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : "Monthly profit") && (
                             <MetricTooltip
                               content={{
                                 title:
@@ -1856,7 +1877,7 @@ export default function RecoverySimulatorPage() {
                   },
                   {
                     label:
-                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : "Net monthly recovery",
+                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : "Net monthly recovery",
                     value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
                     note:
                       copy.auto.s049,
@@ -1896,7 +1917,7 @@ export default function RecoverySimulatorPage() {
                       <span>{item.label}</span>
 
                       {item.label ===
-                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : "Net monthly recovery") && (
+                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : "Net monthly recovery") && (
                           <MetricTooltip
                             content={{
                               title:

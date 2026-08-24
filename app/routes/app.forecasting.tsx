@@ -14,6 +14,8 @@ import {
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { formatMoneyCompact } from "~/utils/formatting";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
 
@@ -63,7 +65,7 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const locale = url.searchParams.get("lang") === "it" ? "it-IT" : "en-US";
+  const locale = getLanguageLocale(getRequestLanguage(request));
   const period = url.searchParams.get("period") ?? "30";
   const parsedPeriod = Number(period);
   const forecastPeriod =
@@ -818,29 +820,45 @@ export default function ForecastingPage() {
           : "Cost growth remains controlled in the selected scenario.",
       ];
 
-  const displayHealth = language !== "fr"
-    ? health
-    : finalPoint.netMargin >= 20
+  const displayHealth = language === "fr"
+    ? finalPoint.netMargin >= 20
       ? "Très solide"
       : finalPoint.netMargin >= 10
         ? "En amélioration"
         : finalPoint.netMargin >= 0
           ? "Fragile"
-          : "À risque";
+          : "À risque"
+    : language === "de"
+      ? finalPoint.netMargin >= 20
+        ? "Sehr solide"
+        : finalPoint.netMargin >= 10
+          ? "Verbessert sich"
+          : finalPoint.netMargin >= 0
+            ? "Anfällig"
+            : "Gefährdet"
+      : health;
 
-  const displayStrongestLever = language !== "fr"
-    ? strongestLever
-    : marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
+  const displayStrongestLever = language === "fr"
+    ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
       ? "l'amélioration de la marge"
       : monthlyRevenueGrowth >= recoveryCapture / 25
         ? "la croissance du chiffre d'affaires"
-        : "la récupération des opportunités";
+        : "la récupération des opportunités"
+    : language === "de"
+      ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
+        ? "die Margenverbesserung"
+        : monthlyRevenueGrowth >= recoveryCapture / 25
+          ? "das Umsatzwachstum"
+          : "die Nutzung von Gewinnpotenzialen"
+      : strongestLever;
 
-  const displayRecommendation = language !== "fr"
-    ? recommendation
-    : `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`;
+  const displayRecommendation = language === "fr"
+    ? `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`
+    : language === "de"
+      ? `Das ${selectedScenario === "custom" ? "benutzerdefinierte" : selectedScenario === "expected" ? "realistische" : selectedScenario === "worst" ? "ungünstige" : "günstige"} Szenario erhöht den geschätzten monatlichen Nettogewinn innerhalb von ${horizon} Monaten von ${money(currentMonthlyNetProfit)} auf ${money(finalPoint.netProfit)}. Der stärkste Hebel ist ${displayStrongestLever}. Bei einer Margenverbesserung um ${number(marginImprovement, 1)} Punkte und der Nutzung von ${pct(recoveryCapture, 0)} der erkannten Potenziale beträgt der geschätzte kumulierte Zusatzgewinn ${money(finalPoint.cumulativeLift)}.`
+      : recommendation;
 
-  const displayActions = language !== "fr" ? actions : [
+  const displayActions = language === "fr" ? [
     marginImprovement > 0
       ? `Augmentez progressivement la marge économique de ${number(marginImprovement, 1)} points par rapport au niveau actuel.`
       : "Maintenez la marge économique stable et surveillez les produits les plus faibles.",
@@ -850,7 +868,17 @@ export default function ForecastingPage() {
     monthlyCostGrowth > 1
       ? "Contenez la croissance mensuelle des coûts, car elle réduit le bénéfice de la croissance du chiffre d'affaires."
       : "La croissance des coûts reste maîtrisée dans le scénario sélectionné.",
-  ];
+  ] : language === "de" ? [
+    marginImprovement > 0
+      ? `Erhöhen Sie die wirtschaftliche Marge schrittweise um ${number(marginImprovement, 1)} Punkte gegenüber dem aktuellen Niveau.`
+      : "Halten Sie die wirtschaftliche Marge stabil und beobachten Sie die schwächsten Produkte.",
+    recoveryCapture > 0
+      ? `Priorisieren Sie die ${impactedProducts} Produkte mit erkanntem Gewinnpotenzial.`
+      : "Nutzen Sie mindestens einen Teil der bereits erkannten Gewinnpotenziale.",
+    monthlyCostGrowth > 1
+      ? "Begrenzen Sie das monatliche Kostenwachstum, da es den Nutzen des Umsatzwachstums verringert."
+      : "Das Kostenwachstum bleibt im ausgewählten Szenario unter Kontrolle.",
+  ] : actions;
 
   const exportForecastCsv = () => {
     type CsvValue = string | number;

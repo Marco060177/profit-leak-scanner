@@ -12,6 +12,8 @@ import {
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
 
@@ -19,7 +21,7 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const locale = url.searchParams.get("lang") === "it" ? "it-IT" : "en-US";
+  const locale = getLanguageLocale(getRequestLanguage(request));
   const period = url.searchParams.get("period") ?? "30";
 
   const billing = await getBillingStatus(admin);
@@ -618,24 +620,35 @@ export default function ProfitAssumptionsPage() {
         )} and annual profit by about ${money(largestCostAnnualSaving)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
 
-  const displayCostItems = language !== "fr" ? costItems : costItems.map((item) => ({
+  const displayCostItems = language === "fr" ? costItems.map((item) => ({
     ...item,
     label: ({ ads: "Publicité", shipping: "Expédition", operating: "Coûts d'exploitation", payment: "Frais de paiement", transaction: "Frais de transaction", tax: "Réserve fiscale du modèle" } as Record<string, string>)[item.key] ?? item.label,
-  }));
+  })) : language === "de" ? costItems.map((item) => ({
+    ...item,
+    label: ({ ads: "Werbung", shipping: "Versand", operating: "Betriebskosten", payment: "Zahlungsgebühren", transaction: "Transaktionsgebühren", tax: "Steuerrücklage des Modells" } as Record<string, string>)[item.key] ?? item.label,
+  })) : costItems;
 
-  const displayWhatIfScenarios = language !== "fr" ? whatIfScenarios : whatIfScenarios.map((scenario) => ({
+  const displayWhatIfScenarios = language === "fr" ? whatIfScenarios.map((scenario) => ({
     ...scenario,
     label: ({ ads: "Réduire la publicité de 10 %", shipping: "Réduire les frais d'expédition de 10 %", fees: "Réduire les frais de 0,5 %" } as Record<string, string>)[scenario.key] ?? scenario.label,
     note: ({ ads: "Effet mensuel immédiat", shipping: "Amélioration opérationnelle", fees: "Renégociation ou changement de prestataire" } as Record<string, string>)[scenario.key] ?? scenario.note,
-  }));
+  })) : language === "de" ? whatIfScenarios.map((scenario) => ({
+    ...scenario,
+    label: ({ ads: "Werbung um 10 % senken", shipping: "Versandkosten um 10 % senken", fees: "Gebühren um 0,5 % senken" } as Record<string, string>)[scenario.key] ?? scenario.label,
+    note: ({ ads: "Unmittelbare monatliche Wirkung", shipping: "Operative Verbesserung", fees: "Neu verhandeln oder Anbieter wechseln" } as Record<string, string>)[scenario.key] ?? scenario.note,
+  })) : whatIfScenarios;
 
-  const displayHealthLabel = language !== "fr" ? healthLabel : healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque";
+  const displayHealthLabel = language === "fr" ? healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque" : language === "de" ? healthScore >= 80 ? "Solides Modell" : healthScore >= 60 ? "Optimierungsbedarf" : "Gefährdet" : healthLabel;
   const displayLargestCostLabel = largestCost ? displayCostItems.find((item) => item.key === largestCost.key)?.label ?? largestCost.label : "";
-  const displayAdvice = language !== "fr"
-    ? advice
-    : largestCost && totalEstimatedCosts > 0
+  const displayAdvice = language === "fr"
+    ? largestCost && totalEstimatedCosts > 0
       ? `${displayLargestCostLabel} représente environ ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} des coûts estimés. Une réduction de 10 % dans ce domaine améliorerait le bénéfice mensuel d'environ ${money(largestCostMonthlySaving)} et le bénéfice annuel d'environ ${money(largestCostAnnualSaving)}.`
-      : "Ajoutez vos principaux coûts pour obtenir une recommandation financière plus fiable.";
+      : "Ajoutez vos principaux coûts pour obtenir une recommandation financière plus fiable."
+    : language === "de"
+      ? largestCost && totalEstimatedCosts > 0
+        ? `${displayLargestCostLabel} macht etwa ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} der geschätzten Kosten aus. Eine Senkung um 10 % in diesem Bereich würde den monatlichen Gewinn um etwa ${money(largestCostMonthlySaving)} und den jährlichen Gewinn um etwa ${money(largestCostAnnualSaving)} verbessern.`
+        : "Ergänzen Sie Ihre wichtigsten Kosten, um eine zuverlässigere finanzielle Empfehlung zu erhalten."
+      : advice;
 
   const exportBusinessModelCsv = () => {
     const labels =
