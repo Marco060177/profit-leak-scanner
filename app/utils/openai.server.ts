@@ -1,4 +1,6 @@
 import OpenAI from "openai";
+import { getAiLanguageName, getAiReportSections } from "~/utils/ai-i18n";
+import { getLanguageLocale, type Language } from "~/utils/i18n";
 
 const openaiApiKey = process.env.OPENAI_API_KEY;
 
@@ -10,7 +12,7 @@ export const openai = new OpenAI({
   apiKey: openaiApiKey,
 });
 
-export type SupportedLanguage = "en" | "it";
+export type SupportedLanguage = Language;
 
 type OfficialEconomicSnapshot = {
   currencyCode: string;
@@ -19,28 +21,6 @@ type OfficialEconomicSnapshot = {
   confidenceLevel: string;
   cogsCoveragePct: number;
 };
-
-function getLanguageName(language: SupportedLanguage) {
-  return language === "it" ? "Italian" : "English";
-}
-
-function getReportSectionNames(language: SupportedLanguage) {
-  if (language === "it") {
-    return {
-      storeHealth: "STATO DELLO STORE",
-      mainRisks: "RISCHI PRINCIPALI",
-      whatToCheckFirst: "COSA CONTROLLARE PRIMA",
-      profitOpportunity: "GAP DI PROFITTO E POTENZIALE",
-    };
-  }
-
-  return {
-    storeHealth: "STORE HEALTH",
-    mainRisks: "MAIN RISKS",
-    whatToCheckFirst: "WHAT TO CHECK FIRST",
-    profitOpportunity: "PROFIT GAP & UPSIDE",
-  };
-}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -55,7 +35,7 @@ function normalizeDeterministicReport({
   language: SupportedLanguage;
   snapshot: OfficialEconomicSnapshot;
 }) {
-  const sections = getReportSectionNames(language);
+  const sections = getAiReportSections(language);
   const headingPattern = new RegExp(
     `^(${[
       sections.storeHealth,
@@ -65,7 +45,7 @@ function normalizeDeterministicReport({
     ]
       .map(escapeRegExp)
       .join("|")})\\s*$`,
-    "m",
+    "mi",
   );
   const parts = text.split(headingPattern);
 
@@ -74,7 +54,7 @@ function normalizeDeterministicReport({
   }
 
   const amount = new Intl.NumberFormat(
-    language === "it" ? "it-IT" : "en-US",
+    getLanguageLocale(language),
     {
       style: "currency",
       currency: snapshot.currencyCode,
@@ -83,32 +63,53 @@ function normalizeDeterministicReport({
     },
   ).format(snapshot.monthlyOpportunity);
 
-  const confidenceLine =
-    language === "it"
-      ? `- Confidenza dei dati: ${snapshot.confidenceScore}/100 (${snapshot.confidenceLevel}). Copertura COGS: ${snapshot.cogsCoveragePct}%.`
-      : `- Data confidence: ${snapshot.confidenceScore}/100 (${snapshot.confidenceLevel}). COGS coverage: ${snapshot.cogsCoveragePct}%.`;
-  const opportunityLine =
-    language === "it"
-      ? `- Opportunità mensile totale stimata dello store: ${amount}.`
-      : `- Estimated total monthly store opportunity: ${amount}.`;
+  const confidenceLevel = ({
+    en: { low: "low", medium: "medium", high: "high" },
+    it: { low: "bassa", medium: "media", high: "alta" },
+    fr: { low: "faible", medium: "moyenne", high: "élevée" },
+    de: { low: "niedrig", medium: "mittel", high: "hoch" },
+    es: { low: "baja", medium: "media", high: "alta" },
+    "pt-BR": { low: "baixa", medium: "média", high: "alta" },
+  }[language] as Record<string, string>)[snapshot.confidenceLevel]
+    ?? snapshot.confidenceLevel;
+
+  const confidenceLine = {
+    en: `- Data confidence: ${snapshot.confidenceScore}/100 (${confidenceLevel}). COGS coverage: ${snapshot.cogsCoveragePct}%.`,
+    it: `- Confidenza dei dati: ${snapshot.confidenceScore}/100 (${confidenceLevel}). Copertura COGS: ${snapshot.cogsCoveragePct}%.`,
+    fr: `- Fiabilité des données : ${snapshot.confidenceScore}/100 (${confidenceLevel}). Couverture COGS : ${snapshot.cogsCoveragePct} %.`,
+    de: `- Datenkonfidenz: ${snapshot.confidenceScore}/100 (${confidenceLevel}). COGS-Abdeckung: ${snapshot.cogsCoveragePct} %.`,
+    es: `- Confianza de los datos: ${snapshot.confidenceScore}/100 (${confidenceLevel}). Cobertura de COGS: ${snapshot.cogsCoveragePct} %.`,
+    "pt-BR": `- Confiança dos dados: ${snapshot.confidenceScore}/100 (${confidenceLevel}). Cobertura de COGS: ${snapshot.cogsCoveragePct}%.`,
+  }[language];
+  const opportunityLine = {
+    en: `- Estimated total monthly store opportunity: ${amount}.`,
+    it: `- Opportunità mensile totale stimata dello store: ${amount}.`,
+    fr: `- Écart mensuel total estimé de la boutique par rapport à l'objectif de bénéfice : ${amount}.`,
+    de: `- Geschätzte gesamte monatliche Gewinnlücke des Shops zum Zielwert: ${amount}.`,
+    es: `- Brecha mensual total estimada de la tienda respecto al objetivo de beneficio: ${amount}.`,
+    "pt-BR": `- Diferença mensal total estimada da loja em relação à meta de lucro: ${amount}.`,
+  }[language];
 
   const confidenceTerms =
-    /(?:confidenza|confidence|copertura\s+cogs|cogs\s+coverage)/i;
+    /(?:confidenza|confidence|fiabilit[ée]|datenkonfidenz|confianza|confiança|copertura\s+cogs|couverture\s+cogs|cogs[-\s](?:coverage|abdeckung)|cobertura\s+(?:de\s+)?cogs)/i;
   const monetaryValue =
     /(?:[$€£¥]|\b(?:USD|EUR|GBP|CAD|AUD|JPY)\b|\d+[.,]\d{2})/i;
 
   for (let index = 1; index < parts.length; index += 2) {
     const heading = parts[index];
+    const normalizedHeading = heading
+      .trim()
+      .toLocaleUpperCase(getLanguageLocale(language));
     const body = parts[index + 1] ?? "";
     let lines = body
       .split("\n")
       .filter((line) => !confidenceTerms.test(line));
 
-    if (heading === sections.storeHealth) {
+    if (normalizedHeading === sections.storeHealth) {
       lines = ["", confidenceLine, ...lines.filter((line) => line.trim())];
     }
 
-    if (heading === sections.profitOpportunity) {
+    if (normalizedHeading === sections.profitOpportunity) {
       lines = [
         "",
         opportunityLine,
@@ -132,14 +133,19 @@ export async function generateAiMarginAnalysis(input: {
   if (!openaiApiKey) {
     return {
       text:
-        input.language === "it"
-          ? "L'analisi AI non è disponibile perché OPENAI_API_KEY non è configurata."
-          : "AI analysis is not available because OPENAI_API_KEY is not configured.",
+        ({
+          en: "AI analysis is not available because OPENAI_API_KEY is not configured.",
+          it: "L'analisi AI non è disponibile perché OPENAI_API_KEY non è configurata.",
+          fr: "L'analyse IA n'est pas disponible, car OPENAI_API_KEY n'est pas configurée.",
+          de: "Die KI-Analyse ist nicht verfügbar, da OPENAI_API_KEY nicht konfiguriert ist.",
+          es: "El análisis de IA no está disponible porque OPENAI_API_KEY no está configurada.",
+          "pt-BR": "A análise de IA não está disponível porque OPENAI_API_KEY não está configurada.",
+        } as const)[input.language],
     };
   }
 
-  const languageName = getLanguageName(input.language);
-  const sections = getReportSectionNames(input.language);
+  const languageName = getAiLanguageName(input.language);
+  const sections = getAiReportSections(input.language);
 
   const response = await openai.responses.create({
     model: "gpt-4.1-mini",
@@ -191,7 +197,7 @@ NEXT STEPS
 BUSINESS SUMMARY
 FINANCIAL OVERVIEW
 
-Do not use English headings when the required response language is Italian.
+Do not use headings from any language other than ${languageName}.
 
 CONTENT RULES
 
@@ -255,13 +261,11 @@ export async function generateAiAnswer(input: {
   if (!openaiApiKey) {
     return {
       text:
-        input.language === "it"
-          ? "L'AI non è disponibile."
-          : "AI is not available.",
+        ({ en: "AI is not available.", it: "L'AI non è disponibile.", fr: "L'IA n'est pas disponible.", de: "Die KI ist nicht verfügbar.", es: "La IA no está disponible.", "pt-BR": "A IA não está disponível." } as const)[input.language],
     };
   }
 
-  const languageName = getLanguageName(input.language);
+  const languageName = getAiLanguageName(input.language);
 
   const response = await openai.responses.create({
     model: "gpt-4.1-mini",

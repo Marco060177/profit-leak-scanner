@@ -23,8 +23,12 @@ import {
 import type { LoaderData } from "~/utils/margin";
 
 import {
+  getLanguageLocale,
+  isLanguage,
   type Language,
 } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
+import { getAiLanguageName } from "~/utils/ai-i18n";
 
 import "~/styles/dashboard.css";
 
@@ -34,10 +38,15 @@ function downloadAiReportPdf(reportText: string, language: Language) {
     unit: "mm",
     format: "a4",
   });
-  const title =
-    language === "it"
-      ? "MarginLab - Report AI"
-      : "MarginLab - AI Report";
+  const pdfCopy = {
+    en: { title: "MarginLab - AI Report", page: "Page", of: "of" },
+    it: { title: "MarginLab - Report AI", page: "Pagina", of: "di" },
+    fr: { title: "MarginLab - Rapport IA", page: "Page", of: "sur" },
+    de: { title: "MarginLab - KI-Bericht", page: "Seite", of: "von" },
+    es: { title: "MarginLab - Informe de IA", page: "Página", of: "de" },
+    "pt-BR": { title: "MarginLab - Relatório de IA", page: "Página", of: "de" },
+  }[language];
+  const title = pdfCopy.title;
   const pdfSafeText = reportText
     .trim()
     .replace(/[–—]/g, "-")
@@ -53,7 +62,7 @@ function downloadAiReportPdf(reportText: string, language: Language) {
   const bodyStartY = 39;
   const bodyEndY = pageHeight - 18;
   const lineHeight = 5.4;
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const locale = getLanguageLocale(language);
   const reportDate = new Date().toLocaleDateString(locale, {
     day: "2-digit",
     month: "long",
@@ -96,9 +105,7 @@ function downloadAiReportPdf(reportText: string, language: Language) {
     pdf.setTextColor(120, 128, 140);
     pdf.setFontSize(8);
     pdf.text(
-      language === "it"
-        ? `MarginLab · Pagina ${pageIndex + 1} di ${totalPages}`
-        : `MarginLab · Page ${pageIndex + 1} of ${totalPages}`,
+      `MarginLab · ${pdfCopy.page} ${pageIndex + 1} ${pdfCopy.of} ${totalPages}`,
       pageWidth - marginX,
       pageHeight - 8,
       { align: "right" },
@@ -136,10 +143,12 @@ function buildServerStoreSummary({
   dashboardData,
   assumptions,
   period,
+  language,
 }: {
   dashboardData: any;
   assumptions: any;
   period: string;
+  language: Language;
 }) {
   const { summary, rows, economicSnapshot } = dashboardData;
 
@@ -180,7 +189,7 @@ function buildServerStoreSummary({
   const profitAlerts = generateProfitAlerts({
     summary,
     rows,
-    language: "en",
+    language,
     period,
     currencyCode: economicSnapshot.currencyCode,
   });
@@ -278,12 +287,8 @@ export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
 
-  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
-
-  const locale =
-    language === "it"
-      ? "it-IT"
-      : "en-US";
+  const language = getRequestLanguage(request);
+  const locale = getLanguageLocale(language);
 
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
@@ -345,10 +350,11 @@ export async function action({ request }: { request: Request }) {
 
   const submittedLanguage = String(formData.get("language") || "en");
 
-  const language: Language =
-    submittedLanguage === "it" ? "it" : "en";
+  const language: Language = isLanguage(submittedLanguage)
+    ? submittedLanguage
+    : "en";
 
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const locale = getLanguageLocale(language);
   const dashboardData = await loadMarginDashboardData({
     admin,
     session,
@@ -365,6 +371,7 @@ export async function action({ request }: { request: Request }) {
     dashboardData,
     assumptions,
     period,
+    language,
   });
 
   const month = getUsageMonth();
@@ -406,10 +413,14 @@ export async function action({ request }: { request: Request }) {
 
   if (!quotaResult) {
     return {
-      text:
-        language === "it"
-          ? "Hai raggiunto il limite di 100 richieste AI per questo mese. La quota si rinnoverà automaticamente il mese prossimo."
-          : "You have reached the limit of 100 AI requests for this month. Your allowance will reset automatically next month.",
+      text: {
+        en: "You have reached the limit of 100 AI requests for this month. Your allowance will reset automatically next month.",
+        it: "Hai raggiunto il limite di 100 richieste AI per questo mese. La quota si rinnoverà automaticamente il mese prossimo.",
+        fr: "Vous avez atteint la limite de 100 requêtes IA pour ce mois-ci. Votre quota sera automatiquement réinitialisé le mois prochain.",
+        de: "Sie haben das Limit von 100 KI-Anfragen für diesen Monat erreicht. Ihr Kontingent wird im nächsten Monat automatisch zurückgesetzt.",
+        es: "Has alcanzado el límite de 100 solicitudes de IA de este mes. Tu cuota se restablecerá automáticamente el próximo mes.",
+        "pt-BR": "Você atingiu o limite de 100 solicitações de IA deste mês. Sua cota será renovada automaticamente no próximo mês.",
+      }[language],
       quotaExceeded: true,
     };
   }
@@ -1043,7 +1054,7 @@ Destination module: ${alert.route}
   const aiPrompt = `
 You are MarginLab AI Advisor.
 
-Respond in ${language === "it" ? "Italian" : language === "fr" ? "French" : "English"}.
+Respond in ${getAiLanguageName(language)}.
 
 Analyze this Shopify store profitability data.
 
