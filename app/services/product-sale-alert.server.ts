@@ -2,7 +2,9 @@ import type { ProfitAlert } from "~/utils/profit-monitor";
 import {
     createAlertNotificationDelivery,
     getNotificationPreferences,
+    normalizeNotificationLanguage,
     shouldNotifyAlert,
+    type NotificationLanguage,
 } from "~/services/notification.server";
 
 type OrderLineItemPayload = {
@@ -42,6 +44,62 @@ type ProductSaleGroup = {
     currencyCode: string;
 };
 
+const PRODUCT_ALERT_COPY: Record<NotificationLanguage, {
+    lossTitle: string;
+    missingTitle: string;
+    weakTitle: string;
+    lossDescription: (product: string, order: string) => string;
+    missingDescription: (product: string, order: string) => string;
+    weakDescription: (product: string, order: string) => string;
+    action: string;
+    lossSubject: (product: string) => string;
+    missingSubject: (product: string) => string;
+    weakSubject: (product: string) => string;
+}> = {
+    en: {
+        lossTitle: "Product sold at a loss", missingTitle: "Missing cost", weakTitle: "Weak margin", action: "Review product",
+        lossDescription: (product, order) => `${product} was just sold in order ${order} and the sale is loss-making based on the order's net product revenue and the current Shopify cost.`,
+        missingDescription: (product, order) => `${product} was just sold in order ${order}, but its Shopify cost is missing.`,
+        weakDescription: (product, order) => `${product} was just sold in order ${order} with a margin below 10%.`,
+        lossSubject: (product) => `MarginLab: product sold at a loss — ${product}`, missingSubject: (product) => `MarginLab: missing cost on a product just sold — ${product}`, weakSubject: (product) => `MarginLab: weak margin on a product just sold — ${product}`,
+    },
+    it: {
+        lossTitle: "Prodotto venduto in perdita", missingTitle: "Costo mancante", weakTitle: "Margine debole", action: "Controlla prodotto",
+        lossDescription: (product, order) => `${product} è stato appena venduto nell'ordine ${order} e la vendita risulta in perdita sulla base del prezzo netto dell'ordine e del costo Shopify corrente.`,
+        missingDescription: (product, order) => `${product} è stato appena venduto nell'ordine ${order}, ma il costo Shopify non è disponibile.`,
+        weakDescription: (product, order) => `${product} è stato appena venduto nell'ordine ${order} con un margine inferiore al 10%.`,
+        lossSubject: (product) => `MarginLab: prodotto venduto in perdita — ${product}`, missingSubject: (product) => `MarginLab: costo mancante su un prodotto appena venduto — ${product}`, weakSubject: (product) => `MarginLab: margine debole su un prodotto appena venduto — ${product}`,
+    },
+    fr: {
+        lossTitle: "Produit vendu à perte", missingTitle: "Coût manquant", weakTitle: "Marge faible", action: "Examiner le produit",
+        lossDescription: (product, order) => `${product} vient d'être vendu dans la commande ${order} et la vente est déficitaire d'après le chiffre d'affaires net de la commande et le coût Shopify actuel.`,
+        missingDescription: (product, order) => `${product} vient d'être vendu dans la commande ${order}, mais son coût Shopify n'est pas disponible.`,
+        weakDescription: (product, order) => `${product} vient d'être vendu dans la commande ${order} avec une marge inférieure à 10 %.` ,
+        lossSubject: (product) => `MarginLab : produit vendu à perte — ${product}`, missingSubject: (product) => `MarginLab : coût manquant sur un produit qui vient d'être vendu — ${product}`, weakSubject: (product) => `MarginLab : marge faible sur un produit qui vient d'être vendu — ${product}`,
+    },
+    de: {
+        lossTitle: "Produkt mit Verlust verkauft", missingTitle: "Fehlende Kosten", weakTitle: "Schwache Marge", action: "Produkt prüfen",
+        lossDescription: (product, order) => `${product} wurde soeben in Bestellung ${order} verkauft. Auf Basis des Nettoproduktumsatzes der Bestellung und der aktuellen Shopify-Kosten ist der Verkauf verlustbringend.`,
+        missingDescription: (product, order) => `${product} wurde soeben in Bestellung ${order} verkauft, aber die Shopify-Kosten sind nicht verfügbar.`,
+        weakDescription: (product, order) => `${product} wurde soeben in Bestellung ${order} mit einer Marge von unter 10 % verkauft.`,
+        lossSubject: (product) => `MarginLab: Produkt mit Verlust verkauft — ${product}`, missingSubject: (product) => `MarginLab: fehlende Kosten bei einem soeben verkauften Produkt — ${product}`, weakSubject: (product) => `MarginLab: schwache Marge bei einem soeben verkauften Produkt — ${product}`,
+    },
+    es: {
+        lossTitle: "Producto vendido con pérdidas", missingTitle: "Coste faltante", weakTitle: "Margen débil", action: "Revisar producto",
+        lossDescription: (product, order) => `${product} se acaba de vender en el pedido ${order} y la venta genera pérdidas según los ingresos netos del pedido y el coste actual de Shopify.`,
+        missingDescription: (product, order) => `${product} se acaba de vender en el pedido ${order}, pero su coste de Shopify no está disponible.`,
+        weakDescription: (product, order) => `${product} se acaba de vender en el pedido ${order} con un margen inferior al 10 %.`,
+        lossSubject: (product) => `MarginLab: producto vendido con pérdidas — ${product}`, missingSubject: (product) => `MarginLab: coste faltante en un producto recién vendido — ${product}`, weakSubject: (product) => `MarginLab: margen débil en un producto recién vendido — ${product}`,
+    },
+    "pt-BR": {
+        lossTitle: "Produto vendido com prejuízo", missingTitle: "Custo não informado", weakTitle: "Margem baixa", action: "Revisar produto",
+        lossDescription: (product, order) => `${product} acaba de ser vendido no pedido ${order} e a venda gera prejuízo com base na receita líquida do pedido e no custo atual da Shopify.`,
+        missingDescription: (product, order) => `${product} acaba de ser vendido no pedido ${order}, mas seu custo na Shopify não está disponível.`,
+        weakDescription: (product, order) => `${product} acaba de ser vendido no pedido ${order} com margem inferior a 10%.`,
+        lossSubject: (product) => `MarginLab: produto vendido com prejuízo — ${product}`, missingSubject: (product) => `MarginLab: custo não informado em um produto recém-vendido — ${product}`, weakSubject: (product) => `MarginLab: margem baixa em um produto recém-vendido — ${product}`,
+    },
+};
+
 function finite(value: unknown, fallback = 0) {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : fallback;
@@ -64,7 +122,7 @@ function buildAlert({
     group,
     orderName,
 }: {
-    language: "it" | "en";
+    language: NotificationLanguage;
     group: ProductSaleGroup;
     orderName: string;
 }): { alert: ProfitAlert; issue: "loss" | "low-margin" | "missing-cost"; profit: number | null; marginPct: number | null } | null {
@@ -81,29 +139,9 @@ function buildAlert({
 
     if (!issue) return null;
 
-    const title = language === "it"
-        ? issue === "loss"
-            ? `Prodotto venduto in perdita: ${group.productTitle}`
-            : issue === "missing-cost"
-                ? `Costo mancante: ${group.productTitle}`
-                : `Margine debole: ${group.productTitle}`
-        : issue === "loss"
-            ? `Product sold at a loss: ${group.productTitle}`
-            : issue === "missing-cost"
-                ? `Missing cost: ${group.productTitle}`
-                : `Weak margin: ${group.productTitle}`;
-
-    const description = language === "it"
-        ? issue === "loss"
-            ? `${group.productTitle} è stato appena venduto nell'ordine ${orderName} e la vendita risulta in perdita sulla base del prezzo netto dell'ordine e del costo Shopify corrente.`
-            : issue === "missing-cost"
-                ? `${group.productTitle} è stato appena venduto nell'ordine ${orderName}, ma il costo Shopify non è disponibile.`
-                : `${group.productTitle} è stato appena venduto nell'ordine ${orderName} con un margine inferiore al 10%.`
-        : issue === "loss"
-            ? `${group.productTitle} was just sold in order ${orderName} and the sale is loss-making based on the order's net product revenue and the current Shopify cost.`
-            : issue === "missing-cost"
-                ? `${group.productTitle} was just sold in order ${orderName}, but its Shopify cost is missing.`
-                : `${group.productTitle} was just sold in order ${orderName} with a margin below 10%.`;
+    const copy = PRODUCT_ALERT_COPY[language];
+    const title = `${issue === "loss" ? copy.lossTitle : issue === "missing-cost" ? copy.missingTitle : copy.weakTitle}: ${group.productTitle}`;
+    const description = issue === "loss" ? copy.lossDescription(group.productTitle, orderName) : issue === "missing-cost" ? copy.missingDescription(group.productTitle, orderName) : copy.weakDescription(group.productTitle, orderName);
 
     return {
         issue,
@@ -121,7 +159,7 @@ function buildAlert({
             monthlyImpact: 0,
             economicKind: "qualitative",
             priority: issue === "loss" ? 100 : issue === "missing-cost" ? 90 : 80,
-            actionLabel: language === "it" ? "Controlla prodotto" : "Review product",
+            actionLabel: copy.action,
             route: "/app/products",
             businessAction: "action",
             effort: "easy",
@@ -140,15 +178,9 @@ function buildAlert({
     };
 }
 
-function subjectFor(language: "it" | "en", productTitle: string, issue: "loss" | "low-margin" | "missing-cost") {
-    if (language === "it") {
-        if (issue === "loss") return `MarginLab: prodotto venduto in perdita — ${productTitle}`;
-        if (issue === "missing-cost") return `MarginLab: costo mancante su un prodotto appena venduto — ${productTitle}`;
-        return `MarginLab: margine debole su un prodotto appena venduto — ${productTitle}`;
-    }
-    if (issue === "loss") return `MarginLab: product sold at a loss — ${productTitle}`;
-    if (issue === "missing-cost") return `MarginLab: missing cost on a product just sold — ${productTitle}`;
-    return `MarginLab: weak margin on a product just sold — ${productTitle}`;
+function subjectFor(language: NotificationLanguage, productTitle: string, issue: "loss" | "low-margin" | "missing-cost") {
+    const copy = PRODUCT_ALERT_COPY[language];
+    return issue === "loss" ? copy.lossSubject(productTitle) : issue === "missing-cost" ? copy.missingSubject(productTitle) : copy.weakSubject(productTitle);
 }
 
 export async function queueProductSaleAlertsFromOrder({
@@ -240,7 +272,7 @@ export async function queueProductSaleAlertsFromOrder({
         groups.set(productId, current);
     }
 
-    const language = preferences.language === "it" ? "it" : "en";
+    const language = normalizeNotificationLanguage(preferences.language);
     const orderId = String(payload.id ?? "unknown-order");
     const orderName = payload.name?.trim() || `#${orderId}`;
     let queued = 0;

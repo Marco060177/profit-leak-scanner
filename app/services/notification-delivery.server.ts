@@ -2,16 +2,19 @@ import {
   listPendingNotificationDeliveries,
   markNotificationDeliveryFailed,
   markNotificationDeliverySent,
+  normalizeNotificationLanguage,
+  type NotificationLanguage,
 } from "~/services/notification.server";
 import { sendEmail } from "~/services/email.server";
-import { money as formatStoreMoney } from "~/utils/margin";
+import { formatUiMoney } from "~/utils/formatting";
+import { getLanguageLocale } from "~/utils/i18n";
 
 type ProfitAlertPayload = {
   source?: string;
   monitorEventId?: string;
   reopening?: boolean;
   materialChange?: boolean;
-  language?: "it" | "en";
+  language?: NotificationLanguage;
   alert?: {
     id: string;
     severity: "critical" | "warning" | "opportunity" | "info";
@@ -46,7 +49,7 @@ type ProfitAlertPayload = {
 
 type WeeklyProfitReportPayload = {
   source?: "weekly-profit-report";
-  language?: "it" | "en";
+  language?: NotificationLanguage;
   currencyCode?: string;
   periodLabel?: string;
   generatedAt?: string;
@@ -87,6 +90,10 @@ type WeeklyProfitReportPayload = {
   }>;
 };
 
+function formatStoreMoney(value: number, currencyCode: string, locale: string) {
+  return formatUiMoney(value, { currencyCode, locale });
+}
+
 function parsePayload<T>(value: string | null): T | null {
   if (!value) return null;
 
@@ -112,21 +119,17 @@ function severityLabel(
       ? S
       : never
     : never,
-  language: "it" | "en",
+  language: NotificationLanguage,
 ) {
-  if (severity === "critical") {
-    return language === "it" ? "Critico" : "Critical";
-  }
-
-  if (severity === "warning") {
-    return language === "it" ? "Attenzione" : "Warning";
-  }
-
-  if (severity === "opportunity") {
-    return language === "it" ? "Opportunità" : "Opportunity";
-  }
-
-  return language === "it" ? "Informazione" : "Information";
+  const labels = {
+    en: { critical: "Critical", warning: "Warning", opportunity: "Opportunity", info: "Information" },
+    it: { critical: "Critico", warning: "Attenzione", opportunity: "Opportunità", info: "Informazione" },
+    fr: { critical: "Critique", warning: "Avertissement", opportunity: "Opportunité", info: "Information" },
+    de: { critical: "Kritisch", warning: "Warnung", opportunity: "Chance", info: "Information" },
+    es: { critical: "Crítico", warning: "Advertencia", opportunity: "Oportunidad", info: "Información" },
+    "pt-BR": { critical: "Crítico", warning: "Aviso", opportunity: "Oportunidade", info: "Informação" },
+  }[language];
+  return labels[severity ?? "info"];
 }
 
 function economicLabel(
@@ -135,29 +138,17 @@ function economicLabel(
       ? K
       : never
     : never,
-  language: "it" | "en",
+  language: NotificationLanguage,
 ) {
-  if (economicKind === "loss") {
-    return language === "it"
-      ? "Perdita mensile stimata"
-      : "Estimated monthly loss";
-  }
-
-  if (economicKind === "exposure") {
-    return language === "it"
-      ? "Esposizione mensile stimata"
-      : "Estimated monthly exposure";
-  }
-
-  if (economicKind === "opportunity") {
-    return language === "it"
-      ? "Gap mensile stimato verso il target"
-      : "Estimated monthly profit gap to target";
-  }
-
-  return language === "it"
-    ? "Segnale qualitativo"
-    : "Qualitative signal";
+  const labels = {
+    en: { loss: "Estimated monthly loss", exposure: "Estimated monthly exposure", opportunity: "Estimated monthly profit gap to target", qualitative: "Qualitative signal" },
+    it: { loss: "Perdita mensile stimata", exposure: "Esposizione mensile stimata", opportunity: "Gap mensile stimato verso il target", qualitative: "Segnale qualitativo" },
+    fr: { loss: "Perte mensuelle estimée", exposure: "Exposition mensuelle estimée", opportunity: "Écart mensuel de bénéfice estimé par rapport à l'objectif", qualitative: "Signal qualitatif" },
+    de: { loss: "Geschätzter monatlicher Verlust", exposure: "Geschätzte monatliche Belastung", opportunity: "Geschätzte monatliche Gewinnlücke zum Zielwert", qualitative: "Qualitatives Signal" },
+    es: { loss: "Pérdida mensual estimada", exposure: "Exposición mensual estimada", opportunity: "Diferencia mensual de beneficio estimada respecto al objetivo", qualitative: "Señal cualitativa" },
+    "pt-BR": { loss: "Prejuízo mensal estimado", exposure: "Exposição mensal estimada", opportunity: "Diferença mensal de lucro estimada em relação à meta", qualitative: "Sinal qualitativo" },
+  }[language];
+  return labels[economicKind ?? "qualitative"];
 }
 
 function buildAppUrl(route: string) {
@@ -210,6 +201,43 @@ function formatImpact({
   };
 }
 
+function productSaleEmailCopy(language: NotificationLanguage, sale: NonNullable<ProfitAlertPayload["sale"]>) {
+  const issue = sale.missingCost ? "missing" : sale.profit !== null && sale.profit < 0 ? "loss" : "weak";
+  const copy = {
+    en: {
+      issues: { missing: "You just sold a product with no cost configured", loss: "You just sold a product at a loss", weak: "You just sold a product with weak margin" },
+      explanation: sale.missingCost ? `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}, but the product's Shopify cost is not available.` : `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}. The values below refer to this sale and the current Shopify cost, not to a monthly forecast.`,
+      subject: `MarginLab: review ${sale.productTitle}`, revenue: "Net product revenue", cost: "Current Shopify cost", profit: "Sale profit", margin: "Sale margin", missing: "Missing", cta: "Review product →", review: "Review in MarginLab", footer: "This alert refers to the sale just detected. It contains no monthly projection. The cost used is the current Shopify cost available when the alert was evaluated.", eyebrow: "MARGINLAB PRODUCT ALERT",
+    },
+    it: {
+      issues: { missing: "Hai appena venduto un prodotto senza costo configurato", loss: "Hai appena venduto un prodotto in perdita", weak: "Hai appena venduto un prodotto con margine debole" },
+      explanation: sale.missingCost ? `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}, ma il costo Shopify del prodotto non è disponibile.` : `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}. I valori sotto si riferiscono a questa vendita e al costo Shopify corrente, non a una previsione mensile.`,
+      subject: `MarginLab: controlla ${sale.productTitle}`, revenue: "Ricavo netto prodotto", cost: "Costo Shopify corrente", profit: "Profitto della vendita", margin: "Margine della vendita", missing: "Mancante", cta: "Controlla il prodotto →", review: "Controlla in MarginLab", footer: "Questo alert riguarda la vendita appena rilevata. Non contiene proiezioni mensili. Il costo utilizzato è il costo Shopify corrente disponibile al momento del controllo.", eyebrow: "ALERT PRODOTTO MARGINLAB",
+    },
+    fr: {
+      issues: { missing: "Vous venez de vendre un produit sans coût configuré", loss: "Vous venez de vendre un produit à perte", weak: "Vous venez de vendre un produit avec une marge faible" },
+      explanation: sale.missingCost ? `MarginLab a détecté la vente de ${sale.productTitle} dans la commande ${sale.orderName}, mais le coût Shopify du produit n'est pas disponible.` : `MarginLab a détecté la vente de ${sale.productTitle} dans la commande ${sale.orderName}. Les valeurs ci-dessous concernent cette vente et le coût Shopify actuel, et non une prévision mensuelle.`,
+      subject: `MarginLab : examinez ${sale.productTitle}`, revenue: "Chiffre d'affaires net du produit", cost: "Coût Shopify actuel", profit: "Bénéfice de la vente", margin: "Marge de la vente", missing: "Manquant", cta: "Examiner le produit →", review: "Examiner dans MarginLab", footer: "Cette alerte concerne la vente qui vient d'être détectée. Elle ne contient aucune projection mensuelle. Le coût utilisé est le coût Shopify disponible au moment de l'analyse.", eyebrow: "ALERTE PRODUIT MARGINLAB",
+    },
+    de: {
+      issues: { missing: "Sie haben soeben ein Produkt ohne hinterlegte Kosten verkauft", loss: "Sie haben soeben ein Produkt mit Verlust verkauft", weak: "Sie haben soeben ein Produkt mit schwacher Marge verkauft" },
+      explanation: sale.missingCost ? `MarginLab hat einen Verkauf von ${sale.productTitle} in Bestellung ${sale.orderName} erkannt, aber die Shopify-Kosten des Produkts sind nicht verfügbar.` : `MarginLab hat einen Verkauf von ${sale.productTitle} in Bestellung ${sale.orderName} erkannt. Die folgenden Werte beziehen sich auf diesen Verkauf und die aktuellen Shopify-Kosten, nicht auf eine monatliche Prognose.`,
+      subject: `MarginLab: ${sale.productTitle} prüfen`, revenue: "Nettoproduktumsatz", cost: "Aktuelle Shopify-Kosten", profit: "Verkaufsgewinn", margin: "Verkaufsmarge", missing: "Fehlt", cta: "Produkt prüfen →", review: "In MarginLab prüfen", footer: "Diese Warnung bezieht sich auf den soeben erkannten Verkauf. Sie enthält keine monatliche Prognose. Verwendet wurden die zum Prüfzeitpunkt verfügbaren aktuellen Shopify-Kosten.", eyebrow: "MARGINLAB PRODUKTWARNUNG",
+    },
+    es: {
+      issues: { missing: "Acabas de vender un producto sin coste configurado", loss: "Acabas de vender un producto con pérdidas", weak: "Acabas de vender un producto con margen débil" },
+      explanation: sale.missingCost ? `MarginLab ha detectado una venta de ${sale.productTitle} en el pedido ${sale.orderName}, pero el coste del producto en Shopify no está disponible.` : `MarginLab ha detectado una venta de ${sale.productTitle} en el pedido ${sale.orderName}. Los valores siguientes corresponden a esta venta y al coste actual de Shopify, no a una previsión mensual.`,
+      subject: `MarginLab: revisa ${sale.productTitle}`, revenue: "Ingresos netos del producto", cost: "Coste actual de Shopify", profit: "Beneficio de la venta", margin: "Margen de la venta", missing: "Faltante", cta: "Revisar producto →", review: "Revisar en MarginLab", footer: "Esta alerta corresponde a la venta recién detectada. No contiene proyecciones mensuales. El coste utilizado es el coste actual de Shopify disponible en el momento de la evaluación.", eyebrow: "ALERTA DE PRODUCTO MARGINLAB",
+    },
+    "pt-BR": {
+      issues: { missing: "Você acabou de vender um produto sem custo configurado", loss: "Você acabou de vender um produto com prejuízo", weak: "Você acabou de vender um produto com margem baixa" },
+      explanation: sale.missingCost ? `A MarginLab detectou uma venda de ${sale.productTitle} no pedido ${sale.orderName}, mas o custo do produto na Shopify não está disponível.` : `A MarginLab detectou uma venda de ${sale.productTitle} no pedido ${sale.orderName}. Os valores abaixo correspondem a esta venda e ao custo atual da Shopify, não a uma previsão mensal.`,
+      subject: `MarginLab: revise ${sale.productTitle}`, revenue: "Receita líquida do produto", cost: "Custo atual da Shopify", profit: "Lucro da venda", margin: "Margem da venda", missing: "Não informado", cta: "Revisar produto →", review: "Revisar na MarginLab", footer: "Este alerta corresponde à venda recém-detectada. Ele não contém projeções mensais. O custo utilizado é o custo atual da Shopify disponível no momento da avaliação.", eyebrow: "ALERTA DE PRODUTO MARGINLAB",
+    },
+  }[language];
+  return { ...copy, issueTitle: copy.issues[issue] };
+}
+
 function buildProductSaleAlertEmail({
   payload,
   fallbackCurrencyCode = "USD",
@@ -224,9 +252,10 @@ function buildProductSaleAlertEmail({
     throw new Error("Product sale alert payload is incomplete.");
   }
 
-  const language = payload.language === "it" ? "it" : "en";
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const language = normalizeNotificationLanguage(payload.language);
+  const locale = getLanguageLocale(language);
   const currencyCode = sale.currencyCode || fallbackCurrencyCode;
+  const copy = productSaleEmailCopy(language, sale);
 
   const money = (value: number) =>
     formatStoreMoney(
@@ -245,53 +274,28 @@ function buildProductSaleAlertEmail({
 
   const appUrl = buildAppUrl(alert.route);
 
-  const issueTitle =
-    language === "it"
-      ? sale.missingCost
-        ? "Hai appena venduto un prodotto senza costo configurato"
-        : sale.profit !== null && sale.profit < 0
-          ? "Hai appena venduto un prodotto in perdita"
-          : "Hai appena venduto un prodotto con margine debole"
-      : sale.missingCost
-        ? "You just sold a product with no cost configured"
-        : sale.profit !== null && sale.profit < 0
-          ? "You just sold a product at a loss"
-          : "You just sold a product with weak margin";
-
-  const explanation =
-    language === "it"
-      ? sale.missingCost
-        ? `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}, ma il costo Shopify del prodotto non è disponibile.`
-        : `MarginLab ha rilevato la vendita di ${sale.productTitle} nell'ordine ${sale.orderName}. I valori sotto si riferiscono a questa vendita e al costo Shopify corrente, non a una previsione mensile.`
-      : sale.missingCost
-        ? `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}, but the product's Shopify cost is not available.`
-        : `MarginLab detected a sale of ${sale.productTitle} in order ${sale.orderName}. The values below refer to this sale and the current Shopify cost, not to a monthly forecast.`;
-
-  const subject =
-    language === "it"
-      ? `MarginLab: controlla ${sale.productTitle}`
-      : `MarginLab: review ${sale.productTitle}`;
+  const issueTitle = copy.issueTitle;
+  const explanation = copy.explanation;
+  const subject = copy.subject;
 
   const metrics = [
     {
-      label: language === "it" ? "Ricavo netto prodotto" : "Net product revenue",
+      label: copy.revenue,
       value: money(sale.revenue),
     },
     {
-      label: language === "it" ? "Costo Shopify corrente" : "Current Shopify cost",
+      label: copy.cost,
       value:
         sale.cogs === null
-          ? language === "it"
-            ? "Mancante"
-            : "Missing"
+          ? copy.missing
           : money(sale.cogs),
     },
     {
-      label: language === "it" ? "Profitto della vendita" : "Sale profit",
+      label: copy.profit,
       value: sale.profit === null ? "—" : money(sale.profit),
     },
     {
-      label: language === "it" ? "Margine della vendita" : "Sale margin",
+      label: copy.margin,
       value: margin ?? "—",
     },
   ];
@@ -311,7 +315,7 @@ function buildProductSaleAlertEmail({
     ? `
       <div style="margin-top:22px;">
         <a href="${escapeHtml(appUrl)}" style="display:inline-block;padding:13px 18px;border-radius:12px;background:#ff6b4a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;">
-          ${language === "it" ? "Controlla il prodotto →" : "Review product →"}
+          ${copy.cta}
         </a>
       </div>
     `
@@ -320,7 +324,7 @@ function buildProductSaleAlertEmail({
   const html = `
     <div style="margin:0;padding:32px;background:#050910;font-family:Arial,Helvetica,sans-serif;color:#f8fafc;">
       <div style="max-width:680px;margin:0 auto;">
-        <div style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ff875f;">MARGINLAB PRODUCT ALERT</div>
+        <div style="font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#ff875f;">${copy.eyebrow}</div>
         <div style="margin-top:10px;font-size:30px;line-height:1.2;font-weight:900;color:#ffffff;">${escapeHtml(issueTitle)}</div>
         <div style="margin-top:10px;font-size:21px;line-height:1.3;font-weight:900;color:#ffffff;">${escapeHtml(sale.productTitle)}</div>
         <div style="margin-top:14px;font-size:15px;line-height:1.7;color:#cbd5e1;">${escapeHtml(explanation)}</div>
@@ -328,9 +332,7 @@ function buildProductSaleAlertEmail({
         ${cta}
         <div style="margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6;color:#64748b;">
           ${
-            language === "it"
-              ? "Questo alert riguarda la vendita appena rilevata. Non contiene proiezioni mensili. Il costo utilizzato è il costo Shopify corrente disponibile al momento del controllo."
-              : "This alert refers to the sale just detected. It contains no monthly projection. The cost used is the current Shopify cost available when the alert was evaluated."
+            copy.footer
           }
         </div>
       </div>
@@ -345,11 +347,11 @@ function buildProductSaleAlertEmail({
     "",
     explanation,
     "",
-    `${language === "it" ? "Ricavo netto prodotto" : "Net product revenue"}: ${money(sale.revenue)}`,
-    `${language === "it" ? "Costo Shopify corrente" : "Current Shopify cost"}: ${sale.cogs === null ? (language === "it" ? "Mancante" : "Missing") : money(sale.cogs)}`,
-    `${language === "it" ? "Profitto della vendita" : "Sale profit"}: ${sale.profit === null ? "—" : money(sale.profit)}`,
-    `${language === "it" ? "Margine della vendita" : "Sale margin"}: ${margin ?? "—"}`,
-    ...(appUrl ? ["", `${language === "it" ? "Controlla in MarginLab" : "Review in MarginLab"}: ${appUrl}`] : []),
+    `${copy.revenue}: ${money(sale.revenue)}`,
+    `${copy.cost}: ${sale.cogs === null ? copy.missing : money(sale.cogs)}`,
+    `${copy.profit}: ${sale.profit === null ? "—" : money(sale.profit)}`,
+    `${copy.margin}: ${margin ?? "—"}`,
+    ...(appUrl ? ["", `${copy.review}: ${appUrl}`] : []),
   ].join("\\n");
 
   return { subject, html, text };
@@ -368,8 +370,16 @@ function buildProfitAlertEmail({
     throw new Error("Notification payload is missing alert data.");
   }
 
-  const language = payload.language === "it" ? "it" : "en";
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const language = normalizeNotificationLanguage(payload.language);
+  const locale = getLanguageLocale(language);
+  const copy = {
+    en: { reopened: "a signal is active again", critical: "critical issue detected", warning: "new warning", opportunity: "new opportunity", store: "Store-wide", severity: "Severity", priority: "Priority", product: "Highest-impact product", module: "Recommended module", open: "Open in MarginLab", disclaimer: "Economic impacts are estimates based on available data and do not represent verified lost or recovered profit." },
+    it: { reopened: "un segnale è tornato attivo", critical: "problema critico rilevato", warning: "nuovo avviso", opportunity: "nuova opportunità", store: "Intero store", severity: "Severità", priority: "Priorità", product: "Prodotto a maggiore impatto", module: "Modulo consigliato", open: "Apri in MarginLab", disclaimer: "Gli impatti economici sono stime basate sui dati disponibili e non rappresentano profitto perso o recuperato già verificato." },
+    fr: { reopened: "un signal est de nouveau actif", critical: "problème critique détecté", warning: "nouvelle alerte", opportunity: "nouvelle opportunité", store: "Ensemble de la boutique", severity: "Gravité", priority: "Priorité", product: "Produit au plus fort impact", module: "Module recommandé", open: "Ouvrir dans MarginLab", disclaimer: "Les impacts économiques sont des estimations fondées sur les données disponibles et ne représentent pas un bénéfice perdu ou récupéré déjà vérifié." },
+    de: { reopened: "ein Signal ist wieder aktiv", critical: "kritisches Problem erkannt", warning: "neue Warnung", opportunity: "neue Chance", store: "Gesamter Shop", severity: "Schweregrad", priority: "Priorität", product: "Produkt mit der größten Auswirkung", module: "Empfohlenes Modul", open: "In MarginLab öffnen", disclaimer: "Wirtschaftliche Auswirkungen sind Schätzungen auf Basis der verfügbaren Daten und stellen keinen bereits bestätigten entgangenen oder wiedergewonnenen Gewinn dar." },
+    es: { reopened: "una señal vuelve a estar activa", critical: "problema crítico detectado", warning: "nueva advertencia", opportunity: "nueva oportunidad", store: "Toda la tienda", severity: "Gravedad", priority: "Prioridad", product: "Producto con mayor impacto", module: "Módulo recomendado", open: "Abrir en MarginLab", disclaimer: "Los impactos económicos son estimaciones basadas en los datos disponibles y no representan beneficios perdidos o recuperados ya verificados." },
+    "pt-BR": { reopened: "um sinal está ativo novamente", critical: "problema crítico detectado", warning: "novo alerta", opportunity: "nova oportunidade", store: "Toda a loja", severity: "Gravidade", priority: "Prioridade", product: "Produto de maior impacto", module: "Módulo recomendado", open: "Abrir no MarginLab", disclaimer: "Os impactos econômicos são estimativas baseadas nos dados disponíveis e não representam lucro perdido ou recuperado já verificado." },
+  }[language];
   const impact = formatImpact({
     amount: Number(alert.monthlyImpact ?? 0),
     economicKind: alert.economicKind,
@@ -381,22 +391,14 @@ function buildProfitAlertEmail({
   const severity = severityLabel(alert.severity, language);
   const economic = economicLabel(alert.economicKind, language);
 
-  const subject =
-    language === "it"
-      ? payload.reopening
-        ? `MarginLab: un segnale è tornato attivo — ${alert.title}`
-        : alert.severity === "critical"
-          ? `MarginLab: problema critico rilevato — ${alert.title}`
-          : alert.severity === "warning"
-            ? `MarginLab: nuovo avviso — ${alert.title}`
-            : `MarginLab: nuova opportunità — ${alert.title}`
-      : payload.reopening
-        ? `MarginLab: a signal is active again — ${alert.title}`
-        : alert.severity === "critical"
-          ? `MarginLab: critical issue detected — ${alert.title}`
-          : alert.severity === "warning"
-            ? `MarginLab: new warning — ${alert.title}`
-            : `MarginLab: new opportunity — ${alert.title}`;
+  const subjectKind = payload.reopening
+    ? copy.reopened
+    : alert.severity === "critical"
+      ? copy.critical
+      : alert.severity === "warning"
+        ? copy.warning
+        : copy.opportunity;
+  const subject = `MarginLab: ${subjectKind} — ${alert.title}`;
 
   const safeTitle = escapeHtml(alert.title);
   const safeDescription = escapeHtml(alert.description);
@@ -405,9 +407,7 @@ function buildProfitAlertEmail({
   const safeModule = escapeHtml(alert.recommendedModule);
   const safeProduct = alert.productTitle
     ? escapeHtml(alert.productTitle)
-    : language === "it"
-      ? "Intero store"
-      : "Store-wide";
+    : copy.store;
 
   const textLines = [
     "MarginLab",
@@ -416,10 +416,10 @@ function buildProfitAlertEmail({
     "",
     alert.description,
     "",
-    `${language === "it" ? "Severità" : "Severity"}: ${severity}`,
-    `${language === "it" ? "Priorità" : "Priority"}: ${alert.priority}/100`,
-    `${language === "it" ? "Prodotto a maggiore impatto" : "Highest-impact product"}: ${alert.productTitle ?? (language === "it" ? "Intero store" : "Store-wide")}`,
-    `${language === "it" ? "Modulo consigliato" : "Recommended module"}: ${alert.recommendedModule}`,
+    `${copy.severity}: ${severity}`,
+    `${copy.priority}: ${alert.priority}/100`,
+    `${copy.product}: ${alert.productTitle ?? copy.store}`,
+    `${copy.module}: ${alert.recommendedModule}`,
   ];
 
   if (impact) {
@@ -431,15 +431,13 @@ function buildProfitAlertEmail({
   if (appUrl) {
     textLines.push(
       "",
-      `${language === "it" ? "Apri in MarginLab" : "Open in MarginLab"}: ${appUrl}`,
+      `${copy.open}: ${appUrl}`,
     );
   }
 
   textLines.push(
     "",
-    language === "it"
-      ? "Gli impatti economici sono stime basate sui dati disponibili e non rappresentano profitto perso o recuperato già verificato."
-      : "Economic impacts are estimates based on available data and do not represent verified lost or recovered profit.",
+    copy.disclaimer,
   );
 
   const impactBlock = impact
@@ -462,7 +460,7 @@ function buildProfitAlertEmail({
           href="${escapeHtml(appUrl)}"
           style="display:inline-block;padding:13px 18px;border-radius:12px;background:#ff6b4a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:800;"
         >
-          ${language === "it" ? "Apri in MarginLab →" : "Open in MarginLab →"}
+          ${copy.open} →
         </a>
       </div>
     `
@@ -487,22 +485,22 @@ function buildProfitAlertEmail({
 
         <div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
           <div style="padding:14px;border-radius:12px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Severità" : "Severity"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.severity}</div>
             <div style="margin-top:5px;font-size:15px;font-weight:800;color:#ffffff;">${safeSeverity}</div>
           </div>
 
           <div style="padding:14px;border-radius:12px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Priorità" : "Priority"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.priority}</div>
             <div style="margin-top:5px;font-size:15px;font-weight:800;color:#ffffff;">${alert.priority}/100</div>
           </div>
 
           <div style="padding:14px;border-radius:12px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Prodotto a maggiore impatto" : "Highest-impact product"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.product}</div>
             <div style="margin-top:5px;font-size:15px;font-weight:800;color:#ffffff;">${safeProduct}</div>
           </div>
 
           <div style="padding:14px;border-radius:12px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Modulo consigliato" : "Recommended module"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.module}</div>
             <div style="margin-top:5px;font-size:15px;font-weight:800;color:#ffffff;">${safeModule}</div>
           </div>
         </div>
@@ -510,11 +508,7 @@ function buildProfitAlertEmail({
         ${cta}
 
         <div style="margin-top:24px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6;color:#64748b;">
-          ${
-            language === "it"
-              ? "Gli impatti economici sono stime basate sui dati disponibili e non rappresentano profitto perso o recuperato già verificato."
-              : "Economic impacts are estimates based on available data and do not represent verified lost or recovered profit."
-          }
+          ${copy.disclaimer}
         </div>
       </div>
     </div>
@@ -557,8 +551,24 @@ function buildWeeklyProfitReportEmail({
   payload: WeeklyProfitReportPayload;
   fallbackCurrencyCode?: string;
 }) {
-  const language = payload.language === "it" ? "it" : "en";
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const language = normalizeNotificationLanguage(payload.language);
+  const locale = getLanguageLocale(language);
+  const copy = {
+    en: { period: "Last 7 days", up: "up", down: "down", stable: "stable", points: "pts", profit: "economic profit", openSignal: "Open signal", noRisks: "No new priority risks to report this week.", action: "Action", module: "Module", time: "Estimated time", open: "Open in MarginLab", empty: "Continue monitoring margins, costs and data quality.", hero: "Your week in numbers, risks and next actions.", revenue: "Economic revenue", margin: "Economic margin", marginWord: "margin", signals: "Open signals", critical: "critical", warnings: "warnings", opportunities: "opportunities", impact: "Weekly economic impact", losses: " observed product losses", exposure: " revenue with missing cost data", gap: " estimated gap to target for the period", attention: "What deserves attention", actions: "Your next actions", openApp: "Open MarginLab", disclaimer: "This report describes the last 7 days only. Loss, exposure and gap to target are separate metrics and should not be added together. The gap to target is a modeled estimate for the period, not guaranteed or already recovered profit.", observedLosses: "Observed product losses", missingRevenue: "Revenue with missing cost data", estimatedGap: "Estimated gap to target for the period" },
+    it: { period: "Ultimi 7 giorni", up: "in aumento del", down: "in calo del", stable: "stabile", points: "punti", profit: "di profitto economico", openSignal: "Apri segnale", noRisks: "Nessun nuovo rischio prioritario da segnalare questa settimana.", action: "Azione", module: "Modulo", time: "Tempo stimato", open: "Apri in MarginLab", empty: "Continua a monitorare margini, costi e qualità dei dati.", hero: "La settimana in numeri, rischi e prossime azioni.", revenue: "Ricavi economici", margin: "Margine economico", marginWord: "margine", signals: "Segnali aperti", critical: "critici", warnings: "avvisi", opportunities: "opportunità", impact: "Impatto economico della settimana", losses: " perdite prodotto osservate", exposure: " ricavi con costo mancante", gap: " gap stimato verso il target nel periodo", attention: "Cosa merita attenzione", actions: "Le prossime azioni", openApp: "Apri MarginLab", disclaimer: "Il report descrive esclusivamente gli ultimi 7 giorni. Perdite, esposizione e gap verso il target sono metriche distinte e non devono essere sommate. Il gap verso il target è una stima modellata sul periodo, non profitto garantito o già recuperato.", observedLosses: "Perdite prodotto osservate", missingRevenue: "Ricavi con costo mancante", estimatedGap: "Gap stimato verso il target nel periodo" },
+    fr: { period: "7 derniers jours", up: "en hausse de", down: "en baisse de", stable: "stable", points: "pts", profit: "de bénéfice économique", openSignal: "Ouvrir le signal", noRisks: "Aucun nouveau risque prioritaire à signaler cette semaine.", action: "Action", module: "Module", time: "Temps estimé", open: "Ouvrir dans MarginLab", empty: "Continuez à surveiller les marges, les coûts et la qualité des données.", hero: "Votre semaine en chiffres, risques et prochaines actions.", revenue: "Chiffre d’affaires économique", margin: "Marge économique", marginWord: "de marge", signals: "Signaux ouverts", critical: "critiques", warnings: "alertes", opportunities: "opportunités", impact: "Impact économique de la semaine", losses: " de pertes produit observées", exposure: " de chiffre d’affaires avec coût manquant", gap: " d’écart estimé par rapport à l’objectif sur la période", attention: "Points à surveiller", actions: "Vos prochaines actions", openApp: "Ouvrir MarginLab", disclaimer: "Ce rapport décrit uniquement les 7 derniers jours. Les pertes, l’exposition et l’écart par rapport à l’objectif sont des métriques distinctes qui ne doivent pas être additionnées. L’écart par rapport à l’objectif est une estimation modélisée sur la période, et non un bénéfice garanti ou déjà récupéré.", observedLosses: "Pertes produit observées", missingRevenue: "Chiffre d’affaires avec coût manquant", estimatedGap: "Écart estimé par rapport à l’objectif sur la période" },
+    de: { period: "Letzte 7 Tage", up: "gestiegen um", down: "gesunken um", stable: "stabil", points: "Pkt.", profit: "wirtschaftlicher Gewinn", openSignal: "Signal öffnen", noRisks: "Diese Woche gibt es keine neuen prioritären Risiken.", action: "Aktion", module: "Modul", time: "Geschätzte Zeit", open: "In MarginLab öffnen", empty: "Überwachen Sie weiterhin Margen, Kosten und Datenqualität.", hero: "Ihre Woche in Zahlen, Risiken und nächsten Schritten.", revenue: "Wirtschaftlicher Umsatz", margin: "Wirtschaftliche Marge", marginWord: "Marge", signals: "Offene Signale", critical: "kritisch", warnings: "Warnungen", opportunities: "Chancen", impact: "Wirtschaftliche Auswirkung der Woche", losses: " beobachtete Produktverluste", exposure: " Umsatz mit fehlenden Kostendaten", gap: " geschätzte Lücke zum Ziel im Zeitraum", attention: "Was Aufmerksamkeit verdient", actions: "Ihre nächsten Schritte", openApp: "MarginLab öffnen", disclaimer: "Dieser Bericht beschreibt ausschließlich die letzten 7 Tage. Verlust, Exposition und Ziellücke sind separate Kennzahlen und dürfen nicht addiert werden. Die Ziellücke ist eine modellierte Schätzung für den Zeitraum, kein garantierter oder bereits wiedergewonnener Gewinn.", observedLosses: "Beobachtete Produktverluste", missingRevenue: "Umsatz mit fehlenden Kostendaten", estimatedGap: "Geschätzte Lücke zum Ziel im Zeitraum" },
+    es: { period: "Últimos 7 días", up: "ha aumentado un", down: "ha disminuido un", stable: "estable", points: "pts", profit: "de beneficio económico", openSignal: "Abrir señal", noRisks: "No hay nuevos riesgos prioritarios que señalar esta semana.", action: "Acción", module: "Módulo", time: "Tiempo estimado", open: "Abrir en MarginLab", empty: "Siga supervisando los márgenes, los costes y la calidad de los datos.", hero: "Su semana en cifras, riesgos y próximas acciones.", revenue: "Ingresos económicos", margin: "Margen económico", marginWord: "de margen", signals: "Señales abiertas", critical: "críticas", warnings: "advertencias", opportunities: "oportunidades", impact: "Impacto económico de la semana", losses: " de pérdidas de producto observadas", exposure: " de ingresos con costes faltantes", gap: " de brecha estimada respecto al objetivo en el periodo", attention: "Qué merece atención", actions: "Sus próximas acciones", openApp: "Abrir MarginLab", disclaimer: "Este informe describe únicamente los últimos 7 días. Las pérdidas, la exposición y la brecha respecto al objetivo son métricas distintas y no deben sumarse. La brecha respecto al objetivo es una estimación modelada para el periodo, no un beneficio garantizado ni ya recuperado.", observedLosses: "Pérdidas de producto observadas", missingRevenue: "Ingresos con costes faltantes", estimatedGap: "Brecha estimada respecto al objetivo en el periodo" },
+    "pt-BR": { period: "Últimos 7 dias", up: "aumentou", down: "caiu", stable: "estável", points: "pts", profit: "de lucro econômico", openSignal: "Abrir sinal", noRisks: "Nenhum novo risco prioritário para relatar esta semana.", action: "Ação", module: "Módulo", time: "Tempo estimado", open: "Abrir no MarginLab", empty: "Continue monitorando margens, custos e qualidade dos dados.", hero: "Sua semana em números, riscos e próximas ações.", revenue: "Receita econômica", margin: "Margem econômica", marginWord: "de margem", signals: "Sinais abertos", critical: "críticos", warnings: "alertas", opportunities: "oportunidades", impact: "Impacto econômico da semana", losses: " de perdas de produto observadas", exposure: " de receita com custo ausente", gap: " de diferença estimada para a meta no período", attention: "O que merece atenção", actions: "Suas próximas ações", openApp: "Abrir MarginLab", disclaimer: "Este relatório descreve apenas os últimos 7 dias. Perda, exposição e diferença para a meta são métricas distintas e não devem ser somadas. A diferença para a meta é uma estimativa modelada para o período, não lucro garantido ou já recuperado.", observedLosses: "Perdas de produto observadas", missingRevenue: "Receita com custo ausente", estimatedGap: "Diferença estimada para a meta no período" },
+  }[language];
+  const profitLabel = {
+    en: "Economic profit",
+    it: "Profitto economico",
+    fr: "Bénéfice économique",
+    de: "Wirtschaftlicher Gewinn",
+    es: "Beneficio económico",
+    "pt-BR": "Lucro econômico",
+  }[language];
   const currencyCode = payload.currencyCode || fallbackCurrencyCode;
 
   const money = (value: number) =>
@@ -577,33 +587,24 @@ function buildWeeklyProfitReportEmail({
 
   const periodLabel =
     payload.periodLabel ||
-    (language === "it" ? "Ultimi 7 giorni" : "Last 7 days");
+    copy.period;
 
   const revenueTrend = trendText({
     value: payload.summary.revenueDeltaPct,
-    positiveLabel: language === "it" ? "in aumento del" : "up",
-    negativeLabel: language === "it" ? "in calo del" : "down",
-    neutralLabel: language === "it" ? "stabile" : "stable",
+    positiveLabel: copy.up,
+    negativeLabel: copy.down,
+    neutralLabel: copy.stable,
   });
 
   const marginDelta = Number(payload.summary.marginDelta ?? 0);
   const marginTrend =
     Math.abs(marginDelta) < 0.05
-      ? language === "it"
-        ? "stabile"
-        : "stable"
+      ? copy.stable
       : marginDelta > 0
-        ? language === "it"
-          ? `+${marginDelta.toFixed(1)} punti`
-          : `+${marginDelta.toFixed(1)} pts`
-        : language === "it"
-          ? `${marginDelta.toFixed(1)} punti`
-          : `${marginDelta.toFixed(1)} pts`;
+        ? `+${marginDelta.toFixed(1)} ${copy.points}`
+        : `${marginDelta.toFixed(1)} ${copy.points}`;
 
-  const subject =
-    language === "it"
-      ? `MarginLab Weekly Profit Report — ${money(payload.summary.economicProfit)} di profitto economico`
-      : `MarginLab Weekly Profit Report — ${money(payload.summary.economicProfit)} economic profit`;
+  const subject = `MarginLab Weekly Profit Report — ${money(payload.summary.economicProfit)} ${copy.profit}`;
 
   const topAlerts = (payload.topAlerts ?? []).slice(0, 3);
   const nextActions = (payload.nextActions ?? []).slice(0, 3);
@@ -630,7 +631,7 @@ function buildWeeklyProfitReportEmail({
                 }
                 ${
                   routeUrl
-                    ? `<div style="margin-top:9px;"><a href="${escapeHtml(routeUrl)}" style="color:#ff875f;text-decoration:none;font-size:12px;font-weight:800;">${language === "it" ? "Apri segnale →" : "Open signal →"}</a></div>`
+                    ? `<div style="margin-top:9px;"><a href="${escapeHtml(routeUrl)}" style="color:#ff875f;text-decoration:none;font-size:12px;font-weight:800;">${copy.openSignal} →</a></div>`
                     : ""
                 }
               </div>
@@ -639,11 +640,7 @@ function buildWeeklyProfitReportEmail({
           .join("")
       : `
         <div style="margin-top:10px;padding:14px 16px;border-radius:14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.16);font-size:13px;color:#86efac;">
-          ${
-            language === "it"
-              ? "Nessun nuovo rischio prioritario da segnalare questa settimana."
-              : "No new priority risks to report this week."
-          }
+          ${copy.noRisks}
         </div>
       `;
 
@@ -655,7 +652,7 @@ function buildWeeklyProfitReportEmail({
             return `
               <div style="padding:14px 16px;border-radius:14px;background:#0f1724;border:1px solid rgba(255,255,255,.07);margin-top:10px;">
                 <div style="font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#ff875f;">
-                  ${language === "it" ? `Azione ${index + 1}` : `Action ${index + 1}`}
+                  ${copy.action} ${index + 1}
                 </div>
                 <div style="margin-top:6px;font-size:15px;font-weight:850;color:#ffffff;">
                   ${escapeHtml(action.title)}
@@ -667,17 +664,17 @@ function buildWeeklyProfitReportEmail({
                 }
                 ${
                   action.module
-                    ? `<div style="margin-top:7px;font-size:11px;color:#64748b;">${language === "it" ? "Modulo" : "Module"}: ${escapeHtml(action.module)}</div>`
+                    ? `<div style="margin-top:7px;font-size:11px;color:#64748b;">${copy.module}: ${escapeHtml(action.module)}</div>`
                     : ""
                 }
                 ${
                   action.estimatedMinutes
-                    ? `<div style="margin-top:5px;font-size:11px;color:#64748b;">${language === "it" ? "Tempo stimato" : "Estimated time"}: ${action.estimatedMinutes} min</div>`
+                    ? `<div style="margin-top:5px;font-size:11px;color:#64748b;">${copy.time}: ${action.estimatedMinutes} min</div>`
                     : ""
                 }
                 ${
                   routeUrl
-                    ? `<div style="margin-top:9px;"><a href="${escapeHtml(routeUrl)}" style="color:#ff875f;text-decoration:none;font-size:12px;font-weight:800;">${language === "it" ? "Apri in MarginLab →" : "Open in MarginLab →"}</a></div>`
+                    ? `<div style="margin-top:9px;"><a href="${escapeHtml(routeUrl)}" style="color:#ff875f;text-decoration:none;font-size:12px;font-weight:800;">${copy.open} →</a></div>`
                     : ""
                 }
               </div>
@@ -686,11 +683,7 @@ function buildWeeklyProfitReportEmail({
           .join("")
       : `
         <div style="margin-top:10px;padding:14px 16px;border-radius:14px;background:#0f1724;border:1px solid rgba(255,255,255,.07);font-size:13px;color:#94a3b8;">
-          ${
-            language === "it"
-              ? "Continua a monitorare margini, costi e qualità dei dati."
-              : "Continue monitoring margins, costs and data quality."
-          }
+          ${copy.empty}
         </div>
       `;
 
@@ -704,7 +697,7 @@ function buildWeeklyProfitReportEmail({
         </div>
 
         <div style="margin-top:10px;font-size:31px;line-height:1.2;font-weight:900;color:#ffffff;">
-          ${language === "it" ? "La settimana in numeri, rischi e prossime azioni." : "Your week in numbers, risks and next actions."}
+          ${copy.hero}
         </div>
 
         <div style="margin-top:9px;font-size:13px;color:#94a3b8;">
@@ -713,60 +706,60 @@ function buildWeeklyProfitReportEmail({
 
         <div style="margin-top:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
           <div style="padding:17px;border-radius:15px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Ricavi economici" : "Economic revenue"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.revenue}</div>
             <div style="margin-top:6px;font-size:24px;font-weight:900;color:#ffffff;">${escapeHtml(money(payload.summary.economicRevenue))}</div>
             <div style="margin-top:4px;font-size:11px;color:#94a3b8;">${escapeHtml(revenueTrend)}</div>
           </div>
 
           <div style="padding:17px;border-radius:15px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.16);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Profitto economico" : "Economic profit"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${profitLabel}</div>
             <div style="margin-top:6px;font-size:24px;font-weight:900;color:#4ade80;">${escapeHtml(money(payload.summary.economicProfit))}</div>
-            <div style="margin-top:4px;font-size:11px;color:#94a3b8;">${escapeHtml(pct(payload.summary.economicMarginPct))} ${language === "it" ? "margine" : "margin"}</div>
+            <div style="margin-top:4px;font-size:11px;color:#94a3b8;">${escapeHtml(pct(payload.summary.economicMarginPct))} ${copy.marginWord}</div>
           </div>
 
           <div style="padding:17px;border-radius:15px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Margine economico" : "Economic margin"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.margin}</div>
             <div style="margin-top:6px;font-size:24px;font-weight:900;color:#ffffff;">${escapeHtml(pct(payload.summary.economicMarginPct))}</div>
             <div style="margin-top:4px;font-size:11px;color:#94a3b8;">${escapeHtml(marginTrend)}</div>
           </div>
 
           <div style="padding:17px;border-radius:15px;background:#0f1724;border:1px solid rgba(255,255,255,.07);">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${language === "it" ? "Segnali aperti" : "Open signals"}</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;">${copy.signals}</div>
             <div style="margin-top:6px;font-size:24px;font-weight:900;color:#ffffff;">${payload.alertCounts.critical + payload.alertCounts.warning + payload.alertCounts.opportunity}</div>
             <div style="margin-top:4px;font-size:11px;color:#94a3b8;">
-              ${payload.alertCounts.critical} ${language === "it" ? "critici" : "critical"} ·
-              ${payload.alertCounts.warning} ${language === "it" ? "avvisi" : "warnings"} ·
-              ${payload.alertCounts.opportunity} ${language === "it" ? "opportunità" : "opportunities"}
+              ${payload.alertCounts.critical} ${copy.critical} ·
+              ${payload.alertCounts.warning} ${copy.warnings} ·
+              ${payload.alertCounts.opportunity} ${copy.opportunities}
             </div>
           </div>
         </div>
 
         <div style="margin-top:22px;padding:18px;border-radius:16px;background:#0b1220;border:1px solid rgba(255,255,255,.08);">
           <div style="font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#94a3b8;">
-            ${language === "it" ? "Impatto economico della settimana" : "Weekly economic impact"}
+            ${copy.impact}
           </div>
           <div style="margin-top:12px;font-size:13px;line-height:1.8;color:#cbd5e1;">
             <strong style="color:#ff8066;">${escapeHtml(money(payload.economics.periodLoss))}</strong>
-            ${language === "it" ? " perdite prodotto osservate" : " observed product losses"}
+            ${copy.losses}
             &nbsp;·&nbsp;
             <strong style="color:#f59e0b;">${escapeHtml(money(payload.economics.periodExposure))}</strong>
-            ${language === "it" ? " ricavi con costo mancante" : " revenue with missing cost data"}
+            ${copy.exposure}
             &nbsp;·&nbsp;
             <strong style="color:#4ade80;">${escapeHtml(money(payload.economics.periodProfitGapToTarget))}</strong>
-            ${language === "it" ? " gap stimato verso il target nel periodo" : " estimated gap to target for the period"}
+            ${copy.gap}
           </div>
         </div>
 
         <div style="margin-top:24px;">
           <div style="font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#ff875f;">
-            ${language === "it" ? "Cosa merita attenzione" : "What deserves attention"}
+            ${copy.attention}
           </div>
           ${alertItemsHtml}
         </div>
 
         <div style="margin-top:24px;">
           <div style="font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#ff875f;">
-            ${language === "it" ? "Le prossime azioni" : "Your next actions"}
+            ${copy.actions}
           </div>
           ${actionsHtml}
         </div>
@@ -776,7 +769,7 @@ function buildWeeklyProfitReportEmail({
             ? `
               <div style="margin-top:24px;">
                 <a href="${escapeHtml(appUrl)}" style="display:inline-block;padding:13px 18px;border-radius:12px;background:#ff6b4a;color:#ffffff;text-decoration:none;font-size:14px;font-weight:850;">
-                  ${language === "it" ? "Apri MarginLab →" : "Open MarginLab →"}
+                  ${copy.openApp} →
                 </a>
               </div>
             `
@@ -784,11 +777,7 @@ function buildWeeklyProfitReportEmail({
         }
 
         <div style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08);font-size:12px;line-height:1.6;color:#64748b;">
-          ${
-            language === "it"
-              ? "Il report descrive esclusivamente gli ultimi 7 giorni. Perdite, esposizione e gap verso il target sono metriche distinte e non devono essere sommate. Il gap verso il target è una stima modellata sul periodo, non profitto garantito o già recuperato."
-              : "This report describes the last 7 days only. Loss, exposure and gap to target are separate metrics and should not be added together. The gap to target is a modeled estimate for the period, not guaranteed or already recovered profit."
-          }
+          ${copy.disclaimer}
         </div>
       </div>
     </div>
@@ -798,14 +787,14 @@ function buildWeeklyProfitReportEmail({
     "MarginLab Weekly Profit Report",
     periodLabel,
     "",
-    `${language === "it" ? "Ricavi economici" : "Economic revenue"}: ${money(payload.summary.economicRevenue)}`,
-    `${language === "it" ? "Profitto economico" : "Economic profit"}: ${money(payload.summary.economicProfit)}`,
-    `${language === "it" ? "Margine economico" : "Economic margin"}: ${pct(payload.summary.economicMarginPct)}`,
-    `${language === "it" ? "Perdite prodotto osservate" : "Observed product losses"}: ${money(payload.economics.periodLoss)}`,
-    `${language === "it" ? "Ricavi con costo mancante" : "Revenue with missing cost data"}: ${money(payload.economics.periodExposure)}`,
-    `${language === "it" ? "Gap stimato verso il target nel periodo" : "Estimated gap to target for the period"}: ${money(payload.economics.periodProfitGapToTarget)}`,
+    `${copy.revenue}: ${money(payload.summary.economicRevenue)}`,
+    `${profitLabel}: ${money(payload.summary.economicProfit)}`,
+    `${copy.margin}: ${pct(payload.summary.economicMarginPct)}`,
+    `${copy.observedLosses}: ${money(payload.economics.periodLoss)}`,
+    `${copy.missingRevenue}: ${money(payload.economics.periodExposure)}`,
+    `${copy.estimatedGap}: ${money(payload.economics.periodProfitGapToTarget)}`,
     "",
-    language === "it" ? "Le prossime azioni:" : "Your next actions:",
+    `${copy.actions}:`,
     ...nextActions.map(
       (action, index) =>
         `${index + 1}. ${action.title}${action.estimatedMinutes ? ` (${action.estimatedMinutes} min)` : ""}`,

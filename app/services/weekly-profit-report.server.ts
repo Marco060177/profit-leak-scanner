@@ -3,13 +3,10 @@ import { generateProfitAlerts } from "~/utils/profit-monitor";
 import {
   createWeeklyReportDelivery,
   getNotificationPreferences,
+  normalizeNotificationLanguage,
+  type NotificationLanguage,
 } from "~/services/notification.server";
-
-type WeeklyReportLanguage = "it" | "en";
-
-function languageFromPreference(value: string | null | undefined): WeeklyReportLanguage {
-  return value === "it" ? "it" : "en";
-}
+import { getLanguageLocale } from "~/utils/i18n";
 
 function datePartsInTimeZone(date: Date, timeZone: string) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -49,10 +46,15 @@ function isoWeekKey(date: Date, timeZone: string) {
   return `${isoYear}-W${String(weekNumber).padStart(2, "0")}`;
 }
 
-function reportPeriodLabel(language: WeeklyReportLanguage) {
-  return language === "it"
-    ? "Ultimi 7 giorni"
-    : "Last 7 days";
+function reportPeriodLabel(language: NotificationLanguage) {
+  return {
+    en: "Last 7 days",
+    it: "Ultimi 7 giorni",
+    fr: "7 derniers jours",
+    de: "Letzte 7 Tage",
+    es: "Últimos 7 días",
+    "pt-BR": "Últimos 7 dias",
+  }[language];
 }
 
 function normalizeEconomicSnapshot(data: any) {
@@ -136,8 +138,8 @@ export async function prepareWeeklyProfitReport({
     };
   }
 
-  const language = languageFromPreference(preferences.language);
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const language = normalizeNotificationLanguage(preferences.language);
+  const locale = getLanguageLocale(language);
 
   const data = await loadMarginDashboardData({
     admin,

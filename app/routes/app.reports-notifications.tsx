@@ -11,13 +11,14 @@ import { authenticate } from "~/shopify.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import {
   getOrCreateNotificationPreferences,
+  normalizeNotificationLanguage,
   updateNotificationPreferences,
+  type NotificationLanguage,
 } from "~/services/notification.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
-
-type NotificationLanguage = "it" | "en";
 
 type ActionData =
   | { ok: true; message: string }
@@ -35,20 +36,12 @@ function parseNumber(
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeLanguage(
-  value: FormDataEntryValue | null,
-): NotificationLanguage {
-  return value === "it" ? "it" : "en";
-}
-
 const dayOptions = [0, 1, 2, 3, 4, 5, 6];
 
 export async function loader({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
 
-  const url = new URL(request.url);
-  const language: NotificationLanguage =
-    url.searchParams.get("lang") === "it" ? "it" : "en";
+  const language: NotificationLanguage = getRequestLanguage(request);
 
   const preferences = await getOrCreateNotificationPreferences({
     shop: session.shop,
@@ -61,7 +54,9 @@ export async function loader({ request }: { request: Request }) {
 export async function action({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
   const formData = await request.formData();
-  const language = normalizeLanguage(formData.get("language"));
+  const language = normalizeNotificationLanguage(
+    String(formData.get("language") || ""),
+  );
 
   try {
     await updateNotificationPreferences({
@@ -98,10 +93,14 @@ export async function action({ request }: { request: Request }) {
 
     return {
       ok: true as const,
-      message:
-        language === "it"
-          ? "Preferenze salvate."
-          : "Preferences saved.",
+      message: {
+        en: "Preferences saved.",
+        it: "Preferenze salvate.",
+        fr: "Préférences enregistrées.",
+        de: "Einstellungen gespeichert.",
+        es: "Preferencias guardadas.",
+        "pt-BR": "Preferências salvas.",
+      }[language],
     };
   } catch (error) {
     return {
@@ -314,6 +313,10 @@ export default function ReportsNotificationsPage() {
                   >
                     <option value="en">English</option>
                     <option value="it">Italiano</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                    <option value="es">Español</option>
+                    <option value="pt-BR">Português (Brasil)</option>
                   </select>
                 </div>
 

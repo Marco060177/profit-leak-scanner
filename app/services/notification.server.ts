@@ -1,7 +1,8 @@
 import prisma from "~/db.server";
 import type { ProfitAlert } from "~/utils/profit-monitor";
+import { isLanguage, type Language } from "~/utils/i18n";
 
-export type NotificationLanguage = "it" | "en";
+export type NotificationLanguage = Language;
 
 export type NotificationPreferencesInput = {
   recipientEmail?: string | null;
@@ -31,10 +32,10 @@ function normalizeTimezone(value: string | null | undefined) {
   return timezone && timezone.length > 0 ? timezone : "UTC";
 }
 
-function normalizeLanguage(
+export function normalizeNotificationLanguage(
   value: string | null | undefined,
 ): NotificationLanguage {
-  return value === "it" ? "it" : "en";
+  return isLanguage(value) ? value : "en";
 }
 
 function safeJsonStringify(value: unknown) {
@@ -83,7 +84,7 @@ export async function getOrCreateNotificationPreferences({
       shop,
       recipientEmail: normalizeEmail(recipientEmail),
       timezone: normalizeTimezone(timezone),
-      language: normalizeLanguage(language),
+      language: normalizeNotificationLanguage(language),
     },
   });
 }
@@ -133,7 +134,7 @@ export async function updateNotificationPreferences({
           : current.timezone,
       language:
         input.language !== undefined
-          ? normalizeLanguage(input.language)
+          ? normalizeNotificationLanguage(input.language)
           : current.language,
     },
   });
