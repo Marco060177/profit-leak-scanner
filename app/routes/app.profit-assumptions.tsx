@@ -8,7 +8,7 @@ import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   type LoaderData,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
@@ -373,14 +373,7 @@ export default function ProfitAssumptionsPage() {
   const pct = (value: number, digits = 1) =>
     formatStorePercent(value, locale, digits);
 
-  const currencySymbol =
-    new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: currencyCode,
-      currencyDisplay: "narrowSymbol",
-    })
-      .formatToParts(0)
-      .find((part) => part.type === "currency")?.value ?? currencyCode;
+  const currencySymbol = currencyCode;
 
   const [monthlyAds, setMonthlyAds] = React.useState(assumptions.monthlyAds);
 

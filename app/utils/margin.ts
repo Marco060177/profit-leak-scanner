@@ -1,5 +1,6 @@
 import {
   formatMoney,
+  formatUiMoney,
   formatPercent,
 } from "~/utils/formatting";
 import type { EconomicSnapshot } from "~/utils/economic-snapshot";
@@ -365,4 +366,13 @@ export function toYYYYMMDD(d: Date) {
 
 export function extractNumericId(gid: string) {
   return gid.split("/").pop() || "";
+}
+
+export function uiMoney(
+  n: number,
+  currencyCode = "USD",
+  locale = "en-US",
+  digits = 2,
+) {
+  return formatUiMoney(n, { currencyCode, locale, digits });
 }

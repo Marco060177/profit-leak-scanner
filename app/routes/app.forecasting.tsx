@@ -9,10 +9,11 @@ import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   type LoaderData,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { formatMoneyCompact } from "~/utils/formatting";
 
 import "~/styles/dashboard.css";
 
@@ -385,12 +386,7 @@ export default function ForecastingPage() {
     }).format(Number.isFinite(value) ? value : 0);
 
   function compactMoney(n: number) {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: currencyCode,
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(safeNumber(n));
+    return formatMoneyCompact(safeNumber(n), { locale, currencyCode });
   }
 
   const periodDays = Math.max(1, forecastPeriod);

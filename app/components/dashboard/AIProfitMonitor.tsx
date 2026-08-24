@@ -3,7 +3,7 @@ import * as React from "react";
 import type { ProfitAlert, ProfitAlertSeverity } from "~/utils/profit-monitor";
 
 import { useI18n } from "~/components/i18n/I18nProvider";
-import { money } from "~/utils/margin";
+import { uiMoney as money } from "~/utils/margin";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 

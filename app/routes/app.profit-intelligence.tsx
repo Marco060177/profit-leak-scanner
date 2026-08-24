@@ -7,7 +7,7 @@ import MarginBreakdown from "~/components/dashboard/MarginBreakdown";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import {
   type LoaderData,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 

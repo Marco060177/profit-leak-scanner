@@ -7,7 +7,7 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { generateProfitAlerts } from "~/utils/profit-monitor";

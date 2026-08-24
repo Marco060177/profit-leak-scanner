@@ -46,6 +46,22 @@ export function formatMoney(
   }
 }
 
+export function formatUiMoney(
+  value: number,
+  options: FormattingOptions = {},
+) {
+  const currencyCode = options.currencyCode?.trim().toUpperCase() || DEFAULT_CURRENCY;
+  const locale = options.locale || DEFAULT_LOCALE;
+  const digits = options.digits ?? 2;
+  const formattedValue = new Intl.NumberFormat(locale, {
+    style: "decimal",
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+    useGrouping: true,
+  }).format(Number.isFinite(value) ? value : 0);
+  return `${formattedValue} ${currencyCode}`;
+}
+
 export function formatMoneyCompact(
   value: number,
   options: FormattingOptions = {},
@@ -56,12 +72,13 @@ export function formatMoneyCompact(
   const locale = options.locale || DEFAULT_LOCALE;
 
   try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: currencyCode,
+    const formattedValue = new Intl.NumberFormat(locale, {
+      style: "decimal",
       notation: "compact",
       maximumFractionDigits: 1,
     }).format(Number.isFinite(value) ? value : 0);
+
+    return `${formattedValue} ${currencyCode}`;
   } catch {
     return formatMoney(value, options);
   }

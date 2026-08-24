@@ -12,7 +12,7 @@ import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   type LoaderData,
   type Row,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 

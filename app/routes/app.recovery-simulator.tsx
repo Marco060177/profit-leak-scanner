@@ -12,7 +12,7 @@ import {
 } from "~/utils/billing.server";
 import {
   type LoaderData,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";

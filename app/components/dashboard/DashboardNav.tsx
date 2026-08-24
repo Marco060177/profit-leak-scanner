@@ -40,6 +40,9 @@ export default function DashboardNav({
   const [moreOpen, setMoreOpen] =
     React.useState(false);
 
+  const [languageOpen, setLanguageOpen] =
+    React.useState(false);
+
   const [unreadAlertCount, setUnreadAlertCount] =
     React.useState(0);
 
@@ -47,6 +50,9 @@ export default function DashboardNav({
     React.useRef<HTMLDivElement | null>(null);
 
   const moreMenuRef =
+    React.useRef<HTMLDivElement | null>(null);
+
+  const languageMenuRef =
     React.useRef<HTMLDivElement | null>(null);
 
   const closeTimerRef =
@@ -168,6 +174,15 @@ export default function DashboardNav({
       ) {
         setMoreOpen(false);
       }
+
+      if (
+        languageMenuRef.current &&
+        !languageMenuRef.current.contains(
+          event.target as Node,
+        )
+      ) {
+        setLanguageOpen(false);
+      }
     };
 
     document.addEventListener(
@@ -188,6 +203,7 @@ export default function DashboardNav({
   const changeLanguage = (
     nextLanguage: Language,
   ) => {
+    setLanguageOpen(false);
     setLanguage(nextLanguage);
 
     const params = new URLSearchParams(
@@ -853,46 +869,92 @@ export default function DashboardNav({
 
         {/* LANGUAGE */}
         <div
+          ref={languageMenuRef}
           style={{
-            display: "inline-flex",
-            padding: 4,
-            borderRadius: 999,
-            background:
-              "rgba(255,115,60,0.08)",
-            border:
-              "1px solid rgba(255,115,60,0.18)",
-            gap: 4,
+            position: "relative",
+            flexShrink: 0,
           }}
         >
-          {(["en", "it", "fr"] as const).map(
-            (lang) => (
-              <button
-                key={lang}
-                type="button"
-                onClick={() =>
-                  changeLanguage(lang)
-                }
-                style={{
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "7px 10px",
-                  cursor: "pointer",
-                  fontWeight: 900,
-                  fontSize: 12,
-                  color:
-                    language === lang
-                      ? "#ffffff"
-                      : "rgba(255,255,255,0.55)",
-                  background:
-                    language === lang
-                      ? "rgba(255,115,60,0.22)"
-                      : "transparent",
-                }}
-              >
-                {lang.toUpperCase()}
-              </button>
-            ),
-          )}
+          <button
+            type="button"
+            onClick={() => setLanguageOpen((current) => !current)}
+            aria-haspopup="menu"
+            aria-expanded={languageOpen}
+            style={{
+              minHeight: 34,
+              borderRadius: 999,
+              padding: "7px 11px",
+              cursor: "pointer",
+              color: "#ffffff",
+              background: "rgba(255,115,60,0.12)",
+              border: "1px solid rgba(255,115,60,0.24)",
+              fontWeight: 900,
+              fontSize: 12,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+            }}
+          >
+            <span>{language.toUpperCase()}</span>
+            <span style={{ color: "#ff936f", fontSize: 10 }}>▾</span>
+          </button>
+
+          {languageOpen ? (
+            <div
+              role="menu"
+              style={{
+                position: "absolute",
+                top: "calc(100% + 10px)",
+                right: 0,
+                zIndex: 120,
+                width: 178,
+                padding: 7,
+                borderRadius: 16,
+                background: "rgba(8,13,22,0.99)",
+                border: "1px solid rgba(255,115,60,0.24)",
+                boxShadow: "0 20px 50px rgba(0,0,0,0.42)",
+              }}
+            >
+              {([
+                { id: "en", name: "English" },
+                { id: "it", name: "Italiano" },
+                { id: "fr", name: "Français" },
+              ] as const).map((option) => {
+                const activeLanguage = language === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={activeLanguage}
+                    onClick={() => changeLanguage(option.id)}
+                    style={{
+                      width: "100%",
+                      minHeight: 38,
+                      padding: "8px 10px",
+                      borderRadius: 11,
+                      border: "none",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 14,
+                      color: activeLanguage ? "#ffffff" : "rgba(255,255,255,0.72)",
+                      background: activeLanguage ? "rgba(255,115,60,0.18)" : "transparent",
+                      fontSize: 12,
+                      fontWeight: activeLanguage ? 900 : 750,
+                      textAlign: "left",
+                    }}
+                  >
+                    <span>{option.name}</span>
+                    <span style={{ color: activeLanguage ? "#ff936f" : "rgba(255,255,255,0.38)", fontWeight: 950 }}>
+                      {option.id.toUpperCase()}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

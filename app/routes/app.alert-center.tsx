@@ -9,7 +9,7 @@ import MetricTooltip from "~/components/ui/MetricTooltip";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
-import { money } from "~/utils/margin";
+import { uiMoney as money } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { getLanguageLocale, type Language } from "~/utils/i18n";
 

@@ -1,4 +1,4 @@
-import { money, pct } from "~/utils/margin";
+import { uiMoney as money, pct } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";

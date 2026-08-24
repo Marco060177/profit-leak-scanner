@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { useI18n } from "~/components/i18n/I18nProvider";
-import { money as formatStoreMoney } from "~/utils/margin";
+import { uiMoney as formatStoreMoney } from "~/utils/margin";
 
 type Props = {
   language: "it" | "en";

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { money, pct, type Row } from "~/utils/margin";
+import { uiMoney as money, pct, type Row } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 

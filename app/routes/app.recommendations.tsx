@@ -14,11 +14,12 @@ import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
 import {
   type LoaderData,
-  money as formatStoreMoney,
+  uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { getStoredLanguage, type Language } from "~/utils/i18n";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { formatMoneyCompact } from "~/utils/formatting";
 import {
   generateProfitAlerts,
   type ProfitAlert,
@@ -86,12 +87,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function compactMoney(value: number, currencyCode: string, locale: string) {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: currencyCode,
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(Number.isFinite(value) ? value : 0);
+  return formatMoneyCompact(value, { currencyCode, locale });
 }
 
 function getStatusStyle(
