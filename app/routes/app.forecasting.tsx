@@ -822,6 +822,40 @@ export default function ForecastingPage() {
           : "Cost growth remains controlled in the selected scenario.",
       ];
 
+  const displayHealth = language !== "fr"
+    ? health
+    : finalPoint.netMargin >= 20
+      ? "Très solide"
+      : finalPoint.netMargin >= 10
+        ? "En amélioration"
+        : finalPoint.netMargin >= 0
+          ? "Fragile"
+          : "À risque";
+
+  const displayStrongestLever = language !== "fr"
+    ? strongestLever
+    : marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
+      ? "l'amélioration de la marge"
+      : monthlyRevenueGrowth >= recoveryCapture / 25
+        ? "la croissance du chiffre d'affaires"
+        : "la récupération des opportunités";
+
+  const displayRecommendation = language !== "fr"
+    ? recommendation
+    : `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`;
+
+  const displayActions = language !== "fr" ? actions : [
+    marginImprovement > 0
+      ? `Augmentez progressivement la marge économique de ${number(marginImprovement, 1)} points par rapport au niveau actuel.`
+      : "Maintenez la marge économique stable et surveillez les produits les plus faibles.",
+    recoveryCapture > 0
+      ? `Donnez la priorité aux ${impactedProducts} produits présentant un potentiel de récupération identifié.`
+      : "Exploitez au moins une partie des opportunités de récupération déjà identifiées.",
+    monthlyCostGrowth > 1
+      ? "Contenez la croissance mensuelle des coûts, car elle réduit le bénéfice de la croissance du chiffre d'affaires."
+      : "La croissance des coûts reste maîtrisée dans le scénario sélectionné.",
+  ];
+
   const exportForecastCsv = () => {
     type CsvValue = string | number;
 
@@ -1705,7 +1739,7 @@ export default function ForecastingPage() {
                         fontSize: 18,
                       }}
                     >
-                      {health}
+                      {displayHealth}
                     </div>
                     <div
                       style={{
@@ -1960,7 +1994,7 @@ export default function ForecastingPage() {
                     fontWeight: 730,
                   }}
                 >
-                  {recommendation}
+                  {displayRecommendation}
                 </div>
 
                 <div
@@ -1970,7 +2004,7 @@ export default function ForecastingPage() {
                     gap: 10,
                   }}
                 >
-                  {actions.map((action, index) => (
+                  {displayActions.map((action, index) => (
                     <div
                       key={action}
                       style={{

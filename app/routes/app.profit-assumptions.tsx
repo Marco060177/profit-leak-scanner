@@ -337,7 +337,7 @@ function FieldCard({
 
 export default function ProfitAssumptionsPage() {
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.profitAssumptionsPage;
   const saveFetcher = useFetcher<{ ok: boolean; error?: string }>();
 
@@ -361,7 +361,6 @@ export default function ProfitAssumptionsPage() {
     };
   };
 
-  const locale = language === "it" ? "it-IT" : "en-US";
   const periodValue = Number(period ?? 30);
   const periodDays =
     Number.isFinite(periodValue) && periodValue > 0 ? periodValue : 30;
@@ -625,6 +624,25 @@ export default function ProfitAssumptionsPage() {
           largestCostMonthlySaving,
         )} and annual profit by about ${money(largestCostAnnualSaving)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
+
+  const displayCostItems = language !== "fr" ? costItems : costItems.map((item) => ({
+    ...item,
+    label: ({ ads: "Publicité", shipping: "Expédition", operating: "Coûts d'exploitation", payment: "Frais de paiement", transaction: "Frais de transaction", tax: "Réserve fiscale du modèle" } as Record<string, string>)[item.key] ?? item.label,
+  }));
+
+  const displayWhatIfScenarios = language !== "fr" ? whatIfScenarios : whatIfScenarios.map((scenario) => ({
+    ...scenario,
+    label: ({ ads: "Réduire la publicité de 10 %", shipping: "Réduire les frais d'expédition de 10 %", fees: "Réduire les frais de 0,5 %" } as Record<string, string>)[scenario.key] ?? scenario.label,
+    note: ({ ads: "Effet mensuel immédiat", shipping: "Amélioration opérationnelle", fees: "Renégociation ou changement de prestataire" } as Record<string, string>)[scenario.key] ?? scenario.note,
+  }));
+
+  const displayHealthLabel = language !== "fr" ? healthLabel : healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque";
+  const displayLargestCostLabel = largestCost ? displayCostItems.find((item) => item.key === largestCost.key)?.label ?? largestCost.label : "";
+  const displayAdvice = language !== "fr"
+    ? advice
+    : largestCost && totalEstimatedCosts > 0
+      ? `${displayLargestCostLabel} représente environ ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} des coûts estimés. Une réduction de 10 % dans ce domaine améliorerait le bénéfice mensuel d'environ ${money(largestCostMonthlySaving)} et le bénéfice annuel d'environ ${money(largestCostAnnualSaving)}.`
+      : "Ajoutez vos principaux coûts pour obtenir une recommandation financière plus fiable.";
 
   const exportBusinessModelCsv = () => {
     const labels =
@@ -1038,7 +1056,7 @@ export default function ProfitAssumptionsPage() {
               <KpiCard
                 label={copy.auto.a026}
                 value={`${healthScore}/100`}
-                note={healthLabel}
+                note={displayHealthLabel}
                 color={
                   healthScore >= 80
                     ? "#22c55e"
@@ -1477,7 +1495,7 @@ export default function ProfitAssumptionsPage() {
                     gap: 13,
                   }}
                 >
-                  {costItems.map((item) => {
+                  {displayCostItems.map((item) => {
                     const share =
                       totalEstimatedCosts > 0
                         ? (item.value / totalEstimatedCosts) * 100
@@ -1639,7 +1657,7 @@ export default function ProfitAssumptionsPage() {
                     gap: 11,
                   }}
                 >
-                  {whatIfScenarios.map((scenario) => (
+                  {displayWhatIfScenarios.map((scenario) => (
                     <div
                       key={scenario.key}
                       style={{
@@ -1772,7 +1790,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 730,
                   }}
                 >
-                  {advice}
+                  {displayAdvice}
                 </div>
 
                 <div

@@ -156,7 +156,7 @@ function PrimaryPriority({
   alert: ProfitAlert;
   navigate: (path: string) => void;
 }) {
-  const { messages, t } = useI18n();
+  const { language, messages, t } = useI18n();
   const copy = messages.businessPriorities;
   const style = getActionStyle(
     alert.businessAction,
@@ -374,7 +374,7 @@ function PrimaryPriority({
           {copy.recommendedModule}
           :{" "}
           <strong style={{ color: "#f8fafc" }}>
-            {alert.recommendedModule}
+            {language === "fr" && alert.recommendedModule === "Products" ? "Produits" : alert.recommendedModule}
           </strong>
         </div>
 

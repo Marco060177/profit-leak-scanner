@@ -120,7 +120,7 @@ function roundCurrency(value: number) {
 
 export default function RecoverySimulatorPage() {
   const navigate = useNavigate();
-  const { language, messages, t } = useI18n();
+  const { language, locale, messages, t } = useI18n();
   const copy = messages.recoverySimulatorPage;
   const loaderData = useLoaderData() as LoaderData & {
     growthAccess: boolean;
@@ -567,8 +567,6 @@ export default function RecoverySimulatorPage() {
               ? "Forte"
               : "Strong";
 
-  const locale = language === "it" ? "it-IT" : "en-US";
-
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);
 
@@ -687,6 +685,36 @@ export default function RecoverySimulatorPage() {
           ? "Monitora vendite e margine per confermare l'impatto reale"
           : "Monitor sales and margin to confirm the real impact",
     },
+  ].filter((item) => item.visible);
+
+  const displayRecoveryBreakdown = language !== "fr" ? recoveryBreakdown : recoveryBreakdown.map((item) => ({
+    ...item,
+    label: ({ price: "Variation du prix", cost: "Réduction du coût", volume: "Variation du volume", fees: "Impact des frais variables", "tax-reserve": `Réserve fiscale du modèle (${formatStorePercent(taxReserveRate * 100, "fr-FR", 1)})` } as Record<string, string>)[item.key] ?? item.label,
+  }));
+
+  const displayRiskLabel = language !== "fr" ? riskLabel : commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible";
+  const displayConfidenceLabel = language !== "fr" ? confidenceLabel : dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible";
+  const displayProfitHealth = language !== "fr" ? profitHealth : simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte";
+
+  const displayRecommendation = language !== "fr" ? recommendation : (() => {
+    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
+    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+      return `Ce scénario réduit le bénéfice mensuel estimé. La variation des ventes ne compense pas le nouvel équilibre entre prix et coût. Réduisez l'hypothèse de baisse des ventes ou augmentez le prix au-dessus de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+    }
+    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+      return `La réduction des coûts est le levier le plus efficace dans ce scénario. Une réduction de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)} avec une hausse de prix limitée. Envisagez de négocier avec le fournisseur avant de modifier le prix de vente.`;
+    }
+    if (displayPriceIncreasePct >= 8) {
+      return `Porter le prix à ${money(simulatedPrice, 2)} crée un impact important, mais l'augmentation de ${pct(displayPriceIncreasePct)} est significative. Testez-la sur une courte période ou sur une partie du trafic afin de mesurer la réaction de la demande.`;
+    }
+    return `Porter le prix à ${money(simulatedPrice, 2)} et réduire le coût de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)}. Au volume supposé, la récupération estimée est de ${formatSignedMoney(netRecoveredAnnualProfit, 0)} par an. Il s'agit d'un équilibre crédible entre rentabilité et risque commercial.`;
+  })();
+
+  const displaySuggestedActions = language !== "fr" ? suggestedActions : [
+    { visible: simulatedPrice > currentPrice, text: `Évaluer un prix de vente de ${money(simulatedPrice, 2)}` },
+    { visible: costReductionPct > 0, text: `Négocier une réduction de coût de ${pct(costReductionPct)}` },
+    { visible: salesChangePct < 0, text: "Surveiller une éventuelle baisse de conversion après le changement de prix" },
+    { visible: salesChangePct >= 0, text: "Surveiller les ventes et la marge pour confirmer l'impact réel" },
   ].filter((item) => item.visible);
 
   const handleManualPriceChange = (value: number) => {
@@ -1288,7 +1316,7 @@ export default function RecoverySimulatorPage() {
                       pct(currentMarginPct),
                     ],
                     [
-                      language === "it" ? "Profitto mensile" : "Monthly profit",
+                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : "Monthly profit",
                       money(currentMonthlyProfit, 0),
                     ],
                   ].map(([label, value]) => (
@@ -1321,7 +1349,7 @@ export default function RecoverySimulatorPage() {
                         </span>
 
                         {label ===
-                          (language === "it" ? "Profitto mensile" : "Monthly profit") && (
+                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : "Monthly profit") && (
                             <MetricTooltip
                               content={{
                                 title:
@@ -1828,7 +1856,7 @@ export default function RecoverySimulatorPage() {
                   },
                   {
                     label:
-                      language === "it" ? "Recupero mensile netto" : "Net monthly recovery",
+                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : "Net monthly recovery",
                     value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
                     note:
                       copy.auto.s049,
@@ -1868,7 +1896,7 @@ export default function RecoverySimulatorPage() {
                       <span>{item.label}</span>
 
                       {item.label ===
-                        (language === "it" ? "Recupero mensile netto" : "Net monthly recovery") && (
+                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : "Net monthly recovery") && (
                           <MetricTooltip
                             content={{
                               title:
@@ -2187,7 +2215,7 @@ export default function RecoverySimulatorPage() {
                   {copy.auto.s067}
                 </div>
                 <div style={{ display: "grid", gap: 12, marginTop: 20 }}>
-                  {recoveryBreakdown.map((item) => (
+                  {displayRecoveryBreakdown.map((item) => (
                     <div
                       key={item.key}
                       style={{
@@ -2268,7 +2296,7 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 950,
                   }}
                 >
-                  {riskLabel}
+                  {displayRiskLabel}
                 </div>
                 <div
                   style={{
@@ -2627,7 +2655,7 @@ export default function RecoverySimulatorPage() {
                           fontWeight: 950,
                         }}
                       >
-                        {profitHealth}
+                        {displayProfitHealth}
                       </div>
                     </div>
                     <div
@@ -2713,8 +2741,8 @@ export default function RecoverySimulatorPage() {
                 >
                   <span>
                     {copy.auto.s087}:{" "}
-                    {confidenceLabel} · {dataConfidenceScore}% ·{" "}
-                    {copy.auto.s088} {riskLabel}
+                    {displayConfidenceLabel} · {dataConfidenceScore}% ·{" "}
+                    {copy.auto.s088} {displayRiskLabel}
                   </span>
 
                   <MetricTooltip
@@ -2737,7 +2765,7 @@ export default function RecoverySimulatorPage() {
                   fontWeight: 750,
                 }}
               >
-                {recommendation}
+                {displayRecommendation}
               </div>
 
               <div
@@ -2748,7 +2776,7 @@ export default function RecoverySimulatorPage() {
                   marginTop: 22,
                 }}
               >
-                {suggestedActions.map((action) => (
+                {displaySuggestedActions.map((action) => (
                   <div
                     key={action.text}
                     style={{

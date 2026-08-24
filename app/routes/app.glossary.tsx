@@ -349,6 +349,10 @@ const GLOSSARY_TERMS: GlossaryTerm[] = [
   },
 ];
 
+const FRENCH_GLOSSARY_TERMS: Record<string, string> = {
+  "action-score": "Score d'action", "annual-impact": "Impact annuel", "annual-net-profit": "Bénéfice net annuel", "average-margin": "Marge moyenne", baseline: "Référence", "break-even-price": "Prix d'équilibre", "break-even-revenue": "Chiffre d'affaires à l'équilibre", "business-tax-reserve": "Réserve fiscale du modèle", cogs: "COGS", "cogs-coverage": "Couverture COGS", "commercial-risk": "Risque commercial", confidence: "Confiance", "contribution-margin": "Marge sur coûts variables", "cumulative-profit": "Bénéfice cumulé", "cumulative-profit-lift": "Gain de bénéfice cumulé", "data-quality": "Qualité des données", "default-tax-rate": "Taux d'imposition par défaut", "discount-exposure": "Exposition aux remises", "economic-cogs": "COGS économique", "economic-margin": "Marge économique", "economic-profit": "Bénéfice économique", "economic-revenue": "Chiffre d'affaires économique", "estimated-profit-model": "Modèle de bénéfice estimé", "estimated-timing": "Délai estimé", "fixed-costs": "Coûts fixes", "forecast-health": "Santé de la prévision", "gross-margin": "Marge brute", "gross-profit": "Bénéfice brut", "input-tax-recovery": "Récupération de la taxe sur les achats", "low-margin-product": "Produit à faible marge", "margin-deterioration": "Détérioration de la marge", "margin-improvement": "Amélioration de la marge", "missing-cost": "Coût manquant", "model-health": "Santé du modèle", "monthly-net-profit": "Bénéfice net mensuel", "monthly-profit-gap-to-target": "Écart mensuel de bénéfice par rapport à l'objectif", "net-margin": "Marge nette", "net-monthly-recovery": "Récupération mensuelle nette", opportunity: "Opportunité", priority: "Priorité", "profit-action-center": "Profit Action Center", "profit-health": "Santé du bénéfice", "profit-leak": "Fuite de bénéfice", "recoverable-profit": "Bénéfice récupérable", "recovery-opportunities-captured": "Opportunités de récupération exploitées", "refund-exposure": "Exposition aux remboursements", "revenue-growth": "Croissance du chiffre d'affaires", scenario: "Scénario", "tax-aware-economic-basis": "Base économique tenant compte de la fiscalité", "tax-lines": "Lignes fiscales", "target-margin": "Marge cible", "variable-fees": "Frais variables", "weak-best-seller": "Best-seller à faible rentabilité",
+};
+
 function normalize(value: string) {
   return value
     .toLowerCase()
@@ -358,7 +362,7 @@ function normalize(value: string) {
 
 export default function GlossaryPage() {
   const navigate = useNavigate();
-  const { messages } = useI18n();
+  const { language, messages } = useI18n();
   const copy = messages.glossary;
   const termCopy = copy.terms as Record<
     string,
@@ -378,6 +382,10 @@ export default function GlossaryPage() {
     React.useState<GlossaryCategory | "all">("all");
   const [expandedId, setExpandedId] =
     React.useState<string | null>(null);
+  const displayTerm = React.useCallback(
+    (item: GlossaryTerm) => language === "fr" ? FRENCH_GLOSSARY_TERMS[item.id] ?? item.term : item.term,
+    [language],
+  );
 
   const filteredTerms = React.useMemo(() => {
     const normalizedQuery = normalize(query.trim());
@@ -392,7 +400,7 @@ export default function GlossaryPage() {
 
         const searchable = normalize(
           [
-            item.term,
+            displayTerm(item),
             italianTerms[item.id].short,
             englishTerms[item.id].short,
             italianTerms[item.id].detail,
@@ -403,24 +411,24 @@ export default function GlossaryPage() {
 
         return searchable.includes(normalizedQuery);
       })
-      .sort((a, b) => a.term.localeCompare(b.term));
-  }, [query, category, englishTerms, italianTerms]);
+      .sort((a, b) => displayTerm(a).localeCompare(displayTerm(b)));
+  }, [query, category, displayTerm, englishTerms, italianTerms]);
 
   const alphabet = React.useMemo(
     () =>
       Array.from(
         new Set(
           GLOSSARY_TERMS.map((item) =>
-            item.term.charAt(0).toUpperCase(),
+            displayTerm(item).charAt(0).toUpperCase(),
           ),
         ),
       ).sort(),
-    [],
+    [displayTerm],
   );
 
   const scrollToLetter = (letter: string) => {
     const first = filteredTerms.find(
-      (item) => item.term.charAt(0).toUpperCase() === letter,
+      (item) => displayTerm(item).charAt(0).toUpperCase() === letter,
     );
 
     if (!first) return;
@@ -752,7 +760,7 @@ export default function GlossaryPage() {
           {alphabet.map((letter) => {
             const available = filteredTerms.some(
               (item) =>
-                item.term.charAt(0).toUpperCase() === letter,
+                displayTerm(item).charAt(0).toUpperCase() === letter,
             );
 
             return (
@@ -858,7 +866,7 @@ export default function GlossaryPage() {
                         letterSpacing: "-0.02em",
                       }}
                     >
-                      {item.term}
+                      {displayTerm(item)}
                     </h2>
                   </div>
 

@@ -13,6 +13,8 @@ import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts, type ProfitAlert } from "~/utils/profit-monitor";
+import { getLanguageLocale } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 import { syncProfitMonitor } from "~/services/profit-monitor.server";
 import {
   buildMarginAssessment,
@@ -298,9 +300,9 @@ export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
-  const language = url.searchParams.get("lang") === "it" ? "it" : "en";
+  const language = getRequestLanguage(request);
 
-  const locale = language === "it" ? "it-IT" : "en-US";
+  const locale = getLanguageLocale(language);
 
   const { admin, session } = await authenticate.admin(request);
 

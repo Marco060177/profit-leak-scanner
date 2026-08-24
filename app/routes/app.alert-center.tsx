@@ -284,6 +284,10 @@ function getBusinessActionLabel(action: string, language: Language) {
   return ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<string, string>)[action] ?? action;
 }
 
+function getModuleDisplayName(module: string, language: Language) {
+  return language === "fr" && module === "Products" ? "Produits" : module;
+}
+
 function TinyBadge({
   children,
   color,
@@ -522,7 +526,7 @@ function AlertCard({
           >
             <TinyBadge color="#38bdf8">{alert.estimatedMinutes} min</TinyBadge>
 
-            <TinyBadge color="#c084fc">{alert.recommendedModule}</TinyBadge>
+            <TinyBadge color="#c084fc">{getModuleDisplayName(alert.recommendedModule, language)}</TinyBadge>
 
             <TinyBadge color="#64748b">
               {formatTimestamp(state?.firstSeenAt, language)}

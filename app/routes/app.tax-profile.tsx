@@ -292,19 +292,23 @@ function getCountryName(
   const config = getCountryUiConfig(countryCode);
 
   if (config) {
+    if (language === "fr") {
+      return new Intl.DisplayNames(["fr-FR"], { type: "region" }).of(countryCode) ?? config.nameEn;
+    }
     return language === "it"
       ? config.nameIt
       : config.nameEn;
   }
 
   if (countryCode === "US") {
+    if (language === "fr") return "États-Unis";
     return language === "it"
       ? "Stati Uniti"
       : "United States";
   }
 
   return countryCode ||
-    (language === "it" ? "Sconosciuto" : "Unknown");
+    (language === "it" ? "Sconosciuto" : language === "fr" ? "Inconnu" : "Unknown");
 }
 
 function getRegimeOptions({
@@ -327,45 +331,45 @@ function getRegimeOptions({
         title:
           language === "it"
             ? "Regime ordinario"
-            : "Standard VAT regime",
+            : language === "fr" ? "Régime de TVA standard" : "Standard VAT regime",
         subtitle:
           language === "it"
             ? "IVA applicata alle vendite"
-            : "VAT applied to sales",
+            : language === "fr" ? "TVA appliquée aux ventes" : "VAT applied to sales",
         detail:
           language === "it"
             ? "Configura aliquote, prezzi, costi e recuperabilità dell'IVA."
-            : "Configure rates, selling prices, cost basis and input VAT recovery.",
+            : language === "fr" ? "Configurez les taux, les prix de vente, la base de coûts et la récupération de la TVA déductible." : "Configure rates, selling prices, cost basis and input VAT recovery.",
       },
       {
         id: "ITALY_FORFETTARIO",
         title:
           language === "it"
             ? "Regime forfettario"
-            : "Flat-rate tax regime",
+            : language === "fr" ? "Régime fiscal forfaitaire" : "Flat-rate tax regime",
         subtitle:
           language === "it"
             ? "Vendite senza addebito IVA"
-            : "Sales without VAT charged",
+            : language === "fr" ? "Ventes sans TVA facturée" : "Sales without VAT charged",
         detail:
           language === "it"
             ? "Preset senza IVA sulle vendite e senza recupero IVA sui costi."
-            : "Preset with no output VAT and no input VAT recovery.",
+            : language === "fr" ? "Préréglage sans TVA collectée et sans récupération de la TVA déductible." : "Preset with no output VAT and no input VAT recovery.",
       },
       {
         id: "ITALY_EXEMPT",
         title:
           language === "it"
             ? "Operazioni esenti"
-            : "VAT-exempt activity",
+            : language === "fr" ? "Activité exonérée de TVA" : "VAT-exempt activity",
         subtitle:
           language === "it"
             ? "Vendite configurate come esenti"
-            : "Sales configured as VAT exempt",
+            : language === "fr" ? "Ventes configurées comme exonérées de TVA" : "Sales configured as VAT exempt",
         detail:
           language === "it"
             ? "Per attività in cui le vendite analizzate non espongono IVA."
-            : "For activities where analyzed sales do not carry output VAT.",
+            : language === "fr" ? "Pour les activités dont les ventes analysées ne comportent pas de TVA collectée." : "For activities where analyzed sales do not carry output VAT.",
       },
     ];
   }
@@ -380,15 +384,15 @@ function getRegimeOptions({
       title:
         language === "it"
           ? `Registrato ${config.taxLabel}`
-          : `${config.taxLabel} registered`,
+          : language === "fr" ? `Enregistré à la ${config.taxLabel}` : `${config.taxLabel} registered`,
       subtitle:
         language === "it"
           ? `Store registrato ${config.taxLabel}`
-          : `${config.taxLabel}-registered store`,
+          : language === "fr" ? `Boutique enregistrée à la ${config.taxLabel}` : `${config.taxLabel}-registered store`,
       detail:
         language === "it"
           ? `Configura aliquote, prezzi, costi, spedizioni e recuperabilità dell'imposta sugli acquisti. Le tax line Shopify reali restano prioritarie.`
-          : `Configure rates, prices, costs, shipping and input-tax recovery. Actual Shopify tax lines remain authoritative.`,
+          : language === "fr" ? `Configurez les taux, les prix, les coûts, l'expédition et la récupération de la taxe sur les achats. Les lignes fiscales Shopify réelles restent prioritaires.` : `Configure rates, prices, costs, shipping and input-tax recovery. Actual Shopify tax lines remain authoritative.`,
     },
     {
       id: config.regimes.exempt,
@@ -397,32 +401,34 @@ function getRegimeOptions({
           ? isGst
             ? `Vendite ${config.taxLabel}-free / esenti`
             : `Attività esente ${config.taxLabel}`
-          : isGst
+          : language === "fr"
+            ? isGst ? `Ventes sans ${config.taxLabel} / exonérées` : `Activité exonérée de ${config.taxLabel}`
+            : isGst
             ? `${config.taxLabel}-free / exempt sales`
             : `${config.taxLabel}-exempt activity`,
       subtitle:
         language === "it"
           ? "Vendite trattate come esenti"
-          : "Sales treated as tax exempt",
+          : language === "fr" ? "Ventes traitées comme exonérées de taxe" : "Sales treated as tax exempt",
       detail:
         language === "it"
           ? `Preset senza output ${config.taxLabel} nel fallback MarginLab e senza recupero automatico dell'imposta sugli acquisti.`
-          : `Preset with no output ${config.taxLabel} in the MarginLab fallback and no automatic input-tax recovery.`,
+          : language === "fr" ? `Préréglage sans ${config.taxLabel} collectée dans le fallback MarginLab et sans récupération automatique de la taxe sur les achats.` : `Preset with no output ${config.taxLabel} in the MarginLab fallback and no automatic input-tax recovery.`,
     },
     {
       id: config.regimes.unregistered,
       title:
         language === "it"
           ? `Non registrato ${config.taxLabel}`
-          : `Not ${config.taxLabel} registered`,
+          : language === "fr" ? `Non enregistré à la ${config.taxLabel}` : `Not ${config.taxLabel} registered`,
       subtitle:
         language === "it"
           ? `Nessun addebito ${config.taxLabel}`
-          : `No ${config.taxLabel} charged`,
+          : language === "fr" ? `Aucune ${config.taxLabel} facturée` : `No ${config.taxLabel} charged`,
       detail:
         language === "it"
           ? `Per merchant che non addebitano ${config.taxLabel} sulle vendite analizzate.`
-          : `For merchants that do not charge ${config.taxLabel} on analyzed sales.`,
+          : language === "fr" ? `Pour les marchands qui ne facturent pas de ${config.taxLabel} sur les ventes analysées.` : `For merchants that do not charge ${config.taxLabel} on analyzed sales.`,
     },
   ];
 }
@@ -1032,7 +1038,11 @@ export default function TaxProfilePage() {
                       <div style={styles.notice}>
                         {language === "it"
                           ? countryUiConfig.noticeIt
-                          : countryUiConfig.noticeEn}
+                          : language === "fr"
+                            ? countryCode === "CA"
+                              ? "Au Canada, le taux réel peut varier selon le lieu de fourniture et la province. Le taux de 5 % sert uniquement de référence de secours : lorsque Shopify fournit des lignes fiscales réelles, MarginLab les considère comme prioritaires."
+                              : "En Australie, le taux standard de GST est généralement de 10 % sur les ventes imposables. MarginLab considère toutefois les lignes fiscales Shopify réelles comme prioritaires et utilise 10 % uniquement comme valeur de secours du profil avancé."
+                            : countryUiConfig.noticeEn}
                       </div>
                     )}
                   <div style={styles.rateRow}>

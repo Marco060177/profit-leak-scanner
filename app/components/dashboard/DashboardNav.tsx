@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useI18n } from "~/components/i18n/I18nProvider";
-import type { Language } from "~/utils/i18n";
+import { isSupportedLanguage, type Language } from "~/utils/i18n";
 
 import {
   getStoredProfitAlertStates,
@@ -219,7 +219,7 @@ export default function DashboardNav({
     const lang = currentParams.get("lang");
     const period = currentParams.get("period");
 
-    if (lang === "it" || lang === "en") {
+    if (isSupportedLanguage(lang)) {
       nextParams.set("lang", lang);
     }
 

@@ -1468,7 +1468,7 @@ export default function RecommendationsPage() {
                               </TinyBadge>
 
                               <TinyBadge color="#c084fc">
-                                {alert.recommendedModule}
+                                {getUiModuleName(alert.recommendedModule, language)}
                               </TinyBadge>
                             </div>
                           </div>
@@ -1869,7 +1869,7 @@ export default function RecommendationsPage() {
                   <ActionMetric
                     label={copy.auto.r065}
                     value={
-                      topAlert?.recommendedModule ??
+                      (topAlert ? getUiModuleName(topAlert.recommendedModule, language) : undefined) ??
                       (copy.auto.r066)
                     }
                     note={
@@ -2071,4 +2071,8 @@ function getUiEffortLabel(effort: ProfitAlertEffort, language: Language) {
 function getUiCategoryLabel(category: string, language: Language) {
   if (language !== "fr") return category;
   return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
+}
+
+function getUiModuleName(module: string, language: Language) {
+  return language === "fr" && module === "Products" ? "Produits" : module;
 }

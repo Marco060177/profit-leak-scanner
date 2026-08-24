@@ -1043,7 +1043,7 @@ Destination module: ${alert.route}
   const aiPrompt = `
 You are MarginLab AI Advisor.
 
-Respond in ${language === "it" ? "Italian" : "English"}.
+Respond in ${language === "it" ? "Italian" : language === "fr" ? "French" : "English"}.
 
 Analyze this Shopify store profitability data.
 

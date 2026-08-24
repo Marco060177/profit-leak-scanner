@@ -521,7 +521,7 @@ export default function ProductRiskTable({
                           >
                             {row.missingCost
                               ? copy.missingCostRecommendation
-                              : language !== "it"
+                              : language === "en"
                                 ? translatedSuggestion(row)
                                 : row.profit < 0
                                   ? row.targetDelta > 0
