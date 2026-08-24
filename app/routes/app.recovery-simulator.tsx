@@ -697,11 +697,14 @@ export default function RecoverySimulatorPage() {
   })) : language === "es" ? recoveryBreakdown.map((item) => ({
     ...item,
     label: ({ price: "Variación del precio", cost: "Reducción del coste", volume: "Variación del volumen", fees: "Impacto de las comisiones variables", "tax-reserve": `Reserva fiscal del modelo (${formatStorePercent(taxReserveRate * 100, "es-ES", 1)})` } as Record<string, string>)[item.key] ?? item.label,
+  })) : language === "pt-BR" ? recoveryBreakdown.map((item) => ({
+    ...item,
+    label: ({ price: "Variação do preço", cost: "Redução do custo", volume: "Variação do volume", fees: "Impacto das taxas variáveis", "tax-reserve": `Reserva fiscal do modelo (${formatStorePercent(taxReserveRate * 100, "pt-BR", 1)})` } as Record<string, string>)[item.key] ?? item.label,
   })) : recoveryBreakdown;
 
-  const displayRiskLabel = language === "fr" ? commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible" : language === "de" ? commercialRiskScore >= 65 ? "Hoch" : commercialRiskScore >= 35 ? "Mittel" : "Niedrig" : language === "es" ? commercialRiskScore >= 65 ? "Alto" : commercialRiskScore >= 35 ? "Medio" : "Bajo" : riskLabel;
-  const displayConfidenceLabel = language === "fr" ? dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible" : language === "de" ? dataConfidenceScore >= 80 ? "Hoch" : dataConfidenceScore >= 55 ? "Mittel" : "Niedrig" : language === "es" ? dataConfidenceScore >= 80 ? "Alta" : dataConfidenceScore >= 55 ? "Media" : "Baja" : confidenceLabel;
-  const displayProfitHealth = language === "fr" ? simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte" : language === "de" ? simulatedMarginPct < 0 ? "Verlustbringend" : simulatedMarginPct < 10 ? "Kritisch" : simulatedMarginPct < 20 ? "Schwach" : simulatedMarginPct < 35 ? "Gesund" : "Stark" : language === "es" ? simulatedMarginPct < 0 ? "Con pérdidas" : simulatedMarginPct < 10 ? "Crítico" : simulatedMarginPct < 20 ? "Débil" : simulatedMarginPct < 35 ? "Saludable" : "Fuerte" : profitHealth;
+  const displayRiskLabel = language === "fr" ? commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible" : language === "de" ? commercialRiskScore >= 65 ? "Hoch" : commercialRiskScore >= 35 ? "Mittel" : "Niedrig" : language === "es" ? commercialRiskScore >= 65 ? "Alto" : commercialRiskScore >= 35 ? "Medio" : "Bajo" : language === "pt-BR" ? commercialRiskScore >= 65 ? "Alto" : commercialRiskScore >= 35 ? "Médio" : "Baixo" : riskLabel;
+  const displayConfidenceLabel = language === "fr" ? dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible" : language === "de" ? dataConfidenceScore >= 80 ? "Hoch" : dataConfidenceScore >= 55 ? "Mittel" : "Niedrig" : language === "es" ? dataConfidenceScore >= 80 ? "Alta" : dataConfidenceScore >= 55 ? "Media" : "Baja" : language === "pt-BR" ? dataConfidenceScore >= 80 ? "Alta" : dataConfidenceScore >= 55 ? "Média" : "Baixa" : confidenceLabel;
+  const displayProfitHealth = language === "fr" ? simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte" : language === "de" ? simulatedMarginPct < 0 ? "Verlustbringend" : simulatedMarginPct < 10 ? "Kritisch" : simulatedMarginPct < 20 ? "Schwach" : simulatedMarginPct < 35 ? "Gesund" : "Stark" : language === "es" ? simulatedMarginPct < 0 ? "Con pérdidas" : simulatedMarginPct < 10 ? "Crítico" : simulatedMarginPct < 20 ? "Débil" : simulatedMarginPct < 35 ? "Saludable" : "Fuerte" : language === "pt-BR" ? simulatedMarginPct < 0 ? "Com prejuízo" : simulatedMarginPct < 10 ? "Crítica" : simulatedMarginPct < 20 ? "Fraca" : simulatedMarginPct < 35 ? "Saudável" : "Forte" : profitHealth;
 
   const displayRecommendation = language === "fr" ? (() => {
     const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
@@ -739,6 +742,18 @@ export default function RecoverySimulatorPage() {
       return `Elevar el precio a ${money(simulatedPrice, 2)} genera un impacto importante, pero el aumento del ${pct(displayPriceIncreasePct)} es considerable. Pruébalo durante un periodo corto o en una parte del tráfico para medir la respuesta de la demanda.`;
     }
     return `Elevar el precio a ${money(simulatedPrice, 2)} y reducir el coste un ${pct(costReductionPct)} aumenta el margen del ${pct(currentMarginPct)} al ${pct(simulatedMarginPct)}. Con el volumen asumido, la recuperación anual estimada es de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Es un equilibrio razonable entre rentabilidad y riesgo comercial.`;
+  })() : language === "pt-BR" ? (() => {
+    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
+    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+      return `Este cenário reduz o lucro mensal estimado. A variação das vendas não compensa o novo equilíbrio entre preço e custo. Reduza a queda de vendas presumida ou aumente o preço acima de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+    }
+    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+      return `A redução de custos é a alavanca mais eficaz neste cenário. Uma redução de ${pct(costReductionPct)} eleva a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)} com um aumento de preço limitado. Considere negociar com o fornecedor antes de alterar o preço de venda.`;
+    }
+    if (displayPriceIncreasePct >= 8) {
+      return `Elevar o preço para ${money(simulatedPrice, 2)} gera um impacto importante, mas o aumento de ${pct(displayPriceIncreasePct)} é significativo. Teste por um período curto ou em parte do tráfego para medir a resposta da demanda.`;
+    }
+    return `Elevar o preço para ${money(simulatedPrice, 2)} e reduzir o custo em ${pct(costReductionPct)} aumenta a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)}. Com o volume presumido, a recuperação anual estimada é de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. É um equilíbrio razoável entre lucratividade e risco comercial.`;
   })() : recommendation;
 
   const displaySuggestedActions = language === "fr" ? [
@@ -756,6 +771,11 @@ export default function RecoverySimulatorPage() {
     { visible: costReductionPct > 0, text: `Negociar una reducción de costes del ${pct(costReductionPct)}` },
     { visible: salesChangePct < 0, text: "Supervisar una posible caída de la conversión tras el cambio de precio" },
     { visible: salesChangePct >= 0, text: "Supervisar ventas y margen para confirmar el impacto real" },
+  ].filter((item) => item.visible) : language === "pt-BR" ? [
+    { visible: simulatedPrice > currentPrice, text: `Avaliar um preço de venda de ${money(simulatedPrice, 2)}` },
+    { visible: costReductionPct > 0, text: `Negociar uma redução de custo de ${pct(costReductionPct)}` },
+    { visible: salesChangePct < 0, text: "Monitorar uma possível queda na conversão após a alteração de preço" },
+    { visible: salesChangePct >= 0, text: "Monitorar vendas e margem para confirmar o impacto real" },
   ].filter((item) => item.visible) : suggestedActions;
 
   const handleManualPriceChange = (value: number) => {
@@ -1357,7 +1377,7 @@ export default function RecoverySimulatorPage() {
                       pct(currentMarginPct),
                     ],
                     [
-                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : "Monthly profit",
+                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : language === "pt-BR" ? "Lucro mensal" : "Monthly profit",
                       money(currentMonthlyProfit, 0),
                     ],
                   ].map(([label, value]) => (
@@ -1390,7 +1410,7 @@ export default function RecoverySimulatorPage() {
                         </span>
 
                         {label ===
-                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : "Monthly profit") && (
+                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : language === "pt-BR" ? "Lucro mensal" : "Monthly profit") && (
                             <MetricTooltip
                               content={{
                                 title:
@@ -1897,7 +1917,7 @@ export default function RecoverySimulatorPage() {
                   },
                   {
                     label:
-                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : "Net monthly recovery",
+                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : language === "pt-BR" ? "Recuperação mensal líquida" : "Net monthly recovery",
                     value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
                     note:
                       copy.auto.s049,
@@ -1937,7 +1957,7 @@ export default function RecoverySimulatorPage() {
                       <span>{item.label}</span>
 
                       {item.label ===
-                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : "Net monthly recovery") && (
+                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : language === "pt-BR" ? "Recuperação mensal líquida" : "Net monthly recovery") && (
                           <MetricTooltip
                             content={{
                               title:

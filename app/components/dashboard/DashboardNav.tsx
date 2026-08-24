@@ -921,6 +921,7 @@ export default function DashboardNav({
                 { id: "fr", name: "Français" },
                 { id: "de", name: "Deutsch" },
                 { id: "es", name: "Español" },
+                { id: "pt-BR", name: "Português (Brasil)" },
               ] as const).map((option) => {
                 const activeLanguage = language === option.id;
                 return (

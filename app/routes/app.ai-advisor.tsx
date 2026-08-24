@@ -1443,6 +1443,25 @@ Rules:
               hiddenCosts: "¿Cuál es mi mayor coste oculto?",
               growthOpportunity: "¿Dónde puedo aumentar el beneficio más rápidamente?",
             } as Record<string, string>)[question.id]
+          : language === "pt-BR"
+            ? ({
+              profitRisk: primaryProfitAlert
+                ? `Por que “${primaryProfitAlert.title}” é a principal prioridade?`
+                : "Qual é o principal risco para o meu lucro?",
+              marginPressure: summary.refunds > 0
+                ? "Quanto os reembolsos estão afetando o lucro?"
+                : "O que está reduzindo minha margem?",
+              priority: missionAlert
+                ? `Por que devo tratar “${missionAlert.title}” primeiro?`
+                : "O que devo revisar primeiro?",
+              fastestImprovement: recoverableProfit > 0
+                ? "Como posso reduzir essa diferença de lucro?"
+                : "Qual ação melhoraria o lucro mais rapidamente?",
+              productPriorities: "Quais produtos devo corrigir primeiro?",
+              pricingOpportunity: "Qual é a maior diferença de preço em relação à meta?",
+              hiddenCosts: "Qual é o meu maior custo oculto?",
+              growthOpportunity: "Onde posso aumentar o lucro mais rapidamente?",
+            } as Record<string, string>)[question.id]
           : question.label,
   }));
 

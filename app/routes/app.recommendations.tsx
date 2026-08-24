@@ -675,10 +675,10 @@ export default function RecommendationsPage() {
       : 100;
 
   const stageLabels: Record<ActionStage, string> = {
-    now: language === "it" ? "Da affrontare ora" : language === "fr" ? "À traiter maintenant" : language === "de" ? "Jetzt bearbeiten" : language === "es" ? "Abordar ahora" : "Address now",
-    next: language === "it" ? "Prossimo passo" : language === "fr" ? "Prochaine étape" : language === "de" ? "Nächster Schritt" : language === "es" ? "Siguiente paso" : "Next step",
-    planned: language === "it" ? "Da pianificare" : language === "fr" ? "À planifier" : language === "de" ? "Einzuplanen" : language === "es" ? "Planificar" : "Plan next",
-    monitor: language === "it" ? "Monitoraggio" : language === "fr" ? "Suivi" : language === "de" ? "Überwachung" : language === "es" ? "Seguimiento" : "Monitoring",
+    now: language === "it" ? "Da affrontare ora" : language === "fr" ? "À traiter maintenant" : language === "de" ? "Jetzt bearbeiten" : language === "es" ? "Abordar ahora" : language === "pt-BR" ? "Tratar agora" : "Address now",
+    next: language === "it" ? "Prossimo passo" : language === "fr" ? "Prochaine étape" : language === "de" ? "Nächster Schritt" : language === "es" ? "Siguiente paso" : language === "pt-BR" ? "Próxima etapa" : "Next step",
+    planned: language === "it" ? "Da pianificare" : language === "fr" ? "À planifier" : language === "de" ? "Einzuplanen" : language === "es" ? "Planificar" : language === "pt-BR" ? "Planejar" : "Plan next",
+    monitor: language === "it" ? "Monitoraggio" : language === "fr" ? "Suivi" : language === "de" ? "Überwachung" : language === "es" ? "Seguimiento" : language === "pt-BR" ? "Monitoramento" : "Monitoring",
   };
 
   const strategyText =
@@ -698,6 +698,10 @@ export default function RecommendationsPage() {
             ? topAlert
               ? `La prioridad principal es «${topAlert.title}». MarginLab recomienda completar primero las tareas de mayor prioridad, validar el efecto en el módulo recomendado y solo después pasar a las oportunidades de optimización.`
               : "No se han detectado acciones operativas. Mantén activo el seguimiento y vuelve a revisar la situación cuando cambien los pedidos, costes o márgenes."
+          : language === "pt-BR"
+            ? topAlert
+              ? `A principal prioridade é “${topAlert.title}”. A MarginLab recomenda concluir primeiro as tarefas de maior prioridade, validar o efeito no módulo recomendado e só então avançar para as oportunidades de otimização.`
+              : "Nenhuma ação operacional foi detectada. Mantenha o monitoramento ativo e revise novamente quando os pedidos, custos ou margens mudarem."
         : topAlert
         ? `The primary priority is “${topAlert.title}”. MarginLab recommends completing higher-priority work first, validating the effect in the recommended module, and only then moving to optimization opportunities.`
         : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
@@ -2066,6 +2070,7 @@ function getUiStatusStyle(action: ProfitBusinessAction, language: Language) {
   if (language === "fr") return { ...style, label: ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<ProfitBusinessAction, string>)[action] };
   if (language === "de") return { ...style, label: ({ action: "Aktion", review: "Prüfung", optimize: "Optimierung", monitor: "Überwachung" } as Record<ProfitBusinessAction, string>)[action] };
   if (language === "es") return { ...style, label: ({ action: "Acción", review: "Revisión", optimize: "Optimización", monitor: "Seguimiento" } as Record<ProfitBusinessAction, string>)[action] };
+  if (language === "pt-BR") return { ...style, label: ({ action: "Ação", review: "Revisão", optimize: "Otimização", monitor: "Monitoramento" } as Record<ProfitBusinessAction, string>)[action] };
   return style;
 }
 
@@ -2073,6 +2078,7 @@ function getUiEffortLabel(effort: ProfitAlertEffort, language: Language) {
   if (language === "fr") return effort === "easy" ? "Facile" : effort === "medium" ? "Moyenne" : "Avancée";
   if (language === "de") return effort === "easy" ? "Einfach" : effort === "medium" ? "Mittel" : "Anspruchsvoll";
   if (language === "es") return effort === "easy" ? "Fácil" : effort === "medium" ? "Medio" : "Avanzado";
+  if (language === "pt-BR") return effort === "easy" ? "Fácil" : effort === "medium" ? "Médio" : "Avançado";
   return getEffortLabel(effort, language);
 }
 
@@ -2080,9 +2086,10 @@ function getUiCategoryLabel(category: string, language: Language) {
   if (language === "fr") return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
   if (language === "de") return ({ pricing: "Preisgestaltung", "data-quality": "Datenqualität", margin: "Marge", discounts: "Rabatte", refunds: "Erstattungen", growth: "Wachstum" } as Record<string, string>)[category] ?? category;
   if (language === "es") return ({ pricing: "Precios", "data-quality": "Calidad de datos", margin: "Margen", discounts: "Descuentos", refunds: "Reembolsos", growth: "Crecimiento" } as Record<string, string>)[category] ?? category;
+  if (language === "pt-BR") return ({ pricing: "Precificação", "data-quality": "Qualidade dos dados", margin: "Margem", discounts: "Descontos", refunds: "Reembolsos", growth: "Crescimento" } as Record<string, string>)[category] ?? category;
   return category;
 }
 
 function getUiModuleName(module: string, language: Language) {
-  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : module) : module;
+  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : module) : module;
 }

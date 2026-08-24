@@ -156,28 +156,28 @@ function getSeverityStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertSeverity, StatusStyle> = {
     critical: {
-      label: language === "it" ? "Critico" : language === "fr" ? "Critique" : language === "de" ? "Kritisch" : language === "es" ? "Crítico" : "Critical",
+      label: language === "it" ? "Critico" : language === "fr" ? "Critique" : language === "de" ? "Kritisch" : language === "es" ? "Crítico" : language === "pt-BR" ? "Crítico" : "Critical",
       color: "#ff6b4a",
       background: "rgba(255,107,74,0.11)",
       border: "rgba(255,107,74,0.30)",
     },
 
     warning: {
-      label: language === "it" ? "Attenzione" : language === "fr" ? "Avertissement" : language === "de" ? "Warnung" : language === "es" ? "Advertencia" : "Warning",
+      label: language === "it" ? "Attenzione" : language === "fr" ? "Avertissement" : language === "de" ? "Warnung" : language === "es" ? "Advertencia" : language === "pt-BR" ? "Aviso" : "Warning",
       color: "#f59e0b",
       background: "rgba(245,158,11,0.11)",
       border: "rgba(245,158,11,0.28)",
     },
 
     opportunity: {
-      label: language === "it" ? "Opportunità" : language === "fr" ? "Opportunité" : language === "de" ? "Chance" : language === "es" ? "Oportunidad" : "Opportunity",
+      label: language === "it" ? "Opportunità" : language === "fr" ? "Opportunité" : language === "de" ? "Chance" : language === "es" ? "Oportunidad" : language === "pt-BR" ? "Oportunidade" : "Opportunity",
       color: "#22c55e",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
     },
 
     info: {
-      label: language === "it" ? "Informazione" : language === "fr" ? "Information" : language === "de" ? "Information" : language === "es" ? "Información" : "Information",
+      label: language === "it" ? "Informazione" : language === "fr" ? "Information" : language === "de" ? "Information" : language === "es" ? "Información" : language === "pt-BR" ? "Informação" : "Information",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
@@ -193,28 +193,28 @@ function getAlertStatusStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertStatus, StatusStyle> = {
     new: {
-      label: language === "it" ? "Nuovo" : language === "fr" ? "Nouveau" : language === "de" ? "Neu" : language === "es" ? "Nuevo" : "New",
+      label: language === "it" ? "Nuovo" : language === "fr" ? "Nouveau" : language === "de" ? "Neu" : language === "es" ? "Nuevo" : language === "pt-BR" ? "Novo" : "New",
       color: "#ff875f",
       background: "rgba(255,115,80,0.12)",
       border: "rgba(255,115,80,0.30)",
     },
 
     active: {
-      label: language === "it" ? "Attivo" : language === "fr" ? "Actif" : language === "de" ? "Aktiv" : language === "es" ? "Activo" : "Active",
+      label: language === "it" ? "Attivo" : language === "fr" ? "Actif" : language === "de" ? "Aktiv" : language === "es" ? "Activo" : language === "pt-BR" ? "Ativo" : "Active",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
     },
 
     acknowledged: {
-      label: language === "it" ? "Preso in carico" : language === "fr" ? "Pris en compte" : language === "de" ? "Zur Kenntnis genommen" : language === "es" ? "Confirmado" : "Acknowledged",
+      label: language === "it" ? "Preso in carico" : language === "fr" ? "Pris en compte" : language === "de" ? "Zur Kenntnis genommen" : language === "es" ? "Confirmado" : language === "pt-BR" ? "Reconhecido" : "Acknowledged",
       color: "#c084fc",
       background: "rgba(192,132,252,0.11)",
       border: "rgba(192,132,252,0.28)",
     },
 
     resolved: {
-      label: language === "it" ? "Risolto" : language === "fr" ? "Résolu" : language === "de" ? "Gelöst" : language === "es" ? "Resuelto" : "Resolved",
+      label: language === "it" ? "Risolto" : language === "fr" ? "Résolu" : language === "de" ? "Gelöst" : language === "es" ? "Resuelto" : language === "pt-BR" ? "Resolvido" : "Resolved",
       color: "#4ade80",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
@@ -226,26 +226,26 @@ function getAlertStatusStyle(
 
 function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (!timestamp) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
   }
 
   const date = new Date(timestamp);
 
   if (Number.isNaN(date.getTime())) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
   }
 
   const differenceMs = Date.now() - date.getTime();
   const differenceMinutes = Math.max(0, Math.floor(differenceMs / 60000));
 
   if (differenceMinutes < 1) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : "Now";
+    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
   }
 
   if (differenceMinutes < 60) {
     return language === "it"
       ? `${differenceMinutes} min fa`
-      : language === "fr" ? `il y a ${differenceMinutes} min` : language === "de" ? `vor ${differenceMinutes} Min.` : language === "es" ? `hace ${differenceMinutes} min` : `${differenceMinutes} min ago`;
+      : language === "fr" ? `il y a ${differenceMinutes} min` : language === "de" ? `vor ${differenceMinutes} Min.` : language === "es" ? `hace ${differenceMinutes} min` : language === "pt-BR" ? `há ${differenceMinutes} min` : `${differenceMinutes} min ago`;
   }
 
   const differenceHours = Math.floor(differenceMinutes / 60);
@@ -253,19 +253,19 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (differenceHours < 24) {
     return language === "it"
       ? `${differenceHours} ore fa`
-      : language === "fr" ? `il y a ${differenceHours} h` : language === "de" ? `vor ${differenceHours} Std.` : language === "es" ? `hace ${differenceHours} h` : `${differenceHours}h ago`;
+      : language === "fr" ? `il y a ${differenceHours} h` : language === "de" ? `vor ${differenceHours} Std.` : language === "es" ? `hace ${differenceHours} h` : language === "pt-BR" ? `há ${differenceHours} h` : `${differenceHours}h ago`;
   }
 
   const differenceDays = Math.floor(differenceHours / 24);
 
   if (differenceDays === 1) {
-    return language === "it" ? "Ieri" : language === "fr" ? "Hier" : language === "de" ? "Gestern" : language === "es" ? "Ayer" : "Yesterday";
+    return language === "it" ? "Ieri" : language === "fr" ? "Hier" : language === "de" ? "Gestern" : language === "es" ? "Ayer" : language === "pt-BR" ? "Ontem" : "Yesterday";
   }
 
   if (differenceDays < 7) {
     return language === "it"
       ? `${differenceDays} giorni fa`
-      : language === "fr" ? `il y a ${differenceDays} jours` : language === "de" ? `vor ${differenceDays} Tagen` : language === "es" ? `hace ${differenceDays} días` : `${differenceDays} days ago`;
+      : language === "fr" ? `il y a ${differenceDays} jours` : language === "de" ? `vor ${differenceDays} Tagen` : language === "es" ? `hace ${differenceDays} días` : language === "pt-BR" ? `há ${differenceDays} dias` : `${differenceDays} days ago`;
   }
 
   return new Intl.DateTimeFormat(getLanguageLocale(language), {
@@ -279,6 +279,7 @@ function getAlertCategoryLabel(category: string, language: Language) {
   if (language === "fr") return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
   if (language === "de") return ({ pricing: "Preisgestaltung", "data-quality": "Datenqualität", margin: "Marge", discounts: "Rabatte", refunds: "Erstattungen", growth: "Wachstum" } as Record<string, string>)[category] ?? category;
   if (language === "es") return ({ pricing: "Precios", "data-quality": "Calidad de datos", margin: "Margen", discounts: "Descuentos", refunds: "Reembolsos", growth: "Crecimiento" } as Record<string, string>)[category] ?? category;
+  if (language === "pt-BR") return ({ pricing: "Precificação", "data-quality": "Qualidade dos dados", margin: "Margem", discounts: "Descontos", refunds: "Reembolsos", growth: "Crescimento" } as Record<string, string>)[category] ?? category;
   return category;
 }
 
@@ -286,11 +287,12 @@ function getBusinessActionLabel(action: string, language: Language) {
   if (language === "fr") return ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<string, string>)[action] ?? action;
   if (language === "de") return ({ action: "Aktion", review: "Prüfung", optimize: "Optimierung", monitor: "Überwachung" } as Record<string, string>)[action] ?? action;
   if (language === "es") return ({ action: "Acción", review: "Revisión", optimize: "Optimización", monitor: "Seguimiento" } as Record<string, string>)[action] ?? action;
+  if (language === "pt-BR") return ({ action: "Ação", review: "Revisão", optimize: "Otimização", monitor: "Monitoramento" } as Record<string, string>)[action] ?? action;
   return action;
 }
 
 function getModuleDisplayName(module: string, language: Language) {
-  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : module) : module;
+  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : module) : module;
 }
 
 function TinyBadge({

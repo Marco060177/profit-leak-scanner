@@ -401,6 +401,7 @@ export function generateProfitAlerts({
     const isFrench = language === "fr";
     const isGerman = language === "de";
     const isSpanish = language === "es";
+    const isPortuguese = language === "pt-BR";
     const periodDays = getPeriodDays(period);
 
     const economicSnapshot = buildEconomicSnapshot({
@@ -468,7 +469,7 @@ export function generateProfitAlerts({
     const monthlyPricingOpportunity =
         economicSnapshot.totals.monthlyOpportunity;
 
-    const locale = isItalian ? "it-IT" : isFrench ? "fr-FR" : isGerman ? "de-DE" : isSpanish ? "es-ES" : "en-US";
+    const locale = isItalian ? "it-IT" : isFrench ? "fr-FR" : isGerman ? "de-DE" : isSpanish ? "es-ES" : isPortuguese ? "pt-BR" : "en-US";
 
     const pct = (value: number, digits = 1) =>
         formatStorePercent(value, locale, digits);
@@ -558,6 +559,8 @@ export function generateProfitAlerts({
                         ? `${losingProducts.length} ${losingProducts.length === 1 ? "Produkt verursacht" : "Produkte verursachen"} Verluste`
                         : isSpanish
                             ? `${losingProducts.length} ${losingProducts.length === 1 ? "producto está generando" : "productos están generando"} pérdidas`
+                        : isPortuguese
+                            ? `${losingProducts.length} ${losingProducts.length === 1 ? "produto está gerando" : "produtos estão gerando"} prejuízo`
                     : `${losingProducts.length} ${losingProducts.length === 1 ? "product is" : "products are"} generating losses`,
 
             description: worstLosingProduct
@@ -569,6 +572,8 @@ export function generateProfitAlerts({
                             ? `${worstLosingProduct.productTitle} ist derzeit das größte Risiko. Prüfen Sie Preis, Kosten und Marge, bevor Sie das Absatzvolumen erhöhen.`
                             : isSpanish
                                 ? `${worstLosingProduct.productTitle} es el principal riesgo actual. Revisa el precio, el coste y el margen antes de aumentar el volumen.`
+                            : isPortuguese
+                                ? `${worstLosingProduct.productTitle} é o principal risco atual. Revise o preço, o custo e a margem antes de aumentar o volume.`
                         : `${worstLosingProduct.productTitle} is the biggest current risk. Review price, cost and margin before increasing volume.`
                 : isItalian
                     ? "Alcuni prodotti vengono venduti con profitto negativo e richiedono un intervento immediato."
@@ -578,6 +583,8 @@ export function generateProfitAlerts({
                             ? "Einige Produkte werden mit Verlust verkauft und erfordern sofortiges Handeln."
                             : isSpanish
                                 ? "Algunos productos se venden con pérdidas y requieren una intervención inmediata."
+                            : isPortuguese
+                                ? "Alguns produtos estão sendo vendidos com prejuízo e exigem uma ação imediata."
                         : "Some products are selling at a negative profit and require immediate action.",
 
             monthlyImpact: monthlyLosingImpact,
@@ -586,7 +593,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Controlla i prodotti"
-                : isFrench ? "Examiner les produits" : isGerman ? "Produkte prüfen" : isSpanish ? "Revisar productos" : "Review products",
+                : isFrench ? "Examiner les produits" : isGerman ? "Produkte prüfen" : isSpanish ? "Revisar productos" : isPortuguese ? "Revisar produtos" : "Review products",
 
             route: "/app/products",
 
@@ -631,11 +638,11 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `${missingCostProducts.length} prodotti non hanno un costo registrato`
-                : isFrench ? `${missingCostProducts.length} produits n'ont pas de coût renseigné` : isGerman ? `Bei ${missingCostProducts.length} Produkten fehlen Kostendaten` : isSpanish ? `${missingCostProducts.length} productos no tienen datos de coste` : `${missingCostProducts.length} products are missing cost data`,
+                : isFrench ? `${missingCostProducts.length} produits n'ont pas de coût renseigné` : isGerman ? `Bei ${missingCostProducts.length} Produkten fehlen Kostendaten` : isSpanish ? `${missingCostProducts.length} productos no tienen datos de coste` : isPortuguese ? `${missingCostProducts.length} produtos estão sem custo informado` : `${missingCostProducts.length} products are missing cost data`,
 
             description: isItalian
                 ? `I prodotti senza costo rappresentano il ${pct(missingCostRevenueShare)} dei ricavi analizzati e riducono l'affidabilità di AI Advisor, Forecasting e delle simulazioni.`
-                : isFrench ? `Les produits sans coût renseigné représentent ${pct(missingCostRevenueShare)} du chiffre d'affaires analysé et réduisent la fiabilité d'AI Advisor, de Forecasting et des simulations.` : isGerman ? `Produkte ohne Kostendaten machen ${pct(missingCostRevenueShare)} des analysierten Umsatzes aus und verringern die Zuverlässigkeit von AI Advisor, Forecasting und Simulationen.` : isSpanish ? `Los productos sin datos de coste representan el ${pct(missingCostRevenueShare)} de los ingresos analizados y reducen la fiabilidad de AI Advisor, Forecasting y las simulaciones.` : `Products without cost data represent ${pct(missingCostRevenueShare)} of analyzed revenue and reduce the reliability of AI Advisor, Forecasting and simulations.`,
+                : isFrench ? `Les produits sans coût renseigné représentent ${pct(missingCostRevenueShare)} du chiffre d'affaires analysé et réduisent la fiabilité d'AI Advisor, de Forecasting et des simulations.` : isGerman ? `Produkte ohne Kostendaten machen ${pct(missingCostRevenueShare)} des analysierten Umsatzes aus und verringern die Zuverlässigkeit von AI Advisor, Forecasting und Simulationen.` : isSpanish ? `Los productos sin datos de coste representan el ${pct(missingCostRevenueShare)} de los ingresos analizados y reducen la fiabilidad de AI Advisor, Forecasting y las simulaciones.` : isPortuguese ? `Os produtos sem custo informado representam ${pct(missingCostRevenueShare)} da receita analisada e reduzem a confiabilidade do AI Advisor, do Forecasting e das simulações.` : `Products without cost data represent ${pct(missingCostRevenueShare)} of analyzed revenue and reduce the reliability of AI Advisor, Forecasting and simulations.`,
 
             monthlyImpact: monthlyMissingCostExposure,
             economicKind: "exposure",
@@ -647,7 +654,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Completa i costi"
-                : isFrench ? "Compléter les coûts" : isGerman ? "Kosten vervollständigen" : isSpanish ? "Completar costes" : "Complete costs",
+                : isFrench ? "Compléter les coûts" : isGerman ? "Kosten vervollständigen" : isSpanish ? "Completar costes" : isPortuguese ? "Completar custos" : "Complete costs",
 
             route: "/app/products",
 
@@ -673,7 +680,7 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `Il margine complessivo è sceso al ${pct(grossMargin)}`
-                : isFrench ? `La marge globale est de ${pct(grossMargin)}` : isGerman ? `Die Gesamtmarge beträgt ${pct(grossMargin)}` : isSpanish ? `El margen global es del ${pct(grossMargin)}` : `Overall margin is ${pct(grossMargin)}`,
+                : isFrench ? `La marge globale est de ${pct(grossMargin)}` : isGerman ? `Die Gesamtmarge beträgt ${pct(grossMargin)}` : isSpanish ? `El margen global es del ${pct(grossMargin)}` : isPortuguese ? `A margem geral é de ${pct(grossMargin)}` : `Overall margin is ${pct(grossMargin)}`,
 
             description: isItalian
                 ? isCritical
@@ -691,6 +698,10 @@ export function generateProfitAlerts({
                             ? isCritical
                                 ? "El margen actual deja muy poco espacio para cubrir publicidad, envíos, comisiones y costes operativos."
                                 : "El margen actual es frágil y puede deteriorarse rápidamente por descuentos, reembolsos o mayores costes."
+                        : isPortuguese
+                            ? isCritical
+                                ? "A margem atual deixa muito pouco espaço para cobrir publicidade, frete, taxas e custos operacionais."
+                                : "A margem atual é frágil e pode se deteriorar rapidamente com descontos, reembolsos ou custos mais altos."
                     : isCritical
                     ? "The current margin leaves very little room for advertising, shipping, fees and operating costs."
                     : "The current margin is fragile and can deteriorate quickly through discounts, refunds or higher costs.",
@@ -701,7 +712,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Analizza i margini"
-                : isFrench ? "Examiner les marges" : isGerman ? "Margen prüfen" : isSpanish ? "Revisar márgenes" : "Review margins",
+                : isFrench ? "Examiner les marges" : isGerman ? "Margen prüfen" : isSpanish ? "Revisar márgenes" : isPortuguese ? "Revisar margens" : "Review margins",
 
             route: "/app/profit-intelligence",
 
@@ -755,10 +766,10 @@ export function generateProfitAlerts({
                 )} Punkte gesunken` : isSpanish ? `El margen ha disminuido ${number(
                     Math.abs(marginDelta),
                     1,
-                )} puntos` : `Margin dropped by ${number(
+                )} puntos` : isPortuguese ? `A margem caiu ${number(
                     Math.abs(marginDelta),
                     1,
-                )} points`,
+                )} pontos` : `Margin dropped by ${number(Math.abs(marginDelta), 1)} points`,
 
             description: isItalian
                 ? `Il margine è passato da circa ${pct(
@@ -778,7 +789,11 @@ export function generateProfitAlerts({
                     previousMargin,
                 )} a ${pct(
                     grossMargin,
-                )}. Revisa los productos con el mayor deterioro.` : `Margin moved from approximately ${pct(
+                )}. Revisa los productos con el mayor deterioro.` : isPortuguese ? `A margem passou de aproximadamente ${pct(
+                    previousMargin,
+                )} para ${pct(
+                    grossMargin,
+                )}. Revise os produtos com a maior deterioração.` : `Margin moved from approximately ${pct(
                     previousMargin,
                 )} to ${pct(
                     grossMargin,
@@ -794,7 +809,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Apri Profit Intelligence"
-                : isFrench ? "Ouvrir Profit Intelligence" : isGerman ? "Profit Intelligence öffnen" : isSpanish ? "Abrir Profit Intelligence" : "Open Profit Intelligence",
+                : isFrench ? "Ouvrir Profit Intelligence" : isGerman ? "Profit Intelligence öffnen" : isSpanish ? "Abrir Profit Intelligence" : isPortuguese ? "Abrir Profit Intelligence" : "Open Profit Intelligence",
 
             route: "/app/profit-intelligence",
 
@@ -821,11 +836,11 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `Gli sconti assorbono il ${pct(discountRate)} dei ricavi`
-                : isFrench ? `Les remises représentent ${pct(discountRate)} du chiffre d'affaires` : isGerman ? `Rabatte machen ${pct(discountRate)} des Umsatzes aus` : isSpanish ? `Los descuentos representan el ${pct(discountRate)} de los ingresos` : `Discounts represent ${pct(discountRate)} of revenue`,
+                : isFrench ? `Les remises représentent ${pct(discountRate)} du chiffre d'affaires` : isGerman ? `Rabatte machen ${pct(discountRate)} des Umsatzes aus` : isSpanish ? `Los descuentos representan el ${pct(discountRate)} de los ingresos` : isPortuguese ? `Os descontos representam ${pct(discountRate)} da receita` : `Discounts represent ${pct(discountRate)} of revenue`,
 
             description: isItalian
                 ? "Verifica che le promozioni stiano generando vendite aggiuntive sufficienti a compensare la perdita di margine."
-                : isFrench ? "Vérifiez que les promotions génèrent suffisamment de ventes supplémentaires pour compenser la perte de marge." : isGerman ? "Prüfen Sie, ob Aktionen genügend zusätzliche Verkäufe generieren, um den Margenverlust auszugleichen." : isSpanish ? "Comprueba que las promociones generen suficientes ventas adicionales para compensar la pérdida de margen." : "Verify that promotions are generating enough additional sales to compensate for the lost margin.",
+                : isFrench ? "Vérifiez que les promotions génèrent suffisamment de ventes supplémentaires pour compenser la perte de marge." : isGerman ? "Prüfen Sie, ob Aktionen genügend zusätzliche Verkäufe generieren, um den Margenverlust auszugleichen." : isSpanish ? "Comprueba que las promociones generen suficientes ventas adicionales para compensar la pérdida de margen." : isPortuguese ? "Verifique se as promoções estão gerando vendas adicionais suficientes para compensar a perda de margem." : "Verify that promotions are generating enough additional sales to compensate for the lost margin.",
 
             monthlyImpact: monthlyDiscounts,
             economicKind: "exposure",
@@ -833,7 +848,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Analizza gli sconti"
-                : isFrench ? "Examiner les remises" : isGerman ? "Rabatte prüfen" : isSpanish ? "Revisar descuentos" : "Review discounts",
+                : isFrench ? "Examiner les remises" : isGerman ? "Rabatte prüfen" : isSpanish ? "Revisar descuentos" : isPortuguese ? "Revisar descontos" : "Review discounts",
 
             route: "/app/profit-intelligence",
 
@@ -858,11 +873,11 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `I rimborsi rappresentano il ${pct(refundRate)} dei ricavi`
-                : isFrench ? `Les remboursements représentent ${pct(refundRate)} du chiffre d'affaires` : isGerman ? `Erstattungen machen ${pct(refundRate)} des Umsatzes aus` : isSpanish ? `Los reembolsos representan el ${pct(refundRate)} de los ingresos` : `Refunds represent ${pct(refundRate)} of revenue`,
+                : isFrench ? `Les remboursements représentent ${pct(refundRate)} du chiffre d'affaires` : isGerman ? `Erstattungen machen ${pct(refundRate)} des Umsatzes aus` : isSpanish ? `Los reembolsos representan el ${pct(refundRate)} de los ingresos` : isPortuguese ? `Os reembolsos representam ${pct(refundRate)} da receita` : `Refunds represent ${pct(refundRate)} of revenue`,
 
             description: isItalian
                 ? "Controlla se i rimborsi sono concentrati su specifici prodotti, problemi di qualità o criticità nell'evasione degli ordini."
-                : isFrench ? "Vérifiez si les remboursements se concentrent sur certains produits, des problèmes de qualité ou des difficultés de traitement des commandes." : isGerman ? "Prüfen Sie, ob sich Erstattungen auf bestimmte Produkte, Qualitätsprobleme oder Schwierigkeiten bei der Bestellabwicklung konzentrieren." : isSpanish ? "Comprueba si los reembolsos se concentran en productos concretos, problemas de calidad o dificultades de preparación de pedidos." : "Check whether refunds are concentrated around specific products, quality issues or fulfillment problems.",
+                : isFrench ? "Vérifiez si les remboursements se concentrent sur certains produits, des problèmes de qualité ou des difficultés de traitement des commandes." : isGerman ? "Prüfen Sie, ob sich Erstattungen auf bestimmte Produkte, Qualitätsprobleme oder Schwierigkeiten bei der Bestellabwicklung konzentrieren." : isSpanish ? "Comprueba si los reembolsos se concentran en productos concretos, problemas de calidad o dificultades de preparación de pedidos." : isPortuguese ? "Verifique se os reembolsos estão concentrados em produtos específicos, problemas de qualidade ou dificuldades no processamento dos pedidos." : "Check whether refunds are concentrated around specific products, quality issues or fulfillment problems.",
 
             monthlyImpact: monthlyRefunds,
             economicKind: "exposure",
@@ -870,7 +885,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Analizza i rimborsi"
-                : isFrench ? "Examiner les remboursements" : isGerman ? "Erstattungen prüfen" : isSpanish ? "Revisar reembolsos" : "Review refunds",
+                : isFrench ? "Examiner les remboursements" : isGerman ? "Erstattungen prüfen" : isSpanish ? "Revisar reembolsos" : isPortuguese ? "Revisar reembolsos" : "Review refunds",
 
             route: "/app/profit-intelligence",
 
@@ -893,11 +908,11 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `${money(monthlyRecoverableProfit)} di gap teorico mensile verso il target`
-                : isFrench ? `${money(monthlyRecoverableProfit)} d'écart de bénéfice mensuel théorique par rapport à l'objectif` : isGerman ? `${money(monthlyRecoverableProfit)} theoretische monatliche Gewinnlücke zum Zielwert` : isSpanish ? `${money(monthlyRecoverableProfit)} de diferencia teórica mensual de beneficio respecto al objetivo` : `${money(monthlyRecoverableProfit)} theoretical monthly profit gap to target`,
+                : isFrench ? `${money(monthlyRecoverableProfit)} d'écart de bénéfice mensuel théorique par rapport à l'objectif` : isGerman ? `${money(monthlyRecoverableProfit)} theoretische monatliche Gewinnlücke zum Zielwert` : isSpanish ? `${money(monthlyRecoverableProfit)} de diferencia teórica mensual de beneficio respecto al objetivo` : isPortuguese ? `${money(monthlyRecoverableProfit)} de diferença teórica mensal de lucro em relação à meta` : `${money(monthlyRecoverableProfit)} theoretical monthly profit gap to target`,
 
             description: isItalian
                 ? `${economicRows.filter((row) => row.targetDelta > 0).length} prodotti presentano un gap di prezzo rispetto al target da verificare nel simulatore. La stima presume volumi invariati e non rappresenta profitto garantito o già recuperato.`
-                : isFrench ? `${economicRows.filter((row) => row.targetDelta > 0).length} produits présentent un écart de prix par rapport à l'objectif, à tester dans le simulateur. L'estimation suppose un volume inchangé et ne constitue ni un bénéfice garanti ni un bénéfice déjà récupéré.` : isGerman ? `${economicRows.filter((row) => row.targetDelta > 0).length} Produkte weisen eine Preislücke zum Zielwert auf, die im Simulator geprüft werden kann. Die Schätzung geht von unverändertem Volumen aus und stellt weder garantierten noch bereits realisierten Gewinn dar.` : isSpanish ? `${economicRows.filter((row) => row.targetDelta > 0).length} productos presentan una diferencia de precio respecto al objetivo que puede probarse en el simulador. La estimación supone un volumen sin cambios y no representa un beneficio garantizado ni ya recuperado.` : `${economicRows.filter((row) => row.targetDelta > 0).length} products have a pricing gap to the target that can be tested in the simulator. The estimate assumes unchanged volume and is not guaranteed or already recovered profit.`,
+                : isFrench ? `${economicRows.filter((row) => row.targetDelta > 0).length} produits présentent un écart de prix par rapport à l'objectif, à tester dans le simulateur. L'estimation suppose un volume inchangé et ne constitue ni un bénéfice garanti ni un bénéfice déjà récupéré.` : isGerman ? `${economicRows.filter((row) => row.targetDelta > 0).length} Produkte weisen eine Preislücke zum Zielwert auf, die im Simulator geprüft werden kann. Die Schätzung geht von unverändertem Volumen aus und stellt weder garantierten noch bereits realisierten Gewinn dar.` : isSpanish ? `${economicRows.filter((row) => row.targetDelta > 0).length} productos presentan una diferencia de precio respecto al objetivo que puede probarse en el simulador. La estimación supone un volumen sin cambios y no representa un beneficio garantizado ni ya recuperado.` : isPortuguese ? `${economicRows.filter((row) => row.targetDelta > 0).length} produtos apresentam uma diferença de preço em relação à meta que pode ser testada no simulador. A estimativa pressupõe volume inalterado e não representa lucro garantido nem já recuperado.` : `${economicRows.filter((row) => row.targetDelta > 0).length} products have a pricing gap to the target that can be tested in the simulator. The estimate assumes unchanged volume and is not guaranteed or already recovered profit.`,
 
             monthlyImpact: monthlyRecoverableProfit,
             economicKind: "opportunity",
@@ -909,7 +924,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Apri Recovery Simulator"
-                : isFrench ? "Ouvrir Recovery Simulator" : isGerman ? "Recovery Simulator öffnen" : isSpanish ? "Abrir Recovery Simulator" : "Open Recovery Simulator",
+                : isFrench ? "Ouvrir Recovery Simulator" : isGerman ? "Recovery Simulator öffnen" : isSpanish ? "Abrir Recovery Simulator" : isPortuguese ? "Abrir Recovery Simulator" : "Open Recovery Simulator",
 
             route: "/app/recovery-simulator",
 
@@ -958,7 +973,7 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `${row.productTitle} presenta il maggiore gap di prezzo verso il target`
-                : isFrench ? `${row.productTitle} présente le plus grand écart de prix par rapport à l'objectif` : isGerman ? `${row.productTitle} weist die größte Preislücke zum Zielwert auf` : isSpanish ? `${row.productTitle} presenta la mayor diferencia de precio respecto al objetivo` : `${row.productTitle} has the largest pricing gap to target`,
+                : isFrench ? `${row.productTitle} présente le plus grand écart de prix par rapport à l'objectif` : isGerman ? `${row.productTitle} weist die größte Preislücke zum Zielwert auf` : isSpanish ? `${row.productTitle} presenta la mayor diferencia de precio respecto al objetivo` : isPortuguese ? `${row.productTitle} apresenta a maior diferença de preço em relação à meta` : `${row.productTitle} has the largest pricing gap to target`,
 
             description: isItalian
                 ? `Un adeguamento stimato del ${pct(
@@ -982,12 +997,14 @@ export function generateProfitAlerts({
                 )} acercaría el precio a ${money(
                     row.targetPrice,
                     2,
-                )}. Es un escenario teórico con el volumen actual que debe probarse en el simulador.` : `An estimated ${pct(
+                )}. Es un escenario teórico con el volumen actual que debe probarse en el simulador.` : isPortuguese ? `Um ajuste estimado de ${pct(
                     priceIncreasePct,
-                )} adjustment would move the price toward ${money(
+                )} aproximaria o preço de ${money(
                     row.targetPrice,
                     2,
-                )}. This is a theoretical current-volume scenario to test in the simulator.`,
+                )}. Este é um cenário teórico com o volume atual que deve ser testado no simulador.` : `An estimated ${pct(
+                    priceIncreasePct,
+                )} adjustment would move the price toward ${money(row.targetPrice, 2)}. This is a theoretical current-volume scenario to test in the simulator.`,
 
             monthlyImpact: normalizeToMonthly(opportunity, periodDays),
             economicKind: "opportunity",
@@ -995,7 +1012,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Simula questo scenario"
-                : isFrench ? "Simuler ce scénario" : isGerman ? "Dieses Szenario simulieren" : isSpanish ? "Simular este escenario" : "Simulate this scenario",
+                : isFrench ? "Simuler ce scénario" : isGerman ? "Dieses Szenario simulieren" : isSpanish ? "Simular este escenario" : isPortuguese ? "Simular este cenário" : "Simulate this scenario",
 
             route: "/app/recovery-simulator",
 
@@ -1035,7 +1052,7 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? `Un bestseller sta generando un margine debole`
-                : isFrench ? `Un best-seller génère une faible marge` : isGerman ? `Ein Bestseller erzielt eine schwache Marge` : isSpanish ? `Un producto superventas genera un margen débil` : `A best seller is generating weak margin`,
+                : isFrench ? `Un best-seller génère une faible marge` : isGerman ? `Ein Bestseller erzielt eine schwache Marge` : isSpanish ? `Un producto superventas genera un margen débil` : isPortuguese ? `Um produto campeão de vendas está gerando margem baixa` : `A best seller is generating weak margin`,
 
             description: isItalian
                 ? `${weakBestSeller.productTitle} genera ricavi elevati ma lavora con un margine del ${pct(
@@ -1047,7 +1064,9 @@ export function generateProfitAlerts({
                     weakBestSeller.marginPct,
                 )}. Ein höheres Volumen könnte das Problem verstärken.` : isSpanish ? `${weakBestSeller.productTitle} genera ingresos elevados, pero opera con un margen del ${pct(
                     weakBestSeller.marginPct,
-                )}. Un mayor volumen podría agravar el problema.` : `${weakBestSeller.productTitle} generates strong revenue but operates at a ${pct(
+                )}. Un mayor volumen podría agravar el problema.` : isPortuguese ? `${weakBestSeller.productTitle} gera uma receita elevada, mas opera com uma margem de ${pct(
+                    weakBestSeller.marginPct,
+                )}. Um volume maior pode ampliar o problema.` : `${weakBestSeller.productTitle} generates strong revenue but operates at a ${pct(
                     weakBestSeller.marginPct,
                 )} margin. Higher volume could amplify the problem.`,
 
@@ -1063,7 +1082,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Controlla il prodotto"
-                : isFrench ? "Examiner le produit" : isGerman ? "Produkt prüfen" : isSpanish ? "Revisar producto" : "Review product",
+                : isFrench ? "Examiner le produit" : isGerman ? "Produkt prüfen" : isSpanish ? "Revisar producto" : isPortuguese ? "Revisar produto" : "Review product",
 
             route: "/app/products",
 
@@ -1093,7 +1112,7 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? "I ricavi crescono, ma il margine sta peggiorando"
-                : isFrench ? "Le chiffre d'affaires augmente, mais la marge diminue" : isGerman ? "Der Umsatz wächst, während die Marge sinkt" : isSpanish ? "Los ingresos crecen mientras el margen disminuye" : "Revenue is growing while margin is declining",
+                : isFrench ? "Le chiffre d'affaires augmente, mais la marge diminue" : isGerman ? "Der Umsatz wächst, während die Marge sinkt" : isSpanish ? "Los ingresos crecen mientras el margen disminuye" : isPortuguese ? "A receita está crescendo enquanto a margem está diminuindo" : "Revenue is growing while margin is declining",
 
             description: isItalian
                 ? `I ricavi sono aumentati del ${pct(
@@ -1117,12 +1136,14 @@ export function generateProfitAlerts({
                 )}, mientras que el margen disminuyó ${number(
                     Math.abs(marginDelta),
                     1,
-                )} puntos. Esta señal consolida el deterioro actual del margen porque ambas describen el mismo movimiento económico subyacente.` : `Revenue increased by ${pct(
+                )} puntos. Esta señal consolida el deterioro actual del margen porque ambas describen el mismo movimiento económico subyacente.` : isPortuguese ? `A receita aumentou ${pct(
                     revenueDeltaPct,
-                )}, while margin declined by ${number(
+                )}, enquanto a margem caiu ${number(
                     Math.abs(marginDelta),
                     1,
-                )} points. This consolidates the current margin-deterioration signal because both describe the same underlying movement.`,
+                )} pontos. Este sinal consolida a deterioração atual da margem porque ambos descrevem o mesmo movimento econômico.` : `Revenue increased by ${pct(
+                    revenueDeltaPct,
+                )}, while margin declined by ${number(Math.abs(marginDelta), 1)} points. This consolidates the current margin-deterioration signal because both describe the same underlying movement.`,
 
             monthlyImpact: normalizeToMonthly(
                 revenue * (Math.abs(marginDelta) / 100),
@@ -1134,7 +1155,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Apri AI Advisor"
-                : isFrench ? "Ouvrir AI Advisor" : isGerman ? "AI Advisor öffnen" : isSpanish ? "Abrir AI Advisor" : "Open AI Advisor",
+                : isFrench ? "Ouvrir AI Advisor" : isGerman ? "AI Advisor öffnen" : isSpanish ? "Abrir AI Advisor" : isPortuguese ? "Abrir AI Advisor" : "Open AI Advisor",
 
             route: "/app/ai-advisor",
 
@@ -1163,11 +1184,11 @@ export function generateProfitAlerts({
 
             title: isItalian
                 ? "Nessun rischio critico rilevato"
-                : isFrench ? "Aucun risque critique pour le bénéfice détecté" : isGerman ? "Keine kritischen Gewinnrisiken erkannt" : isSpanish ? "No se han detectado riesgos críticos para el beneficio" : "No critical profit risks detected",
+                : isFrench ? "Aucun risque critique pour le bénéfice détecté" : isGerman ? "Keine kritischen Gewinnrisiken erkannt" : isSpanish ? "No se han detectado riesgos críticos para el beneficio" : isPortuguese ? "Nenhum risco crítico para o lucro foi detectado" : "No critical profit risks detected",
 
             description: isItalian
                 ? "Non emergono rischi significativi dai dati disponibili. Le eventuali opportunità restano separate e possono essere valutate senza urgenza."
-                : isFrench ? "Aucun risque significatif ne ressort des données disponibles. Les opportunités éventuelles restent distinctes et peuvent être évaluées sans urgence." : isGerman ? "Aus den verfügbaren Daten ergeben sich keine wesentlichen Risiken. Mögliche Chancen bleiben getrennt und können ohne Dringlichkeit bewertet werden." : isSpanish ? "Los datos disponibles no muestran riesgos significativos. Las posibles oportunidades permanecen separadas y pueden evaluarse sin urgencia." : "No significant risks emerge from the available data. Any opportunities remain separate and can be evaluated without urgency.",
+                : isFrench ? "Aucun risque significatif ne ressort des données disponibles. Les opportunités éventuelles restent distinctes et peuvent être évaluées sans urgence." : isGerman ? "Aus den verfügbaren Daten ergeben sich keine wesentlichen Risiken. Mögliche Chancen bleiben getrennt und können ohne Dringlichkeit bewertet werden." : isSpanish ? "Los datos disponibles no muestran riesgos significativos. Las posibles oportunidades permanecen separadas y pueden evaluarse sin urgencia." : isPortuguese ? "Os dados disponíveis não mostram riscos significativos. As possíveis oportunidades permanecem separadas e podem ser avaliadas sem urgência." : "No significant risks emerge from the available data. Any opportunities remain separate and can be evaluated without urgency.",
 
             monthlyImpact: 0,
             economicKind: "qualitative",
@@ -1175,7 +1196,7 @@ export function generateProfitAlerts({
 
             actionLabel: isItalian
                 ? "Apri AI Advisor"
-                : isFrench ? "Ouvrir AI Advisor" : isGerman ? "AI Advisor öffnen" : isSpanish ? "Abrir AI Advisor" : "Open AI Advisor",
+                : isFrench ? "Ouvrir AI Advisor" : isGerman ? "AI Advisor öffnen" : isSpanish ? "Abrir AI Advisor" : isPortuguese ? "Abrir AI Advisor" : "Open AI Advisor",
 
             route: "/app/ai-advisor",
         });

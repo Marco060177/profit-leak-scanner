@@ -844,6 +844,14 @@ export default function ForecastingPage() {
             : finalPoint.netMargin >= 0
               ? "Frágil"
               : "En riesgo"
+      : language === "pt-BR"
+        ? finalPoint.netMargin >= 20
+          ? "Muito saudável"
+          : finalPoint.netMargin >= 10
+            ? "Em melhora"
+            : finalPoint.netMargin >= 0
+              ? "Frágil"
+              : "Em risco"
       : health;
 
   const displayStrongestLever = language === "fr"
@@ -864,6 +872,12 @@ export default function ForecastingPage() {
           : monthlyRevenueGrowth >= recoveryCapture / 25
             ? "el crecimiento de los ingresos"
             : "la recuperación de oportunidades"
+      : language === "pt-BR"
+        ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
+          ? "a melhoria da margem"
+          : monthlyRevenueGrowth >= recoveryCapture / 25
+            ? "o crescimento da receita"
+            : "a recuperação de oportunidades"
       : strongestLever;
 
   const displayRecommendation = language === "fr"
@@ -872,6 +886,8 @@ export default function ForecastingPage() {
       ? `Das ${selectedScenario === "custom" ? "benutzerdefinierte" : selectedScenario === "expected" ? "realistische" : selectedScenario === "worst" ? "ungünstige" : "günstige"} Szenario erhöht den geschätzten monatlichen Nettogewinn innerhalb von ${horizon} Monaten von ${money(currentMonthlyNetProfit)} auf ${money(finalPoint.netProfit)}. Der stärkste Hebel ist ${displayStrongestLever}. Bei einer Margenverbesserung um ${number(marginImprovement, 1)} Punkte und der Nutzung von ${pct(recoveryCapture, 0)} der erkannten Potenziale beträgt der geschätzte kumulierte Zusatzgewinn ${money(finalPoint.cumulativeLift)}.`
       : language === "es"
         ? `El escenario ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorable" : "favorable"} eleva el beneficio neto mensual estimado de ${money(currentMonthlyNetProfit)} a ${money(finalPoint.netProfit)} en ${horizon} meses. La palanca más importante es ${displayStrongestLever}. Con una mejora del margen de ${number(marginImprovement, 1)} puntos y la recuperación del ${pct(recoveryCapture, 0)} de las oportunidades identificadas, el beneficio adicional acumulado estimado alcanza ${money(finalPoint.cumulativeLift)}.`
+      : language === "pt-BR"
+        ? `O cenário ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorável" : "favorável"} eleva o lucro líquido mensal estimado de ${money(currentMonthlyNetProfit)} para ${money(finalPoint.netProfit)} em ${horizon} meses. A principal alavanca é ${displayStrongestLever}. Com uma melhoria de margem de ${number(marginImprovement, 1)} pontos e a recuperação de ${pct(recoveryCapture, 0)} das oportunidades identificadas, o lucro adicional acumulado estimado chega a ${money(finalPoint.cumulativeLift)}.`
       : recommendation;
 
   const displayActions = language === "fr" ? [
@@ -904,6 +920,16 @@ export default function ForecastingPage() {
     monthlyCostGrowth > 1
       ? "Contén el crecimiento mensual de los costes, ya que reduce el beneficio del crecimiento de los ingresos."
       : "El crecimiento de los costes se mantiene controlado en el escenario seleccionado.",
+  ] : language === "pt-BR" ? [
+    marginImprovement > 0
+      ? `Aumente gradualmente a margem econômica em ${number(marginImprovement, 1)} pontos em relação ao nível atual.`
+      : "Mantenha a margem econômica estável e monitore os produtos mais fracos.",
+    recoveryCapture > 0
+      ? `Priorize os ${impactedProducts} produtos com potencial de recuperação identificado.`
+      : "Capture pelo menos parte das oportunidades de recuperação já identificadas.",
+    monthlyCostGrowth > 1
+      ? "Contenha o crescimento mensal dos custos, pois ele reduz o benefício do crescimento da receita."
+      : "O crescimento dos custos permanece controlado no cenário selecionado.",
   ] : actions;
 
   const exportForecastCsv = () => {

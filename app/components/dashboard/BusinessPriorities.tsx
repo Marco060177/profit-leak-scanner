@@ -375,7 +375,7 @@ function PrimaryPriority({
           :{" "}
           <strong style={{ color: "#f8fafc" }}>
             {alert.recommendedModule === "Products"
-              ? language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : alert.recommendedModule
+              ? language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : alert.recommendedModule
               : alert.recommendedModule}
           </strong>
         </div>
