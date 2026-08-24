@@ -920,6 +920,7 @@ export default function DashboardNav({
                 { id: "it", name: "Italiano" },
                 { id: "fr", name: "Français" },
                 { id: "de", name: "Deutsch" },
+                { id: "es", name: "Español" },
               ] as const).map((option) => {
                 const activeLanguage = language === option.id;
                 return (

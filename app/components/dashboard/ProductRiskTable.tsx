@@ -86,10 +86,12 @@ export default function ProductRiskTable({
         ? "Inserisci il costo del prodotto in Shopify"
         : language === "de"
           ? "Produktkosten in Shopify eintragen"
+          : language === "es"
+            ? "Añade el coste del producto en Shopify"
         : "Add the product cost in Shopify";
     }
 
-    if (language !== "it" && language !== "de") {
+    if (language !== "it" && language !== "de" && language !== "es") {
       return row.suggestion;
     }
 
@@ -98,6 +100,10 @@ export default function ProductRiskTable({
         ? row.targetDelta > 0
           ? `Erhöhen Sie den Preis auf ${money(row.targetPrice)}, um eine gesündere Marge zu erreichen.`
           : "Die aktuellen Margen liegen kritisch unter dem Zielwert. Prüfen Sie Produktkosten, Preisstruktur und Rabatte."
+        : language === "es"
+          ? row.targetDelta > 0
+            ? `Aumenta el precio a ${money(row.targetPrice)} para conseguir un margen más saludable.`
+            : "Los márgenes actuales están muy por debajo del objetivo. Revisa los costes del producto, la estructura de precios y los descuentos."
         : row.targetDelta > 0
           ? `Aumenta il prezzo a ${money(row.targetPrice)} per raggiungere un margine più sano.`
           : "I margini attuali sono criticamente sotto il valore target. Controlla costi prodotto, struttura dei prezzi e sconti.";
@@ -106,11 +112,15 @@ export default function ProductRiskTable({
     if (row.targetDelta > 0) {
       return language === "de"
         ? `Erwägen Sie eine Preiserhöhung auf ${money(row.targetPrice)}, um die Produktmarge zu verbessern.`
+        : language === "es"
+          ? `Valora aumentar el precio a ${money(row.targetPrice)} para mejorar el margen del producto.`
         : `Valuta di aumentare il prezzo a ${money(row.targetPrice)} per migliorare il margine del prodotto.`;
     }
 
     return language === "de"
       ? "Preise und Margen sind auf Grundlage der verfügbaren Daten stabil."
+      : language === "es"
+        ? "Los precios y márgenes son estables según los datos disponibles."
       : "Prezzi e margini risultano stabili sulla base dei dati disponibili.";
   }
 
@@ -126,6 +136,12 @@ export default function ProductRiskTable({
       if (row.missingCost) return "Fehlende Kosten";
       if (row.lowMargin) return "Hoch";
       return "Gesund";
+    }
+    if (language === "es") {
+      if (row.losing) return "Crítico";
+      if (row.missingCost) return "Coste faltante";
+      if (row.lowMargin) return "Alto";
+      return "Saludable";
     }
     return riskLabel(row);
   }

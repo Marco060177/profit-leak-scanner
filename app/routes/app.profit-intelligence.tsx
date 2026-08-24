@@ -245,6 +245,12 @@ export default function ProfitIntelligencePage() {
             : dependencyLevel === "Moderate"
               ? "MITTLERES RISIKO"
               : "NIEDRIGES RISIKO"
+          : language === "es"
+            ? dependencyLevel === "High"
+              ? "RIESGO ALTO"
+              : dependencyLevel === "Moderate"
+                ? "RIESGO MODERADO"
+                : "RIESGO BAJO"
         : `${dependencyLevel.toUpperCase()} RISK`;
 
   const sortedProfitRows = [...economicRows].sort((a, b) => b.profit - a.profit);
@@ -297,6 +303,12 @@ export default function ProfitIntelligencePage() {
             : profitQualityLevel === "Mixed"
               ? "Gemischt"
               : "Gesund"
+          : language === "es"
+            ? profitQualityLevel === "Weak"
+              ? "Débil"
+              : profitQualityLevel === "Mixed"
+                ? "Mixta"
+                : "Saludable"
         : profitQualityLevel;
 
   const intelligenceScore = Math.max(

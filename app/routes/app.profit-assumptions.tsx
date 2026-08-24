@@ -626,6 +626,9 @@ export default function ProfitAssumptionsPage() {
   })) : language === "de" ? costItems.map((item) => ({
     ...item,
     label: ({ ads: "Werbung", shipping: "Versand", operating: "Betriebskosten", payment: "Zahlungsgebühren", transaction: "Transaktionsgebühren", tax: "Steuerrücklage des Modells" } as Record<string, string>)[item.key] ?? item.label,
+  })) : language === "es" ? costItems.map((item) => ({
+    ...item,
+    label: ({ ads: "Publicidad", shipping: "Envíos", operating: "Costes operativos", payment: "Comisiones de pago", transaction: "Comisiones de transacción", tax: "Reserva fiscal del modelo" } as Record<string, string>)[item.key] ?? item.label,
   })) : costItems;
 
   const displayWhatIfScenarios = language === "fr" ? whatIfScenarios.map((scenario) => ({
@@ -636,9 +639,13 @@ export default function ProfitAssumptionsPage() {
     ...scenario,
     label: ({ ads: "Werbung um 10 % senken", shipping: "Versandkosten um 10 % senken", fees: "Gebühren um 0,5 % senken" } as Record<string, string>)[scenario.key] ?? scenario.label,
     note: ({ ads: "Unmittelbare monatliche Wirkung", shipping: "Operative Verbesserung", fees: "Neu verhandeln oder Anbieter wechseln" } as Record<string, string>)[scenario.key] ?? scenario.note,
+  })) : language === "es" ? whatIfScenarios.map((scenario) => ({
+    ...scenario,
+    label: ({ ads: "Reducir la publicidad un 10 %", shipping: "Reducir los costes de envío un 10 %", fees: "Reducir las comisiones un 0,5 %" } as Record<string, string>)[scenario.key] ?? scenario.label,
+    note: ({ ads: "Efecto mensual inmediato", shipping: "Mejora operativa", fees: "Renegociar o cambiar de proveedor" } as Record<string, string>)[scenario.key] ?? scenario.note,
   })) : whatIfScenarios;
 
-  const displayHealthLabel = language === "fr" ? healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque" : language === "de" ? healthScore >= 80 ? "Solides Modell" : healthScore >= 60 ? "Optimierungsbedarf" : "Gefährdet" : healthLabel;
+  const displayHealthLabel = language === "fr" ? healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque" : language === "de" ? healthScore >= 80 ? "Solides Modell" : healthScore >= 60 ? "Optimierungsbedarf" : "Gefährdet" : language === "es" ? healthScore >= 80 ? "Modelo sólido" : healthScore >= 60 ? "Debe optimizarse" : "En riesgo" : healthLabel;
   const displayLargestCostLabel = largestCost ? displayCostItems.find((item) => item.key === largestCost.key)?.label ?? largestCost.label : "";
   const displayAdvice = language === "fr"
     ? largestCost && totalEstimatedCosts > 0
@@ -648,6 +655,10 @@ export default function ProfitAssumptionsPage() {
       ? largestCost && totalEstimatedCosts > 0
         ? `${displayLargestCostLabel} macht etwa ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} der geschätzten Kosten aus. Eine Senkung um 10 % in diesem Bereich würde den monatlichen Gewinn um etwa ${money(largestCostMonthlySaving)} und den jährlichen Gewinn um etwa ${money(largestCostAnnualSaving)} verbessern.`
         : "Ergänzen Sie Ihre wichtigsten Kosten, um eine zuverlässigere finanzielle Empfehlung zu erhalten."
+      : language === "es"
+        ? largestCost && totalEstimatedCosts > 0
+          ? `${displayLargestCostLabel} representa aproximadamente el ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} de los costes estimados. Una reducción del 10 % en esta área mejoraría el beneficio mensual en unos ${money(largestCostMonthlySaving)} y el beneficio anual en unos ${money(largestCostAnnualSaving)}.`
+          : "Añade tus principales costes para obtener una recomendación financiera más fiable."
       : advice;
 
   const exportBusinessModelCsv = () => {

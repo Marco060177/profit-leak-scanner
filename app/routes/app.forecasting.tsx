@@ -836,6 +836,14 @@ export default function ForecastingPage() {
           : finalPoint.netMargin >= 0
             ? "Anfällig"
             : "Gefährdet"
+      : language === "es"
+        ? finalPoint.netMargin >= 20
+          ? "Muy sólida"
+          : finalPoint.netMargin >= 10
+            ? "Mejorando"
+            : finalPoint.netMargin >= 0
+              ? "Frágil"
+              : "En riesgo"
       : health;
 
   const displayStrongestLever = language === "fr"
@@ -850,12 +858,20 @@ export default function ForecastingPage() {
         : monthlyRevenueGrowth >= recoveryCapture / 25
           ? "das Umsatzwachstum"
           : "die Nutzung von Gewinnpotenzialen"
+      : language === "es"
+        ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
+          ? "la mejora del margen"
+          : monthlyRevenueGrowth >= recoveryCapture / 25
+            ? "el crecimiento de los ingresos"
+            : "la recuperación de oportunidades"
       : strongestLever;
 
   const displayRecommendation = language === "fr"
     ? `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`
     : language === "de"
       ? `Das ${selectedScenario === "custom" ? "benutzerdefinierte" : selectedScenario === "expected" ? "realistische" : selectedScenario === "worst" ? "ungünstige" : "günstige"} Szenario erhöht den geschätzten monatlichen Nettogewinn innerhalb von ${horizon} Monaten von ${money(currentMonthlyNetProfit)} auf ${money(finalPoint.netProfit)}. Der stärkste Hebel ist ${displayStrongestLever}. Bei einer Margenverbesserung um ${number(marginImprovement, 1)} Punkte und der Nutzung von ${pct(recoveryCapture, 0)} der erkannten Potenziale beträgt der geschätzte kumulierte Zusatzgewinn ${money(finalPoint.cumulativeLift)}.`
+      : language === "es"
+        ? `El escenario ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorable" : "favorable"} eleva el beneficio neto mensual estimado de ${money(currentMonthlyNetProfit)} a ${money(finalPoint.netProfit)} en ${horizon} meses. La palanca más importante es ${displayStrongestLever}. Con una mejora del margen de ${number(marginImprovement, 1)} puntos y la recuperación del ${pct(recoveryCapture, 0)} de las oportunidades identificadas, el beneficio adicional acumulado estimado alcanza ${money(finalPoint.cumulativeLift)}.`
       : recommendation;
 
   const displayActions = language === "fr" ? [
@@ -878,6 +894,16 @@ export default function ForecastingPage() {
     monthlyCostGrowth > 1
       ? "Begrenzen Sie das monatliche Kostenwachstum, da es den Nutzen des Umsatzwachstums verringert."
       : "Das Kostenwachstum bleibt im ausgewählten Szenario unter Kontrolle.",
+  ] : language === "es" ? [
+    marginImprovement > 0
+      ? `Aumenta gradualmente el margen económico en ${number(marginImprovement, 1)} puntos respecto al nivel actual.`
+      : "Mantén estable el margen económico y supervisa los productos más débiles.",
+    recoveryCapture > 0
+      ? `Prioriza los ${impactedProducts} productos con potencial de recuperación identificado.`
+      : "Aprovecha al menos una parte de las oportunidades de recuperación ya identificadas.",
+    monthlyCostGrowth > 1
+      ? "Contén el crecimiento mensual de los costes, ya que reduce el beneficio del crecimiento de los ingresos."
+      : "El crecimiento de los costes se mantiene controlado en el escenario seleccionado.",
   ] : actions;
 
   const exportForecastCsv = () => {
