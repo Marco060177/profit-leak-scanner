@@ -549,3 +549,187 @@
     transition-duration: 0.01ms;
   }
 }
+
+/* MarginLab V2 signal language: signal, orbit, node, trajectory and glow. */
+.ml-signal-ring,
+.ml-orbit-field,
+.ml-flow-path {
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  color: rgb(var(--ml-v2-accent));
+  isolation: isolate;
+}
+
+.ml-signal-size-small { --ml-signal-size: 112px; }
+.ml-signal-size-medium { --ml-signal-size: 176px; }
+.ml-signal-size-large { --ml-signal-size: 240px; }
+
+.ml-signal-ring {
+  display: grid;
+  width: var(--ml-signal-size);
+  aspect-ratio: 1;
+  place-items: center;
+}
+
+.ml-signal-ring figcaption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.ml-signal-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.ml-signal-ring circle { fill: none; vector-effect: non-scaling-stroke; }
+.ml-signal-ring-grid { stroke: rgba(255, 255, 255, 0.075); stroke-width: 7; }
+.ml-signal-ring-inner { stroke: rgba(var(--ml-v2-accent), 0.1); stroke-width: 1; stroke-dasharray: 2 4; }
+.ml-signal-ring-value {
+  stroke: rgb(var(--ml-v2-accent));
+  stroke-width: 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 7px rgba(var(--ml-v2-accent), 0.62));
+}
+.ml-signal-ring-marker {
+  fill: rgb(var(--ml-v2-accent));
+  stroke: var(--ml-v2-surface);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 5px rgba(var(--ml-v2-accent), 0.9));
+}
+
+.ml-signal-ring-content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  max-width: 60%;
+  gap: 4px;
+  text-align: center;
+}
+.ml-signal-ring-content strong { color: var(--ml-v2-text); font-size: 14px; line-height: 1.15; }
+.ml-signal-ring-content span { color: var(--ml-v2-text-subtle); font-size: 10px; line-height: 1.3; }
+
+.ml-orbit-field {
+  width: var(--ml-signal-size);
+  aspect-ratio: 1;
+}
+.ml-orbit-plane { position: absolute; inset: 0; }
+.ml-orbit-track {
+  position: absolute;
+  border: 1px solid rgba(var(--ml-v2-accent), 0.16);
+  border-radius: 50%;
+}
+.ml-orbit-track-1 { inset: 36%; }
+.ml-orbit-track-2 { inset: 20%; border-color: rgba(var(--ml-v2-accent), 0.12); }
+.ml-orbit-track-3 { inset: 4%; border-color: rgba(var(--ml-v2-accent), 0.09); }
+.ml-orbit-axis {
+  position: absolute;
+  inset: 4% 50%;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.06), transparent);
+}
+.ml-orbit-axis::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  transform: rotate(90deg);
+}
+.ml-orbit-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  width: 18%;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--ml-v2-text);
+  border: 1px solid rgba(var(--ml-v2-accent), 0.28);
+  border-radius: 50%;
+  background: var(--ml-v2-surface);
+  box-shadow: 0 0 24px rgba(var(--ml-v2-accent), 0.2);
+  transform: translate(-50%, -50%);
+}
+.ml-orbit-node-anchor {
+  position: absolute;
+  inset: 50%;
+  transform: rotate(var(--ml-signal-angle));
+}
+.ml-orbit-node-anchor.ml-orbit-1 { --ml-signal-radius: calc(var(--ml-signal-size) * 0.14); }
+.ml-orbit-node-anchor.ml-orbit-2 { --ml-signal-radius: calc(var(--ml-signal-size) * 0.30); }
+.ml-orbit-node-anchor.ml-orbit-3 { --ml-signal-radius: calc(var(--ml-signal-size) * 0.46); }
+.ml-orbit-node {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--ml-v2-accent));
+  box-shadow: 0 0 12px rgba(var(--ml-v2-accent), 0.78);
+  transform: translateX(var(--ml-signal-radius)) translate(-50%, -50%);
+}
+.ml-orbit-node-quiet { width: 5px; height: 5px; opacity: 0.58; }
+.ml-orbit-node-strong { width: 10px; height: 10px; box-shadow: 0 0 20px rgba(var(--ml-v2-accent), 0.95); }
+
+.ml-flow-path {
+  width: 100%;
+  min-width: 180px;
+  aspect-ratio: 2.4 / 1;
+}
+.ml-flow-path svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.ml-flow-grid {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.045);
+  stroke-width: 0.5;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+}
+.ml-flow-shadow,
+.ml-flow-trajectory {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.ml-flow-shadow { stroke: rgba(var(--ml-v2-accent), 0.12); stroke-width: 8; filter: blur(4px); }
+.ml-flow-trajectory { stroke-width: 2; filter: drop-shadow(0 0 5px rgba(var(--ml-v2-accent), 0.55)); }
+.ml-flow-node-halo { fill: rgba(var(--ml-v2-accent), 0.13); }
+.ml-flow-node { fill: rgb(var(--ml-v2-accent)); filter: drop-shadow(0 0 4px rgba(var(--ml-v2-accent), 0.9)); }
+.ml-flow-node-quiet { opacity: 0.52; }
+.ml-flow-node-strong { stroke: rgba(255, 255, 255, 0.62); stroke-width: 0.7; }
+
+.ml-signal-motion-ambient .ml-signal-ring-marker,
+.ml-signal-motion-ambient .ml-orbit-node,
+.ml-signal-motion-ambient .ml-flow-node {
+  animation: ml-v2-node-breathe 3.4s ease-in-out infinite;
+}
+.ml-signal-motion-active .ml-flow-trajectory {
+  animation: ml-v2-trajectory-arrive 1.2s var(--ml-v2-ease) both;
+}
+.ml-signal-motion-active .ml-signal-ring-marker,
+.ml-signal-motion-active .ml-orbit-node {
+  animation: ml-v2-node-breathe 2.2s ease-in-out infinite;
+}
+
+@keyframes ml-v2-node-breathe {
+  50% { opacity: 0.68; }
+}
+@keyframes ml-v2-trajectory-arrive {
+  from { stroke-dasharray: 0 100; }
+  to { stroke-dasharray: 100 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ml-signal-ring *,
+  .ml-orbit-field *,
+  .ml-flow-path * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

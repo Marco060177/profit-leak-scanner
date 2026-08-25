@@ -1,5 +1,8 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 
+export { FlowPath, OrbitField, SignalRing } from "~/components/ui/SignalSystem";
+export type { FlowNode, OrbitNode } from "~/components/ui/SignalSystem";
+
 export type VisualTone =
   | "neutral"
   | "orange"

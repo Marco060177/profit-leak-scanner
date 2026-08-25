@@ -14,6 +14,7 @@ import {
   PremiumEmptyState,
   PremiumHero,
   PremiumPanel,
+  SignalRing,
   StatusChip,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
@@ -267,22 +268,35 @@ export default function ProductsPage() {
           description={copy.description}
           actions={<StatusChip tone="green">{copy.taxAwareBasis}</StatusChip>}
           visual={
-            <div
-              className="products-v2-pulse"
-              aria-label={`${productScore}/100 ${productScoreLabel}`}
-            >
-              <div className="products-v2-pulse-score">
-                <strong>{productScore}</strong>
-                <span>/100</span>
-              </div>
-              <StatusChip tone={productTone} pulse>
-                {productScoreLabel}
-              </StatusChip>
-              <div className="products-v2-pulse-track" aria-hidden="true">
-                <i style={{ width: `${productScore}%` }} />
-              </div>
+            <div className="products-v2-health-signal">
+              <span
+                className="products-v2-health-node node-1"
+                aria-hidden="true"
+              />
+              <span
+                className="products-v2-health-node node-2"
+                aria-hidden="true"
+              />
+              <span
+                className="products-v2-health-node node-3"
+                aria-hidden="true"
+              />
+              <SignalRing
+                value={productScore}
+                tone={productTone}
+                size="large"
+                motion="ambient"
+                marker
+                label={
+                  <span className="products-v2-health-value">
+                    {productScore}
+                    <small>/100</small>
+                  </span>
+                }
+                detail={productScoreLabel}
+              />
               <div
-                className="products-v2-pulse-distribution"
+                className="products-v2-health-distribution"
                 aria-hidden="true"
               >
                 <i
