@@ -17,8 +17,17 @@ import {
 } from "~/services/notification.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { getRequestLanguage } from "~/utils/i18n.server";
+import {
+  FlowPath,
+  MetricCard,
+  PremiumHero,
+  PremiumPanel,
+  StatusChip,
+  VisualButton,
+} from "~/components/ui/VisualSystem";
 
 import "~/styles/dashboard.css";
+import "~/styles/reports-notifications-v2.css";
 
 type ActionData =
   | { ok: true; message: string }
@@ -28,10 +37,7 @@ function parseBoolean(value: FormDataEntryValue | null) {
   return value === "on" || value === "true" || value === "1";
 }
 
-function parseNumber(
-  value: FormDataEntryValue | null,
-  fallback: number,
-) {
+function parseNumber(value: FormDataEntryValue | null, fallback: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -63,29 +69,13 @@ export async function action({ request }: { request: Request }) {
       shop: session.shop,
       input: {
         recipientEmail: String(formData.get("recipientEmail") || ""),
-        weeklyReportEnabled: parseBoolean(
-          formData.get("weeklyReportEnabled"),
-        ),
-        emailAlertsEnabled: parseBoolean(
-          formData.get("emailAlertsEnabled"),
-        ),
-        notifyCritical: parseBoolean(
-          formData.get("notifyCritical"),
-        ),
-        notifyWarnings: parseBoolean(
-          formData.get("notifyWarnings"),
-        ),
-        notifyOpportunities: parseBoolean(
-          formData.get("notifyOpportunities"),
-        ),
-        weeklyReportDay: parseNumber(
-          formData.get("weeklyReportDay"),
-          1,
-        ),
-        weeklyReportHour: parseNumber(
-          formData.get("weeklyReportHour"),
-          8,
-        ),
+        weeklyReportEnabled: parseBoolean(formData.get("weeklyReportEnabled")),
+        emailAlertsEnabled: parseBoolean(formData.get("emailAlertsEnabled")),
+        notifyCritical: parseBoolean(formData.get("notifyCritical")),
+        notifyWarnings: parseBoolean(formData.get("notifyWarnings")),
+        notifyOpportunities: parseBoolean(formData.get("notifyOpportunities")),
+        weeklyReportDay: parseNumber(formData.get("weeklyReportDay"), 1),
+        weeklyReportHour: parseNumber(formData.get("weeklyReportHour"), 8),
         timezone: String(formData.get("timezone") || "UTC"),
         language,
       },
@@ -125,55 +115,15 @@ function Toggle({
   description: string;
 }) {
   return (
-    <label
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: 16,
-        padding: 16,
-        borderRadius: 16,
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        cursor: "pointer",
-      }}
-    >
+    <label className="reports-v2-toggle">
       <div>
-        <div
-          style={{
-            color: "#f8fafc",
-            fontSize: 14,
-            fontWeight: 900,
-          }}
-        >
-          {label}
-        </div>
-
-        <div
-          style={{
-            marginTop: 5,
-            color: "rgba(255,255,255,0.50)",
-            fontSize: 11,
-            lineHeight: 1.5,
-            fontWeight: 720,
-          }}
-        >
-          {description}
-        </div>
+        <strong>{label}</strong>
+        <span>{description}</span>
       </div>
-
-      <input
-        type="checkbox"
-        name={name}
-        defaultChecked={defaultChecked}
-        style={{
-          width: 18,
-          height: 18,
-          marginTop: 2,
-          accentColor: "#ff7346",
-          flexShrink: 0,
-        }}
-      />
+      <span className="reports-v2-switch">
+        <input type="checkbox" name={name} defaultChecked={defaultChecked} />
+        <i aria-hidden="true" />
+      </span>
     </label>
   );
 }
@@ -191,353 +141,274 @@ export default function ReportsNotificationsPage() {
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
-        <DashboardNav
-          active="reports-notifications"
-          navigate={navigate}
+        <DashboardNav active="reports-notifications" navigate={navigate} />
+
+        <PremiumHero
+          className="reports-v2-hero"
+          tone="blue"
+          eyebrow={labels.eyebrow}
+          title={labels.title}
+          description={labels.description}
+          actions={
+            <div className="reports-v2-hero-status">
+              <StatusChip
+                tone={preferences.weeklyReportEnabled ? "green" : "neutral"}
+              >
+                {labels.weeklyTitle}
+              </StatusChip>
+              <StatusChip
+                tone={preferences.emailAlertsEnabled ? "green" : "neutral"}
+              >
+                {labels.alertsEyebrow}
+              </StatusChip>
+            </div>
+          }
+          visual={
+            <div className="reports-v2-delivery-flow">
+              <FlowPath
+                tone="blue"
+                trajectory="rising"
+                motion="ambient"
+                label={labels.description}
+                nodes={[
+                  {
+                    id: "signal",
+                    progress: 0.05,
+                    tone: "orange",
+                    label: labels.alertsEyebrow,
+                  },
+                  {
+                    id: "analysis",
+                    progress: 0.37,
+                    tone: "violet",
+                    label: labels.critical,
+                  },
+                  {
+                    id: "report",
+                    progress: 0.7,
+                    tone: "blue",
+                    emphasis: "strong",
+                    label: labels.weeklyTitle,
+                  },
+                  {
+                    id: "delivery",
+                    progress: 0.96,
+                    tone: "green",
+                    emphasis: "strong",
+                    label: labels.recipient,
+                  },
+                ]}
+              />
+              <div className="reports-v2-flow-legend" aria-hidden="true">
+                <span>{labels.alertsEyebrow}</span>
+                <span>{labels.weeklyTitle}</span>
+                <span>{labels.recipient}</span>
+              </div>
+            </div>
+          }
         />
 
-        <div className="hero-header">
-          <div>
-            <div className="eyebrow">{labels.eyebrow}</div>
-            <div className="hero-title">{labels.title}</div>
-            <div className="hero-description">
-              {labels.description}
-            </div>
-          </div>
-        </div>
+        <section className="reports-v2-summary" aria-label={labels.eyebrow}>
+          <MetricCard
+            tone={preferences.weeklyReportEnabled ? "green" : "neutral"}
+            label={labels.weeklyEyebrow}
+            value={preferences.weeklyReportEnabled ? "✓" : "—"}
+            detail={labels.weeklyTitle}
+          />
+          <MetricCard
+            tone={preferences.emailAlertsEnabled ? "green" : "neutral"}
+            label={labels.alertsEyebrow}
+            value={preferences.emailAlertsEnabled ? "✓" : "—"}
+            detail={labels.alertsTitle}
+          />
+          <MetricCard
+            tone="blue"
+            label={labels.day}
+            value={labels.days[preferences.weeklyReportDay]}
+            detail={`${String(preferences.weeklyReportHour).padStart(2, "0")}:00 · ${preferences.timezone || "UTC"}`}
+          />
+          <MetricCard
+            tone="violet"
+            label={labels.language}
+            value={(preferences.language || language).toUpperCase()}
+            detail={labels.recipient}
+          />
+        </section>
 
-        <Form method="post">
-          <div style={{ display: "grid", gap: 22 }}>
-            <section className="panel" style={{ margin: 0, padding: 24 }}>
-              <div className="panel-eyebrow">
-                {labels.recipientEyebrow}
+        <Form method="post" className="reports-v2-form">
+          <PremiumPanel
+            className="reports-v2-panel reports-v2-recipient"
+            tone="cyan"
+          >
+            <div className="panel-eyebrow">{labels.recipientEyebrow}</div>
+            <h2 className="panel-title">{labels.recipient}</h2>
+            <p className="reports-v2-description">{labels.recipientNote}</p>
+            <input
+              className="reports-v2-control"
+              type="email"
+              name="recipientEmail"
+              defaultValue={preferences.recipientEmail ?? ""}
+              placeholder="name@example.com"
+            />
+          </PremiumPanel>
+
+          <PremiumPanel
+            className="reports-v2-panel reports-v2-weekly"
+            tone="blue"
+          >
+            <div className="reports-v2-panel-heading">
+              <div>
+                <div className="panel-eyebrow">{labels.weeklyEyebrow}</div>
+                <h2 className="panel-title">{labels.weeklyTitle}</h2>
+                <p className="reports-v2-description">
+                  {labels.weeklyDescription}
+                </p>
               </div>
-
-              <h2 className="panel-title" style={{ marginTop: 6 }}>
-                {labels.recipient}
-              </h2>
-
-              <div
-                style={{
-                  marginTop: 8,
-                  color: "rgba(255,255,255,0.52)",
-                  fontSize: 12,
-                  lineHeight: 1.55,
-                  fontWeight: 720,
-                }}
-              >
-                {labels.recipientNote}
-              </div>
-
-              <input
-                type="email"
-                name="recipientEmail"
-                defaultValue={preferences.recipientEmail ?? ""}
-                placeholder="name@example.com"
-                style={{
-                  width: "100%",
-                  marginTop: 16,
-                  padding: "15px 16px",
-                  borderRadius: 14,
-                  color: "#ffffff",
-                  background: "rgba(255,255,255,0.035)",
-                  border: "1px solid rgba(255,115,60,0.18)",
-                  outline: "none",
-                  fontWeight: 800,
-                }}
+              <FlowPath
+                className="reports-v2-mini-flow"
+                tone={preferences.weeklyReportEnabled ? "green" : "neutral"}
+                trajectory="steady"
+                nodes={[{ id: "weekly", progress: 0.82, emphasis: "strong" }]}
               />
-            </section>
-
-            <section className="panel" style={{ margin: 0, padding: 24 }}>
-              <div className="panel-eyebrow">
-                {labels.weeklyEyebrow}
-              </div>
-
-              <h2 className="panel-title" style={{ marginTop: 6 }}>
-                {labels.weeklyTitle}
-              </h2>
-
-              <div
-                style={{
-                  marginTop: 8,
-                  color: "rgba(255,255,255,0.52)",
-                  fontSize: 12,
-                  lineHeight: 1.55,
-                  fontWeight: 720,
-                }}
-              >
-                {labels.weeklyDescription}
-              </div>
-
-              <div style={{ marginTop: 18 }}>
-                <Toggle
-                  name="weeklyReportEnabled"
-                  defaultChecked={preferences.weeklyReportEnabled}
-                  label={labels.weeklyEnabled}
-                  description={labels.weeklyEnabledDesc}
-                />
-              </div>
-
-              <div
-                style={{
-                  marginTop: 16,
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      marginBottom: 7,
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 10,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {labels.language}
-                  </div>
-
-                  <select
-                    name="language"
-                    defaultValue={preferences.language || language}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 13,
-                      color: "#f8fafc",
-                      background: "#0f1724",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      fontWeight: 800,
-                    }}
-                  >
-                    <option value="en">English</option>
-                    <option value="it">Italiano</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                    <option value="es">Español</option>
-                    <option value="pt-BR">Português (Brasil)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      marginBottom: 7,
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 10,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {labels.day}
-                  </div>
-
-                  <select
-                    name="weeklyReportDay"
-                    defaultValue={String(preferences.weeklyReportDay)}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 13,
-                      color: "#f8fafc",
-                      background: "#0f1724",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {dayOptions.map((day) => (
-                      <option key={day} value={day}>
-                        {labels.days[day]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      marginBottom: 7,
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 10,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {labels.hour}
-                  </div>
-
-                  <select
-                    name="weeklyReportHour"
-                    defaultValue={String(preferences.weeklyReportHour)}
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 13,
-                      color: "#f8fafc",
-                      background: "#0f1724",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {Array.from({ length: 24 }, (_, hour) => (
-                      <option key={hour} value={hour}>
-                        {String(hour).padStart(2, "0")}:00
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <div
-                    style={{
-                      marginBottom: 7,
-                      color: "rgba(255,255,255,0.52)",
-                      fontSize: 10,
-                      fontWeight: 900,
-                    }}
-                  >
-                    {labels.timezone}
-                  </div>
-
-                  <input
-                    type="text"
-                    name="timezone"
-                    defaultValue={preferences.timezone || "UTC"}
-                    placeholder="Europe/Rome"
-                    style={{
-                      width: "100%",
-                      padding: "13px 14px",
-                      borderRadius: 13,
-                      color: "#f8fafc",
-                      background: "#0f1724",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      fontWeight: 800,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 9,
-                  color: "rgba(255,255,255,0.38)",
-                  fontSize: 10,
-                  fontWeight: 700,
-                }}
-              >
-                {labels.timezoneNote}
-              </div>
-            </section>
-
-            <section className="panel" style={{ margin: 0, padding: 24 }}>
-              <div className="panel-eyebrow">
-                {labels.alertsEyebrow}
-              </div>
-
-              <h2 className="panel-title" style={{ marginTop: 6 }}>
-                {labels.alertsTitle}
-              </h2>
-
-              <div
-                style={{
-                  marginTop: 8,
-                  color: "rgba(255,255,255,0.52)",
-                  fontSize: 12,
-                  lineHeight: 1.55,
-                  fontWeight: 720,
-                }}
-              >
-                {labels.alertsDescription}
-              </div>
-
-              <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
-                <Toggle
-                  name="emailAlertsEnabled"
-                  defaultChecked={preferences.emailAlertsEnabled}
-                  label={labels.alertsEnabled}
-                  description={labels.alertsEnabledDesc}
-                />
-
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3,minmax(0,1fr))",
-                    gap: 12,
-                  }}
-                >
-                  <Toggle
-                    name="notifyCritical"
-                    defaultChecked={preferences.notifyCritical}
-                    label={labels.critical}
-                    description={labels.criticalDesc}
-                  />
-
-                  <Toggle
-                    name="notifyWarnings"
-                    defaultChecked={preferences.notifyWarnings}
-                    label={labels.warnings}
-                    description={labels.warningsDesc}
-                  />
-
-                  <Toggle
-                    name="notifyOpportunities"
-                    defaultChecked={preferences.notifyOpportunities}
-                    label={labels.opportunities}
-                    description={labels.opportunitiesDesc}
-                  />
-                </div>
-              </div>
-            </section>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 14,
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  color: "rgba(255,255,255,0.42)",
-                  fontSize: 11,
-                  lineHeight: 1.5,
-                  fontWeight: 720,
-                  maxWidth: 720,
-                }}
-              >
-                {labels.note}
-              </div>
-
-              <button
-                type="submit"
-                className="primary-button"
-                disabled={saving}
-              >
-                {saving ? labels.saving : labels.save}
-              </button>
             </div>
 
-            {actionData ? (
-              <div
-                style={{
-                  padding: 15,
-                  borderRadius: 15,
-                  background: actionData.ok
-                    ? "rgba(34,197,94,0.08)"
-                    : "rgba(239,68,68,0.08)",
-                  border: actionData.ok
-                    ? "1px solid rgba(34,197,94,0.20)"
-                    : "1px solid rgba(239,68,68,0.20)",
-                  color: actionData.ok ? "#86efac" : "#fca5a5",
-                  fontSize: 12,
-                  fontWeight: 800,
-                }}
-              >
-                {actionData.message}
+            <div className="reports-v2-toggle-row">
+              <Toggle
+                name="weeklyReportEnabled"
+                defaultChecked={preferences.weeklyReportEnabled}
+                label={labels.weeklyEnabled}
+                description={labels.weeklyEnabledDesc}
+              />
+            </div>
+
+            <div className="reports-v2-schedule-grid">
+              <label className="reports-v2-field">
+                <span>{labels.language}</span>
+                <select
+                  className="reports-v2-control"
+                  name="language"
+                  defaultValue={preferences.language || language}
+                >
+                  <option value="en">English</option>
+                  <option value="it">Italiano</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="es">Español</option>
+                  <option value="pt-BR">Português (Brasil)</option>
+                </select>
+              </label>
+
+              <label className="reports-v2-field">
+                <span>{labels.day}</span>
+                <select
+                  className="reports-v2-control"
+                  name="weeklyReportDay"
+                  defaultValue={String(preferences.weeklyReportDay)}
+                >
+                  {dayOptions.map((day) => (
+                    <option key={day} value={day}>
+                      {labels.days[day]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="reports-v2-field">
+                <span>{labels.hour}</span>
+                <select
+                  className="reports-v2-control"
+                  name="weeklyReportHour"
+                  defaultValue={String(preferences.weeklyReportHour)}
+                >
+                  {Array.from({ length: 24 }, (_, hour) => (
+                    <option key={hour} value={hour}>
+                      {String(hour).padStart(2, "0")}:00
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="reports-v2-field">
+                <span>{labels.timezone}</span>
+                <input
+                  className="reports-v2-control"
+                  type="text"
+                  name="timezone"
+                  defaultValue={preferences.timezone || "UTC"}
+                  placeholder="Europe/Rome"
+                />
+              </label>
+            </div>
+            <div className="reports-v2-note">{labels.timezoneNote}</div>
+          </PremiumPanel>
+
+          <PremiumPanel
+            className="reports-v2-panel reports-v2-alerts"
+            tone="orange"
+          >
+            <div className="reports-v2-panel-heading">
+              <div>
+                <div className="panel-eyebrow">{labels.alertsEyebrow}</div>
+                <h2 className="panel-title">{labels.alertsTitle}</h2>
+                <p className="reports-v2-description">
+                  {labels.alertsDescription}
+                </p>
               </div>
-            ) : null}
+              <StatusChip
+                tone={preferences.emailAlertsEnabled ? "green" : "neutral"}
+              >
+                {labels.alertsEnabled}
+              </StatusChip>
+            </div>
+
+            <div className="reports-v2-alert-stack">
+              <Toggle
+                name="emailAlertsEnabled"
+                defaultChecked={preferences.emailAlertsEnabled}
+                label={labels.alertsEnabled}
+                description={labels.alertsEnabledDesc}
+              />
+
+              <div className="reports-v2-channel-grid">
+                <Toggle
+                  name="notifyCritical"
+                  defaultChecked={preferences.notifyCritical}
+                  label={labels.critical}
+                  description={labels.criticalDesc}
+                />
+
+                <Toggle
+                  name="notifyWarnings"
+                  defaultChecked={preferences.notifyWarnings}
+                  label={labels.warnings}
+                  description={labels.warningsDesc}
+                />
+
+                <Toggle
+                  name="notifyOpportunities"
+                  defaultChecked={preferences.notifyOpportunities}
+                  label={labels.opportunities}
+                  description={labels.opportunitiesDesc}
+                />
+              </div>
+            </div>
+          </PremiumPanel>
+
+          <div className="reports-v2-submit-row">
+            <div>{labels.note}</div>
+            <VisualButton type="submit" size="large" disabled={saving}>
+              {saving ? labels.saving : labels.save}
+            </VisualButton>
           </div>
+
+          {actionData ? (
+            <div
+              className={`reports-v2-feedback ${actionData.ok ? "is-success" : "is-error"}`}
+              role="status"
+            >
+              {actionData.message}
+            </div>
+          ) : null}
         </Form>
       </div>
     </div>
