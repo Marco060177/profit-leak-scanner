@@ -189,3 +189,88 @@ model NotificationDelivery {
   @@index([shop, status])
   @@index([scheduledFor, status])
 }
+
+model ProfitImpactAction {
+  id                     String                    @id @default(cuid())
+  shop                   String
+  idempotencyKey         String
+  actionType             String
+  status                 String                    @default("ACCEPTED")
+  sourceModule           String
+  sourceAlertKey         String?
+  productId              String?
+  productTitle           String?
+  title                  String
+  changeDescription      String
+  currencyCode           String
+  measurementWindowDays  Int                       @default(14)
+  appliedAt              DateTime?
+  measurementStart       DateTime?
+  measurementEnd         DateTime?
+  completedAt            DateTime?
+  cancelledAt            DateTime?
+  previousValue          Float?
+  appliedValue           Float?
+  targetMetric           String?
+  targetValue            Float?
+  notes                  String?
+  metadataJson           String?
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+  measurements           ProfitImpactMeasurement[]
+  events                 ProfitImpactEvent[]
+
+  @@index([shop, status, createdAt])
+  @@index([shop, productId, status])
+  @@index([shop, sourceAlertKey])
+  @@unique([shop, idempotencyKey])
+}
+
+model ProfitImpactMeasurement {
+  id                          String             @id @default(cuid())
+  actionId                    String
+  measurementType             String
+  windowStart                 DateTime
+  windowEnd                   DateTime
+  observedDays                Int
+  revenue                     Float
+  economicProfit              Float
+  economicMarginPct           Float
+  units                       Float
+  cogs                        Float
+  discounts                   Float
+  refunds                     Float
+  averageUnitRevenue          Float?
+  averageUnitCost             Float?
+  discountRatePct             Float?
+  measuredProfitChange        Float?
+  measuredMarginChange        Float?
+  measuredRevenueChange       Float?
+  measuredUnitsChange         Float?
+  measuredCogsChange          Float?
+  estimatedAttributableImpact Float?
+  attributionMethod           String?
+  dataConfidenceScore         Int                @default(0)
+  attributionConfidenceScore  Int?
+  confidenceLevel             String             @default("LOW")
+  confidenceReasonsJson       String?
+  sourceCompletenessJson      String?
+  capturedAt                  DateTime           @default(now())
+  action                      ProfitImpactAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@unique([actionId, measurementType])
+  @@index([actionId, capturedAt])
+}
+
+model ProfitImpactEvent {
+  id         String             @id @default(cuid())
+  actionId   String
+  fromStatus String?
+  toStatus   String
+  source     String
+  note       String?
+  createdAt  DateTime           @default(now())
+  action     ProfitImpactAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@index([actionId, createdAt])
+}

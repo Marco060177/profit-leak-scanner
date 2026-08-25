@@ -2,6 +2,15 @@ import prisma from "~/db.server";
 
 export async function deleteShopData(shop: string) {
   return prisma.$transaction(async (tx) => {
+    const profitImpactEvents = await tx.profitImpactEvent.deleteMany({
+      where: { action: { shop } },
+    });
+    const profitImpactMeasurements = await tx.profitImpactMeasurement.deleteMany({
+      where: { action: { shop } },
+    });
+    const profitImpactActions = await tx.profitImpactAction.deleteMany({
+      where: { shop },
+    });
     const alertEvents = await tx.profitMonitorAlertEvent.deleteMany({
       where: { alert: { shop } },
     });
@@ -17,6 +26,9 @@ export async function deleteShopData(shop: string) {
     const sessions = await tx.session.deleteMany({ where: { shop } });
 
     return {
+      profitImpactEvents: profitImpactEvents.count,
+      profitImpactMeasurements: profitImpactMeasurements.count,
+      profitImpactActions: profitImpactActions.count,
       alertEvents: alertEvents.count,
       alerts: alerts.count,
       snapshots: snapshots.count,
