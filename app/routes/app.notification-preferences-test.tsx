@@ -5,9 +5,11 @@ import {
   getNotificationPreferences,
   updateNotificationPreferences,
 } from "~/services/notification.server";
+import { assertTestRouteAccess } from "~/utils/test-route.server";
 
 export async function loader({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
+  assertTestRouteAccess(session.shop);
 
   const preferences = await getNotificationPreferences(session.shop);
 
@@ -19,6 +21,7 @@ export async function loader({ request }: { request: Request }) {
 
 export async function action({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
+  assertTestRouteAccess(session.shop);
 
   const formData = await request.formData();
   const email = String(formData.get("email") || "").trim();

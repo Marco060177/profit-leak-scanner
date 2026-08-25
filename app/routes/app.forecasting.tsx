@@ -16,6 +16,7 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import { formatMoneyCompact } from "~/utils/formatting";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
+import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 
 import "~/styles/dashboard.css";
 
@@ -74,12 +75,14 @@ export async function loader({ request }: { request: Request }) {
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
 
-  const dashboardData = await loadMarginDashboardData({
-    admin,
-    session,
-    period,
-    locale,
-  });
+  const dashboardData = growthAccess
+    ? await loadMarginDashboardData({
+      admin,
+      session,
+      period,
+      locale,
+    })
+    : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
     ? (await prisma.profitAssumptions.findUnique({

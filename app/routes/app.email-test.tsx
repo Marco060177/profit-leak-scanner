@@ -2,9 +2,17 @@ import { Form, useActionData } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { sendTestEmail } from "~/services/email.server";
+import { assertTestRouteAccess } from "~/utils/test-route.server";
+
+export async function loader({ request }: { request: Request }) {
+  const { session } = await authenticate.admin(request);
+  assertTestRouteAccess(session.shop);
+  return null;
+}
 
 export async function action({ request }: { request: Request }) {
-  await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
+  assertTestRouteAccess(session.shop);
 
   const formData = await request.formData();
   const email = String(formData.get("email") || "").trim();

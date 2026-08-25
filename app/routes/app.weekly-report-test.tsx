@@ -2,15 +2,18 @@ import { Form, useActionData } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { prepareWeeklyProfitReport } from "~/services/weekly-profit-report.server";
+import { assertTestRouteAccess } from "~/utils/test-route.server";
+
+export async function loader({ request }: { request: Request }) {
+  const { session } = await authenticate.admin(request);
+  assertTestRouteAccess(session.shop);
+  return null;
+}
 
 export async function action({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
-  if (session.shop !== "profit-leak-dev.myshopify.com") {
-    throw new Response("Test route available only on the dev store.", {
-      status: 403,
-    });
-  }
+  assertTestRouteAccess(session.shop);
 
   const result = await prepareWeeklyProfitReport({
     admin,

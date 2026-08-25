@@ -2,7 +2,7 @@ import * as React from "react";
 
 import {
   getLanguageLocale,
-  getStoredLanguage,
+  getStoredLanguageOrNull,
   setStoredLanguage,
   translations,
   type Language,
@@ -55,11 +55,15 @@ export function I18nProvider({
     React.useState<Language>(initialLanguage);
 
   React.useEffect(() => {
-    const storedLanguage = getStoredLanguage();
+    const storedLanguage = getStoredLanguageOrNull();
 
-    setLanguageState(storedLanguage);
-    setStoredLanguage(storedLanguage);
-  }, []);
+    if (storedLanguage) {
+      setLanguageState(storedLanguage);
+      setStoredLanguage(storedLanguage);
+    } else {
+      setStoredLanguage(initialLanguage);
+    }
+  }, [initialLanguage]);
 
   const setLanguage = React.useCallback((nextLanguage: Language) => {
     setLanguageState(nextLanguage);

@@ -21,6 +21,7 @@ import { getLanguageLocale, getStoredLanguage, type Language } from "~/utils/i18
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { formatMoneyCompact } from "~/utils/formatting";
+import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import {
   generateProfitAlerts,
   type ProfitAlert,
@@ -59,12 +60,14 @@ export const loader = async ({
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
 
-  const dashboardData = await loadMarginDashboardData({
-    admin,
-    session,
-    period,
-    locale,
-  });
+  const dashboardData = growthAccess
+    ? await loadMarginDashboardData({
+      admin,
+      session,
+      period,
+      locale,
+    })
+    : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   return {
     ...dashboardData,

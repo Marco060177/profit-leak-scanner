@@ -425,10 +425,11 @@ export async function action({ request }: { request: Request }) {
     };
   }
 
-  if (intent === "ask") {
-    const question = String(formData.get("question") || "");
+  try {
+    if (intent === "ask") {
+      const question = String(formData.get("question") || "");
 
-    const context = `
+      const context = `
 Current store profitability data and Profit Monitor events:
 
 ${storeSummary}
@@ -453,30 +454,44 @@ State that these amounts are estimates, not guaranteed recovered profit.
 Do not generate a complete business analysis.
 `;
 
-    return generateAiAnswer({
-      question,
-      context,
+      return await generateAiAnswer({
+        question,
+        context,
+        language,
+      });
+    }
+
+    const economicSnapshot = dashboardData.economicSnapshot;
+
+    if (!economicSnapshot) {
+      throw new Error("Economic Snapshot is not available.");
+    }
+
+    return await generateAiMarginAnalysis({
+      storeSummary,
       language,
+      economicSnapshot: {
+        currencyCode: economicSnapshot.currencyCode,
+        monthlyOpportunity: economicSnapshot.totals.monthlyOpportunity,
+        confidenceScore: economicSnapshot.confidence.score,
+        confidenceLevel: economicSnapshot.confidence.level,
+        cogsCoveragePct: economicSnapshot.confidence.cogsCoveragePct,
+      },
     });
+  } catch (error) {
+    await prisma.aiUsage.updateMany({
+      where: {
+        shop: session.shop,
+        month,
+        requests: { gt: 0 },
+      },
+      data: {
+        requests: { decrement: 1 },
+      },
+    });
+
+    throw error;
   }
-
-  const economicSnapshot = dashboardData.economicSnapshot;
-
-  if (!economicSnapshot) {
-    throw new Error("Economic Snapshot is not available.");
-  }
-
-  return generateAiMarginAnalysis({
-    storeSummary,
-    language,
-    economicSnapshot: {
-      currencyCode: economicSnapshot.currencyCode,
-      monthlyOpportunity: economicSnapshot.totals.monthlyOpportunity,
-      confidenceScore: economicSnapshot.confidence.score,
-      confidenceLevel: economicSnapshot.confidence.level,
-      cogsCoveragePct: economicSnapshot.confidence.cogsCoveragePct,
-    },
-  });
 }
 
 export default function AiAdvisorPage() {

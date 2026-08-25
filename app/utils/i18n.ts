@@ -39,13 +39,16 @@ export const translations = {
 };
 
 export function getStoredLanguage(): Language {
+  return getStoredLanguageOrNull() ?? DEFAULT_LANGUAGE;
+}
+
+export function getStoredLanguageOrNull(): Language | null {
   if (typeof window === "undefined") {
-    return DEFAULT_LANGUAGE;
+    return null;
   }
 
-  return normalizeLanguage(
-    window.localStorage.getItem(LANGUAGE_STORAGE_KEY),
-  );
+  const storedLanguage = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+  return isLanguage(storedLanguage) ? storedLanguage : null;
 }
 
 export function setStoredLanguage(language: Language) {
