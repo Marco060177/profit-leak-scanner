@@ -90,6 +90,7 @@ type WeeklyProfitReportPayload = {
     module?: string;
     estimatedMinutes?: number;
   }>;
+  profitImpact?: null | { measuringCount: number; completedThisWeek: number; measuredProfitChange: number; estimatedAttributableImpact: number | null; averageAttributionConfidence: number | null; hasLowConfidence: boolean };
 };
 
 function formatStoreMoney(value: number, currencyCode: string, locale: string) {
@@ -689,6 +690,19 @@ function buildWeeklyProfitReportEmail({
         </div>
       `;
 
+  const impactCopy = {
+    en: { title: "Profit Impact Tracker", measuring: "actions currently measuring", completed: "tracked actions completed measurement this week", observed: "Observed economic profit changed by", estimated: "MarginLab estimates that up to this amount was consistent with the recorded actions", confidence: "Average attribution confidence", low: "Some completed measurements have low confidence and should be interpreted cautiously." },
+    it: { title: "Profit Impact Tracker", measuring: "azioni attualmente in misurazione", completed: "azioni tracciate hanno completato la misurazione questa settimana", observed: "Il profitto economico osservato è variato di", estimated: "MarginLab stima che fino a questo importo sia coerente con le azioni registrate", confidence: "Affidabilità media dell'attribuzione", low: "Alcune misurazioni completate hanno affidabilità bassa e vanno interpretate con cautela." },
+    fr: { title: "Profit Impact Tracker", measuring: "actions actuellement mesurées", completed: "actions suivies ont terminé leur mesure cette semaine", observed: "Le bénéfice économique observé a varié de", estimated: "MarginLab estime que ce montant au maximum est cohérent avec les actions enregistrées", confidence: "Fiabilité moyenne de l'attribution", low: "Certaines mesures terminées ont une faible fiabilité et doivent être interprétées avec prudence." },
+    de: { title: "Profit Impact Tracker", measuring: "Aktionen werden derzeit gemessen", completed: "verfolgte Aktionen haben diese Woche die Messung abgeschlossen", observed: "Der beobachtete wirtschaftliche Gewinn änderte sich um", estimated: "MarginLab schätzt, dass höchstens dieser Betrag mit den erfassten Aktionen übereinstimmt", confidence: "Durchschnittliche Attributionszuverlässigkeit", low: "Einige abgeschlossene Messungen haben geringe Zuverlässigkeit und sind vorsichtig zu interpretieren." },
+    es: { title: "Profit Impact Tracker", measuring: "acciones actualmente en medición", completed: "acciones seguidas completaron la medición esta semana", observed: "El beneficio económico observado cambió en", estimated: "MarginLab estima que hasta este importe fue coherente con las acciones registradas", confidence: "Confianza media de atribución", low: "Algunas mediciones completadas tienen baja confianza y deben interpretarse con cautela." },
+    "pt-BR": { title: "Profit Impact Tracker", measuring: "ações atualmente em medição", completed: "ações acompanhadas concluíram a medição nesta semana", observed: "O lucro econômico observado variou em", estimated: "A MarginLab estima que até este valor foi consistente com as ações registradas", confidence: "Confiança média de atribuição", low: "Algumas medições concluídas têm baixa confiança e devem ser interpretadas com cautela." },
+  }[language];
+  const trackerUrl = buildAppUrl("/app/profit-impact");
+  const impact = payload.profitImpact;
+  const impactText = impact ? [ `${impact.measuringCount} ${impactCopy.measuring}.`, `${impact.completedThisWeek} ${impactCopy.completed}.`, ...(impact.completedThisWeek ? [`${impactCopy.observed} ${money(impact.measuredProfitChange)}.`, ...(impact.estimatedAttributableImpact === null ? [] : [`${impactCopy.estimated}: ${money(impact.estimatedAttributableImpact)}.`]), ...(impact.averageAttributionConfidence === null ? [] : [`${impactCopy.confidence}: ${impact.averageAttributionConfidence.toFixed(0)}/100.`]), ...(impact.hasLowConfidence ? [impactCopy.low] : [])] : []) ] : [];
+  const impactHtml = impact ? `<div style="margin-top:24px;padding:18px;border-radius:16px;background:#0b1220;border:1px solid rgba(255,115,60,.2);"><div style="font-size:12px;font-weight:900;color:#ff875f;">${impactCopy.title}</div>${impactText.map((line) => `<div style="margin-top:8px;font-size:13px;color:#cbd5e1;">${escapeHtml(line)}</div>`).join("")}${trackerUrl ? `<div style="margin-top:12px"><a href="${escapeHtml(trackerUrl)}" style="color:#ff875f;text-decoration:none;font-weight:800">${copy.open} →</a></div>` : ""}</div>` : "";
+
   const appUrl = buildAppUrl("/app");
 
   const html = `
@@ -765,6 +779,7 @@ function buildWeeklyProfitReportEmail({
           </div>
           ${actionsHtml}
         </div>
+        ${impactHtml}
 
         ${
           appUrl
@@ -801,6 +816,7 @@ function buildWeeklyProfitReportEmail({
       (action, index) =>
         `${index + 1}. ${action.title}${action.estimatedMinutes ? ` (${action.estimatedMinutes} min)` : ""}`,
     ),
+    ...(impactText.length ? ["", impactCopy.title, ...impactText] : []),
   ];
 
   return {

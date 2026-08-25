@@ -23,6 +23,13 @@ import {
   aggregateProfitImpact,
   classifyProfitImpactAction,
 } from "~/utils/profit-impact-summary";
+import {
+  buildProfitImpactAiContext,
+  buildWeeklyProfitImpactSummary,
+  completedNotificationEligible,
+  getProfitImpactReminders,
+  historicalInsightEligibility,
+} from "~/services/profit-impact-context.server";
 
 const migrationFiles = fs
   .readdirSync("prisma/migrations", { withFileTypes: true })
@@ -87,6 +94,23 @@ assert.equal(aggregate.lowConfidenceCompleted, 1);
 assert.equal(classifyProfitImpactAction("ACCEPTED"), "active");
 assert.equal(classifyProfitImpactAction("COMPLETED"), "completed");
 assert.equal(classifyProfitImpactAction("INVALIDATED"), "attention");
+
+const phase5Now = new Date("2026-08-25T12:00:00.000Z");
+const contextFixture = (overrides: Record<string, unknown> = {}) => ({
+  id: String(overrides.id ?? Math.random()), shop, actionType: "PRICE_CHANGE", status: "COMPLETED", productTitle: "Test product",
+  appliedAt: new Date("2026-08-10T00:00:00.000Z"), completedAt: new Date("2026-08-24T00:00:00.000Z"), updatedAt: new Date("2026-08-24T00:00:00.000Z"), measurementEnd: new Date("2026-08-24T00:00:00.000Z"),
+  measurements: [{ measurementType: "FINAL_14D", measuredProfitChange: 10, measuredMarginChange: 2, estimatedAttributableImpact: null, dataConfidenceScore: 80, attributionConfidenceScore: 60, confidenceLevel: "LOW", confidenceReasonsJson: "[]" }],
+  events: [], ...overrides,
+}) as any;
+const weeklyImpact = buildWeeklyProfitImpactSummary([contextFixture()], phase5Now);
+assert.equal(weeklyImpact.completedThisWeek, 1);
+assert.equal(weeklyImpact.estimatedAttributableImpact, null, "weekly reports must omit null attribution");
+assert.equal(weeklyImpact.hasLowConfidence, true);
+assert.match(buildProfitImpactAiContext([contextFixture()], phase5Now), /Do not recalculate attribution/);
+assert.equal(historicalInsightEligibility([contextFixture(), contextFixture(), contextFixture()], "PRICE_CHANGE").eligible, true);
+assert.equal(historicalInsightEligibility([contextFixture()], "PRICE_CHANGE").eligible, false);
+assert.equal(getProfitImpactReminders([contextFixture()], phase5Now)[0]?.kind, "completed");
+assert.equal(completedNotificationEligible(contextFixture(), phase5Now), true);
 
 const first = await createProfitImpactAction({
   ...baseInput,
@@ -413,7 +437,7 @@ assert.equal(insufficient.measuringProductKey, null);
 for (const language of ["en", "it", "fr", "de", "es", "pt-BR"] as const) {
   assert.ok(translations[language].profitImpactPage.estimatedAttributableImpact);
   assert.ok(translations[language].profitImpactPage.attributionConfidence);
-  for (const key of ["active", "completed", "needsAttention", "noActions", "measuredProfitChange", "estimatedAttributableProfit", "averageMarginLift", "measuredChangeDefinition", "attributableDefinition", "dataConfidenceDefinition", "attributionConfidenceDefinition"] as const) {
+  for (const key of ["active", "completed", "needsAttention", "noActions", "measuredProfitChange", "estimatedAttributableProfit", "averageMarginLift", "measuredChangeDefinition", "attributableDefinition", "dataConfidenceDefinition", "attributionConfidenceDefinition", "reminderAwaiting", "reminderMeasurementDue", "reminderCompleted"] as const) {
     assert.ok(translations[language].profitImpactPage[key], `${language}.${key} is required`);
   }
   for (const status of ["ACCEPTED", "AWAITING_APPLICATION", "MEASURING", "COMPLETED", "INSUFFICIENT_DATA", "INVALIDATED", "CANCELLED"] as const) {

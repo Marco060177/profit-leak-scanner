@@ -30,6 +30,7 @@ import {
 } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { getAiLanguageName } from "~/utils/ai-i18n";
+import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
 
 import "~/styles/dashboard.css";
 
@@ -372,12 +373,14 @@ export async function action({ request }: { request: Request }) {
       where: { shop: session.shop },
     })) ?? null;
 
-  const storeSummary = buildServerStoreSummary({
+  const baseStoreSummary = buildServerStoreSummary({
     dashboardData,
     assumptions,
     period,
     language,
   });
+  const profitImpact = await loadProfitImpactContext(session.shop);
+  const storeSummary = `${baseStoreSummary}\n\n${profitImpact.aiContext}`;
 
   const month = getUsageMonth();
   const quotaResult = await prisma.$transaction(async (tx) => {

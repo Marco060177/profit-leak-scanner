@@ -7,6 +7,9 @@ import {
   type NotificationLanguage,
 } from "~/services/notification.server";
 import { getLanguageLocale } from "~/utils/i18n";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import { buildWeeklyProfitImpactSummary } from "~/services/profit-impact-context.server";
+import { listProfitImpactActionsForShop } from "~/services/profit-impact.server";
 
 function datePartsInTimeZone(date: Date, timeZone: string) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -142,6 +145,7 @@ export async function prepareWeeklyProfitReport({
 
   const language = normalizeNotificationLanguage(preferences.language);
   const locale = getLanguageLocale(language);
+  const billing = await getBillingStatus(admin);
 
   const data = await loadMarginDashboardData({
     admin,
@@ -181,6 +185,9 @@ export async function prepareWeeklyProfitReport({
     "UTC";
 
   const weekKey = isoWeekKey(now, timeZone);
+  const impact = hasGrowthAccess(billing)
+    ? buildWeeklyProfitImpactSummary(await listProfitImpactActionsForShop({ shop: session.shop, take: 100 }), now)
+    : null;
 
   const payload = {
     source: "weekly-profit-report" as const,
@@ -203,6 +210,7 @@ export async function prepareWeeklyProfitReport({
 
     topAlerts: buildTopAlerts(alerts),
     nextActions: buildNextActions(alerts),
+    profitImpact: impact?.relevant ? impact : null,
   };
 
   const result = await createWeeklyReportDelivery({
