@@ -985,6 +985,27 @@ export default function RecoverySimulatorPage() {
     URL.revokeObjectURL(url);
   };
 
+  const trackCurrentScenario = () => {
+    const tracksPrice = Math.abs(simulatedPrice - currentPrice) > 0.000001;
+    const actionType = tracksPrice ? "PRICE_CHANGE" : "COGS_CHANGE";
+    const appliedValue = tracksPrice ? simulatedPrice : simulatedCost;
+    const params = new URLSearchParams({
+      sourceModule: "RECOVERY_SIMULATOR",
+      productId: selectedProduct.productId,
+      actionType,
+      appliedValue: String(appliedValue),
+      targetValue: String(appliedValue),
+      simulatedPrice: String(simulatedPrice),
+      simulatedCost: String(simulatedCost),
+      period: String(periodDays),
+      lang: language,
+      intentKey: window.crypto.randomUUID(),
+      title: selectedProduct.productTitle,
+      description: displayRecommendation,
+    });
+    navigate(`/app/profit-impact?${params.toString()}`);
+  };
+
   return (
     <div className="dashboard-shell">
       <style>{`
@@ -2871,6 +2892,14 @@ export default function RecoverySimulatorPage() {
                     borderTop: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
+                  <button
+                    type="button"
+                    className="primary-button"
+                    onClick={trackCurrentScenario}
+                    style={{ marginRight: 10 }}
+                  >
+                    {messages.profitImpactPage.trackAction}
+                  </button>
                   <a
                     href={`https://admin.shopify.com/store/${loaderData.shopHandle}/products/${selectedProduct.productId}`}
                     target="_blank"

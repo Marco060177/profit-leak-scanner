@@ -15,6 +15,7 @@ type NavId =
   | "recommendations"
   | "ai-advisor"
   | "recovery-simulator"
+  | "profit-impact"
   | "forecasting"
   | "profit-assumptions"
   | "tax-profile"
@@ -247,6 +248,7 @@ export default function DashboardNav({
       "recommendations",
       "ai-advisor",
       "recovery-simulator",
+      "profit-impact",
       "forecasting",
       "profit-assumptions",
     ];
@@ -311,6 +313,13 @@ export default function DashboardNav({
       description: labels.recoverySimulatorDescription,
       path: "/app/recovery-simulator",
       icon: "↗",
+    },
+    {
+      id: "profit-impact",
+      label: "Profit Impact Tracker",
+      description: t.profitImpactPage.description,
+      path: "/app/profit-impact",
+      icon: "◎",
     },
     {
       id: "forecasting",

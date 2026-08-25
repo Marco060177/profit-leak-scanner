@@ -161,6 +161,30 @@ export async function createProfitImpactAction(
     throw domainError(`${input.actionType} requires productId.`);
   }
 
+  const previousValue = optionalFiniteNumber(input.previousValue, "previousValue");
+  const appliedValue = optionalFiniteNumber(input.appliedValue, "appliedValue");
+  const targetValue = optionalFiniteNumber(input.targetValue, "targetValue");
+
+  if (input.actionType === "PRICE_CHANGE" || input.actionType === "COGS_CHANGE") {
+    if (previousValue === null || previousValue < 0) {
+      throw domainError(`${input.actionType} requires previousValue >= 0.`);
+    }
+    if (appliedValue === null || appliedValue < 0) {
+      throw domainError(`${input.actionType} requires appliedValue >= 0.`);
+    }
+  }
+  if (input.actionType === "DISCOUNT_CHANGE") {
+    for (const [field, value] of [
+      ["previousValue", previousValue],
+      ["appliedValue", appliedValue],
+      ["targetValue", targetValue],
+    ] as const) {
+      if (value !== null && (value < 0 || value > 100)) {
+        throw domainError(`${field} must be between 0 and 100.`);
+      }
+    }
+  }
+
   const data = {
     shop,
     idempotencyKey: normalizeIdempotencyKey(input.idempotencyKey),
@@ -184,10 +208,10 @@ export async function createProfitImpactAction(
     measurementWindowDays: normalizeMeasurementWindow(
       input.measurementWindowDays ?? 14,
     ),
-    previousValue: optionalFiniteNumber(input.previousValue, "previousValue"),
-    appliedValue: optionalFiniteNumber(input.appliedValue, "appliedValue"),
+    previousValue,
+    appliedValue,
     targetMetric: optionalText(input.targetMetric, "targetMetric", 80),
-    targetValue: optionalFiniteNumber(input.targetValue, "targetValue"),
+    targetValue,
     notes: optionalText(input.notes, "notes", MAX_NOTE_LENGTH),
     metadataJson: serializeOptionalJson(input.metadata, "metadata"),
   };
@@ -318,6 +342,13 @@ export async function transitionProfitImpactAction(
   const source = requiredText(input.source ?? "merchant", "source", 80);
   const note = optionalText(input.note, "note", MAX_NOTE_LENGTH);
 
+  if (toStatus === "MEASURING") {
+    throw domainError(
+      "Use startProfitImpactMeasurement to enter MEASURING.",
+      409,
+    );
+  }
+
   return prisma.$transaction(async (tx) => {
     const action = await tx.profitImpactAction.findFirst({
       where: { id: actionId, shop },
@@ -337,25 +368,9 @@ export async function transitionProfitImpactAction(
       );
     }
 
-    const hasBaseline = action.measurements.some(
-      (measurement) => measurement.measurementType === "BASELINE",
-    );
     const hasFinalMeasurement = action.measurements.some(
       (measurement) => measurement.measurementType === "FINAL_14D",
     );
-    const appliedAt = action.appliedAt ??
-      (input.appliedAt
-        ? normalizeDate(input.appliedAt, "appliedAt")
-        : null);
-
-    if (toStatus === "MEASURING") {
-      if (!appliedAt) {
-        throw domainError("MEASURING requires appliedAt.", 409);
-      }
-      if (!hasBaseline) {
-        throw domainError("MEASURING requires an immutable BASELINE.", 409);
-      }
-    }
     if (toStatus === "COMPLETED" && !hasFinalMeasurement) {
       throw domainError("COMPLETED requires FINAL_14D measurement.", 409);
     }
@@ -365,11 +380,11 @@ export async function transitionProfitImpactAction(
       where: { id: actionId, shop, status: action.status },
       data: {
         status: toStatus,
-        ...(toStatus === "MEASURING" && appliedAt
-          ? { appliedAt }
-          : {}),
         ...(toStatus === "COMPLETED" ? { completedAt: now } : {}),
         ...(toStatus === "CANCELLED" ? { cancelledAt: now } : {}),
+        ...(isProfitImpactTerminalStatus(toStatus)
+          ? { measuringProductKey: null }
+          : {}),
       },
     });
 
@@ -391,6 +406,137 @@ export async function transitionProfitImpactAction(
       where: { id: actionId, shop },
     });
   });
+}
+
+export type StartProfitImpactMeasurementInput = {
+  shop: string;
+  actionId: string;
+  appliedAt: Date;
+  measurementEnd: Date;
+  source?: string;
+  note?: string | null;
+  baseline: Omit<
+    CreateProfitImpactMeasurementInput,
+    "shop" | "actionId" | "measurementType"
+  >;
+};
+
+export async function startProfitImpactMeasurement(
+  input: StartProfitImpactMeasurementInput,
+) {
+  const shop = requiredText(input.shop, "shop", 255).toLowerCase();
+  const actionId = requiredText(input.actionId, "actionId", 255);
+  const appliedAt = normalizeDate(input.appliedAt, "appliedAt");
+  const measurementEnd = normalizeDate(input.measurementEnd, "measurementEnd");
+  if (measurementEnd <= appliedAt) {
+    throw domainError("measurementEnd must be after appliedAt.");
+  }
+  const source = requiredText(input.source ?? "merchant", "source", 80);
+  const note = optionalText(input.note, "note", MAX_NOTE_LENGTH);
+  const baseline = input.baseline;
+  const windowStart = normalizeDate(baseline.windowStart, "windowStart");
+  const windowEnd = normalizeDate(baseline.windowEnd, "windowEnd");
+  if (windowEnd.getTime() !== appliedAt.getTime()) {
+    throw domainError("BASELINE must end exactly at appliedAt.");
+  }
+
+  try {
+    return await prisma.$transaction(async (tx) => {
+      const action = await tx.profitImpactAction.findFirst({
+        where: { id: actionId, shop },
+      });
+      if (!action) throw domainError("Profit Impact action not found.", 404);
+      if (action.status !== "AWAITING_APPLICATION") {
+        throw domainError(
+          "Only an AWAITING_APPLICATION action can start measuring.",
+          409,
+        );
+      }
+
+      await tx.profitImpactMeasurement.create({
+        data: {
+          actionId,
+          measurementType: "BASELINE",
+          windowStart,
+          windowEnd,
+          observedDays: integerInRange(baseline.observedDays, "observedDays", 1, 14),
+          revenue: finiteNumber(baseline.revenue, "revenue"),
+          economicProfit: finiteNumber(baseline.economicProfit, "economicProfit"),
+          economicMarginPct: finiteNumber(baseline.economicMarginPct, "economicMarginPct"),
+          units: finiteNumber(baseline.units, "units"),
+          cogs: finiteNumber(baseline.cogs, "cogs"),
+          discounts: finiteNumber(baseline.discounts, "discounts"),
+          refunds: finiteNumber(baseline.refunds, "refunds"),
+          averageUnitRevenue: optionalFiniteNumber(baseline.averageUnitRevenue, "averageUnitRevenue"),
+          averageUnitCost: optionalFiniteNumber(baseline.averageUnitCost, "averageUnitCost"),
+          discountRatePct: optionalFiniteNumber(baseline.discountRatePct, "discountRatePct"),
+          measuredProfitChange: null,
+          measuredMarginChange: null,
+          measuredRevenueChange: null,
+          measuredUnitsChange: null,
+          measuredCogsChange: null,
+          estimatedAttributableImpact: null,
+          attributionMethod: null,
+          dataConfidenceScore: integerInRange(
+            baseline.dataConfidenceScore ?? 0,
+            "dataConfidenceScore",
+            0,
+            100,
+          ),
+          attributionConfidenceScore: null,
+          confidenceLevel: "LOW",
+          confidenceReasonsJson: serializeOptionalJson(
+            baseline.confidenceReasons,
+            "confidenceReasons",
+          ),
+          sourceCompletenessJson: serializeOptionalJson(
+            baseline.sourceCompleteness,
+            "sourceCompleteness",
+          ),
+        },
+      });
+
+      const updated = await tx.profitImpactAction.updateMany({
+        where: { id: actionId, shop, status: "AWAITING_APPLICATION" },
+        data: {
+          status: "MEASURING",
+          appliedAt,
+          measurementStart: appliedAt,
+          measurementEnd,
+          measuringProductKey: action.productId || null,
+        },
+      });
+      if (updated.count !== 1) {
+        throw domainError("Profit Impact action changed concurrently.", 409);
+      }
+
+      await tx.profitImpactEvent.create({
+        data: {
+          actionId,
+          fromStatus: "AWAITING_APPLICATION",
+          toStatus: "MEASURING",
+          source,
+          note,
+        },
+      });
+
+      return tx.profitImpactAction.findFirstOrThrow({
+        where: { id: actionId, shop },
+        include: { measurements: true, events: true },
+      });
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw domainError(
+        "This product already has an action in MEASURING.",
+        409,
+      );
+    }
+    throw error;
+  }
 }
 
 export function cancelProfitImpactAction(input: {

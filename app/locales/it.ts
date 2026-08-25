@@ -1460,6 +1460,9 @@ export const it = {
     ask_ai: "Chiedi all'AI →",
     profit_copilot_uses_the_tax_aware: "Profit Copilot utilizza la base economica tax-aware derivata dai dati Shopify, le ipotesi gestionali salvate nel Business Model Studio e i segnali del Profit Monitor. La riserva fiscale gestionale resta separata dal trattamento VAT/GST/Sales Tax. Le raccomandazioni sono supporto decisionale e non modificano automaticamente prezzi, prodotti o campagne.",
   },
+  profitImpactPage: {
+    eyebrow: "PROFIT IMPACT TRACKER", description: "Traccia un'azione dall'accettazione alla baseline immutabile e al periodo di misurazione.", growthRequired: "Profit Impact Tracker richiede Growth.", upgrade: "Visualizza il piano Growth", actionType: "Tipo di azione", priceChange: "Modifica del prezzo", cogsChange: "Modifica dei COGS", productAction: "Azione sul prodotto", product: "Prodotto", title: "Titolo", descriptionLabel: "Descrizione della modifica", previousValue: "Valore precedente", appliedValue: "Valore applicato", targetValue: "Valore target (facoltativo)", notes: "Note (facoltative)", trackAction: "Traccia questa azione", status: "Stato", markApplied: "Segna come applicata", empty: "Inizia da Profit Action Center o Recovery Simulator per tracciare un'azione.", ACCEPTED: "Accettata", AWAITING_APPLICATION: "In attesa di applicazione", MEASURING: "In misurazione", COMPLETED: "Completata", CANCELLED: "Annullata", INVALIDATED: "Invalidata", INSUFFICIENT_DATA: "Dati insufficienti",
+  },
   taxProfilePage: {
     tax: "fiscali",
     test_environment_shopify_reports: "Ambiente test · Shopify rileva {{country}}",

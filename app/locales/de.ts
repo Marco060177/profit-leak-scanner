@@ -1465,6 +1465,9 @@ export const de = {
     ask_ai: "Fragen Sie AI →",
     profit_copilot_uses_the_tax_aware: "Profit Copilot nutzt die steuerbewusste Wirtschaftsbasis, die aus Shopify-Daten, in Business Model Studio gespeicherten Managementannahmen und Profit Monitor-Signalen abgeleitet wird. Die Gewerbesteuerrücklage bleibt von der VAT/GST/Umsatzsteuerbehandlung getrennt. Empfehlungen unterstützen Entscheidungen und verändern nicht automatisch Produkte, Preise oder Kampagnen.",
   },
+  profitImpactPage: {
+    eyebrow: "PROFIT IMPACT TRACKER", description: "Verfolgen Sie eine Maßnahme von der Annahme über die unveränderliche Baseline bis zum Messzeitraum.", growthRequired: "Profit Impact Tracker erfordert Growth.", upgrade: "Growth-Tarif ansehen", actionType: "Maßnahmentyp", priceChange: "Preisänderung", cogsChange: "COGS-Änderung", productAction: "Produktmaßnahme", product: "Produkt", title: "Titel", descriptionLabel: "Beschreibung der Änderung", previousValue: "Vorheriger Wert", appliedValue: "Angewendeter Wert", targetValue: "Zielwert (optional)", notes: "Notizen (optional)", trackAction: "Diese Maßnahme verfolgen", status: "Status", markApplied: "Als angewendet markieren", empty: "Starten Sie im Profit Action Center oder Recovery Simulator, um eine Maßnahme zu verfolgen.", ACCEPTED: "Angenommen", AWAITING_APPLICATION: "Wartet auf Anwendung", MEASURING: "Wird gemessen", COMPLETED: "Abgeschlossen", CANCELLED: "Abgebrochen", INVALIDATED: "Ungültig", INSUFFICIENT_DATA: "Unzureichende Daten",
+  },
   taxProfilePage: {
     tax: "Steuer",
     test_environment_shopify_reports: "Testumgebung · Shopify meldet {{country}}",

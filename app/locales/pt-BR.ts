@@ -1611,6 +1611,9 @@ export const ptBR = {
     "ask_ai": "Pergunte à IA →",
     "profit_copilot_uses_the_tax_aware": "O Profit Copilot usa a base econômica com consciência fiscal derivada dos dados Shopify, suposições gerenciais salvas nos sinais Business Model Studio e Profit Monitor. A reserva fiscal empresarial permanece separada do tratamento VAT/GST/Sales Tax. As recomendações apoiam as decisões e não alteram automaticamente produtos, preços ou campanhas."
   },
+  "profitImpactPage": {
+    "eyebrow": "PROFIT IMPACT TRACKER", "description": "Acompanhe uma ação desde a aceitação até a baseline imutável e o período de medição.", "growthRequired": "O Profit Impact Tracker requer Growth.", "upgrade": "Ver plano Growth", "actionType": "Tipo de ação", "priceChange": "Alteração de preço", "cogsChange": "Alteração de COGS", "productAction": "Ação no produto", "product": "Produto", "title": "Título", "descriptionLabel": "Descrição da alteração", "previousValue": "Valor anterior", "appliedValue": "Valor aplicado", "targetValue": "Valor-alvo (opcional)", "notes": "Observações (opcional)", "trackAction": "Acompanhar esta ação", "status": "Status", "markApplied": "Marcar como aplicada", "empty": "Comece pelo Profit Action Center ou Recovery Simulator para acompanhar uma ação.", "ACCEPTED": "Aceita", "AWAITING_APPLICATION": "Aguardando aplicação", "MEASURING": "Em medição", "COMPLETED": "Concluída", "CANCELLED": "Cancelada", "INVALIDATED": "Invalidada", "INSUFFICIENT_DATA": "Dados insuficientes"
+  },
   "taxProfilePage": {
     "tax": "imposto",
     "test_environment_shopify_reports": "Ambiente de teste · Relatórios Shopify {{country}}",

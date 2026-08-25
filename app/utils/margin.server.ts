@@ -642,26 +642,46 @@ export async function loadMarginDashboardData({
   period,
   locale = "en-US",
   billingStatus,
+  analysisEndDate,
 }: {
   admin: any;
   session: any;
   period: string;
   locale?: string;
   billingStatus?: BillingStatus;
+  analysisEndDate?: string;
 }): Promise<LoaderData> {
   const days = Number.parseInt(period, 10);
   const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
 
-  const fromDate = new Date();
-  fromDate.setDate(fromDate.getDate() - safeDays);
+  const explicitEndDate =
+    analysisEndDate && /^\d{4}-\d{2}-\d{2}$/.test(analysisEndDate)
+      ? analysisEndDate
+      : null;
+  const subtractCalendarDays = (dateOnly: string, daysToSubtract: number) => {
+    const [year, month, day] = dateOnly.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day - daysToSubtract));
+    return date.toISOString().slice(0, 10);
+  };
 
-  const previousFromDate = new Date(fromDate);
-  previousFromDate.setDate(previousFromDate.getDate() - safeDays);
+  const fromYYYYMMDD = explicitEndDate
+    ? subtractCalendarDays(explicitEndDate, safeDays)
+    : (() => {
+      const date = new Date();
+      date.setDate(date.getDate() - safeDays);
+      return toYYYYMMDD(date);
+    })();
+  const previousFromYYYYMMDD = explicitEndDate
+    ? subtractCalendarDays(fromYYYYMMDD, safeDays)
+    : (() => {
+      const date = new Date(`${fromYYYYMMDD}T00:00:00`);
+      date.setDate(date.getDate() - safeDays);
+      return toYYYYMMDD(date);
+    })();
 
-  const fromYYYYMMDD = toYYYYMMDD(fromDate);
-  const previousFromYYYYMMDD = toYYYYMMDD(previousFromDate);
-
-  const queryString = `processed_at:>=${fromYYYYMMDD}`;
+  const queryString = explicitEndDate
+    ? `processed_at:>=${fromYYYYMMDD} processed_at:<${explicitEndDate}`
+    : `processed_at:>=${fromYYYYMMDD}`;
   const previousQueryString =
     `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 

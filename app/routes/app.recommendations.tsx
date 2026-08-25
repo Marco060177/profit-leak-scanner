@@ -307,6 +307,7 @@ function TopPriority({
   onToggle,
   money,
   confidenceScore,
+  onTrack,
 }: {
   alert: ProfitAlert;
   language: Language;
@@ -315,6 +316,7 @@ function TopPriority({
   onToggle: () => void;
   money: (value: number) => string;
   confidenceScore: number;
+  onTrack?: () => void;
 }) {
   const { messages } = useI18n();
   const copy = messages.recommendationsPage;
@@ -469,6 +471,11 @@ function TopPriority({
           flexWrap: "wrap",
         }}
       >
+        {onTrack ? (
+          <button type="button" className="apply-button" onClick={onTrack}>
+            {messages.profitImpactPage.trackAction}
+          </button>
+        ) : null}
         <button
           type="button"
           className={completed ? "apply-button" : "primary-button"}
@@ -667,6 +674,19 @@ export default function RecommendationsPage() {
         ? current.filter((item) => item !== id)
         : [...current, id],
     );
+  };
+
+  const trackAlert = (alert: ProfitAlert) => {
+    if (!alert.productId) return;
+    const params = new URLSearchParams({
+      sourceModule: "PROFIT_ACTION_CENTER",
+      sourceAlertKey: alert.id,
+      productId: alert.productId,
+      period: String(period),
+      lang: language,
+      intentKey: window.crypto.randomUUID(),
+    });
+    navigate(`/app/profit-impact?${params.toString()}`);
   };
 
   const completedAlerts = queueAlerts.filter((alert) =>
@@ -1322,6 +1342,7 @@ export default function RecommendationsPage() {
                 onToggle={() => toggleComplete(topAlert.id)}
                 money={money}
                 confidenceScore={confidenceScore}
+                onTrack={topAlert.productId ? () => trackAlert(topAlert) : undefined}
               />
             )}
 
@@ -1515,6 +1536,16 @@ export default function RecommendationsPage() {
                             >
                               {alert.actionLabel} →
                             </button>
+                            {alert.productId ? (
+                              <button
+                                type="button"
+                                className="apply-button"
+                                style={{ marginTop: 8 }}
+                                onClick={() => trackAlert(alert)}
+                              >
+                                {messages.profitImpactPage.trackAction}
+                              </button>
+                            ) : null}
                           </div>
                         </article>
                       );

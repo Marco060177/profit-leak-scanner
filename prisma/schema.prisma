@@ -194,6 +194,7 @@ model ProfitImpactAction {
   id                     String                    @id @default(cuid())
   shop                   String
   idempotencyKey         String
+  measuringProductKey    String?
   actionType             String
   status                 String                    @default("ACCEPTED")
   sourceModule           String
@@ -224,6 +225,7 @@ model ProfitImpactAction {
   @@index([shop, productId, status])
   @@index([shop, sourceAlertKey])
   @@unique([shop, idempotencyKey])
+  @@unique([shop, measuringProductKey])
 }
 
 model ProfitImpactMeasurement {

@@ -17,7 +17,8 @@
     "prisma": "prisma",
     "graphql-codegen": "graphql-codegen",
     "vite": "vite",
-    "typecheck": "react-router typegen && tsc --noEmit"
+    "typecheck": "react-router typegen && tsc --noEmit",
+    "test:profit-impact": "node --experimental-strip-types --loader ./app/services/profit-impact-test-loader.mjs app/services/profit-impact.integration.ts"
   },
   "type": "module",
   "engines": {

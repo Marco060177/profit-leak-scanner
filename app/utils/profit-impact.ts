@@ -143,5 +143,9 @@ export function assertProfitImpactTransition(
 export function actionTypeRequiresProduct(
   actionType: ProfitImpactActionType,
 ) {
-  return actionType !== "OTHER";
+  return (
+    actionType === "PRICE_CHANGE" ||
+    actionType === "COGS_CHANGE" ||
+    actionType === "PRODUCT_ACTION"
+  );
 }
