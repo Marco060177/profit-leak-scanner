@@ -4,6 +4,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 
@@ -57,12 +58,14 @@ export const loader = async ({ request }: { request: Request }) => {
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
 
-  const data = await loadMarginDashboardData({
-    admin,
-    session,
-    period,
-    billingStatus: billing,
-  });
+  const data = growthAccess
+    ? await loadMarginDashboardData({
+      admin,
+      session,
+      period,
+      billingStatus: billing,
+    })
+    : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const alerts = generateProfitAlerts({
     summary: data.summary,

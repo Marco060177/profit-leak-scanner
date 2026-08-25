@@ -14,6 +14,7 @@ import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import { jsPDF } from "jspdf";
 import {
   generateAiMarginAnalysis,
@@ -293,13 +294,15 @@ export async function loader({ request }: { request: Request }) {
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
 
-  const dashboardData = await loadMarginDashboardData({
-    admin,
-    session,
-    period,
-    locale,
-    billingStatus: billing,
-  });
+  const dashboardData = growthAccess
+    ? await loadMarginDashboardData({
+      admin,
+      session,
+      period,
+      locale,
+      billingStatus: billing,
+    })
+    : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
     ? (await prisma.profitAssumptions.findUnique({
