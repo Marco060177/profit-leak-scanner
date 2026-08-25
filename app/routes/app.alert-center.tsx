@@ -33,6 +33,7 @@ import {
   syncProfitMonitor,
   updateProfitAlertState,
 } from "~/services/profit-monitor.server";
+import { findProfitImpactActionsBySourceKeys } from "~/services/profit-impact.server";
 
 export const links = () => [
   {
@@ -87,12 +88,14 @@ export const loader = async ({ request }: { request: Request }) => {
       },
     })
     : {};
+  const trackedActions = growthAccess ? await findProfitImpactActionsBySourceKeys({ shop: session.shop, sourceAlertKeys: alerts.map((alert) => alert.id) }) : [];
 
   return {
     ...data,
     billing,
     growthAccess,
     alertStates,
+    trackedActions,
   };
 };
 
@@ -398,12 +401,16 @@ function AlertCard({
   language,
   onOpen,
   onAcknowledge,
+  trackedAction,
+  onTrack,
 }: {
   alert: ProfitAlert;
   alertStates: ProfitAlertStateMap;
   language: Language;
   onOpen: (alert: ProfitAlert) => void;
   onAcknowledge: (alertId: string) => void;
+  trackedAction?: { id: string; status: string };
+  onTrack: (alert: ProfitAlert, trackedAction?: { id: string; status: string }) => void;
 }) {
   const { messages } = useI18n();
   const copy = messages.alertCenterPage;
@@ -639,6 +646,8 @@ function AlertCard({
                 {copy.acknowledge}
               </button>
             )}
+            {alert.productId && lifecycleStatus !== "resolved" ? <button type="button" className="apply-button" onClick={() => onTrack(alert, trackedAction)}>{trackedAction ? messages.profitImpactPage.openTrackedAction : messages.profitImpactPage.trackAction}</button> : null}
+            {lifecycleStatus === "resolved" && trackedAction?.status === "MEASURING" ? <small>{messages.profitImpactPage.alertResolvedMeasuring}</small> : null}
           </div>
         </div>
       </div>
@@ -783,6 +792,7 @@ export default function AlertCenterPage() {
     shopHandle,
     growthAccess,
     alertStates: initialAlertStates,
+    trackedActions,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -791,6 +801,13 @@ export default function AlertCenterPage() {
 
   const { language, locale, messages } = useI18n();
   const copy = messages.alertCenterPage;
+  const trackedByAlert = React.useMemo(() => new Map(trackedActions.filter((item) => item.sourceAlertKey).map((item) => [item.sourceAlertKey!, item])), [trackedActions]);
+  const handleTrack = (alert: ProfitAlert, tracked?: { id: string; status: string }) => {
+    if (tracked) { navigate(`/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`); return; }
+    if (!alert.productId) return;
+    const params = new URLSearchParams({ sourceModule: "ALERT_CENTER", sourceAlertKey: alert.id, productId: alert.productId, period: String(period), lang: language, intentKey: window.crypto.randomUUID() });
+    navigate(`/app/profit-impact?${params.toString()}`);
+  };
 
   const alerts = React.useMemo(
     () =>
@@ -1908,6 +1925,8 @@ export default function AlertCenterPage() {
                       language={language}
                       onOpen={handleOpenAlert}
                       onAcknowledge={handleAcknowledge}
+                      trackedAction={trackedByAlert.get(alert.id)}
+                      onTrack={handleTrack}
                     />
                   ))
                 ) : (

@@ -28,6 +28,7 @@ import {
   type ProfitAlertEffort,
   type ProfitBusinessAction,
 } from "~/utils/profit-monitor";
+import { findProfitImpactActionsBySourceKeys } from "~/services/profit-impact.server";
 
 export const links = () => [
   {
@@ -70,10 +71,18 @@ export const loader = async ({
     })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
+  const trackedActions = growthAccess
+    ? await findProfitImpactActionsBySourceKeys({
+      shop: session.shop,
+      sourceAlertKeys: generateProfitAlerts({ summary: dashboardData.summary, rows: dashboardData.rows, language, period, currencyCode: dashboardData.currencyCode }).map((alert) => alert.id),
+    })
+    : [];
+
   return {
     ...dashboardData,
     billing,
     growthAccess,
+    trackedActions,
   };
 };
 
@@ -507,13 +516,16 @@ export default function RecommendationsPage() {
     shopHandle,
     economicSnapshot,
     growthAccess,
+    trackedActions,
   } =
     useLoaderData() as LoaderData & {
       growthAccess: boolean;
+      trackedActions: Array<{ id: string; sourceAlertKey: string | null; status: string }>;
     };
   const navigate = useNavigate();
   const { language, locale, messages, t } = useI18n();
   const copy = messages.recommendationsPage;
+  const trackedByAlert = React.useMemo(() => new Map(trackedActions.filter((item) => item.sourceAlertKey).map((item) => [item.sourceAlertKey, item])), [trackedActions]);
 
   const money = (value: number) =>
     formatStoreMoney(value, currencyCode, locale);
@@ -678,6 +690,11 @@ export default function RecommendationsPage() {
 
   const trackAlert = (alert: ProfitAlert) => {
     if (!alert.productId) return;
+    const tracked = trackedByAlert.get(alert.id);
+    if (tracked) {
+      navigate(`/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`);
+      return;
+    }
     const params = new URLSearchParams({
       sourceModule: "PROFIT_ACTION_CENTER",
       sourceAlertKey: alert.id,
@@ -1543,7 +1560,7 @@ export default function RecommendationsPage() {
                                 style={{ marginTop: 8 }}
                                 onClick={() => trackAlert(alert)}
                               >
-                                {messages.profitImpactPage.trackAction}
+                                {(() => { const tracked = trackedByAlert.get(alert.id); return !tracked ? messages.profitImpactPage.trackAction : tracked.status === "MEASURING" ? messages.profitImpactPage.viewMeasurement : tracked.status === "COMPLETED" ? messages.profitImpactPage.viewMeasuredImpact : messages.profitImpactPage.openTrackedAction; })()}
                               </button>
                             ) : null}
                           </div>

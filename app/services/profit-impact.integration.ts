@@ -19,6 +19,10 @@ import {
 import { deleteShopData } from "~/services/shop-data-redaction.server";
 import { hasGrowthAccess } from "~/utils/billing.server";
 import { translations } from "~/utils/i18n";
+import {
+  aggregateProfitImpact,
+  classifyProfitImpactAction,
+} from "~/utils/profit-impact-summary";
 
 const migrationFiles = fs
   .readdirSync("prisma/migrations", { withFileTypes: true })
@@ -29,7 +33,12 @@ const migrationFiles = fs
 for (const file of migrationFiles) {
   const migration = fs.readFileSync(file, "utf8");
   for (const statement of migration.split(";").map((part) => part.trim()).filter(Boolean)) {
-    await prisma.$executeRawUnsafe(statement);
+    try {
+      await prisma.$executeRawUnsafe(statement);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("already exists") && !message.includes("duplicate column name")) throw error;
+    }
   }
 }
 
@@ -59,6 +68,26 @@ assert.equal(
   "Growth must pass the server-side gate",
 );
 
+const summaryFixture = (status: string, profit: number | null, margin: number | null, attribution: number | null, confidenceLevel = "HIGH") => ({
+  status,
+  measurements: [{ measurementType: "FINAL_14D", observedDays: 14, revenue: 0, economicProfit: 0, economicMarginPct: 0, units: 0,
+    measuredProfitChange: profit, measuredMarginChange: margin, estimatedAttributableImpact: attribution, confidenceLevel,
+    dataConfidenceScore: 90, attributionConfidenceScore: 80, attributionMethod: null, confidenceReasonsJson: null }],
+});
+const aggregate = aggregateProfitImpact([
+  summaryFixture("COMPLETED", 10, 2, 6),
+  summaryFixture("COMPLETED", 4, 4, null, "LOW"),
+  summaryFixture("INVALIDATED", 999, 99, 999),
+  summaryFixture("MEASURING", 999, 99, 999),
+]);
+assert.equal(aggregate.measuredProfitChange, 14);
+assert.equal(aggregate.estimatedAttributableProfit, 6, "null attribution must not become zero or enter the sum");
+assert.equal(aggregate.averageMarginLift, 3);
+assert.equal(aggregate.lowConfidenceCompleted, 1);
+assert.equal(classifyProfitImpactAction("ACCEPTED"), "active");
+assert.equal(classifyProfitImpactAction("COMPLETED"), "completed");
+assert.equal(classifyProfitImpactAction("INVALIDATED"), "attention");
+
 const first = await createProfitImpactAction({
   ...baseInput,
   idempotencyKey: "intent:first",
@@ -68,6 +97,9 @@ const retry = await createProfitImpactAction({
   idempotencyKey: "intent:first",
 });
 assert.equal(first.id, retry.id, "retry must return the existing action");
+const sourceFirst = await createProfitImpactAction({ ...baseInput, productId: "source-lookup", sourceAlertKey: "alert:stable", idempotencyKey: "source:first" });
+const sourceRetry = await createProfitImpactAction({ ...baseInput, productId: "source-lookup", sourceAlertKey: "alert:stable", idempotencyKey: "source:second" });
+assert.equal(sourceFirst.id, sourceRetry.id, "an integration source must not create duplicate actions");
 assert.equal(
   await prisma.profitImpactEvent.count({ where: { actionId: first.id } }),
   1,
@@ -381,6 +413,12 @@ assert.equal(insufficient.measuringProductKey, null);
 for (const language of ["en", "it", "fr", "de", "es", "pt-BR"] as const) {
   assert.ok(translations[language].profitImpactPage.estimatedAttributableImpact);
   assert.ok(translations[language].profitImpactPage.attributionConfidence);
+  for (const key of ["active", "completed", "needsAttention", "noActions", "measuredProfitChange", "estimatedAttributableProfit", "averageMarginLift", "measuredChangeDefinition", "attributableDefinition", "dataConfidenceDefinition", "attributionConfidenceDefinition"] as const) {
+    assert.ok(translations[language].profitImpactPage[key], `${language}.${key} is required`);
+  }
+  for (const status of ["ACCEPTED", "AWAITING_APPLICATION", "MEASURING", "COMPLETED", "INSUFFICIENT_DATA", "INVALIDATED", "CANCELLED"] as const) {
+    assert.ok(translations[language].profitImpactPage[status]);
+  }
 }
 
 await deleteShopData(shop);

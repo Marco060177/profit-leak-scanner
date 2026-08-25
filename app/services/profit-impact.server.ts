@@ -222,6 +222,14 @@ export async function createProfitImpactAction(
     80,
   );
 
+  if (data.sourceAlertKey) {
+    const existingSourceAction = await prisma.profitImpactAction.findFirst({
+      where: { shop, sourceAlertKey: data.sourceAlertKey, status: { not: "CANCELLED" } },
+      orderBy: { createdAt: "desc" },
+    });
+    if (existingSourceAction) return existingSourceAction;
+  }
+
   try {
     return await prisma.$transaction(async (tx) => {
       const action = await tx.profitImpactAction.create({ data });
@@ -298,6 +306,29 @@ export async function listProfitImpactActionsForShop({
     },
     orderBy: { createdAt: "desc" },
     take: integerInRange(take, "take", 1, 100),
+    include: {
+      measurements: { orderBy: { capturedAt: "asc" } },
+      events: { orderBy: { createdAt: "asc" } },
+    },
+  });
+}
+
+export async function findProfitImpactActionsBySourceKeys({
+  shop,
+  sourceAlertKeys,
+}: {
+  shop: string;
+  sourceAlertKeys: string[];
+}) {
+  const keys = [...new Set(sourceAlertKeys.map((key) => key.trim()).filter(Boolean))];
+  if (keys.length === 0) return [];
+  return prisma.profitImpactAction.findMany({
+    where: {
+      shop: requiredText(shop, "shop", 255).toLowerCase(),
+      sourceAlertKey: { in: keys },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, sourceAlertKey: true, status: true },
   });
 }
 

@@ -993,6 +993,7 @@ export default function RecoverySimulatorPage() {
       sourceModule: "RECOVERY_SIMULATOR",
       productId: selectedProduct.productId,
       actionType,
+      sourceAlertKey: `recovery:${selectedProduct.productId}:${actionType}`,
       appliedValue: String(appliedValue),
       targetValue: String(appliedValue),
       simulatedPrice: String(simulatedPrice),

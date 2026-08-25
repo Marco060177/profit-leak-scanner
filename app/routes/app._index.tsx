@@ -16,6 +16,9 @@ import { generateProfitAlerts, type ProfitAlert } from "~/utils/profit-monitor";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { syncProfitMonitor } from "~/services/profit-monitor.server";
+import { listProfitImpactActionsForShop } from "~/services/profit-impact.server";
+import { aggregateProfitImpact } from "~/utils/profit-impact-summary";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   buildMarginAssessment,
   type DecisionSignal,
@@ -305,6 +308,7 @@ export const loader = async ({ request }: { request: Request }) => {
   const locale = getLanguageLocale(language);
 
   const { admin, session } = await authenticate.admin(request);
+  const billing = await getBillingStatus(admin);
 
   try {
     await admin.graphql(`query { shop { id } }`);
@@ -337,7 +341,10 @@ export const loader = async ({ request }: { request: Request }) => {
       alertIds: alerts.map((alert) => alert.id),
     },
   });
-  return { ...data, alerts, alertStates };
+  const impactActions = hasGrowthAccess(billing) ? await listProfitImpactActionsForShop({ shop: session.shop, take: 100 }) : [];
+  const impactSummary = hasGrowthAccess(billing) ? aggregateProfitImpact(impactActions) : null;
+  const latestCompletedImpact = impactActions.find((action) => action.status === "COMPLETED") ?? null;
+  return { ...data, alerts, alertStates, impactSummary, latestCompletedImpact };
 };
 
 export default function DashboardV2() {
@@ -353,6 +360,8 @@ export default function DashboardV2() {
 
     taxAwareEconomics,
     economicSnapshot,
+    impactSummary,
+    latestCompletedImpact,
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
@@ -981,6 +990,8 @@ export default function DashboardV2() {
           setAnalysisLoading={setAnalysisLoading}
           setAnalysisText={setAnalysisText}
         />
+
+        {impactSummary ? <section className="panel" style={{marginBottom:24,display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}><div><div className="panel-eyebrow">Profit Impact Tracker</div><h2 className="panel-title">{impactSummary.actionsMeasuring} {messages.profitImpactPage.actionsMeasuring}</h2><p style={{color:"rgba(255,255,255,.62)"}}>{messages.profitImpactPage.estimatedAttributableProfit}: {impactSummary.estimatedAttributableProfit == null ? "—" : formatStoreMoney(impactSummary.estimatedAttributableProfit,currencyCode,locale)}{latestCompletedImpact ? ` · ${latestCompletedImpact.title}` : ""}</p></div><button className="primary-button" onClick={()=>navigate("/app/profit-impact")}>{messages.profitImpactPage.openTrackedAction}</button></section> : null}
 
         {shouldShowAdvancedTaxSetup ? (
           <div
