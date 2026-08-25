@@ -81,7 +81,7 @@ export const de = {
     freeTrialDays: "Tag kostenlose Testversion",
     supportedTaxAwareMarkets: "unterstützte Märkte mit integrierter Steuerlogik",
     plansOneDataFoundation: "Pläne, eine Datengrundlage",
-    starterPositioningTitle: "Verstehen Sie Ihren wahren Gewinn.",
+    starterPositioningTitle: "Verstehen Sie Ihren wirtschaftlichen Gewinn.",
     starterPositioningText:
       "Für Händler, die über den Umsatz hinausgehen möchten – COGS und ein klares Verständnis für Margen, Risiken und die tatsächliche Wirtschaftlichkeit des Geschäfts haben möchten.",
     growthPositioningTitle: "Entscheiden Sie, wie Sie es verbessern können.",
@@ -92,7 +92,7 @@ export const de = {
       "Eine vollständige Grundlage, um zu verstehen, woher der Shop-Gewinn kommt, wo er verloren geht und was er wirklich wert ist.",
     starterTrial: "14 Tage kostenlos · Stornierung über Shopify",
     coreMarginIntelligence: "ZENTRALE MARGENANALYSE",
-    realProfitTitle: "Tatsächlicher Gewinn, nicht nur Umsatz − COGS",
+    realProfitTitle: "Wirtschaftlicher Gewinn, nicht nur Umsatz − COGS",
     realProfitText:
       "MarginLab bringt VAT, GST und Umsatzsteuer direkt in die Wirtschaftsanalyse ein. Sofern verfügbar, verwendet es tatsächliche Shopify-Steuerdaten, trennt Brutto- und Nettowerte und berücksichtigt die erstattungsfähige Vorsteuer in unterstützten Profilen, sodass Margen und Gewinn die tatsächliche Wirtschaftlichkeit des Geschäfts besser widerspiegeln.",
     billingError: "Abrechnungsfehler",
@@ -191,7 +191,7 @@ export const de = {
     estimatedImpact: "geschätzte Auswirkung",
   },
   copilotConfidenceBar: {
-    overallConfidence: "Allgemeines Vertrauen",
+    overallConfidence: "Datenzuverlässigkeit",
   },
   copilotDecisionFeed: {
     eyebrow: "ENTSCHEIDUNGSFEED",
@@ -913,7 +913,7 @@ export const de = {
       f002: "Growth-Funktion",
       f003: "GEWINNPROGNOSE",
       f004: "Sehen Sie, wohin Ihr Gewinn gehen kann",
-      f005: "Modellieren Sie Wachstum, Margen, Kosten und Gewinnpotenziale. MarginLab wandelt aktuelle Shop-Daten in eine umsetzbare Prognose für 3, 6 oder 12 Monate um.",
+      f005: "Modellieren Sie Wachstum, Margen, Kosten und Verbesserungsszenarien. MarginLab nutzt aktuelle Shop-Daten und Ihre Annahmen, um Szenarien über 3, 6 oder 12 Monate zu vergleichen.",
       f006: "Steuerbewusste Wirtschaftsgrundlage",
       f007: "Entsperren Sie Growth →",
       f008: "WACHSTUMSMERKMALE",
@@ -1529,13 +1529,13 @@ export const de = {
     tax_profile_improves_the_economic_basis_used: "Das Steuerprofil verbessert die von MarginLab genutzte wirtschaftliche Basis. Es ersetzt keine Buchhaltung, Steuererklärung oder professionelle Steuerberatung und ermittelt nicht automatisch die steuerlichen Pflichten des Händlers.",
   },
   reportsNotificationsPage: {
-    eyebrow: "BERICHTE & BENACHRICHTIGUNGEN", title: "Wählen Sie, was Sie wo erhalten möchten", description: "Konfigurieren Sie den wöchentlichen Gewinnbericht und die MarginLab-E-Mail-Benachrichtigungen. Diese Einstellungen werden direkt vom Shop-Benachrichtigungssystem verwendet.",
-    recipientEyebrow: "EMPFÄNGER", recipient: "Empfänger-E-Mail", recipientNote: "Adresse, an die MarginLab Berichte und Warnungen sendet.",
+    eyebrow: "BERICHTE & BENACHRICHTIGUNGEN", title: "Wählen Sie, was Sie wo erhalten möchten", description: "Konfigurieren Sie den wöchentlichen Gewinnbericht und E-Mail-Benachrichtigungen zu Produktverkäufen. Diese Einstellungen werden direkt vom Shop-Benachrichtigungssystem verwendet.",
+    recipientEyebrow: "EMPFÄNGER", recipient: "Empfänger-E-Mail", recipientNote: "Adresse, an die MarginLab Wochenberichte und Benachrichtigungen zu Produktverkäufen sendet.",
     weeklyEyebrow: "WÖCHENTLICHER BERICHT", weeklyTitle: "Wöchentlicher Gewinnbericht", weeklyDescription: "Erhalten Sie eine wöchentliche Zusammenfassung der letzten 7 Tage mit Rentabilität, Risiken und nächsten Maßnahmen.", weeklyEnabled: "Aktivieren Sie den wöchentlichen Gewinnbericht", weeklyEnabledDesc: "Sendet den wöchentlichen Bericht automatisch an die konfigurierte E-Mail-Adresse.",
     language: "E-Mail-Sprache", day: "Liefertag", hour: "Lieferzeit", timezone: "Zeitzone", timezoneNote: "Wird verwendet, um den Tag und die Uhrzeit der Berichtszustellung zu interpretieren.",
     days: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
-    alertsEyebrow: "E-MAIL-Benachrichtigungen", alertsTitle: "Gewinnmonitor per E-Mail", alertsDescription: "Wählen Sie aus, welche Profit Monitor-Signale E-Mail-Benachrichtigungen generieren dürfen.", alertsEnabled: "E-Mail-Benachrichtigungen aktivieren", alertsEnabledDesc: "Ermöglicht MarginLab das Senden von Benachrichtigungen, wenn relevante neue Signale auftreten.",
-    critical: "Kritische Warnungen", criticalDesc: "Probleme, die eine priorisierte Prüfung erfordern.", warnings: "Warnungen", warningsDesc: "Signale, die Sie überprüfen sollten, bevor sie wichtiger werden.", opportunities: "Chancen", opportunitiesDesc: "Optimierungslücken und modellierte Szenarien, die es wert sind, evaluiert zu werden.",
-    save: "Einstellungen speichern", saving: "Speichern...", note: "MarginLab sendet ohne konfigurierte E-Mail-Adresse keine Berichte oder Warnungen automatisch.",
+    alertsEyebrow: "E-MAILS ZU PRODUKTVERKÄUFEN", alertsTitle: "Risiken bei Produktverkäufen per E-Mail", alertsDescription: "Erhalten Sie E-Mails zu geeigneten Risiken, die beim Verkauf eines Produkts erkannt werden. Andere Profit Monitor-Signale bleiben im Alert Center der App verfügbar.", alertsEnabled: "E-Mails zu Produktverkäufen aktivieren", alertsEnabledDesc: "MarginLab kann eine E-Mail senden, wenn bei einem verkauften Produkt Kosten fehlen, ein Verlust entsteht oder die Marge schwach ist.",
+    critical: "Kritische Warnungen", criticalDesc: "Produktverkäufe, die als verlustbringend erkannt wurden.", warnings: "Warnungen", warningsDesc: "Produktverkäufe mit fehlenden Kosten oder schwacher Marge.", opportunities: "Chancen", opportunitiesDesc: "Profit Monitor-Chancen bleiben in der App verfügbar; sofortige Produktverkaufs-E-Mails decken derzeit Produktrisiken ab.",
+    save: "Einstellungen speichern", saving: "Speichern...", note: "MarginLab sendet ohne konfigurierte E-Mail-Adresse keine Wochenberichte oder Benachrichtigungen zu Produktverkäufen.",
   },
 };

@@ -81,7 +81,7 @@ export const it = {
     freeTrialDays: "giorni di prova gratuita",
     supportedTaxAwareMarkets: "mercati tax-aware supportati",
     plansOneDataFoundation: "piani, un'unica fonte dati",
-    starterPositioningTitle: "Capisci il tuo vero profitto.",
+    starterPositioningTitle: "Comprendi il tuo profitto economico.",
     starterPositioningText:
       "Per merchant che vogliono andare oltre Revenue − COGS e capire margini, rischi e redditività economica con chiarezza.",
     growthPositioningTitle: "Decidi come migliorarlo.",
@@ -92,7 +92,7 @@ export const it = {
       "Una base completa per capire dove nasce, dove si perde e quanto vale davvero il profitto del tuo store.",
     starterTrial: "14 giorni gratis · annulla tramite Shopify",
     coreMarginIntelligence: "CORE MARGIN INTELLIGENCE",
-    realProfitTitle: "Profitto reale, non solo Revenue − COGS",
+    realProfitTitle: "Profitto economico, non solo Revenue − COGS",
     realProfitText:
       "MarginLab integra IVA, GST e Sales Tax direttamente nell’analisi economica. Usa i dati fiscali reali Shopify quando disponibili, distingue valori lordi e netti e considera la recuperabilità dell’imposta nei profili supportati, per mostrare margini e profitti più vicini alla reale economia dello store.",
     billingError: "Errore di fatturazione",
@@ -191,7 +191,7 @@ export const it = {
     estimatedImpact: "impatto stimato",
   },
   copilotConfidenceBar: {
-    overallConfidence: "Affidabilità complessiva",
+    overallConfidence: "Affidabilità dei dati",
   },
   copilotDecisionFeed: {
     eyebrow: "FEED DELLE DECISIONI",
@@ -915,7 +915,7 @@ export const it = {
       f002: "Funzione Growth",
       f003: "PREVISIONE DEL PROFITTO",
       f004: "Guarda dove può arrivare il tuo profitto",
-      f005: "Modella crescita, margini, costi e opportunità di recupero. MarginLab trasforma i dati attuali dello store in una previsione operativa a 3, 6 o 12 mesi.",
+      f005: "Modella crescita, margini, costi e scenari di recupero. MarginLab usa i dati attuali dello store e le tue ipotesi per confrontare scenari a 3, 6 o 12 mesi.",
       f006: "Base economica tax-aware",
       f007: "Sblocca Growth →",
       f008: "FUNZIONE GROWTH",
@@ -1524,13 +1524,13 @@ export const it = {
     tax_profile_improves_the_economic_basis_used: "Tax Profile serve a migliorare la base economica delle analisi MarginLab. Non sostituisce contabilità, dichiarazioni fiscali o consulenza professionale e non determina automaticamente gli obblighi tributari del merchant.",
   },
   reportsNotificationsPage: {
-    eyebrow: "REPORT E NOTIFICHE", title: "Scegli cosa ricevere e dove", description: "Configura il Weekly Profit Report e gli alert email di MarginLab. Queste preferenze vengono usate direttamente dal sistema di notifica dello store.",
-    recipientEyebrow: "DESTINATARIO", recipient: "Email destinataria", recipientNote: "Indirizzo a cui MarginLab invierà report e alert.",
+    eyebrow: "REPORT E NOTIFICHE", title: "Scegli cosa ricevere e dove", description: "Configura il Weekly Profit Report e gli alert email sulle vendite prodotto. Queste preferenze vengono usate direttamente dal sistema di notifica dello store.",
+    recipientEyebrow: "DESTINATARIO", recipient: "Email destinataria", recipientNote: "Indirizzo a cui MarginLab invierà report settimanali e alert sulle vendite prodotto.",
     weeklyEyebrow: "REPORT SETTIMANALE", weeklyTitle: "Weekly Profit Report", weeklyDescription: "Ricevi ogni settimana il riepilogo degli ultimi 7 giorni con redditività, rischi e prossime azioni.", weeklyEnabled: "Attiva Weekly Profit Report", weeklyEnabledDesc: "Invia automaticamente il report settimanale all'indirizzo configurato.",
     language: "Lingua email", day: "Giorno di invio", hour: "Ora di invio", timezone: "Fuso orario", timezoneNote: "Usato per interpretare giorno e ora del report.",
     days: ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"],
-    alertsEyebrow: "ALERT EMAIL", alertsTitle: "Profit Monitor via email", alertsDescription: "Scegli quali segnali del Profit Monitor possono generare una notifica email.", alertsEnabled: "Attiva alert email", alertsEnabledDesc: "Consente a MarginLab di inviare notifiche quando emergono nuovi segnali rilevanti.",
-    critical: "Alert critici", criticalDesc: "Problemi che richiedono una verifica prioritaria.", warnings: "Avvisi", warningsDesc: "Segnali da controllare prima che diventino più importanti.", opportunities: "Opportunità", opportunitiesDesc: "Gap e scenari di ottimizzazione che meritano una valutazione.",
-    save: "Salva preferenze", saving: "Salvataggio...", note: "MarginLab non invia automaticamente report o alert senza un indirizzo email configurato.",
+    alertsEyebrow: "ALERT EMAIL VENDITE PRODOTTO", alertsTitle: "Rischi di vendita prodotto via email", alertsDescription: "Ricevi email per i rischi idonei rilevati quando viene venduto un prodotto. Gli altri segnali del Profit Monitor restano disponibili nell'Alert Center in-app.", alertsEnabled: "Attiva alert email sulle vendite prodotto", alertsEnabledDesc: "Consente a MarginLab di inviare un'email quando un prodotto venduto ha un costo mancante, genera una perdita o ha un margine debole.",
+    critical: "Alert critici", criticalDesc: "Vendite prodotto rilevate come in perdita.", warnings: "Avvisi", warningsDesc: "Vendite prodotto con costo mancante o margine debole.", opportunities: "Opportunità", opportunitiesDesc: "Le opportunità del Profit Monitor restano disponibili in-app; gli alert immediati sulle vendite coprono attualmente i rischi prodotto.",
+    save: "Salva preferenze", saving: "Salvataggio...", note: "MarginLab non invia report settimanali o alert sulle vendite prodotto senza un indirizzo email configurato.",
   },
 };

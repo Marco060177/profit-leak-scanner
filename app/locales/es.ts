@@ -81,7 +81,7 @@ export const es = {
     freeTrialDays: "día de prueba gratis",
     supportedTaxAwareMarkets: "mercados compatibles con fiscalidad integrada",
     plansOneDataFoundation: "planes, una base de datos",
-    starterPositioningTitle: "Comprenda su beneficio real.",
+    starterPositioningTitle: "Comprenda su beneficio económico.",
     starterPositioningText:
       "Para comerciantes que desean ir más allá de los ingresos: COGS y comprender claramente los márgenes, los riesgos y la economía real de la tienda.",
     growthPositioningTitle: "Decide cómo mejorarlo.",
@@ -92,7 +92,7 @@ export const es = {
       "Una base completa para comprender de dónde provienen los beneficios de la tienda, dónde se filtran y cuánto valen realmente.",
     starterTrial: "14 días gratis · cancela a través de Shopify",
     coreMarginIntelligence: "INTELIGENCIA DE MARGEN CENTRAL",
-    realProfitTitle: "Beneficio real, no solo ingresos − COGS",
+    realProfitTitle: "Beneficio económico, no solo ingresos − COGS",
     realProfitText:
       "MarginLab incorpora VAT, GST y el impuesto sobre las ventas directamente al análisis económico. Utiliza datos fiscales reales de Shopify siempre que estén disponibles, separa los valores brutos y netos y contabiliza el impuesto soportado recuperable en los perfiles admitidos, de modo que los márgenes y las ganancias reflejen mejor la economía real de la tienda.",
     billingError: "error de facturación",
@@ -191,7 +191,7 @@ export const es = {
     estimatedImpact: "impacto estimado",
   },
   copilotConfidenceBar: {
-    overallConfidence: "Confianza general",
+    overallConfidence: "Confianza de los datos",
   },
   copilotDecisionFeed: {
     eyebrow: "ALIMENTACIÓN DE DECISIONES",
@@ -913,7 +913,7 @@ export const es = {
       f002: "Característica Growth",
       f003: "PREVISIÓN DE BENEFICIOS",
       f004: "Vea adónde pueden ir sus ganancias",
-      f005: "Modelar crecimiento, márgenes, costos y oportunidades de recuperación. MarginLab convierte los datos actuales de la tienda en un pronóstico procesable de 3, 6 o 12 meses.",
+      f005: "Modele crecimiento, márgenes, costes y escenarios de mejora. MarginLab utiliza los datos actuales de la tienda y sus supuestos para comparar escenarios de 3, 6 o 12 meses.",
       f006: "Base económica consciente de los impuestos",
       f007: "Desbloquear Growth →",
       f008: "CARACTERÍSTICA DE CRECIMIENTO",
@@ -1529,13 +1529,13 @@ export const es = {
     tax_profile_improves_the_economic_basis_used: "Tax Profile mejora la base económica utilizada por MarginLab. No reemplaza la contabilidad, las declaraciones de impuestos ni el asesoramiento fiscal profesional y no determina automáticamente las obligaciones fiscales del comerciante.",
   },
   reportsNotificationsPage: {
-    eyebrow: "INFORMES Y NOTIFICACIONES", title: "Elige qué recibir y dónde", description: "Configure el Informe de ganancias semanal y las alertas por correo electrónico MarginLab. Estas preferencias son utilizadas directamente por el sistema de notificación de la tienda.",
-    recipientEyebrow: "DESTINATARIO", recipient: "Correo electrónico del destinatario", recipientNote: "Dirección donde MarginLab enviará informes y alertas.",
+    eyebrow: "INFORMES Y NOTIFICACIONES", title: "Elige qué recibir y dónde", description: "Configure el Informe de ganancias semanal y las alertas por correo electrónico de ventas de productos. Estas preferencias son utilizadas directamente por el sistema de notificación de la tienda.",
+    recipientEyebrow: "DESTINATARIO", recipient: "Correo electrónico del destinatario", recipientNote: "Dirección donde MarginLab enviará informes semanales y alertas de ventas de productos.",
     weeklyEyebrow: "INFORME SEMANAL", weeklyTitle: "Informe de ganancias semanal", weeklyDescription: "Recibe un resumen semanal de los últimos 7 días con rentabilidad, riesgos y próximas acciones.", weeklyEnabled: "Habilitar informe de ganancias semanal", weeklyEnabledDesc: "Envía automáticamente el informe semanal a la dirección de correo electrónico configurada.",
     language: "Idioma del correo electrónico", day: "Día de entrega", hour: "tiempo de entrega", timezone: "Zona horaria", timezoneNote: "Se utiliza para interpretar el día y la hora de entrega del informe.",
     days: ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
-    alertsEyebrow: "ALERTAS POR CORREO ELECTRÓNICO", alertsTitle: "Monitor de ganancias por correo electrónico", alertsDescription: "Elija qué señales de Profit Monitor pueden generar notificaciones por correo electrónico.", alertsEnabled: "Habilitar alertas por correo electrónico", alertsEnabledDesc: "Permite que MarginLab envíe notificaciones cuando aparecen nuevas señales relevantes.",
-    critical: "Alertas críticas", criticalDesc: "Cuestiones que requieren revisión priorizada.", warnings: "Advertencias", warningsDesc: "Señales a revisar antes de que se vuelvan más importantes.", opportunities: "Oportunidades", opportunitiesDesc: "Brechas de optimización y escenarios modelados que vale la pena evaluar.",
-    save: "Guardar preferencias", saving: "Guardando...", note: "MarginLab no envía informes ni alertas automáticamente sin una dirección de correo electrónico configurada.",
+    alertsEyebrow: "ALERTAS DE VENTAS DE PRODUCTOS", alertsTitle: "Riesgos de ventas de productos por correo electrónico", alertsDescription: "Reciba correos sobre riesgos aptos detectados cuando se vende un producto. Las demás señales de Profit Monitor siguen disponibles en el Alert Center de la aplicación.", alertsEnabled: "Activar alertas de ventas de productos", alertsEnabledDesc: "Permite que MarginLab envíe un correo cuando a un producto vendido le falta el coste, genera pérdidas o tiene un margen débil.",
+    critical: "Alertas críticas", criticalDesc: "Ventas de productos detectadas como deficitarias.", warnings: "Advertencias", warningsDesc: "Ventas de productos con coste faltante o margen débil.", opportunities: "Oportunidades", opportunitiesDesc: "Las oportunidades de Profit Monitor siguen disponibles en la aplicación; los correos inmediatos de ventas cubren actualmente los riesgos de producto.",
+    save: "Guardar preferencias", saving: "Guardando...", note: "MarginLab no envía informes semanales ni alertas de ventas de productos sin una dirección de correo electrónico configurada.",
   },
 };

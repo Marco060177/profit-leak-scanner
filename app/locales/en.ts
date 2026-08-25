@@ -81,7 +81,7 @@ export const en = {
     freeTrialDays: "day free trial",
     supportedTaxAwareMarkets: "supported tax-aware markets",
     plansOneDataFoundation: "plans, one data foundation",
-    starterPositioningTitle: "Understand your real profit.",
+    starterPositioningTitle: "Understand your economic profit.",
     starterPositioningText:
       "For merchants who want to go beyond Revenue − COGS and clearly understand margins, risks and real store economics.",
     growthPositioningTitle: "Decide how to improve it.",
@@ -92,7 +92,7 @@ export const en = {
       "A complete foundation for understanding where store profit comes from, where it leaks and what it is really worth.",
     starterTrial: "14 days free · cancel through Shopify",
     coreMarginIntelligence: "CORE MARGIN INTELLIGENCE",
-    realProfitTitle: "Profitto reale, non solo Revenue − COGS",
+    realProfitTitle: "Economic profit, not just Revenue − COGS",
     realProfitText:
       "MarginLab brings VAT, GST and Sales Tax directly into economic analysis. It uses actual Shopify tax data whenever available, separates gross and net values and accounts for recoverable input tax in supported profiles, so margins and profit better reflect real store economics.",
     billingError: "Billing error",
@@ -191,7 +191,7 @@ export const en = {
     estimatedImpact: "estimated impact",
   },
   copilotConfidenceBar: {
-    overallConfidence: "Overall confidence",
+    overallConfidence: "Data confidence",
   },
   copilotDecisionFeed: {
     eyebrow: "DECISION FEED",
@@ -913,7 +913,7 @@ export const en = {
       f002: "Growth Feature",
       f003: "PROFIT FORECASTING",
       f004: "See where your profit can go",
-      f005: "Model growth, margins, costs and recovery opportunities. MarginLab turns current store data into an actionable 3, 6 or 12 month forecast.",
+      f005: "Model growth, margins, costs and recovery scenarios. MarginLab uses current store data and your assumptions to compare 3, 6 or 12 month scenarios.",
       f006: "Tax-aware economic basis",
       f007: "Unlock Growth →",
       f008: "GROWTH FEATURE",
@@ -1529,13 +1529,13 @@ export const en = {
     tax_profile_improves_the_economic_basis_used: "Tax Profile improves the economic basis used by MarginLab. It does not replace accounting, tax filings or professional tax advice and does not automatically determine the merchant's tax obligations.",
   },
   reportsNotificationsPage: {
-    eyebrow: "REPORTS & NOTIFICATIONS", title: "Choose what to receive and where", description: "Configure the Weekly Profit Report and MarginLab email alerts. These preferences are used directly by the store notification system.",
-    recipientEyebrow: "RECIPIENT", recipient: "Recipient email", recipientNote: "Address where MarginLab will send reports and alerts.",
+    eyebrow: "REPORTS & NOTIFICATIONS", title: "Choose what to receive and where", description: "Configure the Weekly Profit Report and Product Sale Email Alerts. These preferences are used directly by the store notification system.",
+    recipientEyebrow: "RECIPIENT", recipient: "Recipient email", recipientNote: "Address where MarginLab will send weekly reports and product-sale alerts.",
     weeklyEyebrow: "WEEKLY REPORT", weeklyTitle: "Weekly Profit Report", weeklyDescription: "Receive a weekly summary of the last 7 days with profitability, risks and next actions.", weeklyEnabled: "Enable Weekly Profit Report", weeklyEnabledDesc: "Automatically sends the weekly report to the configured email address.",
     language: "Email language", day: "Delivery day", hour: "Delivery time", timezone: "Time zone", timezoneNote: "Used to interpret the report delivery day and time.",
     days: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-    alertsEyebrow: "EMAIL ALERTS", alertsTitle: "Profit Monitor by email", alertsDescription: "Choose which Profit Monitor signals are allowed to generate email notifications.", alertsEnabled: "Enable email alerts", alertsEnabledDesc: "Allows MarginLab to send notifications when relevant new signals appear.",
-    critical: "Critical alerts", criticalDesc: "Issues that require prioritized review.", warnings: "Warnings", warningsDesc: "Signals to review before they become more important.", opportunities: "Opportunities", opportunitiesDesc: "Optimization gaps and modeled scenarios worth evaluating.",
-    save: "Save preferences", saving: "Saving...", note: "MarginLab does not send reports or alerts automatically without a configured email address.",
+    alertsEyebrow: "PRODUCT SALE EMAIL ALERTS", alertsTitle: "Product sale risks by email", alertsDescription: "Receive emails for eligible risks detected when a product is sold. Other Profit Monitor signals remain available in the in-app Alert Center.", alertsEnabled: "Enable product sale email alerts", alertsEnabledDesc: "Allows MarginLab to send an email when a sold product has a missing cost, generates a loss or has a weak margin.",
+    critical: "Critical alerts", criticalDesc: "Product sales detected as loss-generating.", warnings: "Warnings", warningsDesc: "Product sales with a missing cost or weak margin.", opportunities: "Opportunities", opportunitiesDesc: "Profit Monitor opportunities remain available in-app; immediate product-sale emails currently cover product risks.",
+    save: "Save preferences", saving: "Saving...", note: "MarginLab does not send weekly reports or product-sale alerts without a configured email address.",
   },
 };

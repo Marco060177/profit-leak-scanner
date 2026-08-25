@@ -65,7 +65,7 @@ export const ptBR = {
     "freeTrialDays": "teste gratuito de um dia",
     "supportedTaxAwareMarkets": "mercados com consciência fiscal apoiados",
     "plansOneDataFoundation": "planos, uma base de dados",
-    "starterPositioningTitle": "Entenda seu lucro real.",
+    "starterPositioningTitle": "Entenda seu lucro econômico.",
     "starterPositioningText": "Para comerciantes que desejam ir além da Receita - COGS e compreender claramente as margens, os riscos e a economia real da loja.",
     "growthPositioningTitle": "Decida como melhorá-lo.",
     "growthPositioningText": "Para comerciantes que desejam saber o que fazer primeiro, simule o impacto e preveja onde o lucro pode ir.",
@@ -73,7 +73,7 @@ export const ptBR = {
     "starterPromise": "Uma base completa para entender de onde vem o lucro da loja, onde ele vaza e quanto realmente vale.",
     "starterTrial": "14 dias grátis · cancelar através de Shopify",
     "coreMarginIntelligence": "INTELIGÊNCIA DE MARGEM PRINCIPAL",
-    "realProfitTitle": "Lucro real, receita não individual - COGS",
+    "realProfitTitle": "Lucro econômico, não apenas receita − COGS",
     "realProfitText": "MarginLab traz VAT, GST e Sales Tax diretamente para a análise econômica. Ele usa dados fiscais Shopify reais sempre que disponíveis, separa os valores brutos e líquidos e contabiliza o imposto sobre insumos recuperável em perfis suportados, para que as margens e o lucro reflitam melhor a economia real da loja.",
     "billingError": "Erro de faturamento",
     "continuePreview": "Continuar no modo de visualização",
@@ -244,7 +244,7 @@ export const ptBR = {
     "estimatedImpact": "impacto estimado"
   },
   "copilotConfidenceBar": {
-    "overallConfidence": "Confiança geral"
+    "overallConfidence": "Confiabilidade dos dados"
   },
   "copilotDecisionFeed": {
     "eyebrow": "ALIMENTAÇÃO DE DECISÃO",
@@ -961,7 +961,7 @@ export const ptBR = {
       "f002": "Recurso Growth",
       "f003": "PREVISÃO DE LUCRO",
       "f004": "Veja para onde seu lucro pode ir",
-      "f005": "Modele crescimento, margens, custos e oportunidades de recuperação. MarginLab transforma os dados atuais da loja em uma previsão acionável para 3, 6 ou 12 meses.",
+      "f005": "Modele crescimento, margens, custos e cenários de melhoria. MarginLab usa os dados atuais da loja e suas premissas para comparar cenários de 3, 6 ou 12 meses.",
       "f006": "Base econômica consciente dos impostos",
       "f007": "Desbloquear Growth →",
       "f008": "RECURSO DE CRESCIMENTO",
@@ -1677,10 +1677,10 @@ export const ptBR = {
   "reportsNotificationsPage": {
     "eyebrow": "RELATÓRIOS E NOTIFICAÇÕES",
     "title": "Escolha o que receber e onde",
-    "description": "Configure o Relatório de Lucro Semanal e os alertas por e-mail MarginLab. Essas preferências são utilizadas diretamente pelo sistema de notificação da loja.",
+    "description": "Configure o Relatório de Lucro Semanal e os alertas por e-mail sobre vendas de produtos. Essas preferências são utilizadas diretamente pelo sistema de notificação da loja.",
     "recipientEyebrow": "DESTINATÁRIO",
     "recipient": "E-mail do destinatário",
-    "recipientNote": "Endereço para onde MarginLab enviará relatórios e alertas.",
+    "recipientNote": "Endereço para onde MarginLab enviará relatórios semanais e alertas sobre vendas de produtos.",
     "weeklyEyebrow": "RELATÓRIO SEMANAL",
     "weeklyTitle": "Relatório de lucro semanal",
     "weeklyDescription": "Receba um resumo semanal dos últimos 7 dias com lucratividade, riscos e próximas ações.",
@@ -1700,19 +1700,19 @@ export const ptBR = {
       "Sexta-feira",
       "Sábado"
     ],
-    "alertsEyebrow": "ALERTAS DE E-MAIL",
-    "alertsTitle": "Monitor de lucro por e-mail",
-    "alertsDescription": "Escolha quais sinais do Profit Monitor têm permissão para gerar notificações por e-mail.",
-    "alertsEnabled": "Ativar alertas por e-mail",
-    "alertsEnabledDesc": "Permite que MarginLab envie notificações quando novos sinais relevantes aparecerem.",
+    "alertsEyebrow": "ALERTAS DE VENDAS DE PRODUTOS",
+    "alertsTitle": "Riscos de vendas de produtos por e-mail",
+    "alertsDescription": "Receba e-mails sobre riscos elegíveis detectados quando um produto é vendido. Os demais sinais do Profit Monitor continuam disponíveis no Alert Center do aplicativo.",
+    "alertsEnabled": "Ativar alertas de vendas de produtos",
+    "alertsEnabledDesc": "Permite que MarginLab envie um e-mail quando um produto vendido tem custo não informado, gera prejuízo ou apresenta margem baixa.",
     "critical": "Alertas críticos",
-    "criticalDesc": "Questões que requerem revisão priorizada.",
+    "criticalDesc": "Vendas de produtos identificadas como deficitárias.",
     "warnings": "Avisos",
-    "warningsDesc": "Sinais a serem revisados ​​antes que se tornem mais importantes.",
+    "warningsDesc": "Vendas de produtos com custo não informado ou margem baixa.",
     "opportunities": "Oportunidades",
-    "opportunitiesDesc": "Lacunas de otimização e cenários modelados que valem a pena avaliar.",
+    "opportunitiesDesc": "As oportunidades do Profit Monitor continuam disponíveis no aplicativo; os e-mails imediatos de vendas cobrem atualmente riscos de produto.",
     "save": "Salvar preferências",
     "saving": "Salvando...",
-    "note": "MarginLab não envia relatórios ou alertas automaticamente sem um endereço de e-mail configurado."
+    "note": "MarginLab não envia relatórios semanais nem alertas sobre vendas de produtos sem um endereço de e-mail configurado."
   }
 };
