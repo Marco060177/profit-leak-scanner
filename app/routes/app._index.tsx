@@ -991,8 +991,6 @@ export default function DashboardV2() {
           setAnalysisText={setAnalysisText}
         />
 
-        {impactSummary ? <section className="panel" style={{marginBottom:24,display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}><div><div className="panel-eyebrow">Profit Impact Tracker</div><h2 className="panel-title">{impactSummary.actionsMeasuring} {messages.profitImpactPage.actionsMeasuring}</h2><p style={{color:"rgba(255,255,255,.62)"}}>{messages.profitImpactPage.estimatedAttributableProfit}: {impactSummary.estimatedAttributableProfit == null ? "—" : formatStoreMoney(impactSummary.estimatedAttributableProfit,currencyCode,locale)}{latestCompletedImpact ? ` · ${latestCompletedImpact.title}` : ""}</p></div><button className="primary-button" onClick={()=>navigate("/app/profit-impact")}>{messages.profitImpactPage.openTrackedAction}</button></section> : null}
-
         {shouldShowAdvancedTaxSetup ? (
           <div
             style={{
@@ -1236,6 +1234,8 @@ export default function DashboardV2() {
           profitPoints={profitPoints}
           visualMarginPct={visualMarginPct}
         />
+
+        {impactSummary ? <section className="panel" style={{marginBottom:24,display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}><div><div className="panel-eyebrow">Profit Impact Tracker</div><h2 className="panel-title">{impactSummary.actionsMeasuring} {messages.profitImpactPage.actionsMeasuring}</h2><p style={{color:"rgba(255,255,255,.62)"}}>{messages.profitImpactPage.estimatedAttributableProfit}: {impactSummary.estimatedAttributableProfit == null ? "—" : formatStoreMoney(impactSummary.estimatedAttributableProfit,currencyCode,locale)}{latestCompletedImpact ? ` · ${latestCompletedImpact.title}` : ""}</p></div><button className="primary-button" onClick={()=>navigate("/app/profit-impact")}>{messages.profitImpactPage.openTrackedAction}</button></section> : null}
 
         {taxContext && taxAwareEconomics ? (
           <section
