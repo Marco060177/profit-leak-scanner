@@ -3,11 +3,20 @@ import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
+import productsStylesUrl from "~/styles/products-v2.css?url";
 import ProductRiskTable from "~/components/dashboard/ProductRiskTable";
 
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumEmptyState,
+  PremiumHero,
+  PremiumPanel,
+  StatusChip,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 
@@ -22,6 +31,10 @@ export const links = () => [
   {
     rel: "stylesheet",
     href: dashboardStylesUrl,
+  },
+  {
+    rel: "stylesheet",
+    href: productsStylesUrl,
   },
 ];
 
@@ -55,34 +68,20 @@ export const loader = async ({
 };
 
 export default function ProductsPage() {
-  const {
-    summary,
-    rows,
-    period,
-    shopHandle,
-    currencyCode,
-  } = useLoaderData() as LoaderData;
+  const { summary, rows, period, shopHandle, currencyCode } =
+    useLoaderData() as LoaderData;
 
   const navigate = useNavigate();
   const { language, locale, messages, t } = useI18n();
   const copy = messages.productsPage;
 
   const money = React.useCallback(
-    (value: number) =>
-      formatStoreMoney(
-        value,
-        currencyCode,
-        locale,
-      ),
+    (value: number) => formatStoreMoney(value, currencyCode, locale),
     [currencyCode, locale],
   );
 
   const pct = React.useCallback(
-    (value: number) =>
-      formatStorePercent(
-        value,
-        locale,
-      ),
+    (value: number) => formatStorePercent(value, locale),
     [locale],
   );
 
@@ -91,39 +90,26 @@ export default function ProductsPage() {
   const economicRows = React.useMemo<Row[]>(
     () =>
       rows.map((row) => {
-        const economicRevenue =
-          row.economicRevenue ?? row.revenue;
+        const economicRevenue = row.economicRevenue ?? row.revenue;
 
-        const economicCogs =
-          row.economicCogs ?? row.cogs;
+        const economicCogs = row.economicCogs ?? row.cogs;
 
-        const economicProfit =
-          row.economicProfit ?? row.profit;
+        const economicProfit = row.economicProfit ?? row.profit;
 
-        const economicMarginPct =
-          row.economicMarginPct ?? row.marginPct;
+        const economicMarginPct = row.economicMarginPct ?? row.marginPct;
 
         const qty = Math.max(0, row.qty);
 
-        const avgPrice =
-          qty > 0
-            ? economicRevenue / qty
-            : row.avgPrice;
+        const avgPrice = qty > 0 ? economicRevenue / qty : row.avgPrice;
 
-        const avgCost =
-          qty > 0
-            ? economicCogs / qty
-            : row.avgCost;
+        const avgCost = qty > 0 ? economicCogs / qty : row.avgCost;
 
         const breakEvenPrice = avgCost;
 
         const targetPrice =
-          avgCost > 0
-            ? avgCost / (1 - targetMarginPct / 100)
-            : avgPrice;
+          avgCost > 0 ? avgCost / (1 - targetMarginPct / 100) : avgPrice;
 
-        const targetDelta =
-          targetPrice - avgPrice;
+        const targetDelta = targetPrice - avgPrice;
 
         return {
           ...row,
@@ -136,9 +122,7 @@ export default function ProductsPage() {
           marginPct: economicMarginPct,
 
           losing: economicProfit < 0,
-          lowMargin:
-            economicMarginPct > 0 &&
-            economicMarginPct < 10,
+          lowMargin: economicMarginPct > 0 && economicMarginPct < 10,
 
           avgPrice,
           avgCost,
@@ -151,8 +135,7 @@ export default function ProductsPage() {
   );
 
   const economicLeak = economicRows.reduce(
-    (sum, row) =>
-      sum + (row.profit < 0 ? Math.abs(row.profit) : 0),
+    (sum, row) => sum + (row.profit < 0 ? Math.abs(row.profit) : 0),
     0,
   );
   const [onlyLosing, setOnlyLosing] = React.useState(false);
@@ -177,17 +160,16 @@ export default function ProductsPage() {
     ? economicRows.filter((row) => row.losing)
     : economicRows;
 
-  const allSortedRiskRows = [...visibleRows]
-    .sort((a, b) => {
-      const scoreA = productRiskScore(a);
-      const scoreB = productRiskScore(b);
+  const allSortedRiskRows = [...visibleRows].sort((a, b) => {
+    const scoreA = productRiskScore(a);
+    const scoreB = productRiskScore(b);
 
-      if (scoreA !== scoreB) {
-        return scoreB - scoreA;
-      }
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA;
+    }
 
-      return b.revenue - a.revenue;
-    });
+    return b.revenue - a.revenue;
+  });
 
   const sortedRiskRows = allSortedRiskRows.slice(0, visibleLimit);
 
@@ -205,7 +187,12 @@ export default function ProductsPage() {
     return "Healthy";
   };
 
-  const riskColor = (row: Row) => { if (row.losing) return "#ef4444"; if (row.missingCost) return "#f59e0b"; if (row.lowMargin) return "#ff6b4a"; return "#22c55e"; };
+  const riskColor = (row: Row) => {
+    if (row.losing) return "#ef4444";
+    if (row.missingCost) return "#f59e0b";
+    if (row.lowMargin) return "#ff6b4a";
+    return "#22c55e";
+  };
 
   const riskBackground = (row: Row) => {
     if (row.losing) return "rgba(239,68,68,0.16)";
@@ -214,30 +201,21 @@ export default function ProductsPage() {
     return "rgba(34,197,94,0.12)";
   };
 
-  const criticalProducts =
-    economicRows.filter((row) => row.losing).length;
+  const criticalProducts = economicRows.filter((row) => row.losing).length;
 
   const highProducts = economicRows.filter(
-    (row) =>
-      !row.losing &&
-      (row.missingCost || row.lowMargin),
+    (row) => !row.losing && (row.missingCost || row.lowMargin),
   ).length;
 
   const healthyProducts = economicRows.filter(
-    (row) =>
-      !row.losing &&
-      !row.missingCost &&
-      !row.lowMargin,
+    (row) => !row.losing && !row.missingCost && !row.lowMargin,
   ).length;
 
-  const totalProducts =
-    Math.max(economicRows.length, 1);
+  const totalProducts = Math.max(economicRows.length, 1);
 
   const criticalPct = (criticalProducts / totalProducts) * 100;
   const highPct = (highProducts / totalProducts) * 100;
   const healthyPct = (healthyProducts / totalProducts) * 100;
-
-
 
   const revenueAtRisk = economicRows
     .filter((row) => row.revenue > 0)
@@ -247,11 +225,7 @@ export default function ProductsPage() {
       marginGap: targetMarginPct - row.marginPct,
       riskValue: row.revenue * ((targetMarginPct - row.marginPct) / 100),
       riskLevel:
-        row.marginPct < 0
-          ? "Critical"
-          : row.marginPct < 10
-            ? "High"
-            : "Medium",
+        row.marginPct < 0 ? "Critical" : row.marginPct < 10 ? "High" : "Medium",
     }))
     .sort((a, b) => b.riskValue - a.riskValue);
 
@@ -267,290 +241,113 @@ export default function ProductsPage() {
     0,
   );
 
+  const productScore = Math.max(
+    0,
+    Math.min(100, Math.round(100 - criticalProducts * 14 - highProducts * 7)),
+  );
+  const productTone: VisualTone =
+    productScore < 40 ? "red" : productScore < 70 ? "amber" : "green";
+  const productScoreLabel =
+    productScore < 40
+      ? copy.score.highRisk
+      : productScore < 70
+        ? copy.score.moderateRisk
+        : copy.score.healthyLabel;
+
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="products" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="eyebrow">
-              {copy.eyebrow}
-            </div>
-
-            <div className="hero-title">
-              {copy.title}
-            </div>
-
-            <div className="hero-description">
-              {copy.description}
-            </div>
-
+        <PremiumHero
+          className="products-v2-hero"
+          tone={productTone}
+          eyebrow={copy.eyebrow}
+          title={copy.title}
+          description={copy.description}
+          actions={<StatusChip tone="green">{copy.taxAwareBasis}</StatusChip>}
+          visual={
             <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
+              className="products-v2-pulse"
+              aria-label={`${productScore}/100 ${productScoreLabel}`}
             >
-              {copy.taxAwareBasis}
-            </div>
-          </div>
-        </div>
-
-        <div className="hero-score-card" style={{ marginBottom: 28 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.1fr 1fr",
-              gap: 28,
-              alignItems: "stretch",
-            }}
-          >
-            <div>
+              <div className="products-v2-pulse-score">
+                <strong>{productScore}</strong>
+                <span>/100</span>
+              </div>
+              <StatusChip tone={productTone} pulse>
+                {productScoreLabel}
+              </StatusChip>
+              <div className="products-v2-pulse-track" aria-hidden="true">
+                <i style={{ width: `${productScore}%` }} />
+              </div>
               <div
-                className="eyebrow"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                }}
+                className="products-v2-pulse-distribution"
+                aria-hidden="true"
               >
-                <span>
-                  {copy.score.eyebrow}
-                </span>
+                <i
+                  className="is-critical"
+                  style={{ width: `${criticalPct}%` }}
+                />
+                <i className="is-high" style={{ width: `${highPct}%` }} />
+                <i className="is-healthy" style={{ width: `${healthyPct}%` }} />
+              </div>
+            </div>
+          }
+        />
 
+        <PremiumPanel className="products-v2-score" tone={productTone}>
+          <div className="products-v2-section-heading">
+            <div>
+              <div className="panel-eyebrow products-v2-tooltip-label">
+                <span>{copy.score.eyebrow}</span>
                 <MetricTooltip
                   content={{
                     title: copy.score.tooltipTitle,
-
                     description: copy.score.tooltipDescription,
-
                     note: copy.score.tooltipNote,
                   }}
                 />
               </div>
-
-              <div
-                style={{
-                  fontSize: 82,
-                  fontWeight: 950,
-                  lineHeight: 1,
-                  marginTop: 14,
-                  color: "#f3f4f6",
-                  letterSpacing: "-3px",
-                }}
-              >
-                {Math.max(
-                  0,
-                  Math.min(
-                    100,
-                    Math.round(100 - criticalProducts * 14 - highProducts * 7),
-                  ),
-                )}
-                <span style={{ fontSize: 34, opacity: 0.45 }}>/100</span>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 18,
-                  fontSize: 24,
-                  fontWeight: 900,
-                  color:
-                    criticalProducts > 0
-                      ? "#ff6b4a"
-                      : highProducts > 0
-                        ? "#f59e0b"
-                        : "#22c55e",
-                }}
-              >
+              <h2 className="panel-title">
                 {criticalProducts > 0
                   ? copy.score.critical
                   : highProducts > 0
                     ? copy.score.moderate
                     : copy.score.healthy}
-              </div>
-
-              <p
-                style={{
-                  marginTop: 14,
-                  color: "rgba(255,255,255,0.66)",
-                  maxWidth: 620,
-                  lineHeight: 1.7,
-                  fontSize: 15,
-                }}
-              >
-                {copy.score.description}
-              </p>
-
-              <div
-                style={{
-                  marginTop: 28,
-                  paddingTop: 22,
-                  borderTop: "1px solid rgba(255,255,255,0.08)",
-                  display: "grid",
-                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                  gap: 18,
-                }}
-              >
-                {[
-                  [
-                    copy.summary.productsAtRisk,
-                    `${criticalProducts + highProducts}`,
-                  ],
-
-                  [
-                    copy.summary.criticalProducts,
-                    `${criticalProducts}`,
-                  ],
-
-                  [
-                    copy.summary.economicLosses,
-                    money(economicLeak),
-                  ],
-
-                  [
-                    copy.summary.healthyProducts,
-                    `${healthyProducts}`,
-                  ],
-                ].map(([label, value]) => (
-                  <div key={label}>
-                    <div
-                      style={{
-                        fontSize: 34,
-                        fontWeight: 950,
-                        color: "#f3f4f6",
-                        lineHeight: 1,
-                      }}
-                    >
-                      {value}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 9,
-                        fontSize: 11,
-                        fontWeight: 900,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        color: "rgba(255,255,255,0.42)",
-                      }}
-                    >
-                      {label}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              </h2>
+              <p className="panel-subtitle">{copy.score.description}</p>
             </div>
-
-            <div
-              style={{
-                borderRadius: 28,
-                border: "1px solid rgba(255,255,255,0.08)",
-                background:
-                  "radial-gradient(circle at 50% 35%, rgba(255,90,54,0.20), transparent 28%), linear-gradient(180deg, rgba(16,22,35,0.96), rgba(7,11,20,0.96))",
-                padding: 32,
-                boxShadow: "0 24px 80px rgba(0,0,0,0.42)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minHeight: 260,
-              }}
-            >
-              {(() => {
-                const productScore = Math.max(
-                  0,
-                  Math.min(
-                    100,
-                    Math.round(100 - criticalProducts * 14 - highProducts * 7),
-                  ),
-                );
-
-                const productScoreColor =
-                  productScore < 40
-                    ? "#ff6b4a"
-                    : productScore < 70
-                      ? "#f59e0b"
-                      : "#22c55e";
-
-                const productScoreLabel =
-                  productScore < 40
-                    ? copy.score.highRisk
-                    : productScore < 70
-                      ? copy.score.moderateRisk
-                      : copy.score.healthyLabel;
-
-                return (
-                  <div
-                    style={{
-                      width: 170,
-                      height: 170,
-                      borderRadius: "50%",
-                      border: "16px solid rgba(255,255,255,0.08)",
-                      position: "relative",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: `0 0 46px ${productScoreColor}44`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: -16,
-                        borderRadius: "50%",
-                        background: `conic-gradient(${productScoreColor} ${productScore * 3.6
-                          }deg, transparent 0deg)`,
-                        mask:
-                          "radial-gradient(circle, transparent 58%, black 59%)",
-                        WebkitMask:
-                          "radial-gradient(circle, transparent 58%, black 59%)",
-                      }}
-                    />
-
-                    <div style={{ textAlign: "center", position: "relative" }}>
-                      <div
-                        style={{
-                          fontSize: 44,
-                          fontWeight: 950,
-                          color: "#f3f4f6",
-                          lineHeight: 1,
-                        }}
-                      >
-                        {productScore}
-                      </div>
-
-                      <div
-                        style={{
-                          marginTop: 8,
-                          fontSize: 12,
-                          fontWeight: 900,
-                          letterSpacing: "0.08em",
-                          textTransform: "uppercase",
-                          color: productScoreColor,
-                        }}
-                      >
-                        {productScoreLabel}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
+            <StatusChip tone={productTone}>{productScoreLabel}</StatusChip>
           </div>
-        </div>
+          <div className="products-v2-metrics">
+            <MetricCard
+              tone="red"
+              label={copy.summary.productsAtRisk}
+              value={criticalProducts + highProducts}
+            />
+            <MetricCard
+              tone="red"
+              label={copy.summary.criticalProducts}
+              value={criticalProducts}
+            />
+            <MetricCard
+              tone="orange"
+              label={copy.summary.economicLosses}
+              value={money(economicLeak)}
+            />
+            <MetricCard
+              tone="green"
+              label={copy.summary.healthyProducts}
+              value={healthyProducts}
+            />
+          </div>
+        </PremiumPanel>
 
         {biggestRiskProduct && (
-          <div
-            className="panel"
+          <PremiumPanel
+            className="products-v2-risk-panel"
+            tone="red"
             style={{
               marginBottom: 24,
               border: "1px solid rgba(255,115,60,0.26)",
@@ -558,9 +355,7 @@ export default function ProductsPage() {
                 "radial-gradient(circle at top left, rgba(255,115,60,0.08), transparent 34%), linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
             }}
           >
-            <div className="panel-eyebrow">
-              {copy.biggestRisk.eyebrow}
-            </div>
+            <div className="panel-eyebrow">{copy.biggestRisk.eyebrow}</div>
 
             <h2
               className="panel-title"
@@ -651,19 +446,15 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </PremiumPanel>
         )}
 
-        <div className="panel" style={{ marginBottom: 24 }}>
+        <PremiumPanel className="products-v2-panel" tone="orange">
           <div className="panel-header">
             <div>
-              <div className="panel-eyebrow">
-                {copy.distribution.eyebrow}
-              </div>
+              <div className="panel-eyebrow">{copy.distribution.eyebrow}</div>
 
-              <h2 className="panel-title">
-                {copy.distribution.title}
-              </h2>
+              <h2 className="panel-title">{copy.distribution.title}</h2>
             </div>
           </div>
 
@@ -681,129 +472,59 @@ export default function ProductsPage() {
                 count: criticalProducts,
                 pct: criticalPct,
                 color: "#ff6b4a",
-                description:
-                  copy.distribution.critical.description,
+                description: copy.distribution.critical.description,
               },
               {
                 label: copy.distribution.high.label,
                 count: highProducts,
                 pct: highPct,
                 color: "#f59e0b",
-                description:
-                  copy.distribution.high.description,
+                description: copy.distribution.high.description,
               },
               {
                 label: copy.distribution.healthy.label,
                 count: healthyProducts,
                 pct: healthyPct,
                 color: "#22c55e",
-                description:
-                  copy.distribution.healthy.description,
+                description: copy.distribution.healthy.description,
               },
             ].map((item) => (
-              <div
+              <MetricCard
                 key={item.label}
-                style={{
-                  borderRadius: 24,
-                  padding: 24,
-                  background:
-                    "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 36%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
-                  border: "1px solid rgba(255,115,60,0.18)",
-                  boxShadow:
-                    "inset 0 1px 0 rgba(255,255,255,0.035), 0 22px 55px rgba(0,0,0,0.30)",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 14,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 900,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "rgba(255,255,255,0.54)",
-                    }}
-                  >
-                    {item.label}
+                tone={
+                  item.color === "#22c55e"
+                    ? "green"
+                    : item.color === "#f59e0b"
+                      ? "amber"
+                      : "red"
+                }
+                label={item.label}
+                value={item.count}
+                detail={
+                  <>
+                    <strong>
+                      {t("productsPage.distribution.catalogShare", {
+                        value: pct(item.pct),
+                      })}
+                    </strong>
+                    <span>{item.description}</span>
+                  </>
+                }
+                visual={
+                  <div className="products-v2-metric-rail">
+                    <i
+                      style={{
+                        width: `${Math.min(100, Math.max(0, item.pct))}%`,
+                      }}
+                    />
                   </div>
-
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 999,
-                      background: item.color,
-                      boxShadow: `0 0 18px ${item.color}66`,
-                    }}
-                  />
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 18,
-                    fontSize: 52,
-                    fontWeight: 950,
-                    lineHeight: 1,
-                    color: item.color,
-                    letterSpacing: "-0.04em",
-                  }}
-                >
-                  {item.count}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "rgba(255,255,255,0.64)",
-                    fontWeight: 850,
-                  }}
-                >
-                  {t("productsPage.distribution.catalogShare", { value: pct(item.pct) })}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    minHeight: 42,
-                    color: "rgba(255,255,255,0.48)",
-                    fontSize: 13,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {item.description}
-                </div>
-
-                <div
-                  style={{
-                    height: 9,
-                    borderRadius: 999,
-                    background: "rgba(255,255,255,0.07)",
-                    overflow: "hidden",
-                    marginTop: 20,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${Math.min(100, Math.max(0, item.pct))}%`,
-                      height: "100%",
-                      borderRadius: 999,
-                      background: item.color,
-                      boxShadow: `0 0 18px ${item.color}55`,
-                    }}
-                  />
-                </div>
-              </div>
+                }
+              />
             ))}
           </div>
-        </div>
+        </PremiumPanel>
 
-        <div className="panel" style={{ marginBottom: 24 }}>
+        <PremiumPanel className="products-v2-panel" tone="amber">
           <div className="panel-header">
             <div>
               <div
@@ -814,9 +535,7 @@ export default function ProductsPage() {
                   gap: 7,
                 }}
               >
-                <span>
-                  {copy.revenueAtRisk.eyebrow}
-                </span>
+                <span>{copy.revenueAtRisk.eyebrow}</span>
 
                 <MetricTooltip
                   content={{
@@ -829,9 +548,7 @@ export default function ProductsPage() {
                 />
               </div>
 
-              <h2 className="panel-title">
-                {copy.revenueAtRisk.title}
-              </h2>
+              <h2 className="panel-title">{copy.revenueAtRisk.title}</h2>
 
               <p className="panel-subtitle">
                 {t("productsPage.revenueAtRisk.description", {
@@ -885,32 +602,18 @@ export default function ProductsPage() {
                       {product.productTitle}
                     </div>
 
-                    <div
-                      style={{
-                        marginTop: 12,
-                        display: "inline-flex",
-                        padding: "6px 10px",
-                        borderRadius: 999,
-                        background:
-                          product.riskLevel === "Critical"
-                            ? "rgba(239,68,68,0.14)"
-                            : product.riskLevel === "High"
-                              ? "rgba(249,115,22,0.14)"
-                              : "rgba(234,179,8,0.14)",
-                        color:
-                          product.riskLevel === "Critical"
-                            ? "#ff6b6b"
-                            : product.riskLevel === "High"
-                              ? "#ff8a4c"
-                              : "#facc15",
-                        fontSize: 11,
-                        fontWeight: 900,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                      }}
+                    <StatusChip
+                      className="products-v2-card-status"
+                      tone={
+                        product.riskLevel === "Critical"
+                          ? "red"
+                          : product.riskLevel === "High"
+                            ? "orange"
+                            : "amber"
+                      }
                     >
                       {translatedRiskLevel}
-                    </div>
+                    </StatusChip>
 
                     <div
                       style={{
@@ -964,9 +667,7 @@ export default function ProductsPage() {
                         fontWeight: 800,
                       }}
                     >
-                      <span>
-                        {copy.labels.profitGap}
-                      </span>
+                      <span>{copy.labels.profitGap}</span>
                       <span>{money(product.riskValue)}</span>
                     </div>
 
@@ -986,22 +687,23 @@ export default function ProductsPage() {
                 );
               })
             ) : (
-              <div
-                style={{
-                  gridColumn: "1 / -1",
-                  padding: 22,
-                  borderRadius: 18,
-                  background: "rgba(34,197,94,0.08)",
-                  border: "1px solid rgba(34,197,94,0.18)",
-                  color: "rgba(255,255,255,0.68)",
-                  fontWeight: 800,
-                }}
-              >
-                {copy.revenueAtRisk.empty}
-              </div>
+              <PremiumEmptyState
+                className="products-v2-risk-empty"
+                tone="green"
+                eyebrow={copy.revenueAtRisk.eyebrow}
+                title={copy.revenueAtRisk.empty}
+                description={copy.revenueAtRisk.cardDescription}
+                visual={
+                  <div className="products-v2-empty-bars">
+                    <i />
+                    <i />
+                    <i />
+                  </div>
+                }
+              />
             )}
           </div>
-        </div>
+        </PremiumPanel>
 
         <div
           style={{
