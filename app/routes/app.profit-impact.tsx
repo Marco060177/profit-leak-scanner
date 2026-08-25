@@ -393,9 +393,10 @@ function Card({ action, copy, locale, open }: any) {
             {action.productTitle || copy.storeAction}
           </div>
           <h3>{action.title}</h3>
-          <p>
-            {copy[action.actionType]} · {copy[action.sourceModule]}
-          </p>
+          <div className="impact-card-meta">
+            <span>{copy[action.actionType]}</span>
+            <small>{copy[action.sourceModule]}</small>
+          </div>
         </div>
         <span className={`impact-status status-${action.status.toLowerCase()}`}>
           {copy[action.status]}
@@ -421,6 +422,24 @@ function Card({ action, copy, locale, open }: any) {
         </>
       ) : null}
       <Results action={action} copy={copy} locale={locale} />
+      {result ? (
+        <div className="impact-confidence-row">
+          <span className="impact-confidence-data">
+            <i /> {copy.dataConfidence}{" "}
+            <strong>{result.dataConfidenceScore}/100</strong>
+          </span>
+          <span
+            className={`impact-confidence-attribution confidence-${String(result.confidenceLevel).toLowerCase()}`}
+          >
+            <i /> {copy.attributionConfidence}{" "}
+            <strong>
+              {result.attributionConfidenceScore == null
+                ? "—"
+                : `${result.attributionConfidenceScore}/100`}
+            </strong>
+          </span>
+        </div>
+      ) : null}
       {result?.confidenceLevel === "LOW" ? (
         <p className="impact-warning">{copy.lowConfidenceWarning}</p>
       ) : null}
@@ -470,18 +489,40 @@ export default function ProfitImpactPage() {
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="profit-impact" navigate={navigate} />
-        <header className="hero-header">
-          <div>
+        <header className="hero-header impact-hero">
+          <div className="impact-hero-copy">
             <div className="eyebrow">{copy.eyebrow}</div>
             <h1 className="hero-title">Profit Impact Tracker</h1>
             <p className="hero-description">{copy.description}</p>
+            <button
+              className="primary-button impact-hero-cta"
+              onClick={() => navigate("/app/recommendations")}
+            >
+              <span>＋</span>
+              {copy.trackAction}
+            </button>
           </div>
-          <button
-            className="primary-button"
-            onClick={() => navigate("/app/recommendations")}
-          >
-            {copy.trackAction}
-          </button>
+          <aside className="impact-hero-guide" aria-label={copy.trustTitle}>
+            <div className="impact-guide-orbit" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </div>
+            <ol>
+              <li>
+                <span>01</span>
+                <strong>{copy.trackAction}</strong>
+              </li>
+              <li>
+                <span>02</span>
+                <strong>{copy.MEASURING}</strong>
+              </li>
+              <li>
+                <span>03</span>
+                <strong>{copy.trustTitle}</strong>
+              </li>
+            </ol>
+          </aside>
         </header>
         {!data.growthAccess ? (
           <section className="panel">
@@ -499,13 +540,52 @@ export default function ProfitImpactPage() {
             {actionData?.error ? (
               <div className="error-banner">{actionData.error}</div>
             ) : null}
+            <section
+              className="impact-methodology-strip"
+              aria-label={copy.methodologyStatement}
+            >
+              <div>
+                <span className="impact-method-icon">◫</span>
+                <small>14d</small>
+                <strong>{copy.baseline}</strong>
+              </div>
+              <i>→</i>
+              <div>
+                <span className="impact-method-icon">✓</span>
+                <small>0d</small>
+                <strong>{copy.markApplied}</strong>
+              </div>
+              <i>→</i>
+              <div>
+                <span className="impact-method-icon">◔</span>
+                <small>7d</small>
+                <strong>{copy.MEASURING}</strong>
+              </div>
+              <i>→</i>
+              <div>
+                <span className="impact-method-icon">◆</span>
+                <small>14d</small>
+                <strong>{copy.COMPLETED}</strong>
+              </div>
+            </section>
             {data.reminders?.length ? (
               <section className="impact-list" style={{ marginBottom: 16 }}>
                 {data.reminders.map((reminder: any) => {
-                  const tracked = data.actions.find((item: any) => item.id === reminder.actionId);
+                  const tracked = data.actions.find(
+                    (item: any) => item.id === reminder.actionId,
+                  );
                   return (
-                    <button key={`${reminder.actionId}:${reminder.kind}`} className="impact-warning" onClick={() => open(reminder.actionId)}>
-                      {reminder.kind === "completed" ? copy.reminderCompleted : reminder.kind === "measurement_due" ? copy.reminderMeasurementDue : copy.reminderAwaiting} {tracked?.title}
+                    <button
+                      key={`${reminder.actionId}:${reminder.kind}`}
+                      className="impact-warning"
+                      onClick={() => open(reminder.actionId)}
+                    >
+                      {reminder.kind === "completed"
+                        ? copy.reminderCompleted
+                        : reminder.kind === "measurement_due"
+                          ? copy.reminderMeasurementDue
+                          : copy.reminderAwaiting}{" "}
+                      {tracked?.title}
                     </button>
                   );
                 })}
@@ -535,10 +615,28 @@ export default function ProfitImpactPage() {
                     ? "—"
                     : `${data.summary.averageMarginLift.toFixed(1)} pp`,
                 ],
-              ].map(([l, v]) => (
-                <div className="panel" key={l}>
+              ].map(([l, v], index) => (
+                <div
+                  className={`panel impact-kpi impact-kpi-${index + 1}`}
+                  key={l}
+                >
+                  <div className="impact-kpi-top">
+                    <span className="impact-kpi-icon">
+                      {["◔", "✓", "↗", "◇", "⌁"][index]}
+                    </span>
+                    <i />
+                  </div>
                   <small>{l}</small>
-                  <strong>{v}</strong>
+                  <strong className={v === "—" || v === 0 ? "is-zero" : ""}>
+                    {v}
+                  </strong>
+                  <div className="impact-kpi-spark" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                    <i />
+                  </div>
                 </div>
               ))}
             </section>
@@ -702,33 +800,83 @@ export default function ProfitImpactPage() {
             </section>
             {!visible.length ? (
               <section className="panel impact-empty">
-                <p>
-                  {data.actions.length === 0
-                    ? copy.noActions
-                    : tab === "completed"
-                      ? copy.noCompleted
-                      : tab === "attention"
-                        ? copy.noAttention
-                        : copy.noActive}
-                </p>
+                <div className="impact-empty-visual" aria-hidden="true">
+                  <div className="impact-radar-ring ring-1" />
+                  <div className="impact-radar-ring ring-2" />
+                  <div className="impact-radar-ring ring-3" />
+                  <i className="impact-radar-sweep" />
+                  <span className="impact-radar-dot dot-1" />
+                  <span className="impact-radar-dot dot-2" />
+                  <span className="impact-radar-center" />
+                </div>
+                <div className="impact-empty-copy">
+                  <div className="panel-eyebrow">{copy.eyebrow}</div>
+                  <h2>
+                    {data.actions.length === 0
+                      ? copy.trackAction
+                      : tab === "completed"
+                        ? copy.completed
+                        : tab === "attention"
+                          ? copy.needsAttention
+                          : copy.active}
+                  </h2>
+                  <p>
+                    {data.actions.length === 0
+                      ? copy.noActions
+                      : tab === "completed"
+                        ? copy.noCompleted
+                        : tab === "attention"
+                          ? copy.noAttention
+                          : copy.noActive}
+                  </p>
+                  <ol className="impact-empty-steps">
+                    <li>
+                      <span>1</span>
+                      {copy.trackAction}
+                    </li>
+                    <li>
+                      <span>2</span>
+                      {copy.MEASURING}
+                    </li>
+                    <li>
+                      <span>3</span>
+                      {copy.viewMeasuredImpact}
+                    </li>
+                  </ol>
+                  {data.actions.length === 0 ? (
+                    <button
+                      className="primary-button"
+                      onClick={() => navigate("/app/recommendations")}
+                    >
+                      {copy.trackAction} →
+                    </button>
+                  ) : null}
+                </div>
               </section>
             ) : null}
             <section className="panel impact-trust">
-              <h2>{copy.trustTitle}</h2>
+              <div className="impact-trust-heading">
+                <div className="panel-eyebrow">{copy.methodologyStatement}</div>
+                <h2>{copy.trustTitle}</h2>
+              </div>
               <div>
-                <p>
+                <p className="impact-trust-measured">
+                  <span>↗</span>
                   <strong>{copy.measuredChange}</strong>
                   {copy.measuredChangeDefinition}
                 </p>
-                <p>
+                <p className="impact-trust-attribution">
+                  <span>◇</span>
                   <strong>{copy.estimatedAttributableImpact}</strong>
                   {copy.attributableDefinition}
                 </p>
-                <p>
+                <p className="impact-trust-data">
+                  <span>▦</span>
                   <strong>{copy.dataConfidence}</strong>
                   {copy.dataConfidenceDefinition}
                 </p>
-                <p>
+                <p className="impact-trust-confidence">
+                  <span>◎</span>
                   <strong>{copy.attributionConfidence}</strong>
                   {copy.attributionConfidenceDefinition}
                 </p>
