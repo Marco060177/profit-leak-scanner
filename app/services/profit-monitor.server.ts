@@ -396,8 +396,11 @@ export async function updateProfitAlertState({
           : row.status;
 
   await prisma.$transaction(async (tx) => {
-    await tx.profitMonitorAlert.update({
-      where: { id: row.id },
+    const transition = await tx.profitMonitorAlert.updateMany({
+      where: {
+        id: row.id,
+        status: row.status,
+      },
       data: {
         status: nextStatus,
         isRead: true,
@@ -411,7 +414,7 @@ export async function updateProfitAlertState({
       },
     });
 
-    if (nextStatus !== row.status) {
+    if (transition.count === 1 && nextStatus !== row.status) {
       await tx.profitMonitorAlertEvent.create({
         data: {
           alertId: row.id,

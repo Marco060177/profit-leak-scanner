@@ -957,10 +957,21 @@ export async function processPendingNotificationDeliveries({
         message: errorMessage,
       });
 
-      await markNotificationDeliveryFailed({
-        id: delivery.id,
-        errorMessage,
-      });
+      try {
+        await markNotificationDeliveryFailed({
+          id: delivery.id,
+          errorMessage,
+        });
+      } catch (persistenceError) {
+        errors.push({
+          shop: delivery.shop,
+          stage: "delivery",
+          message:
+            persistenceError instanceof Error
+              ? `Unable to persist delivery failure: ${persistenceError.message}`
+              : "Unable to persist delivery failure.",
+        });
+      }
     }
   }
 

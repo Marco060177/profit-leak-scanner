@@ -81,6 +81,7 @@ export async function loader({ request }: { request: Request }) {
       session,
       period,
       locale,
+      billingStatus: billing,
     })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 

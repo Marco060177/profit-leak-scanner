@@ -29,6 +29,7 @@ export type DataConfidence = {
   usesCurrentShopifyCosts: true;
   taxBasis: "shopify_reported_not_allocated";
   refundBasis: "order_period";
+  sourceDataComplete: boolean;
 };
 
 export type EconomicSnapshot = {
@@ -126,6 +127,21 @@ function buildConfidence(
     reasons.push("COMPARISON_UNAVAILABLE");
   }
 
+  const currentPeriodComplete =
+    analysisContext?.dataCompleteness?.currentPeriodComplete ?? true;
+  const previousPeriodComplete =
+    analysisContext?.dataCompleteness?.previousPeriodComplete ?? true;
+
+  if (!currentPeriodComplete) {
+    reasons.push("CURRENT_PERIOD_SHOPIFY_CONNECTION_TRUNCATED");
+    score = Math.min(score, 49);
+  }
+
+  if (!previousPeriodComplete) {
+    reasons.push("PREVIOUS_PERIOD_SHOPIFY_CONNECTION_TRUNCATED");
+    score = Math.min(score, 69);
+  }
+
   const normalizedScore = Math.round(clamp(score, 0, 100));
 
   return {
@@ -142,6 +158,7 @@ function buildConfidence(
     usesCurrentShopifyCosts: true,
     taxBasis: "shopify_reported_not_allocated",
     refundBasis: "order_period",
+    sourceDataComplete: currentPeriodComplete && previousPeriodComplete,
   };
 }
 

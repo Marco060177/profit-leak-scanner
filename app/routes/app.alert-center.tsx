@@ -61,6 +61,7 @@ export const loader = async ({ request }: { request: Request }) => {
     admin,
     session,
     period,
+    billingStatus: billing,
   });
 
   const alerts = generateProfitAlerts({

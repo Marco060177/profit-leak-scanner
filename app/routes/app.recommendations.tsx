@@ -66,6 +66,7 @@ export const loader = async ({
       session,
       period,
       locale,
+      billingStatus: billing,
     })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 

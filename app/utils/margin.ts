@@ -144,6 +144,11 @@ export type AnalysisContext = {
   current: PeriodObservation;
   previous: PeriodObservation;
   comparisonAvailable: boolean;
+  dataCompleteness?: {
+    currentPeriodComplete: boolean;
+    previousPeriodComplete: boolean;
+    truncatedConnections: string[];
+  };
 };
 
 export type TaxSystem =

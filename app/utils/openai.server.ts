@@ -14,6 +14,16 @@ export const openai = new OpenAI({
 
 export type SupportedLanguage = Language;
 
+function requireResponseText(value: unknown) {
+  const text = typeof value === "string" ? value.trim() : "";
+
+  if (!text) {
+    throw new Error("OpenAI returned an empty response.");
+  }
+
+  return text;
+}
+
 type OfficialEconomicSnapshot = {
   currencyCode: string;
   monthlyOpportunity: number;
@@ -246,7 +256,7 @@ ${input.storeSummary}
 
   return {
     text: normalizeDeterministicReport({
-      text: response.output_text.trim(),
+      text: requireResponseText(response.output_text),
       language: input.language,
       snapshot: input.economicSnapshot,
     }),
@@ -340,6 +350,6 @@ ${input.context}
   });
 
   return {
-    text: response.output_text.trim(),
+    text: requireResponseText(response.output_text),
   };
 }

@@ -1,4 +1,4 @@
-import type { LoaderData, Row, TrendPoint } from "~/utils/margin";
+import type { BillingStatus, LoaderData, Row, TrendPoint } from "~/utils/margin";
 
 import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
@@ -83,6 +83,7 @@ type PeriodAggregate = {
   activeDays: number;
   firstOrderAt: string | null;
   lastOrderAt: string | null;
+  truncatedConnections: string[];
 };
 
 const ORDERS_QUERY = `#graphql
@@ -120,6 +121,9 @@ const ORDERS_QUERY = `#graphql
           }
 
           shippingLines(first: 10) {
+            pageInfo {
+              hasNextPage
+            }
             edges {
               node {
                 title
@@ -146,6 +150,9 @@ const ORDERS_QUERY = `#graphql
 
           refunds {
             refundLineItems(first: 100) {
+              pageInfo {
+                hasNextPage
+              }
               edges {
                 node {
                   quantity
@@ -184,6 +191,9 @@ const ORDERS_QUERY = `#graphql
           }
 
           lineItems(first: 150) {
+            pageInfo {
+              hasNextPage
+            }
             edges {
               node {
                 id
@@ -366,9 +376,24 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
   let refundedCogs = 0;
   let firstOrderAt: string | null = null;
   let lastOrderAt: string | null = null;
+  const truncatedConnections = new Set<string>();
 
   for (const edge of orderEdges) {
     const order = edge?.node;
+    if (order?.shippingLines?.pageInfo?.hasNextPage === true) {
+      truncatedConnections.add("shippingLines");
+    }
+    if (order?.lineItems?.pageInfo?.hasNextPage === true) {
+      truncatedConnections.add("lineItems");
+    }
+    if (
+      (order?.refunds ?? []).some(
+        (refund: any) =>
+          refund?.refundLineItems?.pageInfo?.hasNextPage === true,
+      )
+    ) {
+      truncatedConnections.add("refundLineItems");
+    }
     if (order?.taxExempt === true) {
       taxExemptOrderCount += 1;
     }
@@ -607,6 +632,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     activeDays: Object.keys(byDay).length,
     firstOrderAt,
     lastOrderAt,
+    truncatedConnections: [...truncatedConnections],
   };
 }
 
@@ -615,11 +641,13 @@ export async function loadMarginDashboardData({
   session,
   period,
   locale = "en-US",
+  billingStatus,
 }: {
   admin: any;
   session: any;
   period: string;
   locale?: string;
+  billingStatus?: BillingStatus;
 }): Promise<LoaderData> {
   const days = Number.parseInt(period, 10);
   const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
@@ -650,7 +678,7 @@ export async function loadMarginDashboardData({
   }
 }
 `),
-    getBillingStatus(admin),
+    billingStatus ?? getBillingStatus(admin),
   ]);
 
   const appDataJson = await appDataResponse.json();
@@ -1121,6 +1149,18 @@ export async function loadMarginDashboardData({
       },
       comparisonAvailable:
         current.orderCount > 0 && previous.orderCount > 0,
+      dataCompleteness: {
+        currentPeriodComplete: current.truncatedConnections.length === 0,
+        previousPeriodComplete: previous.truncatedConnections.length === 0,
+        truncatedConnections: [
+          ...current.truncatedConnections.map(
+            (connection) => `current:${connection}`,
+          ),
+          ...previous.truncatedConnections.map(
+            (connection) => `previous:${connection}`,
+          ),
+        ],
+      },
     },
   };
 

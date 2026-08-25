@@ -73,19 +73,15 @@ export async function getOrCreateNotificationPreferences({
   timezone?: string | null;
   language?: NotificationLanguage | string | null;
 }) {
-  const existing = await prisma.notificationPreferences.findUnique({
+  return prisma.notificationPreferences.upsert({
     where: { shop },
-  });
-
-  if (existing) return existing;
-
-  return prisma.notificationPreferences.create({
-    data: {
+    create: {
       shop,
       recipientEmail: normalizeEmail(recipientEmail),
       timezone: normalizeTimezone(timezone),
       language: normalizeNotificationLanguage(language),
     },
+    update: {},
   });
 }
 
@@ -232,22 +228,35 @@ export async function createAlertNotificationDelivery({
     return { created: false as const, delivery: existing };
   }
 
-  const delivery = await prisma.notificationDelivery.create({
-    data: {
-      shop,
-      channel: "email",
-      notificationType: "profit_alert",
-      recipient: normalizeEmail(recipient) ?? recipient.trim(),
-      alertKey: alert.id,
-      periodDays,
-      deduplicationKey,
-      subject: subject ?? null,
-      payloadJson: safeJsonStringify(
-        payload ?? { monitorEventId, alert },
-      ),
-      status: "pending",
-    },
-  });
+  let delivery;
+
+  try {
+    delivery = await prisma.notificationDelivery.create({
+      data: {
+        shop,
+        channel: "email",
+        notificationType: "profit_alert",
+        recipient: normalizeEmail(recipient) ?? recipient.trim(),
+        alertKey: alert.id,
+        periodDays,
+        deduplicationKey,
+        subject: subject ?? null,
+        payloadJson: safeJsonStringify(
+          payload ?? { monitorEventId, alert },
+        ),
+        status: "pending",
+      },
+    });
+  } catch (error) {
+    const concurrentDelivery =
+      await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
+
+    if (concurrentDelivery) {
+      return { created: false as const, delivery: concurrentDelivery };
+    }
+
+    throw error;
+  }
 
   return { created: true as const, delivery };
 }

@@ -32,6 +32,7 @@ export async function loader({ request }: { request: Request }) {
     session,
     period,
     locale,
+    billingStatus: billing,
   });
 
   const assumptions = growthAccess

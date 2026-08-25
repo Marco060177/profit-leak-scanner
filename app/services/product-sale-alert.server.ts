@@ -226,6 +226,19 @@ export async function queueProductSaleAlertsFromOrder({
     );
 
     const json = await response.json();
+
+    if (json?.errors?.length) {
+        throw new Error(
+            `Unable to load Shopify product costs: ${json.errors
+                .map((error: any) => error?.message ?? "Unknown GraphQL error")
+                .join("; ")}`,
+        );
+    }
+
+    if (!Array.isArray(json?.data?.nodes)) {
+        throw new Error("Shopify product cost response is incomplete.");
+    }
+
     const nodes = (json?.data?.nodes ?? []) as Array<VariantCostNode | null>;
     const byVariantId = new Map(
         nodes.filter((node): node is VariantCostNode => Boolean(node?.id)).map((node) => [node.id, node]),
