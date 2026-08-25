@@ -2,6 +2,7 @@ import prisma from "~/db.server";
 import { unauthenticated } from "~/shopify.server";
 import { prepareWeeklyProfitReport } from "~/services/weekly-profit-report.server";
 import { processPendingNotificationDeliveries } from "~/services/notification-delivery.server";
+import { processDueProfitImpactMeasurements } from "~/services/profit-impact-measurement.server";
 
 type NotificationPreferenceForScheduler = {
   shop: string;
@@ -199,6 +200,9 @@ export async function runNotificationScheduler({
       limit: clampInt(deliveryLimit, 1, 200),
     });
 
+  const profitImpactMeasurements =
+    await processDueProfitImpactMeasurements({ now });
+
   return {
     runAt: now.toISOString(),
     eligibleShops: preferences.length,
@@ -208,6 +212,7 @@ export async function runNotificationScheduler({
     skippedReports,
     failedReports,
     deliveries: deliveryResult,
+    profitImpactMeasurements,
     errors,
   };
 }

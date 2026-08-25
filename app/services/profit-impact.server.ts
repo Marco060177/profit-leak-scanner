@@ -383,7 +383,11 @@ export async function transitionProfitImpactAction(
         ...(toStatus === "COMPLETED" ? { completedAt: now } : {}),
         ...(toStatus === "CANCELLED" ? { cancelledAt: now } : {}),
         ...(isProfitImpactTerminalStatus(toStatus)
-          ? { measuringProductKey: null }
+          ? {
+            measuringProductKey: null,
+            measurementClaimType: null,
+            measurementClaimedAt: null,
+          }
           : {}),
       },
     });
@@ -577,6 +581,9 @@ export type CreateProfitImpactMeasurementInput = {
   confidenceLevel?: ProfitImpactConfidenceLevel | string;
   confidenceReasons?: unknown;
   sourceCompleteness?: unknown;
+  finalStatus?: "COMPLETED" | "INSUFFICIENT_DATA";
+  eventSource?: string;
+  eventNote?: string | null;
 };
 
 export async function createImmutableProfitImpactMeasurement(
@@ -590,6 +597,9 @@ export async function createImmutableProfitImpactMeasurement(
   const confidenceLevel = input.confidenceLevel ?? "LOW";
   if (!isProfitImpactConfidenceLevel(confidenceLevel)) {
     throw domainError("Unsupported Profit Impact confidence level.");
+  }
+  if (input.finalStatus && input.measurementType !== "FINAL_14D") {
+    throw domainError("Only FINAL_14D can finalize an action.");
   }
 
   const windowStart = normalizeDate(input.windowStart, "windowStart");
@@ -627,7 +637,7 @@ export async function createImmutableProfitImpactMeasurement(
         );
       }
 
-      return tx.profitImpactMeasurement.create({
+      const measurement = await tx.profitImpactMeasurement.create({
         data: {
           actionId,
           measurementType: input.measurementType,
@@ -720,17 +730,120 @@ export async function createImmutableProfitImpactMeasurement(
           ),
         },
       });
+
+      if (input.finalStatus) {
+        const completedAt = input.finalStatus === "COMPLETED"
+          ? new Date()
+          : null;
+        const transition = await tx.profitImpactAction.updateMany({
+          where: { id: actionId, shop, status: "MEASURING" },
+          data: {
+            status: input.finalStatus,
+            completedAt,
+            measuringProductKey: null,
+            measurementClaimType: null,
+            measurementClaimedAt: null,
+          },
+        });
+        if (transition.count !== 1) {
+          throw domainError("Profit Impact action changed concurrently.", 409);
+        }
+        await tx.profitImpactEvent.create({
+          data: {
+            actionId,
+            fromStatus: "MEASURING",
+            toStatus: input.finalStatus,
+            source: requiredText(
+              input.eventSource ?? "measurement-engine",
+              "eventSource",
+              80,
+            ),
+            note: optionalText(input.eventNote, "eventNote", MAX_NOTE_LENGTH),
+          },
+        });
+      } else {
+        await tx.profitImpactAction.updateMany({
+          where: { id: actionId, shop },
+          data: {
+            measurementClaimType: null,
+            measurementClaimedAt: null,
+          },
+        });
+      }
+
+      return measurement;
     });
   } catch (error) {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      throw domainError(
-        "This immutable measurement already exists for the action.",
-        409,
-      );
+      const existing = await prisma.profitImpactMeasurement.findFirst({
+        where: {
+          actionId,
+          measurementType: input.measurementType,
+          action: { shop },
+        },
+      });
+      if (existing) return existing;
     }
     throw error;
   }
+}
+
+export async function claimProfitImpactMeasurement({
+  shop,
+  actionId,
+  measurementType,
+  now = new Date(),
+  staleAfterMinutes = 20,
+}: {
+  shop: string;
+  actionId: string;
+  measurementType: "PROVISIONAL_7D" | "FINAL_14D";
+  now?: Date;
+  staleAfterMinutes?: number;
+}) {
+  const staleBefore = new Date(
+    now.getTime() - Math.max(1, staleAfterMinutes) * 60_000,
+  );
+  const result = await prisma.profitImpactAction.updateMany({
+    where: {
+      id: requiredText(actionId, "actionId", 255),
+      shop: requiredText(shop, "shop", 255).toLowerCase(),
+      status: "MEASURING",
+      OR: [
+        { measurementClaimType: null },
+        { measurementClaimedAt: { lt: staleBefore } },
+      ],
+      measurements: { none: { measurementType } },
+    },
+    data: {
+      measurementClaimType: measurementType,
+      measurementClaimedAt: now,
+    },
+  });
+  return result.count === 1;
+}
+
+export function releaseProfitImpactMeasurementClaim({
+  shop,
+  actionId,
+  measurementType,
+}: {
+  shop: string;
+  actionId: string;
+  measurementType: "PROVISIONAL_7D" | "FINAL_14D";
+}) {
+  return prisma.profitImpactAction.updateMany({
+    where: {
+      id: requiredText(actionId, "actionId", 255),
+      shop: requiredText(shop, "shop", 255).toLowerCase(),
+      measurementClaimType: measurementType,
+    },
+    data: {
+      measurementClaimType: null,
+      measurementClaimedAt: null,
+    },
+  });
 }

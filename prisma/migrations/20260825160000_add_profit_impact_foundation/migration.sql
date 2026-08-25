@@ -4,6 +4,8 @@ CREATE TABLE "ProfitImpactAction" (
     "shop" TEXT NOT NULL,
     "idempotencyKey" TEXT NOT NULL,
     "measuringProductKey" TEXT,
+    "measurementClaimType" TEXT,
+    "measurementClaimedAt" DATETIME,
     "actionType" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ACCEPTED',
     "sourceModule" TEXT NOT NULL,

@@ -9,7 +9,7 @@ type DateParts = {
   second: number;
 };
 
-function zonedParts(date: Date, timeZone: string): DateParts {
+export function zonedParts(date: Date, timeZone: string): DateParts {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -32,7 +32,7 @@ function zonedParts(date: Date, timeZone: string): DateParts {
   };
 }
 
-function safeTimeZone(value: string | null | undefined) {
+export function safeTimeZone(value: string | null | undefined) {
   const candidate = value?.trim() || "UTC";
   try {
     new Intl.DateTimeFormat("en", { timeZone: candidate }).format();
@@ -42,7 +42,7 @@ function safeTimeZone(value: string | null | undefined) {
   }
 }
 
-function localMidnightUtc(
+export function localMidnightUtc(
   dateOnly: string,
   timeZone: string,
 ) {
@@ -64,7 +64,7 @@ function localMidnightUtc(
   return new Date(candidate);
 }
 
-function shiftDateOnly(dateOnly: string, days: number) {
+export function shiftDateOnly(dateOnly: string, days: number) {
   const [year, month, day] = dateOnly.split("-").map(Number);
   return new Date(Date.UTC(year, month - 1, day + days))
     .toISOString()
@@ -180,6 +180,7 @@ export async function captureProductProfitImpactBaseline({
         usesCurrentShopifyCosts: true,
         timeZone: window.timeZone,
         policy: "14_COMPLETE_LOCAL_DAYS_BEFORE_APPLICATION",
+        grossProductSales: row.grossProductSales ?? null,
       },
     },
   };

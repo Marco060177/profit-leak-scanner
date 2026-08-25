@@ -24,6 +24,7 @@ import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
+import { uiMoney } from "~/utils/margin";
 
 import "~/styles/dashboard.css";
 
@@ -297,10 +298,34 @@ export default function ProfitImpactPage() {
   const data = useLoaderData() as any;
   const actionData = useActionData() as { error?: string } | undefined;
   const navigate = useNavigate();
-  const { messages } = useI18n();
+  const { messages, locale } = useI18n();
   const copy = messages.profitImpactPage;
   const prefill = data.prefill;
   const selected = data.selectedAction;
+  const baseline = selected?.measurements?.find(
+    (measurement: any) => measurement.measurementType === "BASELINE",
+  );
+  const provisional = selected?.measurements?.find(
+    (measurement: any) => measurement.measurementType === "PROVISIONAL_7D",
+  );
+  const finalMeasurement = selected?.measurements?.find(
+    (measurement: any) => measurement.measurementType === "FINAL_14D",
+  );
+  const result = finalMeasurement ?? provisional;
+  const money = (value: number | null | undefined) =>
+    value === null || value === undefined
+      ? "—"
+      : uiMoney(value, selected?.currencyCode ?? "USD", locale);
+  const reasons = (() => {
+    try {
+      const parsed = result?.confidenceReasonsJson
+        ? JSON.parse(result.confidenceReasonsJson)
+        : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  })();
 
   return (
     <div className="dashboard-shell">
@@ -355,6 +380,36 @@ export default function ProfitImpactPage() {
                 <h2 className="panel-title">{selected.title}</h2>
                 <p>{selected.changeDescription}</p>
                 <strong>{copy[selected.status as keyof typeof copy] ?? selected.status}</strong>
+                {baseline ? (
+                  <div style={{ marginTop: 18 }}>
+                    <div className="panel-eyebrow">{copy.baseline}</div>
+                    <p>{copy.baselineProfit}: {money(baseline.economicProfit)} · {copy.baselineMargin}: {baseline.economicMarginPct.toFixed(1)}%</p>
+                  </div>
+                ) : null}
+                {selected.status === "MEASURING" ? (
+                  <div style={{ marginTop: 18 }}>
+                    <div className="panel-eyebrow">{copy.measurementProgress}</div>
+                    <p>{result?.observedDays ?? 0} / 14 {copy.daysObserved}</p>
+                    {provisional ? <p>{copy.earlyResult}</p> : null}
+                  </div>
+                ) : null}
+                {result ? (
+                  <div style={{ marginTop: 18, display: "grid", gap: 8 }}>
+                    <div><strong>{copy.measuredChange}</strong></div>
+                    <div>{copy.profitChange}: {money(result.measuredProfitChange)}</div>
+                    <div>{copy.marginChange}: {result.measuredMarginChange?.toFixed(1) ?? "—"} pp</div>
+                    <div>{copy.revenueChange}: {money(result.measuredRevenueChange)}</div>
+                    <div>{copy.unitsChange}: {result.measuredUnitsChange?.toFixed(1) ?? "—"}</div>
+                    <div>{copy.estimatedAttributableImpact}: {money(result.estimatedAttributableImpact)}</div>
+                    <div>{copy.dataConfidence}: {result.dataConfidenceScore}/100</div>
+                    <div>{copy.attributionConfidence}: {result.attributionConfidenceScore ?? 0}/100 · {result.confidenceLevel}</div>
+                    <div>{copy.methodology}: {result.attributionMethod ?? "NOT_ESTIMATED"}</div>
+                    {reasons.length > 0 ? <div>{copy.reasons}: {reasons.join(", ")}</div> : null}
+                  </div>
+                ) : null}
+                {selected.status === "INSUFFICIENT_DATA" ? (
+                  <p style={{ marginTop: 16 }}>{copy.insufficientExplanation}</p>
+                ) : null}
                 {selected.status === "AWAITING_APPLICATION" ? (
                   <Form method="post" style={{ marginTop: 18 }}>
                     <input type="hidden" name="intent" value="apply" />
