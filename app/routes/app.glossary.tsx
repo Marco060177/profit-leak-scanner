@@ -585,7 +585,7 @@ export default function GlossaryPage() {
                   label: copy.statsAreas,
                 },
                 {
-                  value: "IT / EN",
+                  value: 6,
                   label: copy.statsLanguages,
                 },
                 {

@@ -349,7 +349,6 @@ export default function DashboardV2() {
     currencyCode,
     timeZone,
     analysisContext,
-    alerts,
     taxContext,
 
     taxAwareEconomics,
@@ -362,6 +361,18 @@ export default function DashboardV2() {
 
   const { language, locale, messages, t } = useI18n();
   const copy = messages.dashboardPage;
+
+  const alerts = React.useMemo(
+    () =>
+      generateProfitAlerts({
+        summary,
+        rows,
+        language,
+        period,
+        currencyCode,
+      }),
+    [summary, rows, language, period, currencyCode],
+  );
 
   const economicRevenue =
     summary.economicRevenue ?? summary.revenue;
