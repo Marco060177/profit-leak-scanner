@@ -376,6 +376,29 @@ export async function claimPendingNotificationDelivery(id: string) {
   return result.count === 1;
 }
 
+export const STALE_NOTIFICATION_PROCESSING_MS = 15 * 60 * 1000;
+
+export async function recoverStaleProcessingNotificationDeliveries({
+  now = new Date(),
+  staleAfterMs = STALE_NOTIFICATION_PROCESSING_MS,
+}: {
+  now?: Date;
+  staleAfterMs?: number;
+} = {}) {
+  const safeStaleAfterMs = Math.max(60_000, staleAfterMs);
+  const staleBefore = new Date(now.getTime() - safeStaleAfterMs);
+
+  return prisma.notificationDelivery.updateMany({
+    where: {
+      status: "processing",
+      updatedAt: { lte: staleBefore },
+    },
+    data: {
+      status: "pending",
+    },
+  });
+}
+
 export async function markNotificationDeliveryFailed({
   id,
   errorMessage,

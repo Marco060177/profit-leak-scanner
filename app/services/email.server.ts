@@ -7,6 +7,7 @@ export type SendEmailInput = {
   text?: string;
   replyTo?: string;
   from?: string;
+  idempotencyKey?: string;
 };
 
 export type SendEmailResult = {
@@ -42,6 +43,7 @@ export async function sendEmail({
   text,
   replyTo,
   from,
+  idempotencyKey,
 }: SendEmailInput): Promise<SendEmailResult> {
   const recipients = (Array.isArray(to) ? to : [to])
     .map((recipient) => recipient.trim())
@@ -53,16 +55,19 @@ export async function sendEmail({
 
   const defaultReplyTo = getDefaultReplyTo();
 
-  const response = await getResendClient().emails.send({
-    from: from?.trim() || getDefaultFrom(),
-    to: recipients,
-    subject: subject.trim(),
-    html,
-    ...(text ? { text } : {}),
-    ...(replyTo?.trim() || defaultReplyTo
-      ? { replyTo: replyTo?.trim() || defaultReplyTo }
-      : {}),
-  });
+  const response = await getResendClient().emails.send(
+    {
+      from: from?.trim() || getDefaultFrom(),
+      to: recipients,
+      subject: subject.trim(),
+      html,
+      ...(text ? { text } : {}),
+      ...(replyTo?.trim() || defaultReplyTo
+        ? { replyTo: replyTo?.trim() || defaultReplyTo }
+        : {}),
+    },
+    idempotencyKey ? { idempotencyKey } : undefined,
+  );
 
   if (response.error) {
     throw new Error(

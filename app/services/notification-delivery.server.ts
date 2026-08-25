@@ -4,6 +4,7 @@ import {
   markNotificationDeliveryFailed,
   markNotificationDeliverySent,
   normalizeNotificationLanguage,
+  recoverStaleProcessingNotificationDeliveries,
   type NotificationLanguage,
 } from "~/services/notification.server";
 import { sendEmail } from "~/services/email.server";
@@ -818,6 +819,15 @@ export async function processPendingNotificationDeliveries({
   currencyCode?: string;
   notificationType?: "profit_alert" | "weekly_profit_report";
 } = {}) {
+  const staleRecovery =
+    await recoverStaleProcessingNotificationDeliveries();
+
+  if (staleRecovery.count > 0) {
+    console.info("[NOTIFICATION DELIVERY] Recovered stale processing deliveries.", {
+      count: staleRecovery.count,
+    });
+  }
+
   /*
    * When a specific notification type is requested (for example by the
    * Weekly Report test route), scan a larger slice of the pending queue first
@@ -924,6 +934,7 @@ export async function processPendingNotificationDeliveries({
         subject: delivery.subject || email.subject,
         html: email.html,
         text: email.text,
+        idempotencyKey: delivery.deduplicationKey,
       });
 
       await markNotificationDeliverySent({
@@ -955,6 +966,7 @@ export async function processPendingNotificationDeliveries({
 
   return {
     processed: deliveries.length,
+    recoveredStale: staleRecovery.count,
     sent,
     failed,
     skipped,
