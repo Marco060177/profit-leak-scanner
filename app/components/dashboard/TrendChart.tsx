@@ -1,6 +1,12 @@
 import { uiMoney as money, pct } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumPanel,
+  ResponsiveGrid,
+  StatusChip,
+} from "~/components/ui/VisualSystem";
 
 type ChartPoint = {
   date: string;
@@ -32,7 +38,10 @@ function buildPath(
   key: "revenue" | "profit",
 ) {
   return chartData
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${getX(index)} ${getY(point[key])}`)
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"} ${getX(index)} ${getY(point[key])}`,
+    )
     .join(" ");
 }
 
@@ -120,31 +129,15 @@ export default function TrendChart({
     });
 
   return (
-    <div className="panel">
+    <PremiumPanel className="dashboard-v2-trend" tone="blue">
       <div className="section-header">
         <div>
-          <div className="section-title">
-            {copy.title}
-          </div>
+          <div className="section-title">{copy.title}</div>
 
-          <div className="section-subtitle">
-            {copy.subtitle}
-          </div>
+          <div className="section-subtitle">{copy.subtitle}</div>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "12px 16px",
-            borderRadius: 999,
-            background:
-              "linear-gradient(135deg, rgba(34,197,94,0.16), rgba(15,23,42,0.88))",
-            border: "1px solid rgba(34,197,94,0.20)",
-            boxShadow: "0 18px 50px rgba(34,197,94,0.10)",
-          }}
-        >
+        <StatusChip tone="green" className="dashboard-v2-trend-status">
           <div
             style={{
               fontSize: 22,
@@ -155,18 +148,9 @@ export default function TrendChart({
             ↗ {pct(visualMarginPct)}
           </div>
 
-          <div
-            style={{
-              color: "rgba(255,255,255,0.58)",
-              fontSize: 12,
-              fontWeight: 800,
-              lineHeight: 1.25,
-            }}
-          >
-            {copy.profitMargin}
-            <br />
-            {copy.currentPeriod}
-          </div>
+          <span>
+            {copy.profitMargin} · {copy.currentPeriod}
+          </span>
 
           <MetricTooltip
             content={{
@@ -176,7 +160,7 @@ export default function TrendChart({
               note: copy.profitMarginTooltipNote,
             }}
           />
-        </div>
+        </StatusChip>
       </div>
 
       <div
@@ -265,7 +249,13 @@ export default function TrendChart({
           style={{ width: "100%", height: 360, display: "block" }}
         >
           <defs>
-            <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient
+              id="revenueAreaGradient"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="1"
+            >
               <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.42" />
               <stop offset="68%" stopColor="#3b82f6" stopOpacity="0.10" />
               <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
@@ -373,67 +363,29 @@ export default function TrendChart({
           })}
         </svg>
 
-        <div
-          style={{
-            marginTop: 16,
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-            gap: 14,
-          }}
-        >
+        <ResponsiveGrid columns={3} className="dashboard-v2-trend-metrics">
           {[
-            [
-              copy.totalRevenueMetric,
-              money(totalRevenue),
-              "#60a5fa",
-            ],
+            [copy.totalRevenueMetric, money(totalRevenue), "#60a5fa"],
 
-            [
-              copy.totalProfitMetric,
-              money(totalProfit),
-              "#22c55e",
-            ],
+            [copy.totalProfitMetric, money(totalProfit), "#22c55e"],
 
-            [
-              copy.profitMarginMetric,
-              pct(visualMarginPct),
-              "#a855f7",
-            ],
+            [copy.profitMarginMetric, pct(visualMarginPct), "#a855f7"],
           ].map(([label, value, color]) => (
-            <div
+            <MetricCard
               key={label}
-              style={{
-                padding: 16,
-                borderRadius: 18,
-                background: "rgba(255,255,255,0.045)",
-                border: "1px solid rgba(255,255,255,0.07)",
-              }}
-            >
-              <div
-                style={{
-                  color: "rgba(255,255,255,0.52)",
-                  fontSize: 12,
-                  fontWeight: 850,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                }}
-              >
-                {label}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 8,
-                  color,
-                  fontSize: 24,
-                  fontWeight: 950,
-                }}
-              >
-                {value}
-              </div>
-            </div>
+              density="compact"
+              tone={
+                color === "#60a5fa"
+                  ? "blue"
+                  : color === "#22c55e"
+                    ? "green"
+                    : "violet"
+              }
+              label={label}
+              value={value}
+            />
           ))}
-        </div>
+        </ResponsiveGrid>
 
         {firstDate && lastDate ? (
           <div
@@ -449,6 +401,6 @@ export default function TrendChart({
           </div>
         ) : null}
       </div>
-    </div>
+    </PremiumPanel>
   );
 }

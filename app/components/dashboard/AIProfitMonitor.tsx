@@ -6,6 +6,7 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import { uiMoney as money } from "~/utils/margin";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import { PremiumPanel, ResponsiveGrid } from "~/components/ui/VisualSystem";
 
 type Props = {
   alerts: ProfitAlert[];
@@ -479,7 +480,11 @@ export default function AIProfitMonitor({
   );
 
   return (
-    <section
+    <PremiumPanel
+      className="dashboard-v2-monitor"
+      tone={
+        counts.critical > 0 ? "red" : counts.warning > 0 ? "amber" : "green"
+      }
       style={{
         position: "relative",
         overflow: "hidden",
@@ -633,7 +638,9 @@ export default function AIProfitMonitor({
         </div>
       </div>
 
-      <div
+      <ResponsiveGrid
+        columns={4}
+        className="dashboard-v2-monitor-counts"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(4,minmax(0,1fr))",
@@ -641,23 +648,14 @@ export default function AIProfitMonitor({
           marginTop: 22,
         }}
       >
-        <AlertCounter
-          severity="critical"
-          count={counts.critical}
-        />
+        <AlertCounter severity="critical" count={counts.critical} />
 
-        <AlertCounter
-          severity="warning"
-          count={counts.warning}
-        />
+        <AlertCounter severity="warning" count={counts.warning} />
 
-        <AlertCounter
-          severity="opportunity"
-          count={counts.opportunity}
-        />
+        <AlertCounter severity="opportunity" count={counts.opportunity} />
 
         <AlertCounter severity="info" count={counts.info} />
-      </div>
+      </ResponsiveGrid>
 
       <div
         style={{
@@ -704,9 +702,7 @@ export default function AIProfitMonitor({
             >
               <span>{highestSeverityStyle.icon}</span>
 
-              <span>
-                {copy.highestPriority}
-              </span>
+              <span>{copy.highestPriority}</span>
             </div>
 
             <div
@@ -917,6 +913,6 @@ export default function AIProfitMonitor({
           })}
         </div>
       )}
-    </section>
+    </PremiumPanel>
   );
 }

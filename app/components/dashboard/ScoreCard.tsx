@@ -2,6 +2,14 @@ import { uiMoney as money, pct } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import type { MarginAssessment } from "~/utils/margin-decision-engine";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumPanel,
+  SignalRing,
+  SplitLayout,
+  StatusChip,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 
 type Props = {
   assessment: MarginAssessment;
@@ -46,8 +54,7 @@ function getScorePresentation(
   } as const;
 
   const statusPresentation =
-    presentations[assessment.economicStatus] ??
-    presentations.insufficient_data;
+    presentations[assessment.economicStatus] ?? presentations.insufficient_data;
 
   return {
     score: assessment.healthScore,
@@ -92,120 +99,104 @@ export default function ScoreCard({
   const presentation = getScorePresentation(assessment, t);
   const score = presentation.score;
   const gaugeScore = score ?? 0;
+  const tone: VisualTone =
+    assessment.economicStatus === "healthy"
+      ? "green"
+      : assessment.economicStatus === "monitor"
+        ? "amber"
+        : assessment.economicStatus === "insufficient_data"
+          ? "cyan"
+          : "red";
 
   return (
-    <div className="score-card">
-      <div className="score-glow-one" />
-      <div className="score-glow-two" />
-
-      <div className="score-content">
-        <div
-          className="section-eyebrow"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 7,
-          }}
-        >
-          <span>
-            {copy.eyebrow}
-          </span>
-
-          <MetricTooltip
-            content={{
-              title: copy.tooltipTitle,
-              description: copy.tooltipDescription,
-              note: copy.tooltipNote,
+    <PremiumPanel className="dashboard-v2-health" tone={tone}>
+      <SplitLayout ratio="content" className="dashboard-v2-health-layout">
+        <div className="score-content">
+          <div
+            className="section-eyebrow"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
             }}
-          />
-        </div>
+          >
+            <span>{copy.eyebrow}</span>
 
-        <div className="score-number">
-          {score ?? "—"}
-          <span>{score === null ? "" : "/100"}</span>
-        </div>
-
-        <div className="score-risk" style={{ color: presentation.color }}>
-          {presentation.label}
-        </div>
-
-        <div className="score-copy">
-          {getAssessmentCopy(assessment, visualLeak, t)}
-        </div>
-
-        <div className="score-mini-grid">
-          {[
-            [
-              copy.confirmedLoss,
-              money(visualLeak),
-              "#ff5a36",
-            ],
-            [
-              copy.productsAtRisk,
-              t("scoreCard.productsDetected", { count: visualProductsAtRisk }),
-              "#f59e0b",
-            ],
-            [
-              copy.margin,
-              pct(visualMarginPct),
-              "#22c55e",
-            ],
-          ].map(([label, value, color]) => (
-            <div key={label} className="score-mini-card">
-              <div>{label}</div>
-              <strong style={{ color: String(color) }}>{value}</strong>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="gauge-card">
-        <div className="gauge-glow" />
-
-        <div className="gauge">
-          <svg width="170" height="170" viewBox="0 0 220 220">
-            <circle
-              cx="110"
-              cy="110"
-              r="84"
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="14"
-              fill="none"
+            <MetricTooltip
+              content={{
+                title: copy.tooltipTitle,
+                description: copy.tooltipDescription,
+                note: copy.tooltipNote,
+              }}
             />
+          </div>
 
-            {score !== null && (
-              <circle
-                cx="110"
-                cy="110"
-                r="84"
-                stroke={presentation.color}
-                strokeWidth="14"
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray="528"
-                strokeDashoffset={528 - (528 * gaugeScore) / 100}
-                style={{
-                  filter: `drop-shadow(0 0 14px ${presentation.color}73)`,
-                }}
-              />
-            )}
-          </svg>
+          <StatusChip tone={tone}>{presentation.label}</StatusChip>
 
-          <div className="gauge-center">
-            <div>{score ?? "—"}</div>
-            <span>{presentation.label.toUpperCase()}</span>
+          <div className="score-copy">
+            {getAssessmentCopy(assessment, visualLeak, t)}
+          </div>
+
+          <div className="score-mini-grid dashboard-v2-health-metrics">
+            <MetricCard
+              density="dense"
+              tone="red"
+              label={copy.confirmedLoss}
+              value={money(visualLeak)}
+            />
+            <MetricCard
+              density="dense"
+              tone="amber"
+              label={copy.productsAtRisk}
+              value={t("scoreCard.productsDetected", {
+                count: visualProductsAtRisk,
+              })}
+            />
+            <MetricCard
+              density="dense"
+              tone="green"
+              label={copy.margin}
+              value={pct(visualMarginPct)}
+            />
           </div>
         </div>
-
-        <div className="gauge-copy">
-          {score === null
-            ? t("scoreCard.hiddenScore", {
-                orderCount: assessment.evidence.orderCount,
-                activeDays: assessment.evidence.activeDays,
-              })
-            : copy.scoreBasis}
+        <div className="dashboard-v2-health-signal">
+          <SignalRing
+            value={gaugeScore}
+            variant="embedded"
+            size="large"
+            motion="ambient"
+            tone={tone}
+            score={score ?? "—"}
+            suffix={score === null ? undefined : "/100"}
+            label={copy.eyebrow}
+            status={presentation.label}
+            info={
+              <MetricTooltip
+                content={{
+                  title: copy.tooltipTitle,
+                  description: copy.tooltipDescription,
+                  note: copy.tooltipNote,
+                }}
+              />
+            }
+            detail={
+              score === null
+                ? t("scoreCard.hiddenScore", {
+                    orderCount: assessment.evidence.orderCount,
+                    activeDays: assessment.evidence.activeDays,
+                  })
+                : copy.scoreBasis
+            }
+            nodes={[
+              { id: "loss", angle: 35, tone: "red" },
+              { id: "risk", angle: 150, tone: "amber" },
+              { id: "margin", angle: 265, tone: "green" },
+            ]}
+            ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
+          />
         </div>
-      </div>
-    </div>
+      </SplitLayout>
+    </PremiumPanel>
   );
 }

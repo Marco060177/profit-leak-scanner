@@ -321,7 +321,7 @@ export function ControlField({
     <div
       className={classes(
         "ml-v2-field",
-        error && "ml-v2-field-error",
+        Boolean(error) && "ml-v2-field-error",
         className,
       )}
     >

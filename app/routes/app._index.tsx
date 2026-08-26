@@ -11,6 +11,13 @@ import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
 import DashboardHero from "~/components/dashboard/DashboardHero";
 import AIProfitMonitor from "~/components/dashboard/AIProfitMonitor";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumPanel,
+  ResponsiveGrid,
+  StatusChip,
+  VisualButton,
+} from "~/components/ui/VisualSystem";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts, type ProfitAlert } from "~/utils/profit-monitor";
 import { getLanguageLocale } from "~/utils/i18n";
@@ -341,9 +348,14 @@ export const loader = async ({ request }: { request: Request }) => {
       alertIds: alerts.map((alert) => alert.id),
     },
   });
-  const impactActions = hasGrowthAccess(billing) ? await listProfitImpactActionsForShop({ shop: session.shop, take: 100 }) : [];
-  const impactSummary = hasGrowthAccess(billing) ? aggregateProfitImpact(impactActions) : null;
-  const latestCompletedImpact = impactActions.find((action) => action.status === "COMPLETED") ?? null;
+  const impactActions = hasGrowthAccess(billing)
+    ? await listProfitImpactActionsForShop({ shop: session.shop, take: 100 })
+    : [];
+  const impactSummary = hasGrowthAccess(billing)
+    ? aggregateProfitImpact(impactActions)
+    : null;
+  const latestCompletedImpact =
+    impactActions.find((action) => action.status === "COMPLETED") ?? null;
   return { ...data, alerts, alertStates, impactSummary, latestCompletedImpact };
 };
 
@@ -383,20 +395,15 @@ export default function DashboardV2() {
     [summary, rows, language, period, currencyCode],
   );
 
-  const economicRevenue =
-    summary.economicRevenue ?? summary.revenue;
+  const economicRevenue = summary.economicRevenue ?? summary.revenue;
 
-  const economicCogs =
-    summary.economicCogs ?? summary.cogs;
+  const economicCogs = summary.economicCogs ?? summary.cogs;
 
-  const economicProfit =
-    summary.economicProfit ?? summary.profit;
+  const economicProfit = summary.economicProfit ?? summary.profit;
 
-  const economicMarginPct =
-    summary.economicMarginPct ?? summary.marginPct;
+  const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
 
-  const economicAdjustment =
-    economicProfit - summary.profit;
+  const economicAdjustment = economicProfit - summary.profit;
 
   const taxSystemLabel =
     taxContext?.taxSystem === "GST_HST"
@@ -405,23 +412,19 @@ export default function DashboardV2() {
         ? language === "it"
           ? "Sales Tax"
           : "Sales Tax"
-        : taxContext?.taxSystem ?? "Tax";
+        : (taxContext?.taxSystem ?? "Tax");
 
-  const shouldShowAdvancedTaxSetup =
-    Boolean(
-      taxContext?.advancedProfileAvailable &&
-      !taxContext?.configured,
-    );
+  const shouldShowAdvancedTaxSetup = Boolean(
+    taxContext?.advancedProfileAvailable && !taxContext?.configured,
+  );
 
-  const shouldShowTaxBasis =
-    Boolean(taxContext && taxAwareEconomics);
+  const shouldShowTaxBasis = Boolean(taxContext && taxAwareEconomics);
 
-  const shouldShowInputTaxRecovery =
-    Boolean(
-      taxContext?.supportsRecoverableInputTaxModel &&
-      taxContext?.advancedProfileAvailable &&
-      taxContext?.configured,
-    );
+  const shouldShowInputTaxRecovery = Boolean(
+    taxContext?.supportsRecoverableInputTaxModel &&
+    taxContext?.advancedProfileAvailable &&
+    taxContext?.configured,
+  );
 
   const marginAssessment = React.useMemo(
     () =>
@@ -589,45 +592,40 @@ export default function DashboardV2() {
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-        icon: "⚠️",
-        issue:
-          copy.auto.d001,
-        severity: copy.auto.d002,
-        loss: money(visualLeak),
-      }
+          icon: "⚠️",
+          issue: copy.auto.d001,
+          severity: copy.auto.d002,
+          loss: money(visualLeak),
+        }
       : null,
 
     visualMissingCostCount > 0
       ? {
-        icon: "📦",
-        issue:
-          copy.auto.d003,
-        severity: copy.auto.d004,
-        loss:
-          t("dashboardPage.productsCount", { count: visualMissingCostCount }),
-      }
+          icon: "📦",
+          issue: copy.auto.d003,
+          severity: copy.auto.d004,
+          loss: t("dashboardPage.productsCount", {
+            count: visualMissingCostCount,
+          }),
+        }
       : null,
 
     lowMarginCount > 0
       ? {
-        icon: "🏷️",
-        issue:
-          copy.auto.d005,
-        severity: copy.auto.d006,
-        loss:
-          t("dashboardPage.productsCount", { count: lowMarginCount }),
-      }
+          icon: "🏷️",
+          issue: copy.auto.d005,
+          severity: copy.auto.d006,
+          loss: t("dashboardPage.productsCount", { count: lowMarginCount }),
+        }
       : null,
 
     productsAtRisk > 0
       ? {
-        icon: "🔥",
-        issue:
-          copy.auto.d007,
-        severity: copy.auto.d008,
-        loss:
-          t("dashboardPage.atRiskCount", { count: productsAtRisk }),
-      }
+          icon: "🔥",
+          issue: copy.auto.d007,
+          severity: copy.auto.d008,
+          loss: t("dashboardPage.atRiskCount", { count: productsAtRisk }),
+        }
       : null,
   ].filter(Boolean) as {
     icon: string;
@@ -662,36 +660,36 @@ export default function DashboardV2() {
   const contributionInsights = [
     riskyRevenueShare > 25
       ? {
-        title:
-          "High-risk products are driving a significant share of revenue",
-        value: `${pct(riskyRevenueShare)} of revenue`,
-        description:
-          "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
-        severity: "Critical",
-        confidence: "High confidence",
-      }
+          title:
+            "High-risk products are driving a significant share of revenue",
+          value: `${pct(riskyRevenueShare)} of revenue`,
+          description:
+            "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
+          severity: "Critical",
+          confidence: "High confidence",
+        }
       : null,
 
     topRevenueShare > 50
       ? {
-        title: "Revenue is concentrated in a small group of products",
-        value: `${pct(topRevenueShare)} from top 3 products`,
-        description:
-          "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
-        severity: "High",
-        confidence: "High confidence",
-      }
+          title: "Revenue is concentrated in a small group of products",
+          value: `${pct(topRevenueShare)} from top 3 products`,
+          description:
+            "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
+          severity: "High",
+          confidence: "High confidence",
+        }
       : null,
 
     weakTopProducts.length > 0
       ? {
-        title: "Top-selling products show weak contribution quality",
-        value: `${weakTopProducts.length} top products at risk`,
-        description:
-          "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
-        severity: "Medium",
-        confidence: "Moderate confidence",
-      }
+          title: "Top-selling products show weak contribution quality",
+          value: `${weakTopProducts.length} top products at risk`,
+          description:
+            "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
+          severity: "Medium",
+          confidence: "Moderate confidence",
+        }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -719,19 +717,18 @@ export default function DashboardV2() {
   const worstProduct =
     sourceRows.length > 0
       ? ([...sourceRows]
-        .filter((row) => row.profit < 0)
-        .sort((a, b) => a.profit - b.profit)[0] ?? null)
+          .filter((row) => row.profit < 0)
+          .sort((a, b) => a.profit - b.profit)[0] ?? null)
       : null;
 
   const bestProduct =
     sourceRows.length > 0
       ? ([...sourceRows]
-        .filter((row) => !row.missingCost)
-        .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
+          .filter((row) => !row.missingCost)
+          .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
       : null;
 
-  const profitGapToTarget =
-    economicSnapshot?.totals.monthlyOpportunity ?? 0;
+  const profitGapToTarget = economicSnapshot?.totals.monthlyOpportunity ?? 0;
 
   const recoveryProducts = sourceRows.filter(
     (row) => row.targetDelta > 0 && row.qty > 0,
@@ -743,40 +740,41 @@ export default function DashboardV2() {
   const recommendations = [
     sourceRows.filter((row) => row.losing).length > 0
       ? {
-        title: `Fix ${sourceRows.filter((row) => row.losing).length
+          title: `Fix ${
+            sourceRows.filter((row) => row.losing).length
           } underpriced products selling below cost`,
-        impact: `${money(visualLeak)} estimated loss`,
-        confidence: "High confidence",
-        actionLabel: "Review pricing",
-        actionLink: "#products-section",
-      }
+          impact: `${money(visualLeak)} estimated loss`,
+          confidence: "High confidence",
+          actionLabel: "Review pricing",
+          actionLink: "#products-section",
+        }
       : null,
     summary.missingCostCount > 0
       ? {
-        title: "Update missing product costs in Shopify",
-        impact: `${summary.missingCostCount} products affected`,
-        confidence: "Critical issue",
-        actionLabel: "Update costs",
-        actionLink: "#products-section",
-      }
+          title: "Update missing product costs in Shopify",
+          impact: `${summary.missingCostCount} products affected`,
+          confidence: "Critical issue",
+          actionLabel: "Update costs",
+          actionLink: "#products-section",
+        }
       : null,
     lowMarginCount > 0
       ? {
-        title: "Review low-margin products below 10%",
-        impact: `${lowMarginCount} products need attention`,
-        confidence: "Medium confidence",
-        actionLabel: "Analyze products",
-        actionLink: "#products-section",
-      }
+          title: "Review low-margin products below 10%",
+          impact: `${lowMarginCount} products need attention`,
+          confidence: "Medium confidence",
+          actionLabel: "Analyze products",
+          actionLink: "#products-section",
+        }
       : null,
     rows.length > 0
       ? {
-        title: "Review target prices for worst-performing products",
-        impact: "20% margin target available",
-        confidence: "Rule-based insight",
-        actionLabel: "Review",
-        actionLink: "#products-section",
-      }
+          title: "Review target prices for worst-performing products",
+          impact: "20% margin target available",
+          confidence: "Rule-based insight",
+          actionLabel: "Review",
+          actionLink: "#products-section",
+        }
       : null,
   ].filter(Boolean) as {
     title: string;
@@ -789,83 +787,68 @@ export default function DashboardV2() {
   const insights = [
     hasWeakBestSeller
       ? {
-        eyebrow:
-          copy.auto.d009,
-        title:
-          copy.auto.d010,
-        badge: copy.auto.d011,
-        description: (
-          <>
-            <strong>{weakBestSeller.productTitle}</strong>{" "}
-            {copy.auto.d012}{" "}
-            <strong>{money(weakBestSeller.revenue)}</strong>{" "}
-            {copy.auto.d013}{" "}
-            <strong>{pct(weakBestSellerMargin)}</strong>{" "}
-            {copy.auto.d014}
-          </>
-        ),
-      }
+          eyebrow: copy.auto.d009,
+          title: copy.auto.d010,
+          badge: copy.auto.d011,
+          description: (
+            <>
+              <strong>{weakBestSeller.productTitle}</strong> {copy.auto.d012}{" "}
+              <strong>{money(weakBestSeller.revenue)}</strong> {copy.auto.d013}{" "}
+              <strong>{pct(weakBestSellerMargin)}</strong> {copy.auto.d014}
+            </>
+          ),
+        }
       : null,
 
     marginDelta < -3
       ? {
-        eyebrow:
-          copy.auto.d015,
-        title:
-          copy.auto.d016,
-        badge: pct(marginDelta),
-        description: (
-          <>
-            {copy.auto.d017}{" "}
-            <strong>{pct(summary.previousMarginPct)}</strong>{" "}
-            {copy.auto.d018}{" "}
-            <strong>{pct(summary.marginPct)}</strong>{" "}
-            {copy.auto.d019}
-          </>
-        ),
-      }
+          eyebrow: copy.auto.d015,
+          title: copy.auto.d016,
+          badge: pct(marginDelta),
+          description: (
+            <>
+              {copy.auto.d017} <strong>{pct(summary.previousMarginPct)}</strong>{" "}
+              {copy.auto.d018} <strong>{pct(summary.marginPct)}</strong>{" "}
+              {copy.auto.d019}
+            </>
+          ),
+        }
       : null,
 
     hasRecoveryOpportunity
       ? {
-        eyebrow:
-          copy.auto.d020,
-        title:
-          copy.auto.d021,
-        badge: money(profitGapToTarget),
-        description: (
-          <>
-            {copy.auto.d022}{" "}
-            <strong>
-              {recoveryProducts.length}{" "}
-              {copy.auto.d023}
-            </strong>{" "}
-            {copy.auto.d024}{" "}
-            <strong>{money(profitGapToTarget)}</strong>{" "}
-            {copy.auto.d025}
-          </>
-        ),
-      }
+          eyebrow: copy.auto.d020,
+          title: copy.auto.d021,
+          badge: money(profitGapToTarget),
+          description: (
+            <>
+              {copy.auto.d022}{" "}
+              <strong>
+                {recoveryProducts.length} {copy.auto.d023}
+              </strong>{" "}
+              {copy.auto.d024} <strong>{money(profitGapToTarget)}</strong>{" "}
+              {copy.auto.d025}
+            </>
+          ),
+        }
       : null,
 
     summary.revenueDeltaPct > 10 && summary.marginDelta < 0
       ? {
-        eyebrow:
-          copy.auto.d026,
-        title:
-          copy.auto.d027,
-        badge:
-          t("dashboardPage.revenueBadge", { value: pct(summary.revenueDeltaPct) }),
-        description: (
-          <>
-            {copy.auto.d028}{" "}
-            <strong>{pct(summary.revenueDeltaPct)}</strong>
-            {copy.auto.d029}{" "}
-            <strong>{pct(Math.abs(summary.marginDelta))}</strong>
-            {copy.auto.d030}
-          </>
-        ),
-      }
+          eyebrow: copy.auto.d026,
+          title: copy.auto.d027,
+          badge: t("dashboardPage.revenueBadge", {
+            value: pct(summary.revenueDeltaPct),
+          }),
+          description: (
+            <>
+              {copy.auto.d028} <strong>{pct(summary.revenueDeltaPct)}</strong>
+              {copy.auto.d029}{" "}
+              <strong>{pct(Math.abs(summary.marginDelta))}</strong>
+              {copy.auto.d030}
+            </>
+          ),
+        }
       : null,
   ].filter(Boolean);
 
@@ -1042,7 +1025,9 @@ export default function DashboardV2() {
                   maxWidth: 760,
                 }}
               >
-                {t("dashboardPage.advancedTaxDescription", { taxSystem: taxSystemLabel })}
+                {t("dashboardPage.advancedTaxDescription", {
+                  taxSystem: taxSystemLabel,
+                })}
               </div>
             </div>
 
@@ -1058,7 +1043,6 @@ export default function DashboardV2() {
             </button>
           </div>
         ) : null}
-
 
         {/* {!billingActive ? (
           <div className="billing-banner">
@@ -1093,74 +1077,60 @@ export default function DashboardV2() {
         <KpiGrid
           items={[
             {
-              label:
-                copy.auto.d034,
+              label: copy.auto.d034,
               value: money(economicRevenue),
-              note:
-                t("dashboardPage.taxAwarePeriod", { period }),
+              note: t("dashboardPage.taxAwarePeriod", { period }),
               icon: "¤",
               tone: "positive",
               tooltip: {
-                title:
-                  copy.auto.d035,
-                description:
-                  copy.auto.d036,
-                formula:
-                  copy.auto.d037,
-                note:
-                  copy.auto.d038,
+                title: copy.auto.d035,
+                description: copy.auto.d036,
+                formula: copy.auto.d037,
+                note: copy.auto.d038,
               },
             },
             {
-              label:
-                copy.auto.d039,
+              label: copy.auto.d039,
               value: money(economicProfit),
-              note:
-                t("dashboardPage.economicMarginNote", { value: pct(economicMarginPct) }),
+              note: t("dashboardPage.economicMarginNote", {
+                value: pct(economicMarginPct),
+              }),
               icon: "+",
               tone: economicProfit >= 0 ? "positive" : "danger",
               tooltip: {
-                title:
-                  copy.auto.d040,
+                title: copy.auto.d040,
 
-                description:
-                  copy.auto.d041,
+                description: copy.auto.d041,
 
-                formula:
-                  copy.auto.d042,
+                formula: copy.auto.d042,
 
-                note:
-                  copy.auto.d043,
+                note: copy.auto.d043,
               },
             },
             {
-              label:
-                copy.auto.d044,
+              label: copy.auto.d044,
               value: pct(economicMarginPct),
-              note:
-                t("dashboardPage.productProfitComparison", { value: money(economicAdjustment) }),
+              note: t("dashboardPage.productProfitComparison", {
+                value: money(economicAdjustment),
+              }),
               icon: "%",
               tone: economicMarginPct >= 20 ? "positive" : "warning",
               tooltip: {
-                title:
-                  copy.auto.d045,
+                title: copy.auto.d045,
 
-                description:
-                  copy.auto.d046,
+                description: copy.auto.d046,
 
-                formula:
-                  copy.auto.d047,
+                formula: copy.auto.d047,
 
-                note:
-                  copy.auto.d048,
+                note: copy.auto.d048,
               },
             },
             {
-              label:
-                copy.auto.d049,
+              label: copy.auto.d049,
               value: String(sourceRows.length),
-              note:
-                t("dashboardPage.requireReview", { count: visualProductsAtRisk }),
+              note: t("dashboardPage.requireReview", {
+                count: visualProductsAtRisk,
+              }),
               icon: "◈",
               tone: visualProductsAtRisk > 0 ? "warning" : "positive",
             },
@@ -1171,57 +1141,42 @@ export default function DashboardV2() {
           marginBottom={24}
           items={[
             {
-              label:
-                copy.auto.d050,
-              value: worstProduct
-                ? worstProduct.productTitle
-                : copy.auto.d051,
+              label: copy.auto.d050,
+              value: worstProduct ? worstProduct.productTitle : copy.auto.d051,
               note: worstProduct
-                ? t("dashboardPage.estimatedLoss", { value: money(Math.abs(worstProduct.profit)) })
+                ? t("dashboardPage.estimatedLoss", {
+                    value: money(Math.abs(worstProduct.profit)),
+                  })
                 : copy.auto.d052,
               icon: worstProduct ? "↓" : "✓",
               tone: worstProduct ? "danger" : "positive",
             },
             {
-              label:
-                copy.auto.d053,
-              value: String(
-                sourceRows.filter((row) => row.lowMargin).length,
-              ),
-              note:
-                copy.auto.d054,
+              label: copy.auto.d053,
+              value: String(sourceRows.filter((row) => row.lowMargin).length),
+              note: copy.auto.d054,
               icon: "↓",
               tone: "warning",
             },
             {
-              label:
-                copy.auto.d055,
+              label: copy.auto.d055,
               value: String(visualMissingCostCount),
-              note:
-                copy.auto.d056,
+              note: copy.auto.d056,
               icon: "⚠",
-              tone:
-                visualMissingCostCount > 0
-                  ? "danger"
-                  : "positive",
+              tone: visualMissingCostCount > 0 ? "danger" : "positive",
             },
             {
-              label:
-                copy.auto.d057,
+              label: copy.auto.d057,
               value: money(profitGapToTarget),
-              note:
-                copy.auto.d058,
+              note: copy.auto.d058,
               icon: "+",
               tone: "warning",
               tooltip: {
-                title:
-                  copy.auto.d059,
+                title: copy.auto.d059,
 
-                description:
-                  copy.auto.d060,
+                description: copy.auto.d060,
 
-                note:
-                  copy.auto.d061,
+                note: copy.auto.d061,
               },
             },
           ]}
@@ -1235,11 +1190,41 @@ export default function DashboardV2() {
           visualMarginPct={visualMarginPct}
         />
 
-        {impactSummary ? <section className="panel" style={{marginBottom:24,display:"flex",justifyContent:"space-between",alignItems:"center",gap:18,flexWrap:"wrap"}}><div><div className="panel-eyebrow">Profit Impact Tracker</div><h2 className="panel-title">{impactSummary.actionsMeasuring} {messages.profitImpactPage.actionsMeasuring}</h2><p style={{color:"rgba(255,255,255,.62)"}}>{messages.profitImpactPage.estimatedAttributableProfit}: {impactSummary.estimatedAttributableProfit == null ? "—" : formatStoreMoney(impactSummary.estimatedAttributableProfit,currencyCode,locale)}{latestCompletedImpact ? ` · ${latestCompletedImpact.title}` : ""}</p></div><button className="primary-button" onClick={()=>navigate("/app/profit-impact")}>{messages.profitImpactPage.openTrackedAction}</button></section> : null}
+        {impactSummary ? (
+          <PremiumPanel className="dashboard-v2-impact-summary" tone="orange">
+            <div>
+              <div className="ml-v2-eyebrow">Profit Impact Tracker</div>
+              <h2>
+                {impactSummary.actionsMeasuring}{" "}
+                {messages.profitImpactPage.actionsMeasuring}
+              </h2>
+              <p>
+                {messages.profitImpactPage.estimatedAttributableProfit}:{" "}
+                {impactSummary.estimatedAttributableProfit == null
+                  ? "—"
+                  : formatStoreMoney(
+                      impactSummary.estimatedAttributableProfit,
+                      currencyCode,
+                      locale,
+                    )}
+                {latestCompletedImpact
+                  ? ` · ${latestCompletedImpact.title}`
+                  : ""}
+              </p>
+            </div>
+            <VisualButton
+              onClick={() => navigate("/app/profit-impact")}
+              trailing="→"
+            >
+              {messages.profitImpactPage.openTrackedAction}
+            </VisualButton>
+          </PremiumPanel>
+        ) : null}
 
         {taxContext && taxAwareEconomics ? (
-          <section
-            className="panel"
+          <PremiumPanel
+            className="dashboard-v2-tax"
+            tone="green"
             style={{
               marginTop: 24,
               marginBottom: 24,
@@ -1293,14 +1278,11 @@ export default function DashboardV2() {
 
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.d064,
+                      title: copy.auto.d064,
 
-                      description:
-                        copy.auto.d065,
+                      description: copy.auto.d065,
 
-                      note:
-                        copy.auto.d066,
+                      note: copy.auto.d066,
                     }}
                   />
                 </div>
@@ -1315,32 +1297,32 @@ export default function DashboardV2() {
                     maxWidth: 820,
                   }}
                 >
-                  {t("dashboardPage.taxBasisDescription", { taxSystem: taxSystemLabel })}
+                  {t("dashboardPage.taxBasisDescription", {
+                    taxSystem: taxSystemLabel,
+                  })}
                 </div>
               </div>
 
-              <div
-                style={{
-                  padding: "8px 11px",
-                  borderRadius: 999,
-                  background: "rgba(34,197,94,0.09)",
-                  border: "1px solid rgba(34,197,94,0.20)",
-                  color: "#4ade80",
-                  fontSize: 10,
-                  fontWeight: 900,
-                }}
-              >
+              <StatusChip tone="green">
                 {taxAwareEconomics.source === "shopify_actual_tax"
-                  ? t("dashboardPage.shopifyTaxDetected", { taxSystem: taxSystemLabel })
+                  ? t("dashboardPage.shopifyTaxDetected", {
+                      taxSystem: taxSystemLabel,
+                    })
                   : taxAwareEconomics.source === "shopify_zero_tax"
-                    ? t("dashboardPage.noTaxApplied", { taxSystem: taxSystemLabel })
+                    ? t("dashboardPage.noTaxApplied", {
+                        taxSystem: taxSystemLabel,
+                      })
                     : taxAwareEconomics.source === "tax_profile_fallback"
-                      ? t("dashboardPage.taxFromProfile", { taxSystem: taxSystemLabel })
+                      ? t("dashboardPage.taxFromProfile", {
+                          taxSystem: taxSystemLabel,
+                        })
                       : copy.auto.d067}
-              </div>
+              </StatusChip>
             </div>
 
-            <div
+            <ResponsiveGrid
+              columns={3}
+              className="dashboard-v2-tax-metrics"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3,minmax(0,1fr))",
@@ -1402,9 +1384,7 @@ export default function DashboardV2() {
                   style={{
                     marginTop: 8,
                     color:
-                      taxAwareEconomics.realProfit >= 0
-                        ? "#4ade80"
-                        : "#ff9a70",
+                      taxAwareEconomics.realProfit >= 0 ? "#4ade80" : "#ff9a70",
                     fontSize: 25,
                     fontWeight: 950,
                   }}
@@ -1419,8 +1399,7 @@ export default function DashboardV2() {
                     fontWeight: 750,
                   }}
                 >
-                  {pct(taxAwareEconomics.realMarginPct)}{" "}
-                  {copy.auto.d070}
+                  {pct(taxAwareEconomics.realMarginPct)} {copy.auto.d070}
                 </div>
               </div>
 
@@ -1473,7 +1452,7 @@ export default function DashboardV2() {
                   {copy.auto.d072}
                 </div>
               </div>
-            </div>
+            </ResponsiveGrid>
 
             <div
               style={{
@@ -1551,11 +1530,12 @@ export default function DashboardV2() {
                 {money(taxAwareEconomics.economicCogs)}
               </div>
             </div>
-          </section>
+          </PremiumPanel>
         ) : null}
 
-        <section
-          className="panel"
+        <PremiumPanel
+          className="dashboard-v2-executive"
+          tone="violet"
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(0,1.25fr) minmax(280px,0.75fr)",
@@ -1564,9 +1544,7 @@ export default function DashboardV2() {
           }}
         >
           <div>
-            <div className="section-eyebrow">
-              {copy.auto.d078}
-            </div>
+            <div className="section-eyebrow">{copy.auto.d078}</div>
 
             <div
               className="section-title"
@@ -1593,13 +1571,9 @@ export default function DashboardV2() {
               })}
             </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                gap: 11,
-                marginTop: 20,
-              }}
+            <ResponsiveGrid
+              columns={4}
+              className="dashboard-v2-executive-metrics"
             >
               {[
                 {
@@ -1623,40 +1597,23 @@ export default function DashboardV2() {
                   color: "#38bdf8",
                 },
               ].map((item) => (
-                <div
+                <MetricCard
                   key={item.label}
-                  style={{
-                    padding: 15,
-                    borderRadius: 16,
-                    background: "rgba(255,255,255,0.035)",
-                    border: "1px solid rgba(255,255,255,0.07)",
-                  }}
-                >
-                  <div
-                    style={{
-                      color: "rgba(226,232,240,0.48)",
-                      fontSize: 9,
-                      fontWeight: 950,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    {item.label}
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 7,
-                      color: item.color,
-                      fontSize: 24,
-                      lineHeight: 1,
-                      fontWeight: 950,
-                    }}
-                  >
-                    {item.value}
-                  </div>
-                </div>
+                  density="dense"
+                  tone={
+                    item.color === "#ff6b4a"
+                      ? "red"
+                      : item.color === "#f59e0b"
+                        ? "amber"
+                        : item.color === "#22c55e"
+                          ? "green"
+                          : "cyan"
+                  }
+                  label={item.label}
+                  value={item.value}
+                />
               ))}
-            </div>
+            </ResponsiveGrid>
           </div>
 
           <div
@@ -1693,8 +1650,7 @@ export default function DashboardV2() {
                   fontWeight: 950,
                 }}
               >
-                {primaryAlert?.title ??
-                  (copy.auto.d085)}
+                {primaryAlert?.title ?? copy.auto.d085}
               </div>
 
               <div
@@ -1706,23 +1662,20 @@ export default function DashboardV2() {
                   fontWeight: 720,
                 }}
               >
-                {primaryAlert?.description ??
-                  (copy.auto.d086)}
+                {primaryAlert?.description ?? copy.auto.d086}
               </div>
             </div>
 
-            <button
+            <VisualButton
               type="button"
-              className="primary-button"
               style={{ width: "100%", justifyContent: "center", marginTop: 18 }}
               onClick={() => navigate(primaryAlert?.route ?? "/app/ai-advisor")}
             >
-              {primaryAlert?.actionLabel ??
-                (copy.auto.d087)}
+              {primaryAlert?.actionLabel ?? copy.auto.d087}
               {" →"}
-            </button>
+            </VisualButton>
           </div>
-        </section>
+        </PremiumPanel>
 
         <TopLeaksPanel
           topLeaks={topLeaks}
