@@ -2401,16 +2401,16 @@ table {
   background-size: 34px 34px;
   mask-image: linear-gradient(90deg, #000, transparent 75%);
 }
-.impact-hero-copy {
+.impact-hero .ml-v2-hero-copy {
   max-width: 720px;
 }
-.impact-hero .hero-title {
+.impact-hero .ml-v2-hero-title {
   font-size: clamp(36px, 5vw, 62px);
   line-height: 1.02;
   letter-spacing: -0.045em;
   margin: 12px 0 15px;
 }
-.impact-hero .hero-description {
+.impact-hero .ml-v2-hero-description {
   max-width: 650px;
   font-size: 16px;
   line-height: 1.7;
@@ -2424,7 +2424,7 @@ table {
   padding-inline: 20px;
   box-shadow: 0 14px 34px rgba(255, 105, 60, 0.23);
 }
-.impact-hero-cta span {
+.impact-hero-cta > span:first-child {
   font-size: 20px;
   font-weight: 400;
 }
@@ -2610,34 +2610,6 @@ table {
   filter: blur(38px);
   opacity: 0.13;
 }
-.impact-kpi-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.impact-kpi-icon {
-  display: grid;
-  place-items: center;
-  width: 35px;
-  height: 35px;
-  border-radius: 11px;
-  color: var(--impact-accent, #ff8b64);
-  background: color-mix(
-    in srgb,
-    var(--impact-accent, #ff733c) 11%,
-    transparent
-  );
-  border: 1px solid
-    color-mix(in srgb, var(--impact-accent, #ff733c) 22%, transparent);
-  font-size: 15px;
-}
-.impact-kpi-top > i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--impact-accent, #ff733c);
-  box-shadow: 0 0 12px var(--impact-accent, #ff733c);
-}
 .impact-kpi small {
   margin-top: 5px;
   font-size: 10px;
@@ -2663,37 +2635,6 @@ table {
 .impact-kpi-5 {
   --impact-accent: #2dd4bf;
 }
-.impact-kpi-spark {
-  position: absolute;
-  right: 16px;
-  bottom: 13px;
-  height: 25px;
-  display: flex;
-  align-items: end;
-  gap: 3px;
-  opacity: 0.38;
-}
-.impact-kpi-spark i {
-  display: block;
-  width: 3px;
-  border-radius: 4px;
-  background: var(--impact-accent, #ff733c);
-}
-.impact-kpi-spark i:nth-child(1) {
-  height: 7px;
-}
-.impact-kpi-spark i:nth-child(2) {
-  height: 13px;
-}
-.impact-kpi-spark i:nth-child(3) {
-  height: 10px;
-}
-.impact-kpi-spark i:nth-child(4) {
-  height: 20px;
-}
-.impact-kpi-spark i:nth-child(5) {
-  height: 24px;
-}
 .impact-tabs {
   padding: 5px;
   width: max-content;
@@ -2717,7 +2658,7 @@ table {
   color: #fff;
   background: rgba(255, 255, 255, 0.045);
 }
-.impact-tabs button.active {
+.impact-tabs button.is-active {
   border: 0;
   background: linear-gradient(
     135deg,
@@ -2728,17 +2669,7 @@ table {
     inset 0 0 0 1px rgba(255, 125, 78, 0.25),
     0 7px 18px rgba(0, 0, 0, 0.16);
 }
-.impact-tabs button span {
-  display: inline-grid;
-  place-items: center;
-  min-width: 23px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.065);
-  font-size: 10px;
-}
-.impact-tabs button.active span {
+.impact-tabs button.is-active strong {
   background: rgba(255, 115, 60, 0.18);
   color: #ffae8d;
 }
@@ -3012,15 +2943,15 @@ table {
     transform: rotate(360deg);
   }
 }
-.impact-empty-copy {
+.impact-empty .ml-v2-empty-copy {
   max-width: 650px;
 }
-.impact-empty-copy h2 {
+.impact-empty .ml-v2-empty-copy h2 {
   margin: 8px 0 10px;
   font-size: clamp(27px, 3vw, 40px);
   letter-spacing: -0.035em;
 }
-.impact-empty-copy > p {
+.impact-empty .ml-v2-empty-copy > div {
   max-width: 580px;
   color: rgba(255, 255, 255, 0.58);
   line-height: 1.65;

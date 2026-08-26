@@ -9,6 +9,21 @@ import {
 } from "react-router";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import {
+  ControlField,
+  FeedbackState,
+  MetricCard,
+  PremiumEmptyState,
+  PremiumHero,
+  PremiumPanel,
+  ResponsiveGrid,
+  SegmentedTabs,
+  StatusChip,
+  VisualButton,
+  VisualInput,
+  VisualTextarea,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 import { captureProductProfitImpactBaseline } from "~/services/profit-impact-baseline.server";
 import {
   cancelProfitImpactAction,
@@ -379,6 +394,15 @@ function Results({ action, copy, locale, detail = false }: any) {
   );
 }
 
+function statusTone(status: string): VisualTone {
+  if (status === "COMPLETED") return "green";
+  if (status === "MEASURING") return "cyan";
+  if (status === "INSUFFICIENT_DATA" || status === "INVALIDATED")
+    return "amber";
+  if (status === "CANCELLED") return "red";
+  return "orange";
+}
+
 function Card({ action, copy, locale, open }: any) {
   const result = resultMeasurement(action);
   const progress = Math.min(
@@ -386,7 +410,12 @@ function Card({ action, copy, locale, open }: any) {
     ((result?.observedDays ?? 0) / action.measurementWindowDays) * 100,
   );
   return (
-    <article className="panel impact-card">
+    <PremiumPanel
+      as="article"
+      className="impact-card"
+      tone={statusTone(action.status)}
+      interactive
+    >
       <div className="impact-card-head">
         <div>
           <div className="panel-eyebrow">
@@ -398,9 +427,13 @@ function Card({ action, copy, locale, open }: any) {
             <small>{copy[action.sourceModule]}</small>
           </div>
         </div>
-        <span className={`impact-status status-${action.status.toLowerCase()}`}>
+        <StatusChip
+          tone={statusTone(action.status)}
+          pulse={action.status === "MEASURING"}
+          className={`impact-status status-${action.status.toLowerCase()}`}
+        >
           {copy[action.status]}
-        </span>
+        </StatusChip>
       </div>
       {action.appliedAt ? (
         <p>
@@ -444,29 +477,31 @@ function Card({ action, copy, locale, open }: any) {
         <p className="impact-warning">{copy.lowConfidenceWarning}</p>
       ) : null}
       <div className="impact-actions">
-        <button className="apply-button" onClick={() => open(action.id)}>
+        <VisualButton variant="secondary" onClick={() => open(action.id)}>
           {action.status === "MEASURING"
             ? copy.viewMeasurement
             : action.status === "COMPLETED"
               ? copy.viewMeasuredImpact
               : copy.openTrackedAction}
-        </button>
+        </VisualButton>
         {action.status === "AWAITING_APPLICATION" ? (
           <Form method="post">
             <input type="hidden" name="intent" value="apply" />
             <input type="hidden" name="actionId" value={action.id} />
-            <button className="primary-button">{copy.markApplied}</button>
+            <VisualButton type="submit">{copy.markApplied}</VisualButton>
           </Form>
         ) : null}
         {["ACCEPTED", "AWAITING_APPLICATION"].includes(action.status) ? (
           <Form method="post">
             <input type="hidden" name="intent" value="cancel" />
             <input type="hidden" name="actionId" value={action.id} />
-            <button className="apply-button">{copy.cancel}</button>
+            <VisualButton type="submit" variant="ghost">
+              {copy.cancel}
+            </VisualButton>
           </Form>
         ) : null}
       </div>
-    </article>
+    </PremiumPanel>
   );
 }
 
@@ -489,56 +524,57 @@ export default function ProfitImpactPage() {
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="profit-impact" navigate={navigate} />
-        <header className="hero-header impact-hero">
-          <div className="impact-hero-copy">
-            <div className="eyebrow">{copy.eyebrow}</div>
-            <h1 className="hero-title">Profit Impact Tracker</h1>
-            <p className="hero-description">{copy.description}</p>
-            <button
-              className="primary-button impact-hero-cta"
+        <PremiumHero
+          className="impact-hero"
+          eyebrow={copy.eyebrow}
+          title="Profit Impact Tracker"
+          description={copy.description}
+          actions={
+            <VisualButton
+              size="large"
+              className="impact-hero-cta"
+              leading="＋"
               onClick={() => navigate("/app/recommendations")}
             >
-              <span>＋</span>
               {copy.trackAction}
-            </button>
-          </div>
-          <aside className="impact-hero-guide" aria-label={copy.trustTitle}>
-            <div className="impact-guide-orbit" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </div>
-            <ol>
-              <li>
-                <span>01</span>
-                <strong>{copy.trackAction}</strong>
-              </li>
-              <li>
-                <span>02</span>
-                <strong>{copy.MEASURING}</strong>
-              </li>
-              <li>
-                <span>03</span>
-                <strong>{copy.trustTitle}</strong>
-              </li>
-            </ol>
-          </aside>
-        </header>
+            </VisualButton>
+          }
+          visual={
+            <aside className="impact-hero-guide" aria-label={copy.trustTitle}>
+              <div className="impact-guide-orbit" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </div>
+              <ol>
+                <li>
+                  <span>01</span>
+                  <strong>{copy.trackAction}</strong>
+                </li>
+                <li>
+                  <span>02</span>
+                  <strong>{copy.MEASURING}</strong>
+                </li>
+                <li>
+                  <span>03</span>
+                  <strong>{copy.trustTitle}</strong>
+                </li>
+              </ol>
+            </aside>
+          }
+        />
         {!data.growthAccess ? (
-          <section className="panel">
+          <PremiumPanel tone="orange">
             <h2>{copy.growthRequired}</h2>
             <p>{copy.previewExplanation}</p>
-            <button
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-            >
+            <VisualButton onClick={() => navigate("/app/billing")}>
               {copy.upgrade}
-            </button>
-          </section>
+            </VisualButton>
+          </PremiumPanel>
         ) : (
           <>
             {actionData?.error ? (
-              <div className="error-banner">{actionData.error}</div>
+              <FeedbackState tone="red">{actionData.error}</FeedbackState>
             ) : null}
             <section
               className="impact-methodology-strip"
@@ -591,7 +627,7 @@ export default function ProfitImpactPage() {
                 })}
               </section>
             ) : null}
-            <section className="impact-kpis">
+            <ResponsiveGrid columns={5} className="impact-kpis">
               {[
                 [copy.actionsMeasuring, data.summary.actionsMeasuring],
                 [copy.actionsCompleted, data.summary.actionsCompleted],
@@ -616,30 +652,31 @@ export default function ProfitImpactPage() {
                     : `${data.summary.averageMarginLift.toFixed(1)} pp`,
                 ],
               ].map(([l, v], index) => (
-                <div
-                  className={`panel impact-kpi impact-kpi-${index + 1}`}
+                <MetricCard
+                  className={`impact-kpi impact-kpi-${index + 1}`}
                   key={l}
-                >
-                  <div className="impact-kpi-top">
-                    <span className="impact-kpi-icon">
-                      {["◔", "✓", "↗", "◇", "⌁"][index]}
+                  density="compact"
+                  tone={
+                    (index === 0
+                      ? "cyan"
+                      : index === 1
+                        ? "green"
+                        : index === 2
+                          ? "blue"
+                          : index === 3
+                            ? "violet"
+                            : "green") as VisualTone
+                  }
+                  icon={["◔", "✓", "↗", "◇", "⌁"][index]}
+                  label={l}
+                  value={
+                    <span className={v === "—" || v === 0 ? "is-zero" : ""}>
+                      {v}
                     </span>
-                    <i />
-                  </div>
-                  <small>{l}</small>
-                  <strong className={v === "—" || v === 0 ? "is-zero" : ""}>
-                    {v}
-                  </strong>
-                  <div className="impact-kpi-spark" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                  </div>
-                </div>
+                  }
+                />
               ))}
-            </section>
+            </ResponsiveGrid>
             {data.summary.lowConfidenceCompleted ? (
               <p className="impact-warning">
                 {data.summary.lowConfidenceCompleted}{" "}
@@ -647,7 +684,10 @@ export default function ProfitImpactPage() {
               </p>
             ) : null}
             {data.prefill ? (
-              <Form method="post" className="panel impact-create">
+              <Form
+                method="post"
+                className="ml-v2-panel ml-v2-tone-orange impact-create"
+              >
                 <input type="hidden" name="intent" value="create" />
                 <input
                   type="hidden"
@@ -669,57 +709,68 @@ export default function ProfitImpactPage() {
                   />
                 ))}
                 <h2>{copy.confirmAction}</h2>
-                <label>
-                  {copy.product}
-                  <input value={data.prefill.productTitle} readOnly />
-                </label>
-                <label>
-                  {copy.title}
-                  <input name="title" defaultValue={data.prefill.title} />
-                </label>
-                <label>
-                  {copy.descriptionLabel}
-                  <textarea
+                <ControlField label={copy.product}>
+                  <VisualInput value={data.prefill.productTitle} readOnly />
+                </ControlField>
+                <ControlField label={copy.title} htmlFor="impact-title">
+                  <VisualInput
+                    id="impact-title"
+                    name="title"
+                    defaultValue={data.prefill.title}
+                  />
+                </ControlField>
+                <ControlField
+                  label={copy.descriptionLabel}
+                  htmlFor="impact-description"
+                >
+                  <VisualTextarea
+                    id="impact-description"
                     name="changeDescription"
                     defaultValue={data.prefill.changeDescription}
                   />
-                </label>
-                <label>
-                  {copy.previousValue}
-                  <input
+                </ControlField>
+                <ControlField
+                  label={copy.previousValue}
+                  htmlFor="impact-previous-value"
+                >
+                  <VisualInput
+                    id="impact-previous-value"
                     name="previousValue"
                     type="number"
                     step="any"
                     defaultValue={data.prefill.previousValue ?? ""}
                   />
-                </label>
-                <label>
-                  {copy.appliedValue}
-                  <input
+                </ControlField>
+                <ControlField
+                  label={copy.appliedValue}
+                  htmlFor="impact-applied-value"
+                >
+                  <VisualInput
+                    id="impact-applied-value"
                     name="appliedValue"
                     type="number"
                     step="any"
                     defaultValue={data.prefill.appliedValue ?? ""}
                   />
-                </label>
+                </ControlField>
                 <input
                   name="targetValue"
                   type="hidden"
                   value={data.prefill.targetValue ?? ""}
                 />
-                <button className="primary-button">{copy.confirmAction}</button>
+                <VisualButton type="submit">{copy.confirmAction}</VisualButton>
               </Form>
             ) : null}
             {data.selectedAction ? (
-              <section className="panel impact-detail">
-                <button
-                  className="apply-button"
+              <PremiumPanel className="impact-detail" tone="blue">
+                <VisualButton
+                  variant="ghost"
                   onClick={() =>
                     navigate(`/app/profit-impact?lang=${language}`)
                   }
                 >
                   {copy.close}
-                </button>
+                </VisualButton>
                 <div className="panel-eyebrow">{copy.actionDetail}</div>
                 <h2>{data.selectedAction.title}</h2>
                 <p>{data.selectedAction.changeDescription}</p>
@@ -763,30 +814,24 @@ export default function ProfitImpactPage() {
                     </li>
                   ))}
                 </ol>
-              </section>
+              </PremiumPanel>
             ) : null}
-            <nav className="impact-tabs">
-              {[
-                ["active", copy.active],
-                ["completed", copy.completed],
-                ["attention", copy.needsAttention],
-              ].map(([k, l]) => (
-                <button
-                  className={tab === k ? "active" : ""}
-                  key={k}
-                  onClick={() => setTab(k)}
-                >
-                  {l}
-                  <span>
-                    {
-                      data.actions.filter(
-                        (a: any) => classifyProfitImpactAction(a.status) === k,
-                      ).length
-                    }
-                  </span>
-                </button>
-              ))}
-            </nav>
+            <SegmentedTabs
+              className="impact-tabs"
+              ariaLabel={copy.eyebrow}
+              activeId={tab}
+              onChange={setTab}
+              tabs={[
+                { id: "active", label: copy.active },
+                { id: "completed", label: copy.completed },
+                { id: "attention", label: copy.needsAttention },
+              ].map((item) => ({
+                ...item,
+                count: data.actions.filter(
+                  (a: any) => classifyProfitImpactAction(a.status) === item.id,
+                ).length,
+              }))}
+            />
             <section className="impact-list">
               {visible.map((a: any) => (
                 <Card
@@ -799,62 +844,57 @@ export default function ProfitImpactPage() {
               ))}
             </section>
             {!visible.length ? (
-              <section className="panel impact-empty">
-                <div className="impact-empty-visual" aria-hidden="true">
-                  <div className="impact-radar-ring ring-1" />
-                  <div className="impact-radar-ring ring-2" />
-                  <div className="impact-radar-ring ring-3" />
-                  <i className="impact-radar-sweep" />
-                  <span className="impact-radar-dot dot-1" />
-                  <span className="impact-radar-dot dot-2" />
-                  <span className="impact-radar-center" />
-                </div>
-                <div className="impact-empty-copy">
-                  <div className="panel-eyebrow">{copy.eyebrow}</div>
-                  <h2>
-                    {data.actions.length === 0
-                      ? copy.trackAction
-                      : tab === "completed"
-                        ? copy.completed
-                        : tab === "attention"
-                          ? copy.needsAttention
-                          : copy.active}
-                  </h2>
-                  <p>
-                    {data.actions.length === 0
-                      ? copy.noActions
-                      : tab === "completed"
-                        ? copy.noCompleted
-                        : tab === "attention"
-                          ? copy.noAttention
-                          : copy.noActive}
-                  </p>
-                  <ol className="impact-empty-steps">
-                    <li>
-                      <span>1</span>
-                      {copy.trackAction}
-                    </li>
-                    <li>
-                      <span>2</span>
-                      {copy.MEASURING}
-                    </li>
-                    <li>
-                      <span>3</span>
-                      {copy.viewMeasuredImpact}
-                    </li>
-                  </ol>
-                  {data.actions.length === 0 ? (
-                    <button
-                      className="primary-button"
+              <PremiumEmptyState
+                className="impact-empty"
+                tone="orange"
+                eyebrow={copy.eyebrow}
+                visual={
+                  <div className="impact-empty-visual" aria-hidden="true">
+                    <div className="impact-radar-ring ring-1" />
+                    <div className="impact-radar-ring ring-2" />
+                    <div className="impact-radar-ring ring-3" />
+                    <i className="impact-radar-sweep" />
+                    <span className="impact-radar-dot dot-1" />
+                    <span className="impact-radar-dot dot-2" />
+                    <span className="impact-radar-center" />
+                  </div>
+                }
+                title={
+                  data.actions.length === 0
+                    ? copy.trackAction
+                    : tab === "completed"
+                      ? copy.completed
+                      : tab === "attention"
+                        ? copy.needsAttention
+                        : copy.active
+                }
+                description={
+                  data.actions.length === 0
+                    ? copy.noActions
+                    : tab === "completed"
+                      ? copy.noCompleted
+                      : tab === "attention"
+                        ? copy.noAttention
+                        : copy.noActive
+                }
+                steps={[
+                  copy.trackAction,
+                  copy.MEASURING,
+                  copy.viewMeasuredImpact,
+                ]}
+                action={
+                  data.actions.length === 0 ? (
+                    <VisualButton
                       onClick={() => navigate("/app/recommendations")}
+                      trailing="→"
                     >
-                      {copy.trackAction} →
-                    </button>
-                  ) : null}
-                </div>
-              </section>
+                      {copy.trackAction}
+                    </VisualButton>
+                  ) : undefined
+                }
+              />
             ) : null}
-            <section className="panel impact-trust">
+            <PremiumPanel className="impact-trust" tone="neutral">
               <div className="impact-trust-heading">
                 <div className="panel-eyebrow">{copy.methodologyStatement}</div>
                 <h2>{copy.trustTitle}</h2>
@@ -881,7 +921,7 @@ export default function ProfitImpactPage() {
                   {copy.attributionConfidenceDefinition}
                 </p>
               </div>
-            </section>
+            </PremiumPanel>
           </>
         )}
       </div>
