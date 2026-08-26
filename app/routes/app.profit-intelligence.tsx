@@ -595,6 +595,32 @@ export default function ProfitIntelligencePage() {
               {copy.auto.p004}
             </VisualButton>
           }
+          visual={
+            <div className="profit-intelligence-v2-hero-signal">
+              <SignalRing
+                value={intelligenceScore}
+                variant="hero"
+                size="large"
+                motion="ambient"
+                tone={intelligenceTone}
+                score={intelligenceScore}
+                suffix="/100"
+                label={copy.auto.p005}
+                status={dependencyRiskLabel}
+                info={
+                  <MetricTooltip
+                    content={{
+                      title: copy.auto.p006,
+                      description: copy.auto.p007,
+                      note: copy.auto.p008,
+                    }}
+                  />
+                }
+                ariaLabel={`${copy.auto.p005}: ${intelligenceScore}/100, ${dependencyRiskLabel}`}
+              />
+            </div>
+          }
+          mobileVisualPosition="after-copy"
         />
 
         <PremiumPanel
@@ -696,29 +722,6 @@ export default function ProfitIntelligencePage() {
                   />
                 ))}
               </ResponsiveGrid>
-            </div>
-            <div className="profit-intelligence-v2-signal">
-              <SignalRing
-                value={intelligenceScore}
-                variant="embedded"
-                size="large"
-                motion="ambient"
-                tone={intelligenceTone}
-                score={intelligenceScore}
-                suffix="/100"
-                label={copy.auto.p005}
-                status={dependencyRiskLabel}
-                info={
-                  <MetricTooltip
-                    content={{
-                      title: copy.auto.p006,
-                      description: copy.auto.p007,
-                      note: copy.auto.p008,
-                    }}
-                  />
-                }
-                ariaLabel={`${copy.auto.p005}: ${intelligenceScore}/100, ${dependencyRiskLabel}`}
-              />
             </div>
           </div>
         </PremiumPanel>

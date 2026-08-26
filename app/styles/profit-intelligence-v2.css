@@ -10,10 +10,7 @@
 }
 
 .profit-intelligence-v2-score-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
-  align-items: center;
-  gap: 28px;
+  display: block;
 }
 
 .profit-intelligence-v2-score-status {
@@ -32,13 +29,14 @@
   gap: 7px;
 }
 
-.profit-intelligence-v2-signal {
+.profit-intelligence-v2-hero .ml-v2-hero-visual {
+  min-width: 320px;
+}
+
+.profit-intelligence-v2-hero-signal {
   display: grid;
-  min-height: 310px;
+  min-height: 320px;
   place-items: center;
-  border: 1px solid rgb(var(--ml-v2-accent) / 0.14);
-  border-radius: var(--ml-v2-radius-panel);
-  background: rgb(3 7 13 / 0.32);
 }
 
 .profit-intelligence-v2-economic-metrics,
@@ -81,7 +79,6 @@
 }
 
 @media (max-width: 980px) {
-  .profit-intelligence-v2-score-layout,
   .profit-intelligence-v2-operational-grid {
     grid-template-columns: 1fr;
   }
@@ -109,7 +106,7 @@
     grid-template-columns: 1fr;
   }
 
-  .profit-intelligence-v2-signal {
+  .profit-intelligence-v2-hero-signal {
     min-height: 270px;
   }
 
@@ -128,7 +125,7 @@
 }
 
 @media (max-width: 390px) {
-  .profit-intelligence-v2-signal {
+  .profit-intelligence-v2-hero-signal {
     min-height: 245px;
   }
 
