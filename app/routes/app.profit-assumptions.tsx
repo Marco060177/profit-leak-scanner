@@ -15,8 +15,17 @@ import {
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
+import {
+  FlowPath,
+  MetricCard,
+  PremiumHero,
+  PremiumPanel,
+  StatusChip,
+  VisualButton,
+} from "~/components/ui/VisualSystem";
 
 import "~/styles/dashboard.css";
+import "~/styles/business-model-v2.css";
 
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
@@ -30,35 +39,35 @@ export async function loader({ request }: { request: Request }) {
 
   const dashboardData = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      locale,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        locale,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
-    ? (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? {
-      monthlyAds: 500,
-      monthlyShipping: 300,
-      monthlyOperating: 200,
-      paymentFeePct: 2.9,
-      transactionFeePct: 0.5,
-      taxReservePct: 0,
-    }
+    ? ((await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        monthlyAds: 500,
+        monthlyShipping: 300,
+        monthlyOperating: 200,
+        paymentFeePct: 2.9,
+        transactionFeePct: 0.5,
+        taxReservePct: 0,
+      })
     : {
-      monthlyAds: 500,
-      monthlyShipping: 300,
-      monthlyOperating: 200,
-      paymentFeePct: 2.9,
-      transactionFeePct: 0.5,
-      taxReservePct: 0,
-    };
+        monthlyAds: 500,
+        monthlyShipping: 300,
+        monthlyOperating: 200,
+        paymentFeePct: 2.9,
+        transactionFeePct: 0.5,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
@@ -158,72 +167,24 @@ function KpiCard({
   tooltip?: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        minWidth: 0,
-        padding: 20,
-        borderRadius: 20,
-        background: highlight
-          ? "radial-gradient(circle at top left, rgba(34,197,94,0.16), transparent 42%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))"
-          : "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-        border: highlight
-          ? "1px solid rgba(34,197,94,0.28)"
-          : "1px solid rgba(255,115,60,0.16)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          color: highlight ? "#4ade80" : "rgba(255,255,255,0.45)",
-          fontSize: 10,
-          fontWeight: 950,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-        }}
-      >
-        <span>{label}</span>
-        {tooltip}
-      </div>
-
-      <div
-        style={{
-          marginTop: 12,
-          color,
-          fontSize:
-            value.length >= 18
-              ? 17
-              : value.length >= 15
-                ? 19
-                : value.length >= 12
-                  ? 22
-                  : value.length >= 9
-                    ? 25
-                    : 30,
-          lineHeight: 1,
-          fontWeight: 950,
-          letterSpacing: "-0.04em",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "clip",
-        }}
-      >
-        {value}
-      </div>
-
-      <div
-        style={{
-          marginTop: 8,
-          color: "rgba(255,255,255,0.55)",
-          fontSize: 12,
-          lineHeight: 1.45,
-          fontWeight: 750,
-        }}
-      >
-        {note}
-      </div>
-    </div>
+    <MetricCard
+      className="model-v2-kpi"
+      tone={
+        highlight || color === "#22c55e"
+          ? "green"
+          : color === "#ff6b4a"
+            ? "red"
+            : "orange"
+      }
+      label={
+        <span className="model-v2-kpi-label">
+          {label}
+          {tooltip}
+        </span>
+      }
+      value={value}
+      detail={note}
+    />
   );
 }
 
@@ -248,6 +209,7 @@ function FieldCard({
 }) {
   return (
     <label
+      className="model-v2-field"
       style={{
         display: "block",
         padding: 16,
@@ -257,6 +219,7 @@ function FieldCard({
       }}
     >
       <div
+        className="model-v2-field-control"
         style={{
           color: "#f8fafc",
           fontSize: 13,
@@ -302,6 +265,7 @@ function FieldCard({
         )}
 
         <input
+          className="model-v2-field-input"
           type="number"
           min={min}
           max={max}
@@ -403,26 +367,19 @@ export default function ProfitAssumptionsPage() {
     assumptions.taxReservePct,
   );
 
-  const economicRevenue =
-    summary.economicRevenue ?? summary.revenue;
+  const economicRevenue = summary.economicRevenue ?? summary.revenue;
 
-  const economicCogs =
-    summary.economicCogs ?? summary.cogs;
+  const economicCogs = summary.economicCogs ?? summary.cogs;
 
-  const economicProfit =
-    summary.economicProfit ?? summary.profit;
+  const economicProfit = summary.economicProfit ?? summary.profit;
 
-  const economicMarginPct =
-    summary.economicMarginPct ?? summary.marginPct;
+  const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
 
-  const estimatedPaymentFees =
-    economicRevenue * (paymentFeePct / 100);
+  const estimatedPaymentFees = economicRevenue * (paymentFeePct / 100);
 
-  const estimatedTransactionFees =
-    economicRevenue * (transactionFeePct / 100);
+  const estimatedTransactionFees = economicRevenue * (transactionFeePct / 100);
 
-  const estimatedTaxReserve =
-    economicRevenue * (taxReservePct / 100);
+  const estimatedTaxReserve = economicRevenue * (taxReservePct / 100);
 
   const monthlyFixedCosts = monthlyAds + monthlyShipping + monthlyOperating;
   const totalFixedCosts = monthlyFixedCosts * periodFractionOfMonth;
@@ -432,13 +389,10 @@ export default function ProfitAssumptionsPage() {
 
   const totalEstimatedCosts = totalFixedCosts + totalVariableCosts;
 
-  const estimatedNetProfit =
-    economicProfit - totalEstimatedCosts;
+  const estimatedNetProfit = economicProfit - totalEstimatedCosts;
 
   const estimatedNetMargin =
-    economicRevenue > 0
-      ? (estimatedNetProfit / economicRevenue) * 100
-      : 0;
+    economicRevenue > 0 ? (estimatedNetProfit / economicRevenue) * 100 : 0;
 
   const displayedEstimatedNetProfit = roundCsvNumber(estimatedNetProfit);
   const displayedTotalEstimatedCosts = roundCsvNumber(totalEstimatedCosts);
@@ -456,17 +410,11 @@ export default function ProfitAssumptionsPage() {
     displayedTotalEstimatedCosts * monthlyNormalizationMultiplier,
   );
 
-  const annualNetProfit = roundCsvNumber(
-    monthlyEstimatedNetProfit * 12,
-  );
-  const annualEstimatedCosts = roundCsvNumber(
-    monthlyEstimatedCosts * 12,
-  );
+  const annualNetProfit = roundCsvNumber(monthlyEstimatedNetProfit * 12);
+  const annualEstimatedCosts = roundCsvNumber(monthlyEstimatedCosts * 12);
 
   const grossMarginRate =
-    economicRevenue > 0
-      ? economicProfit / economicRevenue
-      : 0;
+    economicRevenue > 0 ? economicProfit / economicRevenue : 0;
 
   const variableCostRate =
     paymentFeePct / 100 + transactionFeePct / 100 + taxReservePct / 100;
@@ -503,10 +451,7 @@ export default function ProfitAssumptionsPage() {
     },
     {
       key: "payment",
-      label:
-        language === "it"
-          ? "Commissioni di pagamento"
-          : "Payment Fees",
+      label: language === "it" ? "Commissioni di pagamento" : "Payment Fees",
       value: estimatedPaymentFees,
       color: "#a78bfa",
     },
@@ -521,7 +466,10 @@ export default function ProfitAssumptionsPage() {
     },
     {
       key: "tax",
-      label: language === "it" ? "Riserva fiscale gestionale" : "Business Tax Reserve",
+      label:
+        language === "it"
+          ? "Riserva fiscale gestionale"
+          : "Business Tax Reserve",
       value: estimatedTaxReserve,
       color: "#22c55e",
     },
@@ -532,13 +480,9 @@ export default function ProfitAssumptionsPage() {
   const largestCost = [...costItems].sort((a, b) => b.value - a.value)[0];
 
   const largestCostMonthlySaving = largestCost
-    ? roundCsvNumber(
-      largestCost.value * monthlyNormalizationMultiplier * 0.1,
-    )
+    ? roundCsvNumber(largestCost.value * monthlyNormalizationMultiplier * 0.1)
     : 0;
-  const largestCostAnnualSaving = roundCsvNumber(
-    largestCostMonthlySaving * 12,
-  );
+  const largestCostAnnualSaving = roundCsvNumber(largestCostMonthlySaving * 12);
 
   const whatIfScenarios = [
     {
@@ -582,11 +526,11 @@ export default function ProfitAssumptionsPage() {
   const healthScore = clamp(
     Math.round(
       100 -
-      Math.max(0, -estimatedNetMargin) * 2 -
-      (totalEstimatedCosts > economicProfit ? 20 : 0) -
-      (largestCost && totalEstimatedCosts > 0
-        ? (largestCost.value / totalEstimatedCosts) * 12
-        : 0),
+        Math.max(0, -estimatedNetMargin) * 2 -
+        (totalEstimatedCosts > economicProfit ? 20 : 0) -
+        (largestCost && totalEstimatedCosts > 0
+          ? (largestCost.value / totalEstimatedCosts) * 12
+          : 0),
     ),
     0,
     100,
@@ -609,236 +553,624 @@ export default function ProfitAssumptionsPage() {
     language === "it"
       ? largestCost && totalEstimatedCosts > 0
         ? `${largestCost.label} rappresenta circa ${pct(
-          (largestCost.value / totalEstimatedCosts) * 100,
-          0,
-        )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
-          largestCostMonthlySaving,
-        )} e quello annuale di circa ${money(largestCostAnnualSaving)}.`
+            (largestCost.value / totalEstimatedCosts) * 100,
+            0,
+          )} dei costi stimati. Una riduzione del 10% in questa area migliorerebbe il profitto mensile di circa ${money(
+            largestCostMonthlySaving,
+          )} e quello annuale di circa ${money(largestCostAnnualSaving)}.`
         : "Inserisci i costi principali per ottenere una raccomandazione economica più affidabile."
       : largestCost && totalEstimatedCosts > 0
         ? `${largestCost.label} represents approximately ${pct(
-          (largestCost.value / totalEstimatedCosts) * 100,
-          0,
-        )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
-          largestCostMonthlySaving,
-        )} and annual profit by about ${money(largestCostAnnualSaving)}.`
+            (largestCost.value / totalEstimatedCosts) * 100,
+            0,
+          )} of estimated costs. A 10% reduction in this area would improve monthly profit by about ${money(
+            largestCostMonthlySaving,
+          )} and annual profit by about ${money(largestCostAnnualSaving)}.`
         : "Add your main costs to generate a more reliable financial recommendation.";
 
-  const displayCostItems = language === "fr" ? costItems.map((item) => ({
-    ...item,
-    label: ({ ads: "Publicité", shipping: "Expédition", operating: "Coûts d'exploitation", payment: "Frais de paiement", transaction: "Frais de transaction", tax: "Réserve fiscale du modèle" } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "de" ? costItems.map((item) => ({
-    ...item,
-    label: ({ ads: "Werbung", shipping: "Versand", operating: "Betriebskosten", payment: "Zahlungsgebühren", transaction: "Transaktionsgebühren", tax: "Steuerrücklage des Modells" } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "es" ? costItems.map((item) => ({
-    ...item,
-    label: ({ ads: "Publicidad", shipping: "Envíos", operating: "Costes operativos", payment: "Comisiones de pago", transaction: "Comisiones de transacción", tax: "Reserva fiscal del modelo" } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "pt-BR" ? costItems.map((item) => ({
-    ...item,
-    label: ({ ads: "Publicidade", shipping: "Frete", operating: "Custos operacionais", payment: "Taxas de pagamento", transaction: "Taxas de transação", tax: "Reserva fiscal do modelo" } as Record<string, string>)[item.key] ?? item.label,
-  })) : costItems;
+  const displayCostItems =
+    language === "fr"
+      ? costItems.map((item) => ({
+          ...item,
+          label:
+            (
+              {
+                ads: "Publicité",
+                shipping: "Expédition",
+                operating: "Coûts d'exploitation",
+                payment: "Frais de paiement",
+                transaction: "Frais de transaction",
+                tax: "Réserve fiscale du modèle",
+              } as Record<string, string>
+            )[item.key] ?? item.label,
+        }))
+      : language === "de"
+        ? costItems.map((item) => ({
+            ...item,
+            label:
+              (
+                {
+                  ads: "Werbung",
+                  shipping: "Versand",
+                  operating: "Betriebskosten",
+                  payment: "Zahlungsgebühren",
+                  transaction: "Transaktionsgebühren",
+                  tax: "Steuerrücklage des Modells",
+                } as Record<string, string>
+              )[item.key] ?? item.label,
+          }))
+        : language === "es"
+          ? costItems.map((item) => ({
+              ...item,
+              label:
+                (
+                  {
+                    ads: "Publicidad",
+                    shipping: "Envíos",
+                    operating: "Costes operativos",
+                    payment: "Comisiones de pago",
+                    transaction: "Comisiones de transacción",
+                    tax: "Reserva fiscal del modelo",
+                  } as Record<string, string>
+                )[item.key] ?? item.label,
+            }))
+          : language === "pt-BR"
+            ? costItems.map((item) => ({
+                ...item,
+                label:
+                  (
+                    {
+                      ads: "Publicidade",
+                      shipping: "Frete",
+                      operating: "Custos operacionais",
+                      payment: "Taxas de pagamento",
+                      transaction: "Taxas de transação",
+                      tax: "Reserva fiscal do modelo",
+                    } as Record<string, string>
+                  )[item.key] ?? item.label,
+              }))
+            : costItems;
 
-  const displayWhatIfScenarios = language === "fr" ? whatIfScenarios.map((scenario) => ({
-    ...scenario,
-    label: ({ ads: "Réduire la publicité de 10 %", shipping: "Réduire les frais d'expédition de 10 %", fees: "Réduire les frais de 0,5 %" } as Record<string, string>)[scenario.key] ?? scenario.label,
-    note: ({ ads: "Effet mensuel immédiat", shipping: "Amélioration opérationnelle", fees: "Renégociation ou changement de prestataire" } as Record<string, string>)[scenario.key] ?? scenario.note,
-  })) : language === "de" ? whatIfScenarios.map((scenario) => ({
-    ...scenario,
-    label: ({ ads: "Werbung um 10 % senken", shipping: "Versandkosten um 10 % senken", fees: "Gebühren um 0,5 % senken" } as Record<string, string>)[scenario.key] ?? scenario.label,
-    note: ({ ads: "Unmittelbare monatliche Wirkung", shipping: "Operative Verbesserung", fees: "Neu verhandeln oder Anbieter wechseln" } as Record<string, string>)[scenario.key] ?? scenario.note,
-  })) : language === "es" ? whatIfScenarios.map((scenario) => ({
-    ...scenario,
-    label: ({ ads: "Reducir la publicidad un 10 %", shipping: "Reducir los costes de envío un 10 %", fees: "Reducir las comisiones un 0,5 %" } as Record<string, string>)[scenario.key] ?? scenario.label,
-    note: ({ ads: "Efecto mensual inmediato", shipping: "Mejora operativa", fees: "Renegociar o cambiar de proveedor" } as Record<string, string>)[scenario.key] ?? scenario.note,
-  })) : language === "pt-BR" ? whatIfScenarios.map((scenario) => ({
-    ...scenario,
-    label: ({ ads: "Reduzir a publicidade em 10%", shipping: "Reduzir o custo de frete em 10%", fees: "Reduzir as taxas em 0,5%" } as Record<string, string>)[scenario.key] ?? scenario.label,
-    note: ({ ads: "Efeito mensal imediato", shipping: "Melhoria operacional", fees: "Renegociar ou trocar de fornecedor" } as Record<string, string>)[scenario.key] ?? scenario.note,
-  })) : whatIfScenarios;
+  const displayWhatIfScenarios =
+    language === "fr"
+      ? whatIfScenarios.map((scenario) => ({
+          ...scenario,
+          label:
+            (
+              {
+                ads: "Réduire la publicité de 10 %",
+                shipping: "Réduire les frais d'expédition de 10 %",
+                fees: "Réduire les frais de 0,5 %",
+              } as Record<string, string>
+            )[scenario.key] ?? scenario.label,
+          note:
+            (
+              {
+                ads: "Effet mensuel immédiat",
+                shipping: "Amélioration opérationnelle",
+                fees: "Renégociation ou changement de prestataire",
+              } as Record<string, string>
+            )[scenario.key] ?? scenario.note,
+        }))
+      : language === "de"
+        ? whatIfScenarios.map((scenario) => ({
+            ...scenario,
+            label:
+              (
+                {
+                  ads: "Werbung um 10 % senken",
+                  shipping: "Versandkosten um 10 % senken",
+                  fees: "Gebühren um 0,5 % senken",
+                } as Record<string, string>
+              )[scenario.key] ?? scenario.label,
+            note:
+              (
+                {
+                  ads: "Unmittelbare monatliche Wirkung",
+                  shipping: "Operative Verbesserung",
+                  fees: "Neu verhandeln oder Anbieter wechseln",
+                } as Record<string, string>
+              )[scenario.key] ?? scenario.note,
+          }))
+        : language === "es"
+          ? whatIfScenarios.map((scenario) => ({
+              ...scenario,
+              label:
+                (
+                  {
+                    ads: "Reducir la publicidad un 10 %",
+                    shipping: "Reducir los costes de envío un 10 %",
+                    fees: "Reducir las comisiones un 0,5 %",
+                  } as Record<string, string>
+                )[scenario.key] ?? scenario.label,
+              note:
+                (
+                  {
+                    ads: "Efecto mensual inmediato",
+                    shipping: "Mejora operativa",
+                    fees: "Renegociar o cambiar de proveedor",
+                  } as Record<string, string>
+                )[scenario.key] ?? scenario.note,
+            }))
+          : language === "pt-BR"
+            ? whatIfScenarios.map((scenario) => ({
+                ...scenario,
+                label:
+                  (
+                    {
+                      ads: "Reduzir a publicidade em 10%",
+                      shipping: "Reduzir o custo de frete em 10%",
+                      fees: "Reduzir as taxas em 0,5%",
+                    } as Record<string, string>
+                  )[scenario.key] ?? scenario.label,
+                note:
+                  (
+                    {
+                      ads: "Efeito mensal imediato",
+                      shipping: "Melhoria operacional",
+                      fees: "Renegociar ou trocar de fornecedor",
+                    } as Record<string, string>
+                  )[scenario.key] ?? scenario.note,
+              }))
+            : whatIfScenarios;
 
-  const displayHealthLabel = language === "fr" ? healthScore >= 80 ? "Modèle solide" : healthScore >= 60 ? "À optimiser" : "À risque" : language === "de" ? healthScore >= 80 ? "Solides Modell" : healthScore >= 60 ? "Optimierungsbedarf" : "Gefährdet" : language === "es" ? healthScore >= 80 ? "Modelo sólido" : healthScore >= 60 ? "Debe optimizarse" : "En riesgo" : language === "pt-BR" ? healthScore >= 80 ? "Modelo sólido" : healthScore >= 60 ? "Precisa de otimização" : "Em risco" : healthLabel;
-  const displayLargestCostLabel = largestCost ? displayCostItems.find((item) => item.key === largestCost.key)?.label ?? largestCost.label : "";
-  const displayAdvice = language === "fr"
-    ? largestCost && totalEstimatedCosts > 0
-      ? `${displayLargestCostLabel} représente environ ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} des coûts estimés. Une réduction de 10 % dans ce domaine améliorerait le bénéfice mensuel d'environ ${money(largestCostMonthlySaving)} et le bénéfice annuel d'environ ${money(largestCostAnnualSaving)}.`
-      : "Ajoutez vos principaux coûts pour obtenir une recommandation financière plus fiable."
-    : language === "de"
+  const displayHealthLabel =
+    language === "fr"
+      ? healthScore >= 80
+        ? "Modèle solide"
+        : healthScore >= 60
+          ? "À optimiser"
+          : "À risque"
+      : language === "de"
+        ? healthScore >= 80
+          ? "Solides Modell"
+          : healthScore >= 60
+            ? "Optimierungsbedarf"
+            : "Gefährdet"
+        : language === "es"
+          ? healthScore >= 80
+            ? "Modelo sólido"
+            : healthScore >= 60
+              ? "Debe optimizarse"
+              : "En riesgo"
+          : language === "pt-BR"
+            ? healthScore >= 80
+              ? "Modelo sólido"
+              : healthScore >= 60
+                ? "Precisa de otimização"
+                : "Em risco"
+            : healthLabel;
+  const displayLargestCostLabel = largestCost
+    ? (displayCostItems.find((item) => item.key === largestCost.key)?.label ??
+      largestCost.label)
+    : "";
+  const displayAdvice =
+    language === "fr"
       ? largestCost && totalEstimatedCosts > 0
-        ? `${displayLargestCostLabel} macht etwa ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} der geschätzten Kosten aus. Eine Senkung um 10 % in diesem Bereich würde den monatlichen Gewinn um etwa ${money(largestCostMonthlySaving)} und den jährlichen Gewinn um etwa ${money(largestCostAnnualSaving)} verbessern.`
-        : "Ergänzen Sie Ihre wichtigsten Kosten, um eine zuverlässigere finanzielle Empfehlung zu erhalten."
-      : language === "es"
+        ? `${displayLargestCostLabel} représente environ ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} des coûts estimés. Une réduction de 10 % dans ce domaine améliorerait le bénéfice mensuel d'environ ${money(largestCostMonthlySaving)} et le bénéfice annuel d'environ ${money(largestCostAnnualSaving)}.`
+        : "Ajoutez vos principaux coûts pour obtenir une recommandation financière plus fiable."
+      : language === "de"
         ? largestCost && totalEstimatedCosts > 0
-          ? `${displayLargestCostLabel} representa aproximadamente el ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} de los costes estimados. Una reducción del 10 % en esta área mejoraría el beneficio mensual en unos ${money(largestCostMonthlySaving)} y el beneficio anual en unos ${money(largestCostAnnualSaving)}.`
-          : "Añade tus principales costes para obtener una recomendación financiera más fiable."
-      : language === "pt-BR"
-        ? largestCost && totalEstimatedCosts > 0
-          ? `${displayLargestCostLabel} representa aproximadamente ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} dos custos estimados. Uma redução de 10% nessa área melhoraria o lucro mensal em cerca de ${money(largestCostMonthlySaving)} e o lucro anual em cerca de ${money(largestCostAnnualSaving)}.`
-          : "Adicione seus principais custos para obter uma recomendação financeira mais confiável."
-      : advice;
+          ? `${displayLargestCostLabel} macht etwa ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} der geschätzten Kosten aus. Eine Senkung um 10 % in diesem Bereich würde den monatlichen Gewinn um etwa ${money(largestCostMonthlySaving)} und den jährlichen Gewinn um etwa ${money(largestCostAnnualSaving)} verbessern.`
+          : "Ergänzen Sie Ihre wichtigsten Kosten, um eine zuverlässigere finanzielle Empfehlung zu erhalten."
+        : language === "es"
+          ? largestCost && totalEstimatedCosts > 0
+            ? `${displayLargestCostLabel} representa aproximadamente el ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} de los costes estimados. Una reducción del 10 % en esta área mejoraría el beneficio mensual en unos ${money(largestCostMonthlySaving)} y el beneficio anual en unos ${money(largestCostAnnualSaving)}.`
+            : "Añade tus principales costes para obtener una recomendación financiera más fiable."
+          : language === "pt-BR"
+            ? largestCost && totalEstimatedCosts > 0
+              ? `${displayLargestCostLabel} representa aproximadamente ${pct((largestCost.value / totalEstimatedCosts) * 100, 0)} dos custos estimados. Uma redução de 10% nessa área melhoraria o lucro mensal em cerca de ${money(largestCostMonthlySaving)} e o lucro anual em cerca de ${money(largestCostAnnualSaving)}.`
+              : "Adicione seus principais custos para obter uma recomendação financeira mais confiável."
+            : advice;
 
   const exportBusinessModelCsv = () => {
     const labels =
       language === "it"
         ? {
-          section: "Sezione",
-          metric: "Voce",
-          value: "Valore",
-          unit: "Unità",
-          nature: "Natura",
-          note: "Nota",
-          metadata: "Metadati",
-          observed: "Baseline economica osservata",
-          assumptions: "Ipotesi del modello",
-          costStructure: "Struttura dei costi stimata",
-          results: "Risultati stimati",
-          scenarios: "Simulazioni rapide",
-          guidance: "Indicazione strategica",
-          observedNature: "Osservato",
-          assumptionNature: "Ipotesi",
-          estimateNature: "Stima",
-          simulationNature: "Simulazione",
-          textNature: "Qualitativo",
-          amount: "Importo",
-          percentage: "Percentuale",
-          score: "Punteggio",
-          text: "Testo",
-          generatedAt: "Generato il",
-          store: "Store",
-          period: "Periodo analizzato",
-          currency: "Valuta",
-          language: "Lingua",
-          days: "giorni",
-          revenue: "Ricavi economici",
-          cogs: "COGS",
-          grossProfit: "Profitto economico",
-          grossMargin: "Margine economico",
-          monthlyAds: "Pubblicità mensile",
-          monthlyShipping: "Spedizioni mensili",
-          monthlyOperating: "Costi operativi mensili",
-          paymentFeePct: "Commissione di pagamento",
-          transactionFeePct: "Commissione sulle transazioni",
-          taxReservePct: "Riserva fiscale gestionale",
-          fixedCosts: "Costi fissi del periodo",
-          variableCosts: "Commissioni e riserva gestionale",
-          totalCosts: "Costi stimati totali",
-          annualCosts: "Costi stimati annuali",
-          monthlyCosts: "Costi mensili normalizzati",
-          monthlyNetProfit: "Profitto netto mensile normalizzato",
-          paymentFees: "Commissioni di pagamento stimate",
-          transactionFees: "Commissioni sulle transazioni stimate",
-          taxReserve: "Riserva fiscale gestionale stimata",
-          netProfit: "Profitto netto stimato",
-          netMargin: "Margine netto stimato",
-          annualNetProfit: "Profitto netto annuale",
-          breakEven: "Ricavi mensili di pareggio",
-          profitAfterFees: "Profitto dopo commissioni",
-          modelHealth: "Salute del modello",
-          mainCost: "Costo principale",
-          recommendation: "Raccomandazione",
-          simulationNote:
-            "Scenario alternativo; non sommare alle altre simulazioni.",
-          estimateNote:
-            "Stima basata sulla baseline del periodo e sulle ipotesi inserite; non è un risultato osservato.",
-        }
+            section: "Sezione",
+            metric: "Voce",
+            value: "Valore",
+            unit: "Unità",
+            nature: "Natura",
+            note: "Nota",
+            metadata: "Metadati",
+            observed: "Baseline economica osservata",
+            assumptions: "Ipotesi del modello",
+            costStructure: "Struttura dei costi stimata",
+            results: "Risultati stimati",
+            scenarios: "Simulazioni rapide",
+            guidance: "Indicazione strategica",
+            observedNature: "Osservato",
+            assumptionNature: "Ipotesi",
+            estimateNature: "Stima",
+            simulationNature: "Simulazione",
+            textNature: "Qualitativo",
+            amount: "Importo",
+            percentage: "Percentuale",
+            score: "Punteggio",
+            text: "Testo",
+            generatedAt: "Generato il",
+            store: "Store",
+            period: "Periodo analizzato",
+            currency: "Valuta",
+            language: "Lingua",
+            days: "giorni",
+            revenue: "Ricavi economici",
+            cogs: "COGS",
+            grossProfit: "Profitto economico",
+            grossMargin: "Margine economico",
+            monthlyAds: "Pubblicità mensile",
+            monthlyShipping: "Spedizioni mensili",
+            monthlyOperating: "Costi operativi mensili",
+            paymentFeePct: "Commissione di pagamento",
+            transactionFeePct: "Commissione sulle transazioni",
+            taxReservePct: "Riserva fiscale gestionale",
+            fixedCosts: "Costi fissi del periodo",
+            variableCosts: "Commissioni e riserva gestionale",
+            totalCosts: "Costi stimati totali",
+            annualCosts: "Costi stimati annuali",
+            monthlyCosts: "Costi mensili normalizzati",
+            monthlyNetProfit: "Profitto netto mensile normalizzato",
+            paymentFees: "Commissioni di pagamento stimate",
+            transactionFees: "Commissioni sulle transazioni stimate",
+            taxReserve: "Riserva fiscale gestionale stimata",
+            netProfit: "Profitto netto stimato",
+            netMargin: "Margine netto stimato",
+            annualNetProfit: "Profitto netto annuale",
+            breakEven: "Ricavi mensili di pareggio",
+            profitAfterFees: "Profitto dopo commissioni",
+            modelHealth: "Salute del modello",
+            mainCost: "Costo principale",
+            recommendation: "Raccomandazione",
+            simulationNote:
+              "Scenario alternativo; non sommare alle altre simulazioni.",
+            estimateNote:
+              "Stima basata sulla baseline del periodo e sulle ipotesi inserite; non è un risultato osservato.",
+          }
         : {
-          section: "Section",
-          metric: "Metric",
-          value: "Value",
-          unit: "Unit",
-          nature: "Nature",
-          note: "Note",
-          metadata: "Metadata",
-          observed: "Observed economic baseline",
-          assumptions: "Model assumptions",
-          costStructure: "Estimated cost structure",
-          results: "Estimated results",
-          scenarios: "Quick what-if scenarios",
-          guidance: "Strategic guidance",
-          observedNature: "Observed",
-          assumptionNature: "Assumption",
-          estimateNature: "Estimate",
-          simulationNature: "Simulation",
-          textNature: "Qualitative",
-          amount: "Amount",
-          percentage: "Percentage",
-          score: "Score",
-          text: "Text",
-          generatedAt: "Generated at",
-          store: "Store",
-          period: "Analysis period",
-          currency: "Currency",
-          language: "Language",
-          days: "days",
-          revenue: "Economic revenue",
-          cogs: "COGS",
-          grossProfit: "Economic profit",
-          grossMargin: "Economic margin",
-          monthlyAds: "Monthly advertising",
-          monthlyShipping: "Monthly shipping",
-          monthlyOperating: "Monthly operating costs",
-          paymentFeePct: "Payment processing fee",
-          transactionFeePct: "Transaction fee",
-          taxReservePct: "Business tax reserve",
-          fixedCosts: "Fixed costs for period",
-          variableCosts: "Fees and business reserve",
-          totalCosts: "Total estimated costs",
-          annualCosts: "Annual estimated costs",
-          monthlyCosts: "Normalized monthly costs",
-          monthlyNetProfit: "Normalized monthly net profit",
-          paymentFees: "Estimated payment fees",
-          transactionFees: "Estimated transaction fees",
-          taxReserve: "Estimated business tax reserve",
-          netProfit: "Estimated net profit",
-          netMargin: "Estimated net margin",
-          annualNetProfit: "Annual net profit",
-          breakEven: "Monthly break-even revenue",
-          profitAfterFees: "Profit after fees",
-          modelHealth: "Model health",
-          mainCost: "Largest cost",
-          recommendation: "Recommendation",
-          simulationNote:
-            "Alternative scenario; do not add to the other simulations.",
-          estimateNote:
-            "Estimate based on the period baseline and entered assumptions; it is not an observed result.",
-        };
+            section: "Section",
+            metric: "Metric",
+            value: "Value",
+            unit: "Unit",
+            nature: "Nature",
+            note: "Note",
+            metadata: "Metadata",
+            observed: "Observed economic baseline",
+            assumptions: "Model assumptions",
+            costStructure: "Estimated cost structure",
+            results: "Estimated results",
+            scenarios: "Quick what-if scenarios",
+            guidance: "Strategic guidance",
+            observedNature: "Observed",
+            assumptionNature: "Assumption",
+            estimateNature: "Estimate",
+            simulationNature: "Simulation",
+            textNature: "Qualitative",
+            amount: "Amount",
+            percentage: "Percentage",
+            score: "Score",
+            text: "Text",
+            generatedAt: "Generated at",
+            store: "Store",
+            period: "Analysis period",
+            currency: "Currency",
+            language: "Language",
+            days: "days",
+            revenue: "Economic revenue",
+            cogs: "COGS",
+            grossProfit: "Economic profit",
+            grossMargin: "Economic margin",
+            monthlyAds: "Monthly advertising",
+            monthlyShipping: "Monthly shipping",
+            monthlyOperating: "Monthly operating costs",
+            paymentFeePct: "Payment processing fee",
+            transactionFeePct: "Transaction fee",
+            taxReservePct: "Business tax reserve",
+            fixedCosts: "Fixed costs for period",
+            variableCosts: "Fees and business reserve",
+            totalCosts: "Total estimated costs",
+            annualCosts: "Annual estimated costs",
+            monthlyCosts: "Normalized monthly costs",
+            monthlyNetProfit: "Normalized monthly net profit",
+            paymentFees: "Estimated payment fees",
+            transactionFees: "Estimated transaction fees",
+            taxReserve: "Estimated business tax reserve",
+            netProfit: "Estimated net profit",
+            netMargin: "Estimated net margin",
+            annualNetProfit: "Annual net profit",
+            breakEven: "Monthly break-even revenue",
+            profitAfterFees: "Profit after fees",
+            modelHealth: "Model health",
+            mainCost: "Largest cost",
+            recommendation: "Recommendation",
+            simulationNote:
+              "Alternative scenario; do not add to the other simulations.",
+            estimateNote:
+              "Estimate based on the period baseline and entered assumptions; it is not an observed result.",
+          };
 
     const rows: Array<Array<string | number>> = [
-      [labels.section, labels.metric, labels.value, labels.unit, labels.nature, labels.note],
-      [labels.metadata, labels.generatedAt, new Date().toISOString(), "ISO 8601", labels.textNature, ""],
-      [labels.metadata, labels.store, shopHandle ?? "", "", labels.textNature, ""],
-      [labels.metadata, labels.period, periodDays, labels.days, labels.observedNature, ""],
-      [labels.metadata, labels.currency, currencyCode, "ISO 4217", labels.textNature, ""],
+      [
+        labels.section,
+        labels.metric,
+        labels.value,
+        labels.unit,
+        labels.nature,
+        labels.note,
+      ],
+      [
+        labels.metadata,
+        labels.generatedAt,
+        new Date().toISOString(),
+        "ISO 8601",
+        labels.textNature,
+        "",
+      ],
+      [
+        labels.metadata,
+        labels.store,
+        shopHandle ?? "",
+        "",
+        labels.textNature,
+        "",
+      ],
+      [
+        labels.metadata,
+        labels.period,
+        periodDays,
+        labels.days,
+        labels.observedNature,
+        "",
+      ],
+      [
+        labels.metadata,
+        labels.currency,
+        currencyCode,
+        "ISO 4217",
+        labels.textNature,
+        "",
+      ],
       [labels.metadata, labels.language, language, "", labels.textNature, ""],
-      [labels.observed, labels.revenue, roundCsvNumber(economicRevenue), currencyCode, labels.observedNature, ""],
-      [labels.observed, labels.cogs, roundCsvNumber(economicCogs), currencyCode, labels.observedNature, ""],
-      [labels.observed, labels.grossProfit, roundCsvNumber(economicProfit), currencyCode, labels.observedNature, ""],
-      [labels.observed, labels.grossMargin, roundCsvNumber(economicMarginPct), "%", labels.observedNature, ""],
-      [labels.assumptions, labels.monthlyAds, roundCsvNumber(monthlyAds), currencyCode, labels.assumptionNature, ""],
-      [labels.assumptions, labels.monthlyShipping, roundCsvNumber(monthlyShipping), currencyCode, labels.assumptionNature, ""],
-      [labels.assumptions, labels.monthlyOperating, roundCsvNumber(monthlyOperating), currencyCode, labels.assumptionNature, ""],
-      [labels.assumptions, labels.paymentFeePct, roundCsvNumber(paymentFeePct), "%", labels.assumptionNature, ""],
-      [labels.assumptions, labels.transactionFeePct, roundCsvNumber(transactionFeePct), "%", labels.assumptionNature, ""],
-      [labels.assumptions, labels.taxReservePct, roundCsvNumber(taxReservePct), "%", labels.assumptionNature, ""],
-      [labels.costStructure, labels.fixedCosts, roundCsvNumber(totalFixedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.paymentFees, roundCsvNumber(estimatedPaymentFees), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.transactionFees, roundCsvNumber(estimatedTransactionFees), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.taxReserve, roundCsvNumber(estimatedTaxReserve), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.variableCosts, roundCsvNumber(totalVariableCosts), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.totalCosts, roundCsvNumber(totalEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.annualCosts, roundCsvNumber(annualEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.costStructure, labels.monthlyCosts, roundCsvNumber(monthlyEstimatedCosts), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.netProfit, roundCsvNumber(estimatedNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.monthlyNetProfit, roundCsvNumber(monthlyEstimatedNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.netMargin, roundCsvNumber(estimatedNetMargin), "%", labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.annualNetProfit, roundCsvNumber(annualNetProfit), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.breakEven, roundCsvNumber(breakEvenRevenue), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.profitAfterFees, roundCsvNumber(profitAfterFees), currencyCode, labels.estimateNature, labels.estimateNote],
-      [labels.results, labels.modelHealth, healthScore, "/100", labels.estimateNature, healthLabel],
-      ...costItems.map((item) => [labels.costStructure, item.label, roundCsvNumber(item.value), currencyCode, labels.estimateNature, labels.estimateNote]),
-      ...whatIfScenarios.map((scenario) => [labels.scenarios, scenario.label, roundCsvNumber(scenario.impact), `${currencyCode}/month`, labels.simulationNature, labels.simulationNote]),
-      ...whatIfScenarios.map((scenario) => [labels.scenarios, `${scenario.label} — 12 months`, roundCsvNumber(scenario.impact * 12), currencyCode, labels.simulationNature, labels.simulationNote]),
-      [labels.guidance, labels.mainCost, largestCost?.label ?? "", labels.text, labels.textNature, ""],
-      [labels.guidance, labels.recommendation, advice, labels.text, labels.textNature, ""],
+      [
+        labels.observed,
+        labels.revenue,
+        roundCsvNumber(economicRevenue),
+        currencyCode,
+        labels.observedNature,
+        "",
+      ],
+      [
+        labels.observed,
+        labels.cogs,
+        roundCsvNumber(economicCogs),
+        currencyCode,
+        labels.observedNature,
+        "",
+      ],
+      [
+        labels.observed,
+        labels.grossProfit,
+        roundCsvNumber(economicProfit),
+        currencyCode,
+        labels.observedNature,
+        "",
+      ],
+      [
+        labels.observed,
+        labels.grossMargin,
+        roundCsvNumber(economicMarginPct),
+        "%",
+        labels.observedNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.monthlyAds,
+        roundCsvNumber(monthlyAds),
+        currencyCode,
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.monthlyShipping,
+        roundCsvNumber(monthlyShipping),
+        currencyCode,
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.monthlyOperating,
+        roundCsvNumber(monthlyOperating),
+        currencyCode,
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.paymentFeePct,
+        roundCsvNumber(paymentFeePct),
+        "%",
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.transactionFeePct,
+        roundCsvNumber(transactionFeePct),
+        "%",
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.assumptions,
+        labels.taxReservePct,
+        roundCsvNumber(taxReservePct),
+        "%",
+        labels.assumptionNature,
+        "",
+      ],
+      [
+        labels.costStructure,
+        labels.fixedCosts,
+        roundCsvNumber(totalFixedCosts),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.paymentFees,
+        roundCsvNumber(estimatedPaymentFees),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.transactionFees,
+        roundCsvNumber(estimatedTransactionFees),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.taxReserve,
+        roundCsvNumber(estimatedTaxReserve),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.variableCosts,
+        roundCsvNumber(totalVariableCosts),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.totalCosts,
+        roundCsvNumber(totalEstimatedCosts),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.annualCosts,
+        roundCsvNumber(annualEstimatedCosts),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.costStructure,
+        labels.monthlyCosts,
+        roundCsvNumber(monthlyEstimatedCosts),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.netProfit,
+        roundCsvNumber(estimatedNetProfit),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.monthlyNetProfit,
+        roundCsvNumber(monthlyEstimatedNetProfit),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.netMargin,
+        roundCsvNumber(estimatedNetMargin),
+        "%",
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.annualNetProfit,
+        roundCsvNumber(annualNetProfit),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.breakEven,
+        roundCsvNumber(breakEvenRevenue),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.profitAfterFees,
+        roundCsvNumber(profitAfterFees),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ],
+      [
+        labels.results,
+        labels.modelHealth,
+        healthScore,
+        "/100",
+        labels.estimateNature,
+        healthLabel,
+      ],
+      ...costItems.map((item) => [
+        labels.costStructure,
+        item.label,
+        roundCsvNumber(item.value),
+        currencyCode,
+        labels.estimateNature,
+        labels.estimateNote,
+      ]),
+      ...whatIfScenarios.map((scenario) => [
+        labels.scenarios,
+        scenario.label,
+        roundCsvNumber(scenario.impact),
+        `${currencyCode}/month`,
+        labels.simulationNature,
+        labels.simulationNote,
+      ]),
+      ...whatIfScenarios.map((scenario) => [
+        labels.scenarios,
+        `${scenario.label} — 12 months`,
+        roundCsvNumber(scenario.impact * 12),
+        currencyCode,
+        labels.simulationNature,
+        labels.simulationNote,
+      ]),
+      [
+        labels.guidance,
+        labels.mainCost,
+        largestCost?.label ?? "",
+        labels.text,
+        labels.textNature,
+        "",
+      ],
+      [
+        labels.guidance,
+        labels.recommendation,
+        advice,
+        labels.text,
+        labels.textNature,
+        "",
+      ],
     ];
 
     const csv = `\uFEFF${rows.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
@@ -859,59 +1191,86 @@ export default function ProfitAssumptionsPage() {
       <div className="dashboard-container">
         <DashboardNav active="profit-assumptions" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-              {growthAccess
-                ? copy.auto.a001
-                : copy.auto.a002}
+        <PremiumHero
+          className="model-v2-hero"
+          tone={estimatedNetProfit >= 0 ? "green" : "red"}
+          eyebrow={copy.auto.a003}
+          title={copy.auto.a004}
+          description={copy.auto.a005}
+          actions={
+            <>
+              <StatusChip
+                tone={growthAccess ? "green" : "amber"}
+                pulse={growthAccess}
+              >
+                {growthAccess ? copy.auto.a001 : copy.auto.a002}
+              </StatusChip>
+              <StatusChip
+                tone={
+                  healthScore >= 80
+                    ? "green"
+                    : healthScore >= 60
+                      ? "amber"
+                      : "red"
+                }
+              >
+                {displayHealthLabel}
+              </StatusChip>
+              <StatusChip tone="blue">{copy.auto.a006}</StatusChip>
+              {!growthAccess ? (
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.auto.a007}
+                </VisualButton>
+              ) : null}
+            </>
+          }
+          visual={
+            <div className="model-v2-economic-flow">
+              <FlowPath
+                tone={estimatedNetProfit >= 0 ? "green" : "red"}
+                trajectory="pulse"
+                motion="ambient"
+                label={copy.auto.a005}
+                nodes={[
+                  {
+                    id: "revenue",
+                    progress: 0.06,
+                    tone: "blue",
+                    label: copy.auto.a055,
+                  },
+                  {
+                    id: "costs",
+                    progress: 0.5,
+                    tone: "orange",
+                    emphasis: "strong",
+                    label: copy.auto.a059,
+                  },
+                  {
+                    id: "profit",
+                    progress: 0.94,
+                    tone: estimatedNetProfit >= 0 ? "green" : "red",
+                    emphasis: "strong",
+                    label: copy.auto.a060,
+                  },
+                ]}
+              />
+              <div className="model-v2-flow-values">
+                <span>
+                  <small>{copy.auto.a055}</small>
+                  <strong>{money(monthlyEconomicRevenue)}</strong>
+                </span>
+                <span>
+                  <small>{copy.auto.a059}</small>
+                  <strong>-{money(monthlyEstimatedCosts)}</strong>
+                </span>
+                <span>
+                  <small>{copy.auto.a060}</small>
+                  <strong>{money(monthlyEstimatedNetProfit)}</strong>
+                </span>
+              </div>
             </div>
-
-            <div className="eyebrow">
-              {copy.auto.a003}
-            </div>
-
-            <div className="hero-title">
-              {copy.auto.a004}
-            </div>
-
-            <div className="hero-description">
-              {copy.auto.a005}
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              {copy.auto.a006}
-            </div>
-          </div>
-
-          {!growthAccess && (
-            <button
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-              style={{
-                boxShadow:
-                  "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
-              }}
-            >
-              {copy.auto.a007}
-            </button>
-          )}
-        </div>
+          }
+        />
 
         <div
           style={{
@@ -921,6 +1280,7 @@ export default function ProfitAssumptionsPage() {
         >
           {!growthAccess && (
             <div
+              className="model-v2-gate"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -981,14 +1341,12 @@ export default function ProfitAssumptionsPage() {
                   {copy.auto.a010}
                 </div>
 
-                <button
-                  type="button"
-                  className="primary-button"
+                <VisualButton
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
                   {copy.auto.a011}
-                </button>
+                </VisualButton>
               </div>
             </div>
           )}
@@ -999,13 +1357,14 @@ export default function ProfitAssumptionsPage() {
               growthAccess
                 ? undefined
                 : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
             }
           >
             <div
+              className="model-v2-kpis"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(6,minmax(0,1fr))",
@@ -1013,75 +1372,52 @@ export default function ProfitAssumptionsPage() {
               }}
             >
               <KpiCard
-                label={
-                  copy.auto.a012
-                }
+                label={copy.auto.a012}
                 value={money(monthlyEstimatedNetProfit)}
-                note={`${pct(estimatedNetMargin)} ${copy.auto.a013
-                  }`}
+                note={`${pct(estimatedNetMargin)} ${copy.auto.a013}`}
                 color={estimatedNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
                 highlight
                 tooltip={
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.a014,
-                      description:
-                        copy.auto.a015,
+                      title: copy.auto.a014,
+                      description: copy.auto.a015,
                     }}
                   />
                 }
               />
 
               <KpiCard
-                label={
-                  copy.auto.a016
-                }
+                label={copy.auto.a016}
                 value={money(monthlyEstimatedCosts)}
-                note={
-                  copy.auto.a017
-                }
+                note={copy.auto.a017}
               />
 
               <KpiCard
-                label={
-                  copy.auto.a018
-                }
+                label={copy.auto.a018}
                 value={money(breakEvenRevenue)}
-                note={
-                  copy.auto.a019
-                }
+                note={copy.auto.a019}
                 tooltip={
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.a020,
-                      description:
-                        copy.auto.a021,
+                      title: copy.auto.a020,
+                      description: copy.auto.a021,
                     }}
                   />
                 }
               />
 
               <KpiCard
-                label={
-                  copy.auto.a022
-                }
+                label={copy.auto.a022}
                 value={money(profitAfterFees)}
-                note={
-                  copy.auto.a023
-                }
+                note={copy.auto.a023}
                 color={profitAfterFees >= 0 ? "#f8fafc" : "#ff6b4a"}
               />
 
               <KpiCard
-                label={
-                  copy.auto.a024
-                }
+                label={copy.auto.a024}
                 value={money(annualNetProfit)}
-                note={
-                  copy.auto.a025
-                }
+                note={copy.auto.a025}
                 color={annualNetProfit >= 0 ? "#22c55e" : "#ff6b4a"}
               />
 
@@ -1099,10 +1435,8 @@ export default function ProfitAssumptionsPage() {
                 tooltip={
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.a027,
-                      description:
-                        copy.auto.a028,
+                      title: copy.auto.a027,
+                      description: copy.auto.a028,
                     }}
                   />
                 }
@@ -1110,6 +1444,7 @@ export default function ProfitAssumptionsPage() {
             </div>
 
             <div
+              className="model-v2-input-output"
               style={{
                 marginTop: 22,
                 display: "grid",
@@ -1118,10 +1453,8 @@ export default function ProfitAssumptionsPage() {
                 alignItems: "stretch",
               }}
             >
-              <div className="panel" style={{ margin: 0, padding: 24 }}>
-                <div className="panel-eyebrow">
-                  {copy.auto.a029}
-                </div>
+              <PremiumPanel className="model-v2-assumptions" tone="orange">
+                <div className="panel-eyebrow">{copy.auto.a029}</div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
                   {copy.auto.a030}
@@ -1170,9 +1503,7 @@ export default function ProfitAssumptionsPage() {
                       >
                         <FieldCard
                           label={copy.auto.a033}
-                          helper={
-                            copy.auto.a034
-                          }
+                          helper={copy.auto.a034}
                           value={monthlyAds}
                           onChange={setMonthlyAds}
                           prefix={currencySymbol}
@@ -1180,21 +1511,15 @@ export default function ProfitAssumptionsPage() {
 
                         <FieldCard
                           label={copy.auto.a035}
-                          helper={
-                            copy.auto.a036
-                          }
+                          helper={copy.auto.a036}
                           value={monthlyShipping}
                           onChange={setMonthlyShipping}
                           prefix={currencySymbol}
                         />
 
                         <FieldCard
-                          label={
-                            copy.auto.a037
-                          }
-                          helper={
-                            copy.auto.a038
-                          }
+                          label={copy.auto.a037}
+                          helper={copy.auto.a038}
                           value={monthlyOperating}
                           onChange={setMonthlyOperating}
                           prefix={currencySymbol}
@@ -1224,12 +1549,8 @@ export default function ProfitAssumptionsPage() {
                         }}
                       >
                         <FieldCard
-                          label={
-                            copy.auto.a040
-                          }
-                          helper={
-                            copy.auto.a041
-                          }
+                          label={copy.auto.a040}
+                          helper={copy.auto.a041}
                           value={paymentFeePct}
                           onChange={setPaymentFeePct}
                           suffix="%"
@@ -1237,12 +1558,8 @@ export default function ProfitAssumptionsPage() {
                         />
 
                         <FieldCard
-                          label={
-                            copy.auto.a042
-                          }
-                          helper={
-                            copy.auto.a043
-                          }
+                          label={copy.auto.a042}
+                          helper={copy.auto.a043}
                           value={transactionFeePct}
                           onChange={setTransactionFeePct}
                           suffix="%"
@@ -1266,12 +1583,8 @@ export default function ProfitAssumptionsPage() {
                       </div>
 
                       <FieldCard
-                        label={
-                          copy.auto.a045
-                        }
-                        helper={
-                          copy.auto.a046
-                        }
+                        label={copy.auto.a045}
+                        helper={copy.auto.a046}
                         value={taxReservePct}
                         onChange={setTaxReservePct}
                         suffix="%"
@@ -1291,17 +1604,25 @@ export default function ProfitAssumptionsPage() {
                     name="monthlyOperating"
                     value={monthlyOperating}
                   />
-                  <input type="hidden" name="paymentFeePct" value={paymentFeePct} />
+                  <input
+                    type="hidden"
+                    name="paymentFeePct"
+                    value={paymentFeePct}
+                  />
                   <input
                     type="hidden"
                     name="transactionFeePct"
                     value={transactionFeePct}
                   />
-                  <input type="hidden" name="taxReservePct" value={taxReservePct} />
+                  <input
+                    type="hidden"
+                    name="taxReservePct"
+                    value={taxReservePct}
+                  />
 
-                  <button
+                  <VisualButton
                     type="submit"
-                    className="primary-button"
+                    className="model-v2-save"
                     style={{
                       width: "100%",
                       marginTop: 20,
@@ -1316,11 +1637,13 @@ export default function ProfitAssumptionsPage() {
                       : saveFetcher.data?.ok
                         ? copy.auto.a048
                         : copy.auto.a049}
-                  </button>
+                  </VisualButton>
                 </saveFetcher.Form>
-              </div>
+              </PremiumPanel>
 
-              <div
+              <PremiumPanel
+                className="model-v2-output"
+                tone={estimatedNetProfit >= 0 ? "green" : "red"}
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1329,7 +1652,15 @@ export default function ProfitAssumptionsPage() {
                   border: "1px solid rgba(34,197,94,0.22)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 14,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <div
                     style={{
                       display: "flex",
@@ -1342,28 +1673,24 @@ export default function ProfitAssumptionsPage() {
                       letterSpacing: "0.13em",
                     }}
                   >
-                    <span>
-                      {copy.auto.a050}
-                    </span>
+                    <span>{copy.auto.a050}</span>
 
                     <MetricTooltip
                       content={{
-                        title:
-                          copy.auto.a051,
-                        description:
-                          copy.auto.a052,
+                        title: copy.auto.a051,
+                        description: copy.auto.a052,
                       }}
                     />
                   </div>
 
-                  <button
-                    type="button"
+                  <VisualButton
                     onClick={exportBusinessModelCsv}
-                    className="secondary-button"
+                    variant="secondary"
+                    size="small"
                     style={{ whiteSpace: "nowrap" }}
                   >
                     {copy.auto.a053}
-                  </button>
+                  </VisualButton>
                 </div>
 
                 <div
@@ -1387,8 +1714,7 @@ export default function ProfitAssumptionsPage() {
                     fontWeight: 800,
                   }}
                 >
-                  {copy.auto.a054}
-                  : {pct(estimatedNetMargin)}
+                  {copy.auto.a054}: {pct(estimatedNetMargin)}
                 </div>
 
                 <div
@@ -1415,14 +1741,12 @@ export default function ProfitAssumptionsPage() {
                       color: "#f8fafc",
                     },
                     {
-                      label:
-                        copy.auto.a058,
+                      label: copy.auto.a058,
                       value: `-${money(totalVariableCosts * monthlyNormalizationMultiplier)}`,
                       color: "#f8fafc",
                     },
                     {
-                      label:
-                        copy.auto.a059,
+                      label: copy.auto.a059,
                       value: `-${money(monthlyEstimatedCosts)}`,
                       color: "#ff9a70",
                     },
@@ -1440,16 +1764,22 @@ export default function ProfitAssumptionsPage() {
                         gap: 14,
                         padding: "10px 0",
                         borderTop:
-                          index === 5 ? "1px solid rgba(255,115,60,0.20)" : "none",
+                          index === 5
+                            ? "1px solid rgba(255,115,60,0.20)"
+                            : "none",
                         borderBottom:
-                          index < 5 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                          index < 5
+                            ? "1px solid rgba(255,255,255,0.06)"
+                            : "none",
                         color: "rgba(255,255,255,0.68)",
                         fontSize: 13,
                         fontWeight: 800,
                       }}
                     >
                       <span>{item.label}</span>
-                      <strong style={{ color: item.color }}>{item.value}</strong>
+                      <strong style={{ color: item.color }}>
+                        {item.value}
+                      </strong>
                     </div>
                   ))}
                 </div>
@@ -1492,18 +1822,19 @@ export default function ProfitAssumptionsPage() {
                   >
                     {estimatedNetProfit >= 0
                       ? t("profitAssumptionsPage.positiveModel", {
-                        profit: money(monthlyEstimatedNetProfit),
-                        breakEven: money(breakEvenRevenue),
-                      })
+                          profit: money(monthlyEstimatedNetProfit),
+                          breakEven: money(breakEvenRevenue),
+                        })
                       : t("profitAssumptionsPage.negativeModel", {
-                        loss: money(Math.abs(monthlyEstimatedNetProfit)),
-                      })}
+                          loss: money(Math.abs(monthlyEstimatedNetProfit)),
+                        })}
                   </div>
                 </div>
-              </div>
+              </PremiumPanel>
             </div>
 
             <div
+              className="model-v2-analysis-grid"
               style={{
                 marginTop: 22,
                 display: "grid",
@@ -1511,10 +1842,8 @@ export default function ProfitAssumptionsPage() {
                 gap: 22,
               }}
             >
-              <div className="panel" style={{ margin: 0, padding: 24 }}>
-                <div className="panel-eyebrow">
-                  {copy.auto.a062}
-                </div>
+              <PremiumPanel className="model-v2-cost-chart" tone="orange">
+                <div className="panel-eyebrow">{copy.auto.a062}</div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
                   {copy.auto.a063}
@@ -1648,9 +1977,11 @@ export default function ProfitAssumptionsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </PremiumPanel>
 
-              <div
+              <PremiumPanel
+                className="model-v2-scenarios"
+                tone="blue"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1770,10 +2101,11 @@ export default function ProfitAssumptionsPage() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </PremiumPanel>
             </div>
 
             <div
+              className="model-v2-insights-grid"
               style={{
                 marginTop: 22,
                 display: "grid",
@@ -1781,7 +2113,9 @@ export default function ProfitAssumptionsPage() {
                 gap: 22,
               }}
             >
-              <div
+              <PremiumPanel
+                className="model-v2-advice"
+                tone="orange"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1926,9 +2260,11 @@ export default function ProfitAssumptionsPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </PremiumPanel>
 
-              <div
+              <PremiumPanel
+                className="model-v2-connected"
+                tone="green"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1971,23 +2307,21 @@ export default function ProfitAssumptionsPage() {
                     {
                       label: "Profit Copilot",
                       route: "/app/ai-advisor",
-                      text:
-                        copy.auto.a076,
+                      text: copy.auto.a076,
                     },
                     {
                       label: "Recovery Simulator",
                       route: "/app/recovery-simulator",
-                      text:
-                        copy.auto.a077,
+                      text: copy.auto.a077,
                     },
                     {
                       label: "Forecasting",
                       route: "/app/forecasting",
-                      text:
-                        copy.auto.a078,
+                      text: copy.auto.a078,
                     },
                   ].map((module) => (
                     <button
+                      className="model-v2-module-link"
                       key={module.label}
                       type="button"
                       onClick={() => navigate(module.route)}
@@ -2023,10 +2357,11 @@ export default function ProfitAssumptionsPage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </PremiumPanel>
             </div>
 
             <div
+              className="model-v2-method"
               style={{
                 marginTop: 22,
                 padding: 18,
