@@ -8,9 +8,9 @@ import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   MetricCard,
+  OrbitField,
   PremiumHero,
   PremiumPanel,
-  SignalRing,
   StatusChip,
   VisualButton,
 } from "~/components/ui/VisualSystem";
@@ -1457,9 +1457,7 @@ Rules:
 
         <PremiumHero
           className="advisor-v2-hero"
-          tone={
-            healthScore >= 70 ? "green" : healthScore >= 45 ? "amber" : "red"
-          }
+          tone="orange"
           eyebrow={copy.profit_copilot}
           title={copy.your_store_briefing_already_prepared}
           description={
@@ -1484,40 +1482,34 @@ Rules:
             </>
           }
           visual={
-            <div className="advisor-v2-brief-visual">
-              <SignalRing
-                value={healthScore}
+            <div className="advisor-v2-identity-visual" aria-hidden="true">
+              <OrbitField
+                className="advisor-v2-identity-orbit"
                 size="large"
                 motion="ambient"
-                tone={
-                  healthScore >= 70
-                    ? "green"
-                    : healthScore >= 45
-                      ? "amber"
-                      : "red"
+                tone="orange"
+                nodes={[
+                  { id: "signal-a", orbit: 1, angle: 38, tone: "orange" },
+                  { id: "signal-b", orbit: 2, angle: 162, tone: "blue" },
+                  { id: "signal-c", orbit: 3, angle: 278, tone: "green" },
+                  {
+                    id: "signal-d",
+                    orbit: 3,
+                    angle: 92,
+                    tone: "violet",
+                    emphasis: "quiet",
+                  },
+                ]}
+                center={
+                  <span className="advisor-v2-identity-core">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
                 }
-                label={
-                  <span className="advisor-v2-ring-value">{healthScore}</span>
-                }
-                detail={copy.store_health_2}
               />
-              <div className="advisor-v2-brief-stats" aria-hidden="true">
-                <span>
-                  <i />
-                  {copy.active_risks}
-                  <strong>{activeRiskAlerts.length}</strong>
-                </span>
-                <span>
-                  <i />
-                  {copy.weekly_mission}
-                  <strong>{missionActions}</strong>
-                </span>
-                <span>
-                  <i />
-                  {copy.profit_gap_to_target}
-                  <strong>{money(recoverableProfit)}</strong>
-                </span>
-              </div>
+              <span className="advisor-v2-identity-trace advisor-v2-identity-trace-a" />
+              <span className="advisor-v2-identity-trace advisor-v2-identity-trace-b" />
             </div>
           }
         />
