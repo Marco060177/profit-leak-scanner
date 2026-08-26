@@ -133,27 +133,35 @@ export default function ScoreCard({
           {getAssessmentCopy(assessment, visualLeak, t)}
         </div>
 
-        <div className="score-mini-grid dashboard-v2-health-metrics">
-          <MetricCard
-            density="dense"
-            tone="red"
-            label={copy.confirmedLoss}
-            value={money(visualLeak)}
-          />
-          <MetricCard
-            density="dense"
-            tone="amber"
-            label={copy.productsAtRisk}
-            value={t("scoreCard.productsDetected", {
-              count: visualProductsAtRisk,
-            })}
-          />
-          <MetricCard
-            density="dense"
-            tone="green"
-            label={copy.margin}
-            value={pct(visualMarginPct)}
-          />
+        <div className="dashboard-v2-health-drivers">
+          <div className="dashboard-v2-driver-rail" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+
+          <div className="score-mini-grid dashboard-v2-health-metrics">
+            <MetricCard
+              density="dense"
+              tone="red"
+              label={copy.confirmedLoss}
+              value={money(visualLeak)}
+            />
+            <MetricCard
+              density="dense"
+              tone="amber"
+              label={copy.productsAtRisk}
+              value={t("scoreCard.productsDetected", {
+                count: visualProductsAtRisk,
+              })}
+            />
+            <MetricCard
+              density="dense"
+              tone="green"
+              label={copy.margin}
+              value={pct(visualMarginPct)}
+            />
+          </div>
         </div>
       </div>
     </PremiumPanel>
@@ -176,40 +184,63 @@ export function MarginHealthSignal({ assessment }: Pick<Props, "assessment">) {
 
   return (
     <div className="dashboard-v2-health-signal">
-      <SignalRing
-        value={score ?? 0}
-        variant="hero"
-        size="large"
-        motion="ambient"
-        tone={tone}
-        score={score ?? "—"}
-        suffix={score === null ? undefined : "/100"}
-        label={copy.eyebrow}
-        status={presentation.label}
-        info={
-          <MetricTooltip
-            content={{
-              title: copy.tooltipTitle,
-              description: copy.tooltipDescription,
-              note: copy.tooltipNote,
-            }}
-          />
-        }
-        detail={
-          score === null
-            ? t("scoreCard.hiddenScore", {
-                orderCount: assessment.evidence.orderCount,
-                activeDays: assessment.evidence.activeDays,
-              })
-            : copy.scoreBasis
-        }
-        nodes={[
-          { id: "loss", angle: 35, tone: "red" },
-          { id: "risk", angle: 150, tone: "amber" },
-          { id: "margin", angle: 265, tone: "green" },
-        ]}
-        ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
-      />
+      <div className="dashboard-v2-signal-grid" aria-hidden="true" />
+      <div className="dashboard-v2-signal-axis" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </div>
+      <div className="dashboard-v2-signal-trace" aria-hidden="true" />
+
+      <div className="dashboard-v2-signal-label is-loss">
+        <i aria-hidden="true" />
+        {copy.confirmedLoss}
+      </div>
+      <div className="dashboard-v2-signal-label is-risk">
+        <i aria-hidden="true" />
+        {copy.productsAtRisk}
+      </div>
+      <div className="dashboard-v2-signal-label is-margin">
+        <i aria-hidden="true" />
+        {copy.margin}
+      </div>
+
+      <div className="dashboard-v2-signal-core">
+        <SignalRing
+          value={score ?? 0}
+          variant="hero"
+          size="large"
+          motion="ambient"
+          tone={tone}
+          score={score ?? "—"}
+          suffix={score === null ? undefined : "/100"}
+          label={copy.eyebrow}
+          status={presentation.label}
+          info={
+            <MetricTooltip
+              content={{
+                title: copy.tooltipTitle,
+                description: copy.tooltipDescription,
+                note: copy.tooltipNote,
+              }}
+            />
+          }
+          detail={
+            score === null
+              ? t("scoreCard.hiddenScore", {
+                  orderCount: assessment.evidence.orderCount,
+                  activeDays: assessment.evidence.activeDays,
+                })
+              : copy.scoreBasis
+          }
+          nodes={[
+            { id: "loss", angle: 35, tone: "red" },
+            { id: "risk", angle: 150, tone: "amber" },
+            { id: "margin", angle: 265, tone: "green" },
+          ]}
+          ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
+        />
+      </div>
     </div>
   );
 }
