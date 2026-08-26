@@ -7,6 +7,12 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
+  FlowPath,
+  PremiumHero,
+  StatusChip,
+  VisualButton,
+} from "~/components/ui/VisualSystem";
+import {
   uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
@@ -23,16 +29,13 @@ import {
 
 import type { LoaderData } from "~/utils/margin";
 
-import {
-  getLanguageLocale,
-  isLanguage,
-  type Language,
-} from "~/utils/i18n";
+import { getLanguageLocale, isLanguage, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { getAiLanguageName } from "~/utils/ai-i18n";
 import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
 
 import "~/styles/dashboard.css";
+import "~/styles/ai-advisor-v2.css";
 
 function downloadAiReportPdf(reportText: string, language: Language) {
   const pdf = new jsPDF({
@@ -154,14 +157,10 @@ function buildServerStoreSummary({
 }) {
   const { summary, rows, economicSnapshot } = dashboardData;
 
-  const economicRevenue =
-    summary.economicRevenue ?? summary.revenue;
-  const economicCogs =
-    summary.economicCogs ?? summary.cogs;
-  const economicProfit =
-    summary.economicProfit ?? summary.profit;
-  const economicMarginPct =
-    summary.economicMarginPct ?? summary.marginPct;
+  const economicRevenue = summary.economicRevenue ?? summary.revenue;
+  const economicCogs = summary.economicCogs ?? summary.cogs;
+  const economicProfit = summary.economicProfit ?? summary.profit;
+  const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
 
   const periodDays = Number(period);
   const fixedCostFactor = periodDays / 30;
@@ -201,13 +200,9 @@ function buildServerStoreSummary({
       ...row,
       economicRevenue: row.economicRevenue ?? row.revenue,
       economicProfit: row.economicProfit ?? row.profit,
-      economicMarginPct:
-        row.economicMarginPct ?? row.marginPct,
+      economicMarginPct: row.economicMarginPct ?? row.marginPct,
     }))
-    .sort(
-      (a: any, b: any) =>
-        a.economicProfit - b.economicProfit,
-    )
+    .sort((a: any, b: any) => a.economicProfit - b.economicProfit)
     .slice(0, 8)
     .map(
       (row: any) =>
@@ -252,8 +247,9 @@ Confidence reasons: ${economicSnapshot.confidence.reasons.join(", ") || "none"}
 BUSINESS MODEL
 
 Configuration status: ${modelConfigured ? "configured" : "not configured"}
-${modelConfigured
-      ? `Monthly advertising: ${monthlyAds}
+${
+  modelConfigured
+    ? `Monthly advertising: ${monthlyAds}
 Monthly shipping: ${monthlyShipping}
 Monthly operating costs: ${monthlyOperating}
 Fixed costs prorated to ${periodDays} days: ${proratedFixedCosts}
@@ -263,19 +259,20 @@ Business tax reserve: ${taxReservePct}%
 Variable costs for the selected period: ${estimatedVariableCosts}
 Estimated net profit for the selected period: ${estimatedNetProfit}
 Estimated net margin for the selected period: ${estimatedNetMargin}%`
-      : `Net profit is unavailable because Business Model Studio has not been configured.
+    : `Net profit is unavailable because Business Model Studio has not been configured.
 Do not treat zero assumptions as real costs and do not claim that the store is profitable after operating costs.`
-    }
+}
 
 PROFIT MONITOR EVENTS
 
-${profitAlerts
-      .map(
-        (alert: any, index: number) =>
-          `${index + 1}. ${alert.severity} | economic kind: ${alert.economicKind} | ${alert.title} | action: ${alert.actionLabel} | destination: ${alert.route}`,
-      )
-      .join("\n") || "No active events."
-    }
+${
+  profitAlerts
+    .map(
+      (alert: any, index: number) =>
+        `${index + 1}. ${alert.severity} | economic kind: ${alert.economicKind} | ${alert.title} | action: ${alert.actionLabel} | destination: ${alert.route}`,
+    )
+    .join("\n") || "No active events."
+}
 
 PRODUCT DATA
 
@@ -297,32 +294,32 @@ export async function loader({ request }: { request: Request }) {
 
   const dashboardData = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      locale,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        locale,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
-    ? (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? null
+    ? ((await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? null)
     : null;
 
   const month = getUsageMonth();
   const usage = growthAccess
     ? await prisma.aiUsage.findUnique({
-      where: {
-        shop_month: {
-          shop: session.shop,
-          month,
+        where: {
+          shop_month: {
+            shop: session.shop,
+            month,
+          },
         },
-      },
-    })
+      })
     : null;
 
   return {
@@ -427,7 +424,8 @@ export async function action({ request }: { request: Request }) {
         fr: "Vous avez atteint la limite de 100 requêtes IA pour ce mois-ci. Votre quota sera automatiquement réinitialisé le mois prochain.",
         de: "Sie haben das Limit von 100 KI-Anfragen für diesen Monat erreicht. Ihr Kontingent wird im nächsten Monat automatisch zurückgesetzt.",
         es: "Has alcanzado el límite de 100 solicitudes de IA de este mes. Tu cuota se restablecerá automáticamente el próximo mes.",
-        "pt-BR": "Você atingiu o limite de 100 solicitações de IA deste mês. Sua cota será renovada automaticamente no próximo mês.",
+        "pt-BR":
+          "Você atingiu o limite de 100 solicitações de IA deste mês. Sua cota será renovada automaticamente no próximo mês.",
       }[language],
       quotaExceeded: true,
     };
@@ -508,17 +506,9 @@ export default function AiAdvisorPage() {
   const copy = messages.aiAdvisorPage;
 
   const money = (value: number) =>
-    formatStoreMoney(
-      value,
-      currencyCode,
-      locale,
-    );
+    formatStoreMoney(value, currencyCode, locale);
 
-  const pct = (value: number) =>
-    formatStorePercent(
-      value,
-      locale,
-    );
+  const pct = (value: number) => formatStorePercent(value, locale);
 
   const aiFetcher = useFetcher<{
     text: string;
@@ -566,26 +556,18 @@ export default function AiAdvisorPage() {
     }
   }, [aiFetcher.data]);
 
-  const economicRevenue =
-    summary.economicRevenue ?? summary.revenue;
-  const economicCogs =
-    summary.economicCogs ?? summary.cogs;
-  const economicProfit =
-    summary.economicProfit ?? summary.profit;
-  const economicMarginPct =
-    summary.economicMarginPct ?? summary.marginPct;
+  const economicRevenue = summary.economicRevenue ?? summary.revenue;
+  const economicCogs = summary.economicCogs ?? summary.cogs;
+  const economicProfit = summary.economicProfit ?? summary.profit;
+  const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
 
   const economicRows = React.useMemo(
     () =>
       rows.map((row) => {
-        const rowRevenue =
-          row.economicRevenue ?? row.revenue;
-        const rowCogs =
-          row.economicCogs ?? row.cogs;
-        const rowProfit =
-          row.economicProfit ?? row.profit;
-        const rowMargin =
-          row.economicMarginPct ?? row.marginPct;
+        const rowRevenue = row.economicRevenue ?? row.revenue;
+        const rowCogs = row.economicCogs ?? row.cogs;
+        const rowProfit = row.economicProfit ?? row.profit;
+        const rowMargin = row.economicMarginPct ?? row.marginPct;
 
         return {
           ...row,
@@ -628,38 +610,25 @@ export default function AiAdvisorPage() {
     () =>
       profitAlerts.filter(
         (alert) =>
-          alert.severity === "critical" ||
-          alert.severity === "warning",
+          alert.severity === "critical" || alert.severity === "warning",
       ),
     [profitAlerts],
   );
 
   const criticalAlerts = React.useMemo(
-    () =>
-      profitAlerts.filter(
-        (alert) => alert.severity === "critical",
-      ),
+    () => profitAlerts.filter((alert) => alert.severity === "critical"),
     [profitAlerts],
   );
 
   const opportunityAlerts = React.useMemo(
-    () =>
-      profitAlerts.filter(
-        (alert) => alert.severity === "opportunity",
-      ),
+    () => profitAlerts.filter((alert) => alert.severity === "opportunity"),
     [profitAlerts],
   );
 
   const missionAlert =
-    profitAlerts.find(
-      (alert) => alert.severity === "critical",
-    ) ??
-    profitAlerts.find(
-      (alert) => alert.severity === "warning",
-    ) ??
-    profitAlerts.find(
-      (alert) => alert.severity === "opportunity",
-    ) ??
+    profitAlerts.find((alert) => alert.severity === "critical") ??
+    profitAlerts.find((alert) => alert.severity === "warning") ??
+    profitAlerts.find((alert) => alert.severity === "opportunity") ??
     profitAlerts[0] ??
     null;
 
@@ -671,30 +640,23 @@ export default function AiAdvisorPage() {
 
   const losingProducts = economicRows.filter((row) => row.losing);
 
-  const missingCostProducts = rows.filter(
-    (row) => row.missingCost,
-  );
+  const missingCostProducts = rows.filter((row) => row.missingCost);
 
-  const lowMarginProducts = economicRows.filter(
-    (row) => row.lowMargin,
-  );
+  const lowMarginProducts = economicRows.filter((row) => row.lowMargin);
 
   const topProfitLeak =
     economicRows.length > 0
       ? [...economicRows].sort((a, b) => a.profit - b.profit)[0]
       : undefined;
 
-  const recoverableProfit = economicRows.reduce(
-    (sum, row) => {
-      if (row.revenue <= 0 || row.marginPct >= 20) {
-        return sum;
-      }
+  const recoverableProfit = economicRows.reduce((sum, row) => {
+    if (row.revenue <= 0 || row.marginPct >= 20) {
+      return sum;
+    }
 
-      const targetProfit = row.revenue * 0.2;
-      return sum + Math.max(0, targetProfit - row.profit);
-    },
-    0,
-  );
+    const targetProfit = row.revenue * 0.2;
+    return sum + Math.max(0, targetProfit - row.profit);
+  }, 0);
 
   /*
   |--------------------------------------------------------------------------
@@ -710,24 +672,17 @@ export default function AiAdvisorPage() {
   const fixedCostFactor = periodDays / 30;
 
   const paymentFeePct = assumptions?.paymentFeePct ?? 0;
-  const transactionFeePct =
-    assumptions?.transactionFeePct ?? 0;
+  const transactionFeePct = assumptions?.transactionFeePct ?? 0;
   const taxReservePct = assumptions?.taxReservePct ?? 0;
 
-  const estimatedPaymentFees =
-    economicRevenue * (paymentFeePct / 100);
+  const estimatedPaymentFees = economicRevenue * (paymentFeePct / 100);
 
-  const estimatedTransactionFees =
-    economicRevenue * (transactionFeePct / 100);
+  const estimatedTransactionFees = economicRevenue * (transactionFeePct / 100);
 
-  const estimatedTaxReserve =
-    economicRevenue * (taxReservePct / 100);
+  const estimatedTaxReserve = economicRevenue * (taxReservePct / 100);
 
   const totalEstimatedCosts =
-    (monthlyAds +
-      monthlyShipping +
-      monthlyOperating) *
-    fixedCostFactor +
+    (monthlyAds + monthlyShipping + monthlyOperating) * fixedCostFactor +
     estimatedPaymentFees +
     estimatedTransactionFees +
     estimatedTaxReserve;
@@ -757,9 +712,9 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        losingProducts.length * 15 -
-        missingCostProducts.length * 10 -
-        lowMarginProducts.length * 4,
+          losingProducts.length * 15 -
+          missingCostProducts.length * 10 -
+          lowMarginProducts.length * 4,
       ),
     ),
   );
@@ -772,11 +727,7 @@ export default function AiAdvisorPage() {
         : copy.healthy;
 
   const healthColor =
-    healthScore < 40
-      ? "#ff6b4a"
-      : healthScore < 70
-        ? "#f59e0b"
-        : "#22c55e";
+    healthScore < 40 ? "#ff6b4a" : healthScore < 70 ? "#f59e0b" : "#22c55e";
 
   /*
   |--------------------------------------------------------------------------
@@ -795,8 +746,7 @@ export default function AiAdvisorPage() {
       const priorityScore =
         recoverableOpportunity +
         Math.max(0, -row.profit) +
-        (row.revenue * Math.max(0, 20 - row.marginPct)) /
-        100;
+        (row.revenue * Math.max(0, 20 - row.marginPct)) / 100;
 
       return {
         ...row,
@@ -810,17 +760,13 @@ export default function AiAdvisorPage() {
   const topPriorityProducts = prioritizedProducts.slice(0, 3);
 
   const priorityImpact = topPriorityProducts.reduce(
-    (sum, product) =>
-      sum + product.recoverableOpportunity,
+    (sum, product) => sum + product.recoverableOpportunity,
     0,
   );
 
   const priorityConcentration =
     recoverableProfit > 0
-      ? Math.min(
-        100,
-        (priorityImpact / recoverableProfit) * 100,
-      )
+      ? Math.min(100, (priorityImpact / recoverableProfit) * 100)
       : 0;
 
   /*
@@ -842,26 +788,21 @@ export default function AiAdvisorPage() {
     Math.min(
       3,
       criticalAlerts.length +
-      (activeRiskAlerts.some(
-        (alert) => alert.severity === "warning",
-      )
-        ? 1
-        : 0) +
-      (opportunityAlerts.length > 0 ? 1 : 0),
+        (activeRiskAlerts.some((alert) => alert.severity === "warning")
+          ? 1
+          : 0) +
+        (opportunityAlerts.length > 0 ? 1 : 0),
     ),
   );
 
   const weeklyReport = {
-    title:
-      missionAlert?.title ??
-      (copy.continue_monitoring_store_profitability),
+    title: missionAlert?.title ?? copy.continue_monitoring_store_profitability,
 
     recommendation:
       missionAlert?.actionLabel ??
-      (copy.review_risks_and_opportunities_regularly),
+      copy.review_risks_and_opportunities_regularly,
 
-    route:
-      missionAlert?.route ?? "/app/recommendations",
+    route: missionAlert?.route ?? "/app/recommendations",
   };
 
   /*
@@ -887,18 +828,14 @@ export default function AiAdvisorPage() {
   |
   */
 
-  const getDecisionFeedColor = (
-    severity: string,
-  ): string => {
+  const getDecisionFeedColor = (severity: string): string => {
     if (severity === "critical") return "#ff6b4a";
     if (severity === "warning") return "#f59e0b";
     if (severity === "opportunity") return "#22c55e";
     return "#38bdf8";
   };
 
-  const getDecisionFeedWhen = (
-    severity: string,
-  ): string => {
+  const getDecisionFeedWhen = (severity: string): string => {
     if (severity === "opportunity") {
       return copy.new_opportunity;
     }
@@ -914,16 +851,14 @@ export default function AiAdvisorPage() {
     return copy.active_signal;
   };
 
-  const decisionFeed = profitAlerts
-    .slice(0, 5)
-    .map((alert) => ({
-      when: getDecisionFeedWhen(alert.severity),
-      title: alert.title,
-      detail: alert.description,
-      actionLabel: alert.actionLabel,
-      route: alert.route,
-      color: getDecisionFeedColor(alert.severity),
-    }));
+  const decisionFeed = profitAlerts.slice(0, 5).map((alert) => ({
+    when: getDecisionFeedWhen(alert.severity),
+    title: alert.title,
+    detail: alert.description,
+    actionLabel: alert.actionLabel,
+    route: alert.route,
+    color: getDecisionFeedColor(alert.severity),
+  }));
 
   /*
   |--------------------------------------------------------------------------
@@ -936,21 +871,14 @@ export default function AiAdvisorPage() {
     Math.min(
       100,
       Math.round(
-        100 -
-        losingProducts.length * 18 -
-        lowMarginProducts.length * 5,
+        100 - losingProducts.length * 18 - lowMarginProducts.length * 5,
       ),
     ),
   );
 
   const dataQualityScore = Math.max(
     0,
-    Math.min(
-      100,
-      Math.round(
-        100 - missingCostProducts.length * 12,
-      ),
-    ),
+    Math.min(100, Math.round(100 - missingCostProducts.length * 12)),
   );
 
   const profitQualityScore = Math.max(
@@ -959,10 +887,10 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        losingProducts.length * 16 -
-        lowMarginProducts.length * 4 -
-        (summary.refunds > 0 ? 6 : 0) -
-        (summary.discounts > 0 ? 4 : 0),
+          losingProducts.length * 16 -
+          lowMarginProducts.length * 4 -
+          (summary.refunds > 0 ? 6 : 0) -
+          (summary.discounts > 0 ? 4 : 0),
       ),
     ),
   );
@@ -973,12 +901,11 @@ export default function AiAdvisorPage() {
       100,
       Math.round(
         100 -
-        criticalAlerts.length * 16 -
-        activeRiskAlerts.filter(
-          (alert) => alert.severity === "warning",
-        ).length *
-        8 -
-        (opportunityAlerts.length > 0 ? 5 : 0),
+          criticalAlerts.length * 16 -
+          activeRiskAlerts.filter((alert) => alert.severity === "warning")
+            .length *
+            8 -
+          (opportunityAlerts.length > 0 ? 5 : 0),
       ),
     ),
   );
@@ -986,15 +913,13 @@ export default function AiAdvisorPage() {
   const scorecards = [
     {
       key: "health",
-      label:
-        copy.store_health,
+      label: copy.store_health,
       value: healthScore,
       color: healthColor,
     },
     {
       key: "profit",
-      label:
-        copy.profit_quality,
+      label: copy.profit_quality,
       value: profitQualityScore,
       color:
         profitQualityScore < 40
@@ -1005,8 +930,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "pricing",
-      label:
-        copy.pricing_efficiency,
+      label: copy.pricing_efficiency,
       value: pricingScore,
       color:
         pricingScore < 40
@@ -1017,8 +941,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "data",
-      label:
-        copy.data_quality,
+      label: copy.data_quality,
       value: dataQualityScore,
       color:
         dataQualityScore < 40
@@ -1029,8 +952,7 @@ export default function AiAdvisorPage() {
     },
     {
       key: "execution",
-      label:
-        copy.execution_readiness,
+      label: copy.execution_readiness,
       value: executionScore,
       color:
         executionScore < 40
@@ -1050,8 +972,8 @@ export default function AiAdvisorPage() {
   const profitMonitorContext =
     profitAlerts.length > 0
       ? profitAlerts
-        .map(
-          (alert, index) => `
+          .map(
+            (alert, index) => `
 EVENT ${index + 1}
 
 Severity: ${alert.severity}
@@ -1060,8 +982,8 @@ Description: ${alert.description}
 Recommended action: ${alert.actionLabel}
 Destination module: ${alert.route}
 `,
-        )
-        .join("\n")
+          )
+          .join("\n")
       : "No active Profit Monitor events detected.";
 
   /*
@@ -1158,10 +1080,9 @@ Profit gap to 20% target: ${recoverableProfit}
 ACTIVE PROFIT MONITOR COUNTS
 
 Critical events: ${criticalAlerts.length}
-Warning events: ${activeRiskAlerts.filter(
-    (alert) => alert.severity === "warning",
-  ).length
-    }
+Warning events: ${
+    activeRiskAlerts.filter((alert) => alert.severity === "warning").length
+  }
 Opportunity events: ${opportunityAlerts.length}
 Total active risks: ${activeRiskAlerts.length}
 
@@ -1183,13 +1104,14 @@ Estimated business tax reserve: ${estimatedTaxReserve}
 
 Total estimated costs outside product costs: ${totalEstimatedCosts}
 
-${modelConfigured
-      ? `Estimated net profit: ${estimatedNetProfit}
+${
+  modelConfigured
+    ? `Estimated net profit: ${estimatedNetProfit}
 Estimated net margin: ${estimatedNetMargin}%`
-      : `Estimated net profit: unavailable
+    : `Estimated net profit: unavailable
 Estimated net margin: unavailable
 Do not interpret missing assumptions as zero costs.`
-    }
+}
 
 PRODUCT RISKS
 
@@ -1208,56 +1130,58 @@ ${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
 
 TOP LOSING PRODUCTS
 
-${[...losingProducts]
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Revenue ${money(
-            product.revenue,
-          )} | Profit ${money(
-            product.profit,
-          )} | Margin ${pct(product.marginPct)}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...losingProducts]
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Revenue ${money(
+          product.revenue,
+        )} | Profit ${money(
+          product.profit,
+        )} | Margin ${pct(product.marginPct)}`,
+    )
+    .join("\n") || "None"
+}
 
 TOP LOW-MARGIN PRODUCTS
 
-${[...lowMarginProducts]
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Revenue ${money(
-            product.revenue,
-          )} | Profit ${money(
-            product.profit,
-          )} | Margin ${pct(product.marginPct)}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...lowMarginProducts]
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Revenue ${money(
+          product.revenue,
+        )} | Profit ${money(
+          product.profit,
+        )} | Margin ${pct(product.marginPct)}`,
+    )
+    .join("\n") || "None"
+}
 
 TOP RECOVERY OPPORTUNITIES
 
-${[...prioritizedProducts]
-      .filter((row) => row.recoverableOpportunity > 0)
-      .slice(0, 3)
-      .map(
-        (product) =>
-          `${product.productTitle} | Economic Revenue ${money(
-            product.revenue,
-          )} | Economic Margin ${pct(
-            product.marginPct,
-          )} | Profit Gap to Target ${money(
-            product.recoverableOpportunity,
-          )}`,
-      )
-      .join("\n") || "None"
-    }
+${
+  [...prioritizedProducts]
+    .filter((row) => row.recoverableOpportunity > 0)
+    .slice(0, 3)
+    .map(
+      (product) =>
+        `${product.productTitle} | Economic Revenue ${money(
+          product.revenue,
+        )} | Economic Margin ${pct(
+          product.marginPct,
+        )} | Profit Gap to Target ${money(product.recoverableOpportunity)}`,
+    )
+    .join("\n") || "None"
+}
 
 PRIORITIZED PRODUCTS
 
-${prioritizedProducts.length > 0
-      ? prioritizedProducts
+${
+  prioritizedProducts.length > 0
+    ? prioritizedProducts
         .map(
           (product, index) => `
 PRIORITY ${index + 1}
@@ -1278,8 +1202,8 @@ Low margin: ${product.lowMargin ? "Yes" : "No"}
 `,
         )
         .join("\n")
-      : "No product data available."
-    }
+    : "No product data available."
+}
 
 TASK
 
@@ -1421,142 +1345,192 @@ Rules:
     promptText: question.label,
     displayLabel:
       language === "fr"
-        ? ({
-          profitRisk: primaryProfitAlert
-            ? `Pourquoi « ${primaryProfitAlert.title} » est-elle la priorité principale ?`
-            : "Quel est le principal risque pour mon bénéfice ?",
-          marginPressure: summary.refunds > 0
-            ? "Dans quelle mesure les remboursements affectent-ils le bénéfice ?"
-            : "Qu'est-ce qui réduit ma marge ?",
-          priority: missionAlert
-            ? `Pourquoi dois-je traiter « ${missionAlert.title} » en priorité ?`
-            : "Que dois-je vérifier en premier ?",
-          fastestImprovement: recoverableProfit > 0
-            ? "Comment puis-je réduire cet écart de bénéfice ?"
-            : "Quelle action améliorerait le bénéfice le plus rapidement ?",
-          productPriorities: "Quels produits dois-je corriger en premier ?",
-          pricingOpportunity: "Quel est le plus grand écart de prix par rapport à l'objectif ?",
-          hiddenCosts: "Quel est mon principal coût caché ?",
-          growthOpportunity: "Où puis-je augmenter le bénéfice le plus rapidement ?",
-        } as Record<string, string>)[question.id]
+        ? (
+            {
+              profitRisk: primaryProfitAlert
+                ? `Pourquoi « ${primaryProfitAlert.title} » est-elle la priorité principale ?`
+                : "Quel est le principal risque pour mon bénéfice ?",
+              marginPressure:
+                summary.refunds > 0
+                  ? "Dans quelle mesure les remboursements affectent-ils le bénéfice ?"
+                  : "Qu'est-ce qui réduit ma marge ?",
+              priority: missionAlert
+                ? `Pourquoi dois-je traiter « ${missionAlert.title} » en priorité ?`
+                : "Que dois-je vérifier en premier ?",
+              fastestImprovement:
+                recoverableProfit > 0
+                  ? "Comment puis-je réduire cet écart de bénéfice ?"
+                  : "Quelle action améliorerait le bénéfice le plus rapidement ?",
+              productPriorities: "Quels produits dois-je corriger en premier ?",
+              pricingOpportunity:
+                "Quel est le plus grand écart de prix par rapport à l'objectif ?",
+              hiddenCosts: "Quel est mon principal coût caché ?",
+              growthOpportunity:
+                "Où puis-je augmenter le bénéfice le plus rapidement ?",
+            } as Record<string, string>
+          )[question.id]
         : language === "de"
-          ? ({
-            profitRisk: primaryProfitAlert
-              ? `Warum hat „${primaryProfitAlert.title}“ die höchste Priorität?`
-              : "Was ist das größte Risiko für meinen Gewinn?",
-            marginPressure: summary.refunds > 0
-              ? "Wie stark belasten Erstattungen meinen Gewinn?"
-              : "Was verringert meine Marge?",
-            priority: missionAlert
-              ? `Warum sollte ich „${missionAlert.title}“ zuerst bearbeiten?`
-              : "Was sollte ich zuerst prüfen?",
-            fastestImprovement: recoverableProfit > 0
-              ? "Wie kann ich diese Gewinnlücke verringern?"
-              : "Welche Maßnahme verbessert den Gewinn am schnellsten?",
-            productPriorities: "Welche Produkte sollte ich zuerst korrigieren?",
-            pricingOpportunity: "Wo besteht die größte Preislücke zum Zielwert?",
-            hiddenCosts: "Was sind meine größten versteckten Kosten?",
-            growthOpportunity: "Wo kann ich den Gewinn am schnellsten steigern?",
-          } as Record<string, string>)[question.id]
+          ? (
+              {
+                profitRisk: primaryProfitAlert
+                  ? `Warum hat „${primaryProfitAlert.title}“ die höchste Priorität?`
+                  : "Was ist das größte Risiko für meinen Gewinn?",
+                marginPressure:
+                  summary.refunds > 0
+                    ? "Wie stark belasten Erstattungen meinen Gewinn?"
+                    : "Was verringert meine Marge?",
+                priority: missionAlert
+                  ? `Warum sollte ich „${missionAlert.title}“ zuerst bearbeiten?`
+                  : "Was sollte ich zuerst prüfen?",
+                fastestImprovement:
+                  recoverableProfit > 0
+                    ? "Wie kann ich diese Gewinnlücke verringern?"
+                    : "Welche Maßnahme verbessert den Gewinn am schnellsten?",
+                productPriorities:
+                  "Welche Produkte sollte ich zuerst korrigieren?",
+                pricingOpportunity:
+                  "Wo besteht die größte Preislücke zum Zielwert?",
+                hiddenCosts: "Was sind meine größten versteckten Kosten?",
+                growthOpportunity:
+                  "Wo kann ich den Gewinn am schnellsten steigern?",
+              } as Record<string, string>
+            )[question.id]
           : language === "es"
-            ? ({
-              profitRisk: primaryProfitAlert
-                ? `¿Por qué «${primaryProfitAlert.title}» es la prioridad principal?`
-                : "¿Cuál es el principal riesgo para mi beneficio?",
-              marginPressure: summary.refunds > 0
-                ? "¿Cuánto afectan los reembolsos al beneficio?"
-                : "¿Qué está reduciendo mi margen?",
-              priority: missionAlert
-                ? `¿Por qué debo abordar primero «${missionAlert.title}»?`
-                : "¿Qué debería revisar primero?",
-              fastestImprovement: recoverableProfit > 0
-                ? "¿Cómo puedo reducir esta diferencia de beneficio?"
-                : "¿Qué acción mejoraría el beneficio más rápidamente?",
-              productPriorities: "¿Qué productos debo corregir primero?",
-              pricingOpportunity: "¿Cuál es la mayor diferencia de precio respecto al objetivo?",
-              hiddenCosts: "¿Cuál es mi mayor coste oculto?",
-              growthOpportunity: "¿Dónde puedo aumentar el beneficio más rápidamente?",
-            } as Record<string, string>)[question.id]
-          : language === "pt-BR"
-            ? ({
-              profitRisk: primaryProfitAlert
-                ? `Por que “${primaryProfitAlert.title}” é a principal prioridade?`
-                : "Qual é o principal risco para o meu lucro?",
-              marginPressure: summary.refunds > 0
-                ? "Quanto os reembolsos estão afetando o lucro?"
-                : "O que está reduzindo minha margem?",
-              priority: missionAlert
-                ? `Por que devo tratar “${missionAlert.title}” primeiro?`
-                : "O que devo revisar primeiro?",
-              fastestImprovement: recoverableProfit > 0
-                ? "Como posso reduzir essa diferença de lucro?"
-                : "Qual ação melhoraria o lucro mais rapidamente?",
-              productPriorities: "Quais produtos devo corrigir primeiro?",
-              pricingOpportunity: "Qual é a maior diferença de preço em relação à meta?",
-              hiddenCosts: "Qual é o meu maior custo oculto?",
-              growthOpportunity: "Onde posso aumentar o lucro mais rapidamente?",
-            } as Record<string, string>)[question.id]
-          : question.label,
+            ? (
+                {
+                  profitRisk: primaryProfitAlert
+                    ? `¿Por qué «${primaryProfitAlert.title}» es la prioridad principal?`
+                    : "¿Cuál es el principal riesgo para mi beneficio?",
+                  marginPressure:
+                    summary.refunds > 0
+                      ? "¿Cuánto afectan los reembolsos al beneficio?"
+                      : "¿Qué está reduciendo mi margen?",
+                  priority: missionAlert
+                    ? `¿Por qué debo abordar primero «${missionAlert.title}»?`
+                    : "¿Qué debería revisar primero?",
+                  fastestImprovement:
+                    recoverableProfit > 0
+                      ? "¿Cómo puedo reducir esta diferencia de beneficio?"
+                      : "¿Qué acción mejoraría el beneficio más rápidamente?",
+                  productPriorities: "¿Qué productos debo corregir primero?",
+                  pricingOpportunity:
+                    "¿Cuál es la mayor diferencia de precio respecto al objetivo?",
+                  hiddenCosts: "¿Cuál es mi mayor coste oculto?",
+                  growthOpportunity:
+                    "¿Dónde puedo aumentar el beneficio más rápidamente?",
+                } as Record<string, string>
+              )[question.id]
+            : language === "pt-BR"
+              ? (
+                  {
+                    profitRisk: primaryProfitAlert
+                      ? `Por que “${primaryProfitAlert.title}” é a principal prioridade?`
+                      : "Qual é o principal risco para o meu lucro?",
+                    marginPressure:
+                      summary.refunds > 0
+                        ? "Quanto os reembolsos estão afetando o lucro?"
+                        : "O que está reduzindo minha margem?",
+                    priority: missionAlert
+                      ? `Por que devo tratar “${missionAlert.title}” primeiro?`
+                      : "O que devo revisar primeiro?",
+                    fastestImprovement:
+                      recoverableProfit > 0
+                        ? "Como posso reduzir essa diferença de lucro?"
+                        : "Qual ação melhoraria o lucro mais rapidamente?",
+                    productPriorities: "Quais produtos devo corrigir primeiro?",
+                    pricingOpportunity:
+                      "Qual é a maior diferença de preço em relação à meta?",
+                    hiddenCosts: "Qual é o meu maior custo oculto?",
+                    growthOpportunity:
+                      "Onde posso aumentar o lucro mais rapidamente?",
+                  } as Record<string, string>
+                )[question.id]
+              : question.label,
   }));
 
   return (
-    <div className="dashboard-shell">
+    <div className="dashboard-shell advisor-v2-page">
       <div className="dashboard-container">
         <DashboardNav active="ai-advisor" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-              {growthAccess
-                ? copy.growth_plan_active
-                : copy.growth_feature}
+        <PremiumHero
+          className="advisor-v2-hero"
+          tone={
+            healthScore >= 70 ? "green" : healthScore >= 45 ? "amber" : "red"
+          }
+          eyebrow={copy.profit_copilot}
+          title={copy.your_store_briefing_already_prepared}
+          description={
+            copy.marginlab_automatically_analyzes_profitability_risk_opportunities
+          }
+          actions={
+            <>
+              <StatusChip
+                tone={growthAccess ? "green" : "orange"}
+                pulse={growthAccess}
+              >
+                {growthAccess ? copy.growth_plan_active : copy.growth_feature}
+              </StatusChip>
+              <StatusChip tone="green">
+                {copy.tax_aware_economic_basis}
+              </StatusChip>
+              {!growthAccess && (
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.unlock_growth}
+                </VisualButton>
+              )}
+            </>
+          }
+          visual={
+            <div className="advisor-signal-network" aria-hidden="true">
+              <svg viewBox="0 0 360 220" focusable="false">
+                <path d="M38 40 C105 40 108 110 173 110" />
+                <path d="M38 110 H173" />
+                <path d="M38 180 C105 180 108 110 173 110" />
+                <circle cx="38" cy="40" r="5" />
+                <circle cx="38" cy="110" r="5" />
+                <circle cx="38" cy="180" r="5" />
+                <circle
+                  className="advisor-network-core-halo"
+                  cx="186"
+                  cy="110"
+                  r="42"
+                />
+              </svg>
+              <div className="advisor-network-signal advisor-network-signal-revenue">
+                <span>{copy.revenue}</span>
+                <strong>{money(economicRevenue)}</strong>
+              </div>
+              <div className="advisor-network-signal advisor-network-signal-margin">
+                <span>{copy.profit_quality}</span>
+                <strong>{pct(economicMarginPct)}</strong>
+              </div>
+              <div className="advisor-network-signal advisor-network-signal-risk">
+                <span>{copy.active_risks}</span>
+                <strong>{activeRiskAlerts.length}</strong>
+              </div>
+              <div className="advisor-network-core">
+                <strong>{healthScore}</strong>
+                <span>{copy.store_health_2}</span>
+              </div>
+              <FlowPath
+                className="advisor-network-decision"
+                trajectory="steady"
+                tone={
+                  healthScore >= 70
+                    ? "green"
+                    : healthScore >= 45
+                      ? "amber"
+                      : "red"
+                }
+                motion="ambient"
+              />
+              <div className="advisor-network-output">
+                {copy.executive_brief}
+              </div>
             </div>
-
-            <div className="eyebrow">
-              {copy.profit_copilot}
-            </div>
-
-            <div className="hero-title">
-              {copy.your_store_briefing_already_prepared}
-            </div>
-
-            <div className="hero-description">
-              {copy.marginlab_automatically_analyzes_profitability_risk_opportunities}
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              {copy.tax_aware_economic_basis}
-            </div>
-          </div>
-
-          {!growthAccess && (
-            <button
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-              style={{
-                boxShadow:
-                  "0 12px 32px rgba(255,115,80,0.28), 0 0 30px rgba(255,115,80,0.15)",
-              }}
-            >
-              {copy.unlock_growth}
-            </button>
-          )}
-        </div>
+          }
+        />
 
         <div
           style={{
@@ -1644,10 +1618,10 @@ Rules:
               growthAccess
                 ? undefined
                 : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
             }
           >
             <div
@@ -1771,35 +1745,30 @@ Rules:
                   >
                     {[
                       {
-                        label:
-                          copy.estimated_net_profit,
+                        label: copy.estimated_net_profit,
                         value: modelConfigured
                           ? money(estimatedNetProfit)
                           : copy.not_configured,
                         note: modelConfigured
                           ? pct(estimatedNetMargin)
                           : "Business Model Studio",
-                        color:
-                          !modelConfigured
-                            ? "#f59e0b"
-                            : estimatedNetProfit >= 0
-                              ? "#22c55e"
-                              : "#ff6b4a",
+                        color: !modelConfigured
+                          ? "#f59e0b"
+                          : estimatedNetProfit >= 0
+                            ? "#22c55e"
+                            : "#ff6b4a",
 
                         tooltip: {
-                          title:
-                            copy.estimated_net_profit_2,
+                          title: copy.estimated_net_profit_2,
 
                           description:
                             copy.estimated_profit_remaining_after_applying_the,
 
-                          note:
-                            copy.this_is_a_management_estimate_based,
+                          note: copy.this_is_a_management_estimate_based,
                         },
                       },
                       {
-                        label:
-                          copy.profit_gap_to_target,
+                        label: copy.profit_gap_to_target,
                         value:
                           recoverableProfit > 0
                             ? `+${money(recoverableProfit)}`
@@ -1810,19 +1779,16 @@ Rules:
                         color: "#22c55e",
 
                         tooltip: {
-                          title:
-                            copy.profit_gap_to_target_2,
+                          title: copy.profit_gap_to_target_2,
 
                           description:
                             copy.estimated_additional_profit_required_to_bring,
 
-                          note:
-                            copy.this_is_a_modeled_estimate_not,
+                          note: copy.this_is_a_modeled_estimate_not,
                         },
                       },
                       {
-                        label:
-                          copy.active_risks,
+                        label: copy.active_risks,
                         value: `${activeRiskAlerts.length}`,
                         note: t("aiAdvisorPage.critical_count", {
                           count: criticalAlerts.length,
@@ -1835,8 +1801,7 @@ Rules:
                               : "#22c55e",
                       },
                       {
-                        label:
-                          copy.weekly_mission,
+                        label: copy.weekly_mission,
                         value: `${missionActions}`,
                         note: t("aiAdvisorPage.estimated_minutes_count", {
                           count: missionMinutes,
@@ -1960,8 +1925,9 @@ Rules:
                         borderRadius: "50%",
                         display: "grid",
                         placeItems: "center",
-                        background: `conic-gradient(${healthColor} ${healthScore * 3.6
-                          }deg, rgba(255,255,255,0.08) 0deg)`,
+                        background: `conic-gradient(${healthColor} ${
+                          healthScore * 3.6
+                        }deg, rgba(255,255,255,0.08) 0deg)`,
                         boxShadow: `0 0 54px ${healthColor}22`,
                       }}
                     >
@@ -2003,20 +1969,15 @@ Rules:
                               letterSpacing: "0.1em",
                             }}
                           >
-                            <span>
-                              {copy.store_health_2}
-                            </span>
+                            <span>{copy.store_health_2}</span>
 
                             <MetricTooltip
                               content={{
-                                title:
-                                  copy.store_health_3,
+                                title: copy.store_health_3,
 
-                                description:
-                                  copy.a_0_100_score_summarizing_the,
+                                description: copy.a_0_100_score_summarizing_the,
 
-                                note:
-                                  copy.it_considers_loss_making_products_missing,
+                                note: copy.it_considers_loss_making_products_missing,
                               }}
                             />
                           </div>
@@ -2093,48 +2054,38 @@ Rules:
                       content={
                         card.key === "health"
                           ? {
-                            title:
-                              copy.store_health_3,
-                            description:
-                              copy.summarizes_the_overall_health_of_the,
-                            note:
-                              copy.considers_losses_missing_costs_and_weak,
-                          }
+                              title: copy.store_health_3,
+                              description:
+                                copy.summarizes_the_overall_health_of_the,
+                              note: copy.considers_losses_missing_costs_and_weak,
+                            }
                           : card.key === "profit"
                             ? {
-                              title:
-                                copy.profit_quality_2,
-                              description:
-                                copy.measures_how_healthy_the_margins_are,
-                              note:
-                                copy.a_higher_score_indicates_more_products,
-                            }
+                                title: copy.profit_quality_2,
+                                description:
+                                  copy.measures_how_healthy_the_margins_are,
+                                note: copy.a_higher_score_indicates_more_products,
+                              }
                             : card.key === "pricing"
                               ? {
-                                title:
-                                  copy.pricing_efficiency_2,
-                                description:
-                                  copy.shows_how_effectively_current_prices_support,
-                                note:
-                                  copy.a_lower_score_indicates_a_larger,
-                              }
+                                  title: copy.pricing_efficiency_2,
+                                  description:
+                                    copy.shows_how_effectively_current_prices_support,
+                                  note: copy.a_lower_score_indicates_a_larger,
+                                }
                               : card.key === "data"
                                 ? {
-                                  title:
-                                    copy.data_quality_2,
-                                  description:
-                                    copy.measures_how_complete_the_available_data,
-                                  note:
-                                    copy.product_cost_coverage_is_one_of,
-                                }
+                                    title: copy.data_quality_2,
+                                    description:
+                                      copy.measures_how_complete_the_available_data,
+                                    note: copy.product_cost_coverage_is_one_of,
+                                  }
                                 : {
-                                  title:
-                                    copy.execution_readiness_2,
-                                  description:
-                                    copy.shows_how_much_actionable_evidence_marginlab,
-                                  note:
-                                    copy.higher_scores_indicate_more_opportunities_to,
-                                }
+                                    title: copy.execution_readiness_2,
+                                    description:
+                                      copy.shows_how_much_actionable_evidence_marginlab,
+                                    note: copy.higher_scores_indicate_more_opportunities_to,
+                                  }
                       }
                     />
                   </div>
@@ -2192,8 +2143,6 @@ Rules:
                 </div>
               ))}
             </div>
-
-
 
             <div
               style={{
@@ -2264,14 +2213,12 @@ Rules:
                       color: "#f8fafc",
                     },
                     {
-                      label:
-                        copy.estimated_time,
+                      label: copy.estimated_time,
                       value: `${missionMinutes}m`,
                       color: "#38bdf8",
                     },
                     {
-                      label:
-                        copy.potential,
+                      label: copy.potential,
                       value:
                         recoverableProfit > 0
                           ? `+${money(recoverableProfit)}`
@@ -2279,14 +2226,12 @@ Rules:
                       color: "#22c55e",
 
                       tooltip: {
-                        title:
-                          copy.mission_potential,
+                        title: copy.mission_potential,
 
                         description:
                           copy.estimated_profit_opportunity_associated_with_the,
 
-                        note:
-                          copy.this_is_modeled_potential_based_on,
+                        note: copy.this_is_modeled_potential_based_on,
                       },
                     },
                   ].map((item) => (
@@ -2341,15 +2286,12 @@ Rules:
                   }}
                   onClick={() => navigate(weeklyReport.route)}
                 >
-                  {missionAlert?.actionLabel ??
-                    (copy.open_action_plan)}
+                  {missionAlert?.actionLabel ?? copy.open_action_plan}
                 </button>
               </div>
 
               <div className="panel" style={{ margin: 0, padding: 24 }}>
-                <div className="panel-eyebrow">
-                  {copy.decision_feed}
-                </div>
+                <div className="panel-eyebrow">{copy.decision_feed}</div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
                   {copy.signals_that_need_attention}
@@ -2471,6 +2413,7 @@ Rules:
               </div>
 
               <div
+                className="advisor-v2-analysis"
                 style={{
                   marginTop: 24,
                   borderRadius: 26,
@@ -2564,7 +2507,6 @@ Rules:
                         </div>
                       ))}
                     </div>
-
                   </div>
 
                   <aiFetcher.Form
@@ -2629,7 +2571,10 @@ Rules:
                         type="button"
                         className="primary-button"
                         onClick={() =>
-                          downloadAiReportPdf(String(aiFetcher.data?.text), language)
+                          downloadAiReportPdf(
+                            String(aiFetcher.data?.text),
+                            language,
+                          )
                         }
                       >
                         {copy.download_pdf_report}
@@ -2640,6 +2585,7 @@ Rules:
               </div>
 
               <div
+                className="advisor-v2-ask"
                 style={{
                   marginTop: 24,
                   borderRadius: 26,
@@ -2754,9 +2700,7 @@ Rules:
                       name="question"
                       value={question}
                       onChange={(event) => setQuestion(event.target.value)}
-                      placeholder={
-                        copy.ask_a_profitability_question
-                      }
+                      placeholder={copy.ask_a_profitability_question}
                       style={{
                         width: "100%",
                         padding: "15px 16px",
