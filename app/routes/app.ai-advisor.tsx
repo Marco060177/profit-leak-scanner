@@ -7,8 +7,10 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
-  FlowPath,
+  MetricCard,
   PremiumHero,
+  PremiumPanel,
+  SignalRing,
   StatusChip,
   VisualButton,
 } from "~/components/ui/VisualSystem";
@@ -1482,40 +1484,11 @@ Rules:
             </>
           }
           visual={
-            <div className="advisor-signal-network" aria-hidden="true">
-              <svg viewBox="0 0 360 220" focusable="false">
-                <path d="M38 40 C105 40 108 110 173 110" />
-                <path d="M38 110 H173" />
-                <path d="M38 180 C105 180 108 110 173 110" />
-                <circle cx="38" cy="40" r="5" />
-                <circle cx="38" cy="110" r="5" />
-                <circle cx="38" cy="180" r="5" />
-                <circle
-                  className="advisor-network-core-halo"
-                  cx="186"
-                  cy="110"
-                  r="42"
-                />
-              </svg>
-              <div className="advisor-network-signal advisor-network-signal-revenue">
-                <span>{copy.revenue}</span>
-                <strong>{money(economicRevenue)}</strong>
-              </div>
-              <div className="advisor-network-signal advisor-network-signal-margin">
-                <span>{copy.profit_quality}</span>
-                <strong>{pct(economicMarginPct)}</strong>
-              </div>
-              <div className="advisor-network-signal advisor-network-signal-risk">
-                <span>{copy.active_risks}</span>
-                <strong>{activeRiskAlerts.length}</strong>
-              </div>
-              <div className="advisor-network-core">
-                <strong>{healthScore}</strong>
-                <span>{copy.store_health_2}</span>
-              </div>
-              <FlowPath
-                className="advisor-network-decision"
-                trajectory="steady"
+            <div className="advisor-v2-brief-visual">
+              <SignalRing
+                value={healthScore}
+                size="large"
+                motion="ambient"
                 tone={
                   healthScore >= 70
                     ? "green"
@@ -1523,10 +1496,27 @@ Rules:
                       ? "amber"
                       : "red"
                 }
-                motion="ambient"
+                label={
+                  <span className="advisor-v2-ring-value">{healthScore}</span>
+                }
+                detail={copy.store_health_2}
               />
-              <div className="advisor-network-output">
-                {copy.executive_brief}
+              <div className="advisor-v2-brief-stats" aria-hidden="true">
+                <span>
+                  <i />
+                  {copy.active_risks}
+                  <strong>{activeRiskAlerts.length}</strong>
+                </span>
+                <span>
+                  <i />
+                  {copy.weekly_mission}
+                  <strong>{missionActions}</strong>
+                </span>
+                <span>
+                  <i />
+                  {copy.profit_gap_to_target}
+                  <strong>{money(recoverableProfit)}</strong>
+                </span>
               </div>
             </div>
           }
@@ -1624,7 +1614,15 @@ Rules:
                   }
             }
           >
-            <div
+            <PremiumPanel
+              className="advisor-v2-executive"
+              tone={
+                criticalAlerts.length > 0
+                  ? "red"
+                  : activeRiskAlerts.length > 0
+                    ? "amber"
+                    : "green"
+              }
               style={{
                 borderRadius: 30,
                 padding: 28,
@@ -1757,6 +1755,11 @@ Rules:
                           : estimatedNetProfit >= 0
                             ? "#22c55e"
                             : "#ff6b4a",
+                        tone: !modelConfigured
+                          ? ("amber" as const)
+                          : estimatedNetProfit >= 0
+                            ? ("green" as const)
+                            : ("red" as const),
 
                         tooltip: {
                           title: copy.estimated_net_profit_2,
@@ -1777,6 +1780,7 @@ Rules:
                           count: prioritizedProducts.length,
                         }),
                         color: "#22c55e",
+                        tone: "green" as const,
 
                         tooltip: {
                           title: copy.profit_gap_to_target_2,
@@ -1799,6 +1803,12 @@ Rules:
                             : activeRiskAlerts.length > 0
                               ? "#f59e0b"
                               : "#22c55e",
+                        tone:
+                          criticalAlerts.length > 0
+                            ? ("red" as const)
+                            : activeRiskAlerts.length > 0
+                              ? ("amber" as const)
+                              : ("green" as const),
                       },
                       {
                         label: copy.weekly_mission,
@@ -1807,67 +1817,24 @@ Rules:
                           count: missionMinutes,
                         }),
                         color: "#38bdf8",
+                        tone: "blue" as const,
                       },
                     ].map((item) => (
-                      <div
+                      <MetricCard
                         key={item.label}
-                        style={{
-                          minWidth: 0,
-                          padding: 18,
-                          borderRadius: 18,
-                          background: "rgba(255,255,255,0.035)",
-                          border: "1px solid rgba(255,255,255,0.07)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            color: "rgba(255,255,255,0.43)",
-                            fontSize: 9,
-                            fontWeight: 950,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                          }}
-                        >
-                          <span>{item.label}</span>
-
-                          {"tooltip" in item && item.tooltip ? (
-                            <MetricTooltip content={item.tooltip} />
-                          ) : null}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 9,
-                            color: item.color,
-                            fontSize:
-                              String(item.value).length > 11
-                                ? 17
-                                : String(item.value).length > 8
-                                  ? 20
-                                  : 25,
-                            fontWeight: 950,
-                            lineHeight: 1,
-                            letterSpacing: "-0.03em",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {item.value}
-                        </div>
-
-                        <div
-                          style={{
-                            marginTop: 7,
-                            color: "rgba(255,255,255,0.52)",
-                            fontSize: 11,
-                            fontWeight: 780,
-                          }}
-                        >
-                          {item.note}
-                        </div>
-                      </div>
+                        className="advisor-v2-kpi"
+                        tone={item.tone}
+                        label={
+                          <span className="advisor-v2-kpi-label">
+                            {item.label}
+                            {"tooltip" in item && item.tooltip ? (
+                              <MetricTooltip content={item.tooltip} />
+                            ) : null}
+                          </span>
+                        }
+                        value={item.value}
+                        detail={item.note}
+                      />
                     ))}
                   </div>
 
@@ -2009,7 +1976,7 @@ Rules:
                   </div>
                 </div>
               </div>
-            </div>
+            </PremiumPanel>
 
             <BusinessPriorities
               alerts={profitAlerts}
@@ -2018,6 +1985,7 @@ Rules:
             />
 
             <div
+              className="advisor-v2-scorecards"
               style={{
                 marginTop: 24,
                 display: "grid",
@@ -2145,6 +2113,7 @@ Rules:
             </div>
 
             <div
+              className="advisor-v2-workspace"
               style={{
                 marginTop: 24,
                 display: "grid",
@@ -2153,7 +2122,9 @@ Rules:
                 alignItems: "start",
               }}
             >
-              <div
+              <PremiumPanel
+                className="advisor-v2-mission"
+                tone="blue"
                 style={{
                   borderRadius: 26,
                   padding: "24px 24px 32px",
@@ -2288,9 +2259,13 @@ Rules:
                 >
                   {missionAlert?.actionLabel ?? copy.open_action_plan}
                 </button>
-              </div>
+              </PremiumPanel>
 
-              <div className="panel" style={{ margin: 0, padding: 24 }}>
+              <PremiumPanel
+                className="panel advisor-v2-feed"
+                tone="orange"
+                style={{ margin: 0, padding: 24 }}
+              >
                 <div className="panel-eyebrow">{copy.decision_feed}</div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
@@ -2410,7 +2385,7 @@ Rules:
                     </div>
                   )}
                 </div>
-              </div>
+              </PremiumPanel>
 
               <div
                 className="advisor-v2-analysis"
@@ -2543,7 +2518,10 @@ Rules:
                 </div>
 
                 {showAiReport && aiFetcher.data?.text && (
-                  <div style={{ marginTop: 20 }}>
+                  <div
+                    className="advisor-v2-response"
+                    style={{ marginTop: 20 }}
+                  >
                     <div
                       style={{
                         padding: 22,
@@ -2596,6 +2574,7 @@ Rules:
                 }}
               >
                 <div
+                  className="advisor-v2-questions"
                   style={{
                     color: "#ff9a70",
                     fontSize: 11,
@@ -2697,6 +2676,7 @@ Rules:
                     }}
                   >
                     <input
+                      className="advisor-v2-composer"
                       name="question"
                       value={question}
                       onChange={(event) => setQuestion(event.target.value)}
@@ -2727,6 +2707,7 @@ Rules:
 
                 {askFetcher.data?.text && (
                   <div
+                    className="advisor-v2-response advisor-v2-answer"
                     style={{
                       marginTop: 18,
                       padding: 21,
@@ -2746,6 +2727,7 @@ Rules:
               </div>
 
               <div
+                className="advisor-v2-methodology"
                 style={{
                   marginTop: 22,
                   padding: 18,
