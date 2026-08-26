@@ -133,35 +133,27 @@ export default function ScoreCard({
           {getAssessmentCopy(assessment, visualLeak, t)}
         </div>
 
-        <div className="dashboard-v2-health-drivers">
-          <div className="dashboard-v2-driver-rail" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-
-          <div className="score-mini-grid dashboard-v2-health-metrics">
-            <MetricCard
-              density="dense"
-              tone="red"
-              label={copy.confirmedLoss}
-              value={money(visualLeak)}
-            />
-            <MetricCard
-              density="dense"
-              tone="amber"
-              label={copy.productsAtRisk}
-              value={t("scoreCard.productsDetected", {
-                count: visualProductsAtRisk,
-              })}
-            />
-            <MetricCard
-              density="dense"
-              tone="green"
-              label={copy.margin}
-              value={pct(visualMarginPct)}
-            />
-          </div>
+        <div className="score-mini-grid dashboard-v2-health-metrics">
+          <MetricCard
+            density="dense"
+            tone="red"
+            label={copy.confirmedLoss}
+            value={money(visualLeak)}
+          />
+          <MetricCard
+            density="dense"
+            tone="amber"
+            label={copy.productsAtRisk}
+            value={t("scoreCard.productsDetected", {
+              count: visualProductsAtRisk,
+            })}
+          />
+          <MetricCard
+            density="dense"
+            tone="green"
+            label={copy.margin}
+            value={pct(visualMarginPct)}
+          />
         </div>
       </div>
     </PremiumPanel>
@@ -184,27 +176,8 @@ export function MarginHealthSignal({ assessment }: Pick<Props, "assessment">) {
 
   return (
     <div className="dashboard-v2-health-signal">
-      <div className="dashboard-v2-signal-grid" aria-hidden="true" />
-      <div className="dashboard-v2-signal-axis" aria-hidden="true">
-        <i />
-        <i />
-        <i />
-      </div>
-      <div className="dashboard-v2-signal-trace" aria-hidden="true" />
-
-      <div className="dashboard-v2-signal-label is-loss">
-        <i aria-hidden="true" />
-        {copy.confirmedLoss}
-      </div>
-      <div className="dashboard-v2-signal-label is-risk">
-        <i aria-hidden="true" />
-        {copy.productsAtRisk}
-      </div>
-      <div className="dashboard-v2-signal-label is-margin">
-        <i aria-hidden="true" />
-        {copy.margin}
-      </div>
-
+      <div className="dashboard-v2-instrument-halo" aria-hidden="true" />
+      <div className="dashboard-v2-instrument-arc" aria-hidden="true" />
       <div className="dashboard-v2-signal-core">
         <SignalRing
           value={score ?? 0}
@@ -241,6 +214,7 @@ export function MarginHealthSignal({ assessment }: Pick<Props, "assessment">) {
           ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
         />
       </div>
+      <div className="dashboard-v2-instrument-base" aria-hidden="true" />
     </div>
   );
 }
