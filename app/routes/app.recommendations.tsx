@@ -3,21 +3,28 @@ import { useLoaderData, useNavigate } from "react-router";
 
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import {
-  getBillingStatus,
-  hasGrowthAccess,
-} from "~/utils/billing.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumEmptyState,
+  PremiumHero,
+  PremiumPanel,
+  StatusChip,
+  VisualButton,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
+import recommendationsStylesUrl from "~/styles/recommendations-v2.css?url";
 
 import {
   type LoaderData,
   uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
-import { getLanguageLocale, getStoredLanguage, type Language } from "~/utils/i18n";
+import { getLanguageLocale, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { formatMoneyCompact } from "~/utils/formatting";
@@ -35,13 +42,13 @@ export const links = () => [
     rel: "stylesheet",
     href: dashboardStylesUrl,
   },
+  {
+    rel: "stylesheet",
+    href: recommendationsStylesUrl,
+  },
 ];
 
-export const loader = async ({
-  request,
-}: {
-  request: Request;
-}) => {
+export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
@@ -63,19 +70,25 @@ export const loader = async ({
 
   const dashboardData = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      locale,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        locale,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const trackedActions = growthAccess
     ? await findProfitImpactActionsBySourceKeys({
-      shop: session.shop,
-      sourceAlertKeys: generateProfitAlerts({ summary: dashboardData.summary, rows: dashboardData.rows, language, period, currencyCode: dashboardData.currencyCode }).map((alert) => alert.id),
-    })
+        shop: session.shop,
+        sourceAlertKeys: generateProfitAlerts({
+          summary: dashboardData.summary,
+          rows: dashboardData.rows,
+          language,
+          period,
+          currencyCode: dashboardData.currencyCode,
+        }).map((alert) => alert.id),
+      })
     : [];
 
   return {
@@ -213,27 +226,20 @@ function TinyBadge({
   children: React.ReactNode;
   color: string;
 }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        minHeight: 27,
-        padding: "6px 9px",
-        borderRadius: 999,
-        background: `${color}16`,
-        border: `1px solid ${color}36`,
-        color,
-        fontSize: 9,
-        fontWeight: 950,
-        letterSpacing: "0.05em",
-        textTransform: "uppercase",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </span>
-  );
+  const tone: VisualTone =
+    color === "#22c55e" || color === "#4ade80"
+      ? "green"
+      : color === "#f59e0b"
+        ? "amber"
+        : color === "#38bdf8" || color === "#60a5fa"
+          ? "cyan"
+          : color === "#c084fc" || color === "#a78bfa"
+            ? "violet"
+            : color === "#ff6b4a" || color === "#fb7185"
+              ? "red"
+              : "neutral";
+
+  return <StatusChip tone={tone}>{children}</StatusChip>;
 }
 
 function ActionMetric({
@@ -250,61 +256,18 @@ function ActionMetric({
   tooltip?: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        minWidth: 0,
-        borderRadius: 20,
-        padding: 19,
-        background: highlight
-          ? "radial-gradient(circle at top left, rgba(34,197,94,0.16), transparent 42%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))"
-          : "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-        border: highlight
-          ? "1px solid rgba(34,197,94,0.30)"
-          : "1px solid rgba(255,115,60,0.16)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          fontSize: 9,
-          fontWeight: 950,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          color: highlight ? "#4ade80" : "rgba(255,255,255,0.46)",
-        }}
-      >
-        <span>{label}</span>
-        {tooltip}
-      </div>
-
-      <div
-        style={{
-          marginTop: 11,
-          fontSize: value.length >= 9 ? 22 : value.length >= 7 ? 25 : 29,
-          fontWeight: 950,
-          lineHeight: 1,
-          letterSpacing: "-0.04em",
-          color: highlight ? "#22c55e" : "#f8fafc",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {value}
-      </div>
-
-      <div
-        style={{
-          marginTop: 8,
-          color: "rgba(255,255,255,0.56)",
-          fontSize: 11,
-          fontWeight: 750,
-          lineHeight: 1.45,
-        }}
-      >
-        {note}
-      </div>
-    </div>
+    <MetricCard
+      density="compact"
+      tone={highlight ? "green" : "orange"}
+      label={
+        <span className="recommendations-v2-metric-label">
+          <span>{label}</span>
+          {tooltip}
+        </span>
+      }
+      value={value}
+      detail={note}
+    />
   );
 }
 
@@ -332,7 +295,17 @@ function TopPriority({
   const status = getUiStatusStyle(alert.businessAction, language);
 
   return (
-    <section
+    <PremiumPanel
+      tone={
+        alert.businessAction === "action"
+          ? "red"
+          : alert.businessAction === "review"
+            ? "amber"
+            : alert.businessAction === "optimize"
+              ? "green"
+              : "cyan"
+      }
+      className="recommendations-v2-top-priority"
       style={{
         position: "relative",
         overflow: "hidden",
@@ -428,13 +401,11 @@ function TopPriority({
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                alert.monthlyImpact,
-              )}`
+                  alert.monthlyImpact,
+                )}`
               : copy.auto.r003
           }
-          note={
-            copy.auto.r004
-          }
+          note={copy.auto.r004}
           highlight={alert.monthlyImpact > 0}
         />
 
@@ -453,16 +424,12 @@ function TopPriority({
         <ActionMetric
           label={copy.auto.r008}
           value={`${confidenceScore}%`}
-          note={
-            copy.auto.r009
-          }
+          note={copy.auto.r009}
           tooltip={
             <MetricTooltip
               content={{
-                title:
-                  copy.auto.r010,
-                description:
-                  copy.auto.r011,
+                title: copy.auto.r010,
+                description: copy.auto.r011,
               }}
             />
           }
@@ -481,29 +448,22 @@ function TopPriority({
         }}
       >
         {onTrack ? (
-          <button type="button" className="apply-button" onClick={onTrack}>
+          <VisualButton variant="secondary" onClick={onTrack}>
             {messages.profitImpactPage.trackAction}
-          </button>
+          </VisualButton>
         ) : null}
-        <button
-          type="button"
-          className={completed ? "apply-button" : "primary-button"}
+        <VisualButton
+          variant={completed ? "secondary" : "primary"}
           onClick={onToggle}
         >
-          {completed
-            ? copy.auto.r012
-            : copy.auto.r013}
-        </button>
+          {completed ? copy.auto.r012 : copy.auto.r013}
+        </VisualButton>
 
-        <button
-          type="button"
-          className="apply-button"
-          onClick={() => navigate(alert.route)}
-        >
+        <VisualButton variant="ghost" onClick={() => navigate(alert.route)}>
           {alert.actionLabel} →
-        </button>
+        </VisualButton>
       </div>
-    </section>
+    </PremiumPanel>
   );
 }
 
@@ -517,15 +477,26 @@ export default function RecommendationsPage() {
     economicSnapshot,
     growthAccess,
     trackedActions,
-  } =
-    useLoaderData() as LoaderData & {
-      growthAccess: boolean;
-      trackedActions: Array<{ id: string; sourceAlertKey: string | null; status: string }>;
-    };
+  } = useLoaderData() as LoaderData & {
+    growthAccess: boolean;
+    trackedActions: Array<{
+      id: string;
+      sourceAlertKey: string | null;
+      status: string;
+    }>;
+  };
   const navigate = useNavigate();
   const { language, locale, messages, t } = useI18n();
   const copy = messages.recommendationsPage;
-  const trackedByAlert = React.useMemo(() => new Map(trackedActions.filter((item) => item.sourceAlertKey).map((item) => [item.sourceAlertKey, item])), [trackedActions]);
+  const trackedByAlert = React.useMemo(
+    () =>
+      new Map(
+        trackedActions
+          .filter((item) => item.sourceAlertKey)
+          .map((item) => [item.sourceAlertKey, item]),
+      ),
+    [trackedActions],
+  );
 
   const money = (value: number) =>
     formatStoreMoney(value, currencyCode, locale);
@@ -616,15 +587,15 @@ export default function RecommendationsPage() {
   const averagePriority =
     queueAlerts.length > 0
       ? queueAlerts.reduce((sum, alert) => sum + alert.priority, 0) /
-      queueAlerts.length
+        queueAlerts.length
       : 0;
 
   const actionCenterScore = clamp(
     Math.round(
       35 +
-      Math.min(30, actionableCount * 6) +
-      Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
-      Math.min(15, averagePriority * 0.15),
+        Math.min(30, actionableCount * 6) +
+        Math.min(20, headlineMonthlyOpportunity > 0 ? 20 : 0) +
+        Math.min(15, averagePriority * 0.15),
     ),
     0,
     100,
@@ -692,7 +663,9 @@ export default function RecommendationsPage() {
     if (!alert.productId) return;
     const tracked = trackedByAlert.get(alert.id);
     if (tracked) {
-      navigate(`/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`);
+      navigate(
+        `/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`,
+      );
       return;
     }
     const params = new URLSearchParams({
@@ -716,10 +689,54 @@ export default function RecommendationsPage() {
       : 100;
 
   const stageLabels: Record<ActionStage, string> = {
-    now: language === "it" ? "Da affrontare ora" : language === "fr" ? "À traiter maintenant" : language === "de" ? "Jetzt bearbeiten" : language === "es" ? "Abordar ahora" : language === "pt-BR" ? "Tratar agora" : "Address now",
-    next: language === "it" ? "Prossimo passo" : language === "fr" ? "Prochaine étape" : language === "de" ? "Nächster Schritt" : language === "es" ? "Siguiente paso" : language === "pt-BR" ? "Próxima etapa" : "Next step",
-    planned: language === "it" ? "Da pianificare" : language === "fr" ? "À planifier" : language === "de" ? "Einzuplanen" : language === "es" ? "Planificar" : language === "pt-BR" ? "Planejar" : "Plan next",
-    monitor: language === "it" ? "Monitoraggio" : language === "fr" ? "Suivi" : language === "de" ? "Überwachung" : language === "es" ? "Seguimiento" : language === "pt-BR" ? "Monitoramento" : "Monitoring",
+    now:
+      language === "it"
+        ? "Da affrontare ora"
+        : language === "fr"
+          ? "À traiter maintenant"
+          : language === "de"
+            ? "Jetzt bearbeiten"
+            : language === "es"
+              ? "Abordar ahora"
+              : language === "pt-BR"
+                ? "Tratar agora"
+                : "Address now",
+    next:
+      language === "it"
+        ? "Prossimo passo"
+        : language === "fr"
+          ? "Prochaine étape"
+          : language === "de"
+            ? "Nächster Schritt"
+            : language === "es"
+              ? "Siguiente paso"
+              : language === "pt-BR"
+                ? "Próxima etapa"
+                : "Next step",
+    planned:
+      language === "it"
+        ? "Da pianificare"
+        : language === "fr"
+          ? "À planifier"
+          : language === "de"
+            ? "Einzuplanen"
+            : language === "es"
+              ? "Planificar"
+              : language === "pt-BR"
+                ? "Planejar"
+                : "Plan next",
+    monitor:
+      language === "it"
+        ? "Monitoraggio"
+        : language === "fr"
+          ? "Suivi"
+          : language === "de"
+            ? "Überwachung"
+            : language === "es"
+              ? "Seguimiento"
+              : language === "pt-BR"
+                ? "Monitoramento"
+                : "Monitoring",
   };
 
   const strategyText =
@@ -739,13 +756,13 @@ export default function RecommendationsPage() {
             ? topAlert
               ? `La prioridad principal es «${topAlert.title}». MarginLab recomienda completar primero las tareas de mayor prioridad, validar el efecto en el módulo recomendado y solo después pasar a las oportunidades de optimización.`
               : "No se han detectado acciones operativas. Mantén activo el seguimiento y vuelve a revisar la situación cuando cambien los pedidos, costes o márgenes."
-          : language === "pt-BR"
-            ? topAlert
-              ? `A principal prioridade é “${topAlert.title}”. A MarginLab recomenda concluir primeiro as tarefas de maior prioridade, validar o efeito no módulo recomendado e só então avançar para as oportunidades de otimização.`
-              : "Nenhuma ação operacional foi detectada. Mantenha o monitoramento ativo e revise novamente quando os pedidos, custos ou margens mudarem."
-        : topAlert
-        ? `The primary priority is “${topAlert.title}”. MarginLab recommends completing higher-priority work first, validating the effect in the recommended module, and only then moving to optimization opportunities.`
-        : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
+            : language === "pt-BR"
+              ? topAlert
+                ? `A principal prioridade é “${topAlert.title}”. A MarginLab recomenda concluir primeiro as tarefas de maior prioridade, validar o efeito no módulo recomendado e só então avançar para as oportunidades de otimização.`
+                : "Nenhuma ação operacional foi detectada. Mantenha o monitoramento ativo e revise novamente quando os pedidos, custos ou margens mudarem."
+              : topAlert
+                ? `The primary priority is “${topAlert.title}”. MarginLab recommends completing higher-priority work first, validating the effect in the recommended module, and only then moving to optimization opportunities.`
+                : "No operational actions were detected. Keep monitoring active and review again when orders, costs or margins change.";
 
   const exportRecommendationsCsv = () => {
     const exportStageLabels: Record<ActionStage, string> = {
@@ -771,101 +788,101 @@ export default function RecommendationsPage() {
     const labels =
       language === "it"
         ? {
-          report: "Report",
-          store: "Store",
-          period: "Periodo (giorni)",
-          currency: "Valuta",
-          language: "Lingua",
-          generated: "Generato il",
-          summary: "RIEPILOGO DEL PIANO",
-          metric: "Metrica",
-          value: "Valore",
-          monthlyOpportunity: "Gap mensile stimato verso il target",
-          annualOpportunity: "Gap annuale stimato verso il target",
-          actionCenterScore: "Action Center Score",
-          confidence: "Data Confidence",
-          totalActions: "Azioni totali",
-          completedActions: "Azioni completate",
-          remainingActions: "Azioni rimanenti",
-          progress: "Avanzamento %",
-          totalTime: "Tempo totale stimato (minuti)",
-          priorities: "PRIORITÀ OPERATIVE",
-          columns: [
-            "Posizione",
-            "ID",
-            "Titolo",
-            "Descrizione",
-            "Categoria",
-            "Stato operativo",
-            "Fase",
-            "Priorità",
-            "Natura economica",
-            "Importo economico",
-            "Difficoltà",
-            "Tempo stimato (minuti)",
-            "Data Confidence %",
-            "Stato completamento",
-            "Modulo consigliato",
-            "Azione consigliata",
-            "Percorso",
-          ],
-          completed: "Completata",
-          pending: "Da completare",
-          economicKinds: {
-            loss: "Perdita",
-            opportunity: "Opportunità",
-            exposure: "Esposizione",
-            qualitative: "Qualitativo",
-          },
-        }
+            report: "Report",
+            store: "Store",
+            period: "Periodo (giorni)",
+            currency: "Valuta",
+            language: "Lingua",
+            generated: "Generato il",
+            summary: "RIEPILOGO DEL PIANO",
+            metric: "Metrica",
+            value: "Valore",
+            monthlyOpportunity: "Gap mensile stimato verso il target",
+            annualOpportunity: "Gap annuale stimato verso il target",
+            actionCenterScore: "Action Center Score",
+            confidence: "Data Confidence",
+            totalActions: "Azioni totali",
+            completedActions: "Azioni completate",
+            remainingActions: "Azioni rimanenti",
+            progress: "Avanzamento %",
+            totalTime: "Tempo totale stimato (minuti)",
+            priorities: "PRIORITÀ OPERATIVE",
+            columns: [
+              "Posizione",
+              "ID",
+              "Titolo",
+              "Descrizione",
+              "Categoria",
+              "Stato operativo",
+              "Fase",
+              "Priorità",
+              "Natura economica",
+              "Importo economico",
+              "Difficoltà",
+              "Tempo stimato (minuti)",
+              "Data Confidence %",
+              "Stato completamento",
+              "Modulo consigliato",
+              "Azione consigliata",
+              "Percorso",
+            ],
+            completed: "Completata",
+            pending: "Da completare",
+            economicKinds: {
+              loss: "Perdita",
+              opportunity: "Opportunità",
+              exposure: "Esposizione",
+              qualitative: "Qualitativo",
+            },
+          }
         : {
-          report: "Report",
-          store: "Store",
-          period: "Period (days)",
-          currency: "Currency",
-          language: "Language",
-          generated: "Generated at",
-          summary: "ACTION PLAN SUMMARY",
-          metric: "Metric",
-          value: "Value",
-          monthlyOpportunity: "Estimated monthly profit gap to target",
-          annualOpportunity: "Estimated annual profit gap to target",
-          actionCenterScore: "Action Center Score",
-          confidence: "Data Confidence",
-          totalActions: "Total actions",
-          completedActions: "Completed actions",
-          remainingActions: "Remaining actions",
-          progress: "Progress %",
-          totalTime: "Total estimated time (minutes)",
-          priorities: "OPERATIONAL PRIORITIES",
-          columns: [
-            "Rank",
-            "ID",
-            "Title",
-            "Description",
-            "Category",
-            "Business status",
-            "Stage",
-            "Priority",
-            "Economic kind",
-            "Economic amount",
-            "Difficulty",
-            "Estimated time (minutes)",
-            "Data Confidence %",
-            "Completion status",
-            "Recommended module",
-            "Recommended action",
-            "Route",
-          ],
-          completed: "Completed",
-          pending: "Pending",
-          economicKinds: {
-            loss: "Loss",
-            opportunity: "Opportunity",
-            exposure: "Exposure",
-            qualitative: "Qualitative",
-          },
-        };
+            report: "Report",
+            store: "Store",
+            period: "Period (days)",
+            currency: "Currency",
+            language: "Language",
+            generated: "Generated at",
+            summary: "ACTION PLAN SUMMARY",
+            metric: "Metric",
+            value: "Value",
+            monthlyOpportunity: "Estimated monthly profit gap to target",
+            annualOpportunity: "Estimated annual profit gap to target",
+            actionCenterScore: "Action Center Score",
+            confidence: "Data Confidence",
+            totalActions: "Total actions",
+            completedActions: "Completed actions",
+            remainingActions: "Remaining actions",
+            progress: "Progress %",
+            totalTime: "Total estimated time (minutes)",
+            priorities: "OPERATIONAL PRIORITIES",
+            columns: [
+              "Rank",
+              "ID",
+              "Title",
+              "Description",
+              "Category",
+              "Business status",
+              "Stage",
+              "Priority",
+              "Economic kind",
+              "Economic amount",
+              "Difficulty",
+              "Estimated time (minutes)",
+              "Data Confidence %",
+              "Completion status",
+              "Recommended module",
+              "Recommended action",
+              "Route",
+            ],
+            completed: "Completed",
+            pending: "Pending",
+            economicKinds: {
+              loss: "Loss",
+              opportunity: "Opportunity",
+              exposure: "Exposure",
+              qualitative: "Qualitative",
+            },
+          };
 
     const lines = [
       csvRow([labels.report, "MarginLab Recommendations"]),
@@ -935,133 +952,53 @@ export default function RecommendationsPage() {
       <div className="dashboard-container">
         <DashboardNav active="recommendations" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-              {growthAccess
-                ? copy.auto.r014
-                : copy.auto.r015}
-            </div>
-
-            <div className="eyebrow">
-              {copy.auto.r016}
-            </div>
-
-            <div className="hero-title">
-              {copy.auto.r017}
-            </div>
-
-            <div className="hero-description">
-              {copy.auto.r018}
-            </div>
-          </div>
-
-          {!growthAccess && (
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              <button
-                className="primary-button"
-                onClick={() => navigate("/app/billing")}
-              >
+        <PremiumHero
+          className="recommendations-v2-hero"
+          eyebrow={
+            <span className="recommendations-v2-hero-eyebrow">
+              <StatusChip tone={growthAccess ? "green" : "orange"}>
+                {growthAccess ? copy.auto.r014 : copy.auto.r015}
+              </StatusChip>
+              <span>{copy.auto.r016}</span>
+            </span>
+          }
+          title={copy.auto.r017}
+          description={copy.auto.r018}
+          actions={
+            !growthAccess ? (
+              <VisualButton onClick={() => navigate("/app/billing")}>
                 {copy.auto.r019}
-              </button>
-            </div>
-          )}
-        </div>
+              </VisualButton>
+            ) : undefined
+          }
+        />
 
         <div
-          style={{
-            position: "relative",
-            ...(growthAccess ? {} : { overflow: "hidden", borderRadius: 30 }),
-          }}
+          className={`recommendations-v2-content${growthAccess ? "" : " is-locked"}`}
         >
           {!growthAccess && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 50,
-                display: "grid",
-                placeItems: "start center",
-                paddingTop: 150,
-                background:
-                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.9))",
-                backdropFilter: "blur(2px)",
-              }}
-            >
-              <div
-                style={{
-                  width: "min(560px, calc(100% - 40px))",
-                  padding: 26,
-                  borderRadius: 24,
-                  textAlign: "center",
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(255,115,60,0.3)",
-                  boxShadow: "0 24px 70px rgba(0,0,0,0.42)",
-                }}
+            <div className="recommendations-v2-gate">
+              <PremiumPanel
+                tone="orange"
+                className="recommendations-v2-gate-card"
               >
-                <div
-                  style={{
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {copy.auto.r020}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "#f8fafc",
-                    fontSize: 24,
-                    lineHeight: 1.25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {copy.auto.r021}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "rgba(255,255,255,0.62)",
-                    fontSize: 13,
-                    lineHeight: 1.65,
-                    fontWeight: 750,
-                  }}
-                >
-                  {copy.auto.r022}
-                </div>
-
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => navigate("/app/billing")}
-                  style={{ marginTop: 18 }}
-                >
+                <div className="ml-v2-eyebrow">{copy.auto.r020}</div>
+                <h2>{copy.auto.r021}</h2>
+                <p>{copy.auto.r022}</p>
+                <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.r023}
-                </button>
-              </div>
+                </VisualButton>
+              </PremiumPanel>
             </div>
           )}
 
           <div
             aria-hidden={!growthAccess}
-            style={
-              growthAccess
-                ? undefined
-                : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
-            }
+            className="recommendations-v2-workspace"
           >
-            <section
+            <PremiumPanel
+              tone="green"
+              className="recommendations-v2-economic-summary"
               style={{
                 borderRadius: 30,
                 padding: 28,
@@ -1103,27 +1040,23 @@ export default function RecommendationsPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      <span>
-                        {copy.auto.r024}
-                      </span>
+                      <span>{copy.auto.r024}</span>
 
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.auto.r025,
-                          description:
-                            copy.auto.r026,
+                          title: copy.auto.r025,
+                          description: copy.auto.r026,
                         }}
                       />
                     </div>
 
-                    <button
-                      className="secondary-button"
+                    <VisualButton
+                      variant="secondary"
+                      size="small"
                       onClick={exportRecommendationsCsv}
-                      style={{ padding: "10px 14px", fontSize: 12 }}
                     >
                       {copy.auto.r027}
-                    </button>
+                    </VisualButton>
                   </div>
 
                   <div
@@ -1174,11 +1107,13 @@ export default function RecommendationsPage() {
                               : "#fb7185"
                         }
                       >
-                        {copy.auto.r028}: {confidenceScore}% · {confidenceLevelLabel}
+                        {copy.auto.r028}: {confidenceScore}% ·{" "}
+                        {confidenceLevelLabel}
                       </TinyBadge>
 
                       <TinyBadge color="#60a5fa">
-                        {copy.auto.r029}: {pct(snapshotConfidence.cogsCoveragePct)}
+                        {copy.auto.r029}:{" "}
+                        {pct(snapshotConfidence.cogsCoveragePct)}
                       </TinyBadge>
 
                       <TinyBadge
@@ -1204,151 +1139,76 @@ export default function RecommendationsPage() {
                     }}
                   >
                     <ActionMetric
-                      label={
-                        copy.auto.r032
-                      }
+                      label={copy.auto.r032}
                       value={`+${compactMoney(annualOpportunity, currencyCode, locale)}`}
-                      note={
-                        copy.auto.r033
-                      }
+                      note={copy.auto.r033}
                       highlight
                     />
 
                     <ActionMetric
-                      label={
-                        copy.auto.r034
-                      }
+                      label={copy.auto.r034}
                       value={`${actionableCount}`}
-                      note={
-                        copy.auto.r035
-                      }
+                      note={copy.auto.r035}
                     />
 
                     <ActionMetric
                       label={copy.auto.r036}
                       value={`${totalMinutes} min`}
-                      note={
-                        copy.auto.r037
-                      }
+                      note={copy.auto.r037}
                     />
 
                     <ActionMetric
                       label={copy.auto.r038}
                       value={`${quickWins.length}`}
-                      note={
-                        copy.auto.r039
-                      }
+                      note={copy.auto.r039}
                     />
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    borderRadius: 27,
-                    padding: 25,
-                    display: "grid",
-                    placeItems: "center",
-                    background:
-                      "radial-gradient(circle at center, rgba(255,115,80,0.15), transparent 43%), rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        width: 184,
-                        height: 184,
-                        margin: "0 auto",
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        background: `conic-gradient(${businessStatus.color} ${actionCenterScore * 3.6
-                          }deg, rgba(255,255,255,0.08) 0deg)`,
-                        boxShadow: `0 0 50px ${businessStatus.color}22`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 146,
-                          height: 146,
-                          borderRadius: "50%",
-                          display: "grid",
-                          placeItems: "center",
-                          background:
-                            "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
-                          border: "1px solid rgba(255,255,255,0.06)",
+                <MetricCard
+                  className="recommendations-v2-action-score"
+                  tone={
+                    businessStatus.key === "action"
+                      ? "red"
+                      : businessStatus.key === "review"
+                        ? "amber"
+                        : businessStatus.key === "optimize"
+                          ? "green"
+                          : "cyan"
+                  }
+                  label={
+                    <span className="recommendations-v2-metric-label">
+                      <span>{copy.auto.r040}</span>
+                      <MetricTooltip
+                        content={{
+                          title: copy.auto.r041,
+                          description: copy.auto.r042,
                         }}
+                      />
+                    </span>
+                  }
+                  value={`${actionCenterScore}/100`}
+                  detail={
+                    <>
+                      <StatusChip
+                        tone={
+                          businessStatus.key === "action"
+                            ? "red"
+                            : businessStatus.key === "review"
+                              ? "amber"
+                              : businessStatus.key === "optimize"
+                                ? "green"
+                                : "cyan"
+                        }
                       >
-                        <div>
-                          <div
-                            style={{
-                              color: "#f8fafc",
-                              fontSize: 50,
-                              fontWeight: 950,
-                              lineHeight: 1,
-                              letterSpacing: "-0.05em",
-                            }}
-                          >
-                            {actionCenterScore}
-                          </div>
-
-                          <div
-                            style={{
-                              marginTop: 7,
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              gap: 6,
-                              color: businessStatus.color,
-                              fontSize: 9,
-                              fontWeight: 950,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.1em",
-                            }}
-                          >
-                            <span>
-                              {copy.auto.r040}
-                            </span>
-
-                            <MetricTooltip
-                              content={{
-                                title:
-                                  copy.auto.r041,
-                                description:
-                                  copy.auto.r042,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 18,
-                        color: businessStatus.color,
-                        fontSize: 20,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {businessStatusLabel}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 7,
-                        color: "rgba(255,255,255,0.52)",
-                        fontSize: 11,
-                        lineHeight: 1.5,
-                        fontWeight: 750,
-                      }}
-                    >
-                      {businessStatusDescription}
-                    </div>
-                  </div>
-                </div>
+                        {businessStatusLabel}
+                      </StatusChip>
+                      <span>{businessStatusDescription}</span>
+                    </>
+                  }
+                />
               </div>
-            </section>
+            </PremiumPanel>
 
             {topAlert && (
               <TopPriority
@@ -1359,7 +1219,9 @@ export default function RecommendationsPage() {
                 onToggle={() => toggleComplete(topAlert.id)}
                 money={money}
                 confidenceScore={confidenceScore}
-                onTrack={topAlert.productId ? () => trackAlert(topAlert) : undefined}
+                onTrack={
+                  topAlert.productId ? () => trackAlert(topAlert) : undefined
+                }
               />
             )}
 
@@ -1372,7 +1234,7 @@ export default function RecommendationsPage() {
                 alignItems: "start",
               }}
             >
-              <section className="panel" style={{ margin: 0, padding: 24 }}>
+              <PremiumPanel className="recommendations-v2-action-queue">
                 <div
                   style={{
                     display: "flex",
@@ -1383,9 +1245,7 @@ export default function RecommendationsPage() {
                   }}
                 >
                   <div>
-                    <div className="panel-eyebrow">
-                      {copy.auto.r043}
-                    </div>
+                    <div className="panel-eyebrow">{copy.auto.r043}</div>
 
                     <h2 className="panel-title" style={{ marginTop: 6 }}>
                       {copy.auto.r044}
@@ -1408,7 +1268,10 @@ export default function RecommendationsPage() {
                   {queueAlerts.length > 0 ? (
                     queueAlerts.map((alert, index) => {
                       const completed = completedIds.includes(alert.id);
-                      const status = getUiStatusStyle(alert.businessAction, language);
+                      const status = getUiStatusStyle(
+                        alert.businessAction,
+                        language,
+                      );
 
                       return (
                         <article
@@ -1478,7 +1341,9 @@ export default function RecommendationsPage() {
                                 fontSize: 17,
                                 fontWeight: 950,
                                 lineHeight: 1.25,
-                                textDecoration: completed ? "line-through" : "none",
+                                textDecoration: completed
+                                  ? "line-through"
+                                  : "none",
                               }}
                             >
                               {alert.title}
@@ -1513,12 +1378,14 @@ export default function RecommendationsPage() {
                               </TinyBadge>
 
                               <TinyBadge color="#22c55e">
-                                {copy.auto.r046}{" "}
-                                {confidenceScore}%
+                                {copy.auto.r046} {confidenceScore}%
                               </TinyBadge>
 
                               <TinyBadge color="#c084fc">
-                                {getUiModuleName(alert.recommendedModule, language)}
+                                {getUiModuleName(
+                                  alert.recommendedModule,
+                                  language,
+                                )}
                               </TinyBadge>
                             </div>
                           </div>
@@ -1545,44 +1412,43 @@ export default function RecommendationsPage() {
                                 : copy.auto.r047}
                             </div>
 
-                            <button
-                              type="button"
-                              className="apply-button"
-                              style={{ marginTop: 11 }}
+                            <VisualButton
+                              variant="secondary"
+                              size="small"
                               onClick={() => navigate(alert.route)}
                             >
                               {alert.actionLabel} →
-                            </button>
+                            </VisualButton>
                             {alert.productId ? (
-                              <button
-                                type="button"
-                                className="apply-button"
-                                style={{ marginTop: 8 }}
+                              <VisualButton
+                                variant="ghost"
+                                size="small"
                                 onClick={() => trackAlert(alert)}
                               >
-                                {(() => { const tracked = trackedByAlert.get(alert.id); return !tracked ? messages.profitImpactPage.trackAction : tracked.status === "MEASURING" ? messages.profitImpactPage.viewMeasurement : tracked.status === "COMPLETED" ? messages.profitImpactPage.viewMeasuredImpact : messages.profitImpactPage.openTrackedAction; })()}
-                              </button>
+                                {(() => {
+                                  const tracked = trackedByAlert.get(alert.id);
+                                  return !tracked
+                                    ? messages.profitImpactPage.trackAction
+                                    : tracked.status === "MEASURING"
+                                      ? messages.profitImpactPage
+                                          .viewMeasurement
+                                      : tracked.status === "COMPLETED"
+                                        ? messages.profitImpactPage
+                                            .viewMeasuredImpact
+                                        : messages.profitImpactPage
+                                            .openTrackedAction;
+                                })()}
+                              </VisualButton>
                             ) : null}
                           </div>
                         </article>
                       );
                     })
                   ) : (
-                    <div
-                      style={{
-                        padding: 24,
-                        borderRadius: 18,
-                        color: "#86efac",
-                        background: "rgba(34,197,94,0.08)",
-                        border: "1px solid rgba(34,197,94,0.20)",
-                        fontWeight: 850,
-                      }}
-                    >
-                      {copy.auto.r048}
-                    </div>
+                    <PremiumEmptyState tone="green" title={copy.auto.r048} />
                   )}
                 </div>
-              </section>
+              </PremiumPanel>
 
               <aside
                 style={{
@@ -1590,7 +1456,9 @@ export default function RecommendationsPage() {
                   gap: 18,
                 }}
               >
-                <section
+                <PremiumPanel
+                  tone="green"
+                  className="recommendations-v2-progress"
                   style={{
                     borderRadius: 24,
                     padding: 22,
@@ -1635,10 +1503,8 @@ export default function RecommendationsPage() {
 
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.auto.r050,
-                          description:
-                            copy.auto.r051,
+                          title: copy.auto.r050,
+                          description: copy.auto.r051,
                         }}
                       />
                     </div>
@@ -1683,31 +1549,25 @@ export default function RecommendationsPage() {
                     }}
                   >
                     <ActionMetric
-                      label={
-                        copy.auto.r052
-                      }
+                      label={copy.auto.r052}
                       value={`${completedAlerts.length}`}
-                      note={
-                        copy.auto.r053
-                      }
+                      note={copy.auto.r053}
                     />
 
                     <ActionMetric
-                      label={
-                        copy.auto.r054
-                      }
+                      label={copy.auto.r054}
                       value={`${Math.max(
                         0,
                         queueAlerts.length - completedAlerts.length,
                       )}`}
-                      note={
-                        copy.auto.r055
-                      }
+                      note={copy.auto.r055}
                     />
                   </div>
-                </section>
+                </PremiumPanel>
 
-                <section
+                <PremiumPanel
+                  tone="cyan"
+                  className="recommendations-v2-annual-gap"
                   style={{
                     borderRadius: 24,
                     padding: 22,
@@ -1728,16 +1588,12 @@ export default function RecommendationsPage() {
                       letterSpacing: "0.12em",
                     }}
                   >
-                    <span>
-                      {copy.auto.r056}
-                    </span>
+                    <span>{copy.auto.r056}</span>
 
                     <MetricTooltip
                       content={{
-                        title:
-                          copy.auto.r057,
-                        description:
-                          copy.auto.r058,
+                        title: copy.auto.r057,
+                        description: copy.auto.r058,
                       }}
                     />
                   </div>
@@ -1765,7 +1621,7 @@ export default function RecommendationsPage() {
                   >
                     {copy.auto.r059}
                   </div>
-                </section>
+                </PremiumPanel>
               </aside>
             </div>
 
@@ -1777,10 +1633,8 @@ export default function RecommendationsPage() {
                 gap: 22,
               }}
             >
-              <section className="panel" style={{ margin: 0, padding: 24 }}>
-                <div className="panel-eyebrow">
-                  {copy.auto.r060}
-                </div>
+              <PremiumPanel className="recommendations-v2-quick-wins">
+                <div className="panel-eyebrow">{copy.auto.r060}</div>
 
                 <h2 className="panel-title" style={{ marginTop: 6 }}>
                   {copy.auto.r061}
@@ -1857,23 +1711,14 @@ export default function RecommendationsPage() {
                       </button>
                     ))
                   ) : (
-                    <div
-                      style={{
-                        padding: 18,
-                        borderRadius: 16,
-                        color: "rgba(255,255,255,0.58)",
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.07)",
-                        fontWeight: 760,
-                      }}
-                    >
-                      {copy.auto.r062}
-                    </div>
+                    <PremiumEmptyState tone="cyan" title={copy.auto.r062} />
                   )}
                 </div>
-              </section>
+              </PremiumPanel>
 
-              <section
+              <PremiumPanel
+                tone="orange"
+                className="recommendations-v2-strategy"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1929,46 +1774,37 @@ export default function RecommendationsPage() {
                   <ActionMetric
                     label={copy.auto.r065}
                     value={
-                      (topAlert ? getUiModuleName(topAlert.recommendedModule, language) : undefined) ??
-                      (copy.auto.r066)
+                      (topAlert
+                        ? getUiModuleName(topAlert.recommendedModule, language)
+                        : undefined) ?? copy.auto.r066
                     }
-                    note={
-                      copy.auto.r067
-                    }
+                    note={copy.auto.r067}
                   />
 
                   <ActionMetric
-                    label={
-                      copy.auto.r068
-                    }
+                    label={copy.auto.r068}
                     value={`${Math.round(averagePriority)}/100`}
-                    note={
-                      copy.auto.r069
-                    }
+                    note={copy.auto.r069}
                   />
 
                   <ActionMetric
                     label={copy.auto.r070}
                     value={`${totalMinutes} min`}
-                    note={
-                      copy.auto.r071
-                    }
+                    note={copy.auto.r071}
                   />
                 </div>
-              </section>
+              </PremiumPanel>
             </div>
 
-            <section
-              className="panel"
+            <PremiumPanel
+              className="recommendations-v2-roadmap"
               style={{
                 marginTop: 26,
                 marginBottom: 24,
                 padding: 24,
               }}
             >
-              <div className="panel-eyebrow">
-                {copy.auto.r072}
-              </div>
+              <div className="panel-eyebrow">{copy.auto.r072}</div>
 
               <h2 className="panel-title" style={{ marginTop: 6 }}>
                 {copy.auto.r073}
@@ -2094,22 +1930,11 @@ export default function RecommendationsPage() {
                   },
                 )}
               </div>
-            </section>
+            </PremiumPanel>
 
-            <div
-              style={{
-                padding: 18,
-                borderRadius: 18,
-                background: "rgba(255,115,60,0.07)",
-                border: "1px solid rgba(255,115,60,0.18)",
-                color: "rgba(255,255,255,0.64)",
-                lineHeight: 1.6,
-                fontSize: 12,
-                fontWeight: 700,
-              }}
-            >
+            <PremiumPanel tone="orange" className="recommendations-v2-note">
               {copy.auto.r075}
-            </div>
+            </PremiumPanel>
           </div>
         </div>
       </div>
@@ -2119,29 +1944,151 @@ export default function RecommendationsPage() {
 
 function getUiStatusStyle(action: ProfitBusinessAction, language: Language) {
   const style = getStatusStyle(action, language);
-  if (language === "fr") return { ...style, label: ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<ProfitBusinessAction, string>)[action] };
-  if (language === "de") return { ...style, label: ({ action: "Aktion", review: "Prüfung", optimize: "Optimierung", monitor: "Überwachung" } as Record<ProfitBusinessAction, string>)[action] };
-  if (language === "es") return { ...style, label: ({ action: "Acción", review: "Revisión", optimize: "Optimización", monitor: "Seguimiento" } as Record<ProfitBusinessAction, string>)[action] };
-  if (language === "pt-BR") return { ...style, label: ({ action: "Ação", review: "Revisão", optimize: "Otimização", monitor: "Monitoramento" } as Record<ProfitBusinessAction, string>)[action] };
+  if (language === "fr")
+    return {
+      ...style,
+      label: (
+        {
+          action: "Action",
+          review: "Examen",
+          optimize: "Optimisation",
+          monitor: "Suivi",
+        } as Record<ProfitBusinessAction, string>
+      )[action],
+    };
+  if (language === "de")
+    return {
+      ...style,
+      label: (
+        {
+          action: "Aktion",
+          review: "Prüfung",
+          optimize: "Optimierung",
+          monitor: "Überwachung",
+        } as Record<ProfitBusinessAction, string>
+      )[action],
+    };
+  if (language === "es")
+    return {
+      ...style,
+      label: (
+        {
+          action: "Acción",
+          review: "Revisión",
+          optimize: "Optimización",
+          monitor: "Seguimiento",
+        } as Record<ProfitBusinessAction, string>
+      )[action],
+    };
+  if (language === "pt-BR")
+    return {
+      ...style,
+      label: (
+        {
+          action: "Ação",
+          review: "Revisão",
+          optimize: "Otimização",
+          monitor: "Monitoramento",
+        } as Record<ProfitBusinessAction, string>
+      )[action],
+    };
   return style;
 }
 
 function getUiEffortLabel(effort: ProfitAlertEffort, language: Language) {
-  if (language === "fr") return effort === "easy" ? "Facile" : effort === "medium" ? "Moyenne" : "Avancée";
-  if (language === "de") return effort === "easy" ? "Einfach" : effort === "medium" ? "Mittel" : "Anspruchsvoll";
-  if (language === "es") return effort === "easy" ? "Fácil" : effort === "medium" ? "Medio" : "Avanzado";
-  if (language === "pt-BR") return effort === "easy" ? "Fácil" : effort === "medium" ? "Médio" : "Avançado";
+  if (language === "fr")
+    return effort === "easy"
+      ? "Facile"
+      : effort === "medium"
+        ? "Moyenne"
+        : "Avancée";
+  if (language === "de")
+    return effort === "easy"
+      ? "Einfach"
+      : effort === "medium"
+        ? "Mittel"
+        : "Anspruchsvoll";
+  if (language === "es")
+    return effort === "easy"
+      ? "Fácil"
+      : effort === "medium"
+        ? "Medio"
+        : "Avanzado";
+  if (language === "pt-BR")
+    return effort === "easy"
+      ? "Fácil"
+      : effort === "medium"
+        ? "Médio"
+        : "Avançado";
   return getEffortLabel(effort, language);
 }
 
 function getUiCategoryLabel(category: string, language: Language) {
-  if (language === "fr") return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
-  if (language === "de") return ({ pricing: "Preisgestaltung", "data-quality": "Datenqualität", margin: "Marge", discounts: "Rabatte", refunds: "Erstattungen", growth: "Wachstum" } as Record<string, string>)[category] ?? category;
-  if (language === "es") return ({ pricing: "Precios", "data-quality": "Calidad de datos", margin: "Margen", discounts: "Descuentos", refunds: "Reembolsos", growth: "Crecimiento" } as Record<string, string>)[category] ?? category;
-  if (language === "pt-BR") return ({ pricing: "Precificação", "data-quality": "Qualidade dos dados", margin: "Margem", discounts: "Descontos", refunds: "Reembolsos", growth: "Crescimento" } as Record<string, string>)[category] ?? category;
+  if (language === "fr")
+    return (
+      (
+        {
+          pricing: "Tarification",
+          "data-quality": "Qualité des données",
+          margin: "Marge",
+          discounts: "Remises",
+          refunds: "Remboursements",
+          growth: "Croissance",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "de")
+    return (
+      (
+        {
+          pricing: "Preisgestaltung",
+          "data-quality": "Datenqualität",
+          margin: "Marge",
+          discounts: "Rabatte",
+          refunds: "Erstattungen",
+          growth: "Wachstum",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "es")
+    return (
+      (
+        {
+          pricing: "Precios",
+          "data-quality": "Calidad de datos",
+          margin: "Margen",
+          discounts: "Descuentos",
+          refunds: "Reembolsos",
+          growth: "Crecimiento",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "pt-BR")
+    return (
+      (
+        {
+          pricing: "Precificação",
+          "data-quality": "Qualidade dos dados",
+          margin: "Margem",
+          discounts: "Descontos",
+          refunds: "Reembolsos",
+          growth: "Crescimento",
+        } as Record<string, string>
+      )[category] ?? category
+    );
   return category;
 }
 
 function getUiModuleName(module: string, language: Language) {
-  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : module) : module;
+  return module === "Products"
+    ? language === "fr"
+      ? "Produits"
+      : language === "de"
+        ? "Produkte"
+        : language === "es"
+          ? "Productos"
+          : language === "pt-BR"
+            ? "Produtos"
+            : module
+    : module;
 }
