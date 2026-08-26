@@ -1,6 +1,12 @@
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { pct } from "~/utils/margin";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumPanel,
+  ResponsiveGrid,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 
 type Props = {
   cogsPercentage: number;
@@ -21,6 +27,7 @@ export default function MarginBreakdown({
       label: "COGS",
       value: cogsPercentage,
       color: "#3b82f6",
+      tone: "blue" as VisualTone,
       description: copy.cogsDescription,
       tooltip: {
         title: copy.cogsTooltipTitle,
@@ -32,6 +39,7 @@ export default function MarginBreakdown({
       label: copy.profitLabel,
       value: profitPercentage,
       color: "#22c55e",
+      tone: "green" as VisualTone,
       description: copy.profitDescription,
       tooltip: {
         title: copy.profitTooltipTitle,
@@ -43,6 +51,7 @@ export default function MarginBreakdown({
       label: copy.marginLossLabel,
       value: leakPercentage,
       color: "#ef4444",
+      tone: "red" as VisualTone,
       description: copy.marginLossDescription,
       tooltip: {
         title: copy.marginLossTooltipTitle,
@@ -53,123 +62,43 @@ export default function MarginBreakdown({
   ];
 
   return (
-    <div className="panel">
+    <PremiumPanel className="profit-intelligence-v2-breakdown" tone="blue">
       <div className="section-header">
         <div>
-          <div className="section-title">
-            {copy.title}
-          </div>
+          <div className="section-title">{copy.title}</div>
 
-          <div className="section-subtitle">
-            {copy.subtitle}
-          </div>
+          <div className="section-subtitle">{copy.subtitle}</div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 18,
-          marginTop: 24,
-        }}
+      <ResponsiveGrid
+        columns={3}
+        className="profit-intelligence-v2-breakdown-grid"
       >
         {items.map((item) => (
-          <div
+          <MetricCard
             key={item.label}
-            style={{
-              borderRadius: 24,
-              padding: 24,
-              background:
-                "radial-gradient(circle at top left, rgba(255,115,60,0.05), transparent 36%), linear-gradient(135deg, rgba(17,24,39,0.98), rgba(6,12,24,0.98))",
-              border: "1px solid rgba(255,115,60,0.18)",
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.035), 0 22px 55px rgba(0,0,0,0.30)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 14,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 11,
-                  fontWeight: 900,
-                  letterSpacing: "0.12em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.54)",
-                }}
-              >
-                <span>{item.label}</span>
-
+            tone={item.tone}
+            label={
+              <span className="profit-intelligence-v2-metric-label">
+                {item.label}
                 <MetricTooltip content={item.tooltip} />
+              </span>
+            }
+            value={pct(item.value)}
+            detail={item.description}
+            visual={
+              <div className="profit-intelligence-v2-rail">
+                <i
+                  style={{
+                    width: `${Math.min(Math.max(item.value, 0), 100)}%`,
+                  }}
+                />
               </div>
-
-              <div
-                style={{
-                  width: 10,
-                  height: 10,
-                  borderRadius: 999,
-                  background: item.color,
-                  boxShadow: `0 0 18px ${item.color}66`,
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                marginTop: 18,
-                fontSize: 46,
-                fontWeight: 950,
-                lineHeight: 1,
-                color: item.color,
-                letterSpacing: "-0.04em",
-              }}
-            >
-              {pct(item.value)}
-            </div>
-
-            <div
-              style={{
-                marginTop: 10,
-                minHeight: 42,
-                color: "rgba(255,255,255,0.50)",
-                fontSize: 13,
-                lineHeight: 1.5,
-              }}
-            >
-              {item.description}
-            </div>
-
-            <div
-              style={{
-                height: 9,
-                borderRadius: 999,
-                background: "rgba(255,255,255,0.07)",
-                overflow: "hidden",
-                marginTop: 20,
-              }}
-            >
-              <div
-                style={{
-                  width: `${Math.min(Math.max(item.value, 0), 100)}%`,
-                  height: "100%",
-                  borderRadius: 999,
-                  background: item.color,
-                  boxShadow: `0 0 18px ${item.color}55`,
-                }}
-              />
-            </div>
-          </div>
+            }
+          />
         ))}
-      </div>
-    </div>
+      </ResponsiveGrid>
+    </PremiumPanel>
   );
 }
