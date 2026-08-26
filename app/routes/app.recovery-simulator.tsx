@@ -3,13 +3,22 @@ import { useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  ChoiceCard,
+  ControlField,
+  FeedbackState,
+  MetricCard,
+  PremiumEmptyState,
+  PremiumHero,
+  PremiumPanel,
+  StatusChip,
+  VisualButton,
+  VisualInput,
+} from "~/components/ui/VisualSystem";
 import prisma from "~/db.server";
 import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import {
-  getBillingStatus,
-  hasGrowthAccess,
-} from "~/utils/billing.server";
+import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
   type LoaderData,
   uiMoney as formatStoreMoney,
@@ -21,6 +30,7 @@ import { getRequestLanguage } from "~/utils/i18n.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 
 import "~/styles/dashboard.css";
+import "~/styles/recovery-simulator-v2.css";
 
 export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
@@ -36,29 +46,29 @@ export async function loader({ request }: { request: Request }) {
 
   const dashboardData = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      locale,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        locale,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
-    ? (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? {
-      paymentFeePct: 0,
-      transactionFeePct: 0,
-      taxReservePct: 0,
-    }
+    ? ((await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      })
     : {
-      paymentFeePct: 0,
-      transactionFeePct: 0,
-      taxReservePct: 0,
-    };
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
@@ -143,24 +153,14 @@ export default function RecoverySimulatorPage() {
       rows.map((row) => {
         const qty = Math.max(0, safeNumber(row.qty));
 
-        const economicRevenue =
-          row.economicRevenue ?? row.revenue;
-        const economicCogs =
-          row.economicCogs ?? row.cogs;
-        const economicProfit =
-          row.economicProfit ?? row.profit;
-        const economicMarginPct =
-          row.economicMarginPct ?? row.marginPct;
+        const economicRevenue = row.economicRevenue ?? row.revenue;
+        const economicCogs = row.economicCogs ?? row.cogs;
+        const economicProfit = row.economicProfit ?? row.profit;
+        const economicMarginPct = row.economicMarginPct ?? row.marginPct;
 
-        const economicAvgPrice =
-          qty > 0
-            ? economicRevenue / qty
-            : row.avgPrice;
+        const economicAvgPrice = qty > 0 ? economicRevenue / qty : row.avgPrice;
 
-        const economicAvgCost =
-          qty > 0
-            ? economicCogs / qty
-            : row.avgCost;
+        const economicAvgCost = qty > 0 ? economicCogs / qty : row.avgCost;
 
         return {
           ...row,
@@ -339,19 +339,17 @@ export default function RecoverySimulatorPage() {
         <div className="dashboard-container">
           <DashboardNav active="recovery-simulator" navigate={navigate} />
 
-          <div className="hero-header">
-            <div>
-              <div className="eyebrow">
-                {copy.emptyEyebrow}
-              </div>
-              <div className="hero-title">
-                {copy.emptyTitle}
-              </div>
-              <div className="hero-description">
-                {copy.emptyDescription}
-              </div>
-            </div>
-          </div>
+          <PremiumHero
+            eyebrow={copy.auto.s003}
+            title={copy.auto.s004}
+            description={copy.auto.s005}
+          />
+          <PremiumEmptyState
+            tone="cyan"
+            eyebrow={copy.emptyEyebrow}
+            title={copy.emptyTitle}
+            description={copy.emptyDescription}
+          />
         </div>
       </div>
     );
@@ -378,8 +376,7 @@ export default function RecoverySimulatorPage() {
       : currentPrice - currentCost;
 
   const currentMarginPct = safeNumber(
-    selectedProduct.economicMarginPct ??
-    selectedProduct.marginPct,
+    selectedProduct.economicMarginPct ?? selectedProduct.marginPct,
   );
 
   const currentMonthlyRevenue =
@@ -387,7 +384,7 @@ export default function RecoverySimulatorPage() {
   const variableFeeRate = clamp(
     (safeNumber(loaderData.assumptions.paymentFeePct) +
       safeNumber(loaderData.assumptions.transactionFeePct)) /
-    100,
+      100,
     0,
     1,
   );
@@ -421,8 +418,7 @@ export default function RecoverySimulatorPage() {
   const taxReserveMonthly =
     Math.max(0, recoveredMonthlyProfit) * taxReserveRate;
   const taxReserveAnnual = taxReserveMonthly * 12;
-  const netRecoveredMonthlyProfit =
-    recoveredMonthlyProfit - taxReserveMonthly;
+  const netRecoveredMonthlyProfit = recoveredMonthlyProfit - taxReserveMonthly;
   const netRecoveredAnnualProfit = netRecoveredMonthlyProfit * 12;
   const marginDelta = simulatedMarginPct - currentMarginPct;
   const profitDeltaPct =
@@ -433,9 +429,7 @@ export default function RecoverySimulatorPage() {
         : 0;
 
   const breakEvenPrice =
-    variableFeeRate < 1
-      ? simulatedCost / (1 - variableFeeRate)
-      : simulatedCost;
+    variableFeeRate < 1 ? simulatedCost / (1 - variableFeeRate) : simulatedCost;
   const priceChangePct =
     currentPrice > 0
       ? ((simulatedPrice - currentPrice) / currentPrice) * 100
@@ -446,8 +440,7 @@ export default function RecoverySimulatorPage() {
   const costRecoveryMonthly =
     (currentCost - simulatedCost) * simulatedMonthlyQty;
   const volumeRecoveryMonthly =
-    (simulatedMonthlyQty - currentMonthlyQty) *
-    (currentPrice - currentCost);
+    (simulatedMonthlyQty - currentMonthlyQty) * (currentPrice - currentCost);
   const feeImpactMonthly = currentMonthlyFees - simulatedMonthlyFees;
   const recoveryBreakdown = [
     {
@@ -467,10 +460,7 @@ export default function RecoverySimulatorPage() {
     },
     {
       key: "fees",
-      label:
-        language === "it"
-          ? "Impatto commissioni"
-          : "Variable fee impact",
+      label: language === "it" ? "Impatto commissioni" : "Variable fee impact",
       value: feeImpactMonthly * 12,
     },
     {
@@ -478,15 +468,15 @@ export default function RecoverySimulatorPage() {
       label:
         language === "it"
           ? `Riserva fiscale gestionale (${formatStorePercent(
-            taxReserveRate * 100,
-            "it-IT",
-            1,
-          )})`
+              taxReserveRate * 100,
+              "it-IT",
+              1,
+            )})`
           : `Business-model tax reserve (${formatStorePercent(
-            taxReserveRate * 100,
-            "en-US",
-            1,
-          )})`,
+              taxReserveRate * 100,
+              "en-US",
+              1,
+            )})`,
       value: -taxReserveAnnual,
     },
   ];
@@ -494,8 +484,8 @@ export default function RecoverySimulatorPage() {
   const commercialRiskScore = clamp(
     Math.round(
       Math.max(0, priceChangePct) * 6 +
-      Math.max(0, -salesChangePct) * 4 +
-      (priceChangePct > 8 ? 12 : 0),
+        Math.max(0, -salesChangePct) * 4 +
+        (priceChangePct > 8 ? 12 : 0),
     ),
     0,
     100,
@@ -530,9 +520,9 @@ export default function RecoverySimulatorPage() {
   const dataConfidenceScore = clamp(
     Math.round(
       (currentCost > 0 ? 40 : 0) +
-      (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
-      (selectedProduct.revenue > 0 ? 20 : 0) +
-      (!selectedProduct.missingCost ? 10 : 0),
+        (currentPeriodQty >= 10 ? 30 : currentPeriodQty > 0 ? 15 : 0) +
+        (selectedProduct.revenue > 0 ? 20 : 0) +
+        (!selectedProduct.missingCost ? 10 : 0),
     ),
     0,
     100,
@@ -597,68 +587,68 @@ export default function RecoverySimulatorPage() {
     if (simulatedMonthlyProfit <= currentMonthlyProfit) {
       return language === "it"
         ? `Questo scenario riduce il profitto mensile stimato. La variazione delle vendite non compensa il nuovo equilibrio tra prezzo e costo. Riduci l'ipotesi di calo delle vendite oppure aumenta il prezzo sopra ${money(
-          Math.max(currentPrice, breakEvenPrice),
-          2,
-        )}.`
+            Math.max(currentPrice, breakEvenPrice),
+            2,
+          )}.`
         : `This scenario lowers estimated monthly profit. The sales change does not compensate for the new price and cost balance. Reduce the assumed sales decline or move the price above ${money(
-          Math.max(currentPrice, breakEvenPrice),
-          2,
-        )}.`;
+            Math.max(currentPrice, breakEvenPrice),
+            2,
+          )}.`;
     }
 
     if (costReductionPct >= 4 && priceIncreasePct < 4) {
       return language === "it"
         ? `La leva più efficace in questo scenario è il costo. Una riduzione del ${pct(
-          costReductionPct,
-        )} porta il margine dal ${pct(currentMarginPct)} al ${pct(
-          simulatedMarginPct,
-        )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
+            costReductionPct,
+          )} porta il margine dal ${pct(currentMarginPct)} al ${pct(
+            simulatedMarginPct,
+          )} con un aumento di prezzo limitato. Prima di intervenire sul listino, valuta una negoziazione con il fornitore.`
         : `Cost reduction is the strongest lever in this scenario. A ${pct(
-          costReductionPct,
-        )} reduction moves margin from ${pct(currentMarginPct)} to ${pct(
-          simulatedMarginPct,
-        )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
+            costReductionPct,
+          )} reduction moves margin from ${pct(currentMarginPct)} to ${pct(
+            simulatedMarginPct,
+          )} with only a limited price increase. Consider supplier negotiation before changing the retail price.`;
     }
 
     if (priceIncreasePct >= 8) {
       return language === "it"
         ? `Portare il prezzo a ${money(
-          simulatedPrice,
-          2,
-        )} genera un impatto importante, ma l'aumento del ${pct(
-          priceIncreasePct,
-        )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
+            simulatedPrice,
+            2,
+          )} genera un impatto importante, ma l'aumento del ${pct(
+            priceIncreasePct,
+          )} è significativo. Testa la modifica su un periodo breve o su una parte del traffico per verificare la risposta della domanda.`
         : `Moving the price to ${money(
-          simulatedPrice,
-          2,
-        )} creates a meaningful impact, but the ${pct(
-          priceIncreasePct,
-        )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
+            simulatedPrice,
+            2,
+          )} creates a meaningful impact, but the ${pct(
+            priceIncreasePct,
+          )} increase is material. Test it over a short period or on part of your traffic to validate demand response.`;
     }
 
     return language === "it"
       ? `Portare il prezzo a ${money(
-        simulatedPrice,
-        2,
-      )} e ridurre il costo del ${pct(
-        costReductionPct,
-      )} aumenta il margine dal ${pct(currentMarginPct)} al ${pct(
-        simulatedMarginPct,
-      )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
-        netRecoveredAnnualProfit,
-        0,
-      )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
+          simulatedPrice,
+          2,
+        )} e ridurre il costo del ${pct(
+          costReductionPct,
+        )} aumenta il margine dal ${pct(currentMarginPct)} al ${pct(
+          simulatedMarginPct,
+        )}. Con i volumi ipotizzati, il recupero stimato è ${formatSignedMoney(
+          netRecoveredAnnualProfit,
+          0,
+        )} all'anno. Questo è un equilibrio credibile tra redditività e rischio commerciale.`
       : `Moving the price to ${money(
-        simulatedPrice,
-        2,
-      )} and reducing cost by ${pct(
-        costReductionPct,
-      )} increases margin from ${pct(currentMarginPct)} to ${pct(
-        simulatedMarginPct,
-      )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
-        netRecoveredAnnualProfit,
-        0,
-      )} per year. This is a credible balance between profitability and commercial risk.`;
+          simulatedPrice,
+          2,
+        )} and reducing cost by ${pct(
+          costReductionPct,
+        )} increases margin from ${pct(currentMarginPct)} to ${pct(
+          simulatedMarginPct,
+        )}. At the assumed volume, estimated recovery is ${formatSignedMoney(
+          netRecoveredAnnualProfit,
+          0,
+        )} per year. This is a credible balance between profitability and commercial risk.`;
   })();
 
   const suggestedActions = [
@@ -692,95 +682,309 @@ export default function RecoverySimulatorPage() {
     },
   ].filter((item) => item.visible);
 
-  const displayRecoveryBreakdown = language === "fr" ? recoveryBreakdown.map((item) => ({
-    ...item,
-    label: ({ price: "Variation du prix", cost: "Réduction du coût", volume: "Variation du volume", fees: "Impact des frais variables", "tax-reserve": `Réserve fiscale du modèle (${formatStorePercent(taxReserveRate * 100, "fr-FR", 1)})` } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "de" ? recoveryBreakdown.map((item) => ({
-    ...item,
-    label: ({ price: "Preisänderung", cost: "Kostensenkung", volume: "Volumenänderung", fees: "Auswirkung variabler Gebühren", "tax-reserve": `Steuerrücklage des Modells (${formatStorePercent(taxReserveRate * 100, "de-DE", 1)})` } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "es" ? recoveryBreakdown.map((item) => ({
-    ...item,
-    label: ({ price: "Variación del precio", cost: "Reducción del coste", volume: "Variación del volumen", fees: "Impacto de las comisiones variables", "tax-reserve": `Reserva fiscal del modelo (${formatStorePercent(taxReserveRate * 100, "es-ES", 1)})` } as Record<string, string>)[item.key] ?? item.label,
-  })) : language === "pt-BR" ? recoveryBreakdown.map((item) => ({
-    ...item,
-    label: ({ price: "Variação do preço", cost: "Redução do custo", volume: "Variação do volume", fees: "Impacto das taxas variáveis", "tax-reserve": `Reserva fiscal do modelo (${formatStorePercent(taxReserveRate * 100, "pt-BR", 1)})` } as Record<string, string>)[item.key] ?? item.label,
-  })) : recoveryBreakdown;
+  const displayRecoveryBreakdown =
+    language === "fr"
+      ? recoveryBreakdown.map((item) => ({
+          ...item,
+          label:
+            (
+              {
+                price: "Variation du prix",
+                cost: "Réduction du coût",
+                volume: "Variation du volume",
+                fees: "Impact des frais variables",
+                "tax-reserve": `Réserve fiscale du modèle (${formatStorePercent(taxReserveRate * 100, "fr-FR", 1)})`,
+              } as Record<string, string>
+            )[item.key] ?? item.label,
+        }))
+      : language === "de"
+        ? recoveryBreakdown.map((item) => ({
+            ...item,
+            label:
+              (
+                {
+                  price: "Preisänderung",
+                  cost: "Kostensenkung",
+                  volume: "Volumenänderung",
+                  fees: "Auswirkung variabler Gebühren",
+                  "tax-reserve": `Steuerrücklage des Modells (${formatStorePercent(taxReserveRate * 100, "de-DE", 1)})`,
+                } as Record<string, string>
+              )[item.key] ?? item.label,
+          }))
+        : language === "es"
+          ? recoveryBreakdown.map((item) => ({
+              ...item,
+              label:
+                (
+                  {
+                    price: "Variación del precio",
+                    cost: "Reducción del coste",
+                    volume: "Variación del volumen",
+                    fees: "Impacto de las comisiones variables",
+                    "tax-reserve": `Reserva fiscal del modelo (${formatStorePercent(taxReserveRate * 100, "es-ES", 1)})`,
+                  } as Record<string, string>
+                )[item.key] ?? item.label,
+            }))
+          : language === "pt-BR"
+            ? recoveryBreakdown.map((item) => ({
+                ...item,
+                label:
+                  (
+                    {
+                      price: "Variação do preço",
+                      cost: "Redução do custo",
+                      volume: "Variação do volume",
+                      fees: "Impacto das taxas variáveis",
+                      "tax-reserve": `Reserva fiscal do modelo (${formatStorePercent(taxReserveRate * 100, "pt-BR", 1)})`,
+                    } as Record<string, string>
+                  )[item.key] ?? item.label,
+              }))
+            : recoveryBreakdown;
 
-  const displayRiskLabel = language === "fr" ? commercialRiskScore >= 65 ? "Élevé" : commercialRiskScore >= 35 ? "Moyen" : "Faible" : language === "de" ? commercialRiskScore >= 65 ? "Hoch" : commercialRiskScore >= 35 ? "Mittel" : "Niedrig" : language === "es" ? commercialRiskScore >= 65 ? "Alto" : commercialRiskScore >= 35 ? "Medio" : "Bajo" : language === "pt-BR" ? commercialRiskScore >= 65 ? "Alto" : commercialRiskScore >= 35 ? "Médio" : "Baixo" : riskLabel;
-  const displayConfidenceLabel = language === "fr" ? dataConfidenceScore >= 80 ? "Élevée" : dataConfidenceScore >= 55 ? "Moyenne" : "Faible" : language === "de" ? dataConfidenceScore >= 80 ? "Hoch" : dataConfidenceScore >= 55 ? "Mittel" : "Niedrig" : language === "es" ? dataConfidenceScore >= 80 ? "Alta" : dataConfidenceScore >= 55 ? "Media" : "Baja" : language === "pt-BR" ? dataConfidenceScore >= 80 ? "Alta" : dataConfidenceScore >= 55 ? "Média" : "Baixa" : confidenceLabel;
-  const displayProfitHealth = language === "fr" ? simulatedMarginPct < 0 ? "Déficitaire" : simulatedMarginPct < 10 ? "Critique" : simulatedMarginPct < 20 ? "Faible" : simulatedMarginPct < 35 ? "Saine" : "Forte" : language === "de" ? simulatedMarginPct < 0 ? "Verlustbringend" : simulatedMarginPct < 10 ? "Kritisch" : simulatedMarginPct < 20 ? "Schwach" : simulatedMarginPct < 35 ? "Gesund" : "Stark" : language === "es" ? simulatedMarginPct < 0 ? "Con pérdidas" : simulatedMarginPct < 10 ? "Crítico" : simulatedMarginPct < 20 ? "Débil" : simulatedMarginPct < 35 ? "Saludable" : "Fuerte" : language === "pt-BR" ? simulatedMarginPct < 0 ? "Com prejuízo" : simulatedMarginPct < 10 ? "Crítica" : simulatedMarginPct < 20 ? "Fraca" : simulatedMarginPct < 35 ? "Saudável" : "Forte" : profitHealth;
+  const displayRiskLabel =
+    language === "fr"
+      ? commercialRiskScore >= 65
+        ? "Élevé"
+        : commercialRiskScore >= 35
+          ? "Moyen"
+          : "Faible"
+      : language === "de"
+        ? commercialRiskScore >= 65
+          ? "Hoch"
+          : commercialRiskScore >= 35
+            ? "Mittel"
+            : "Niedrig"
+        : language === "es"
+          ? commercialRiskScore >= 65
+            ? "Alto"
+            : commercialRiskScore >= 35
+              ? "Medio"
+              : "Bajo"
+          : language === "pt-BR"
+            ? commercialRiskScore >= 65
+              ? "Alto"
+              : commercialRiskScore >= 35
+                ? "Médio"
+                : "Baixo"
+            : riskLabel;
+  const displayConfidenceLabel =
+    language === "fr"
+      ? dataConfidenceScore >= 80
+        ? "Élevée"
+        : dataConfidenceScore >= 55
+          ? "Moyenne"
+          : "Faible"
+      : language === "de"
+        ? dataConfidenceScore >= 80
+          ? "Hoch"
+          : dataConfidenceScore >= 55
+            ? "Mittel"
+            : "Niedrig"
+        : language === "es"
+          ? dataConfidenceScore >= 80
+            ? "Alta"
+            : dataConfidenceScore >= 55
+              ? "Media"
+              : "Baja"
+          : language === "pt-BR"
+            ? dataConfidenceScore >= 80
+              ? "Alta"
+              : dataConfidenceScore >= 55
+                ? "Média"
+                : "Baixa"
+            : confidenceLabel;
+  const displayProfitHealth =
+    language === "fr"
+      ? simulatedMarginPct < 0
+        ? "Déficitaire"
+        : simulatedMarginPct < 10
+          ? "Critique"
+          : simulatedMarginPct < 20
+            ? "Faible"
+            : simulatedMarginPct < 35
+              ? "Saine"
+              : "Forte"
+      : language === "de"
+        ? simulatedMarginPct < 0
+          ? "Verlustbringend"
+          : simulatedMarginPct < 10
+            ? "Kritisch"
+            : simulatedMarginPct < 20
+              ? "Schwach"
+              : simulatedMarginPct < 35
+                ? "Gesund"
+                : "Stark"
+        : language === "es"
+          ? simulatedMarginPct < 0
+            ? "Con pérdidas"
+            : simulatedMarginPct < 10
+              ? "Crítico"
+              : simulatedMarginPct < 20
+                ? "Débil"
+                : simulatedMarginPct < 35
+                  ? "Saludable"
+                  : "Fuerte"
+          : language === "pt-BR"
+            ? simulatedMarginPct < 0
+              ? "Com prejuízo"
+              : simulatedMarginPct < 10
+                ? "Crítica"
+                : simulatedMarginPct < 20
+                  ? "Fraca"
+                  : simulatedMarginPct < 35
+                    ? "Saudável"
+                    : "Forte"
+            : profitHealth;
 
-  const displayRecommendation = language === "fr" ? (() => {
-    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
-    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
-      return `Ce scénario réduit le bénéfice mensuel estimé. La variation des ventes ne compense pas le nouvel équilibre entre prix et coût. Réduisez l'hypothèse de baisse des ventes ou augmentez le prix au-dessus de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
-    }
-    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
-      return `La réduction des coûts est le levier le plus efficace dans ce scénario. Une réduction de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)} avec une hausse de prix limitée. Envisagez de négocier avec le fournisseur avant de modifier le prix de vente.`;
-    }
-    if (displayPriceIncreasePct >= 8) {
-      return `Porter le prix à ${money(simulatedPrice, 2)} crée un impact important, mais l'augmentation de ${pct(displayPriceIncreasePct)} est significative. Testez-la sur une courte période ou sur une partie du trafic afin de mesurer la réaction de la demande.`;
-    }
-    return `Porter le prix à ${money(simulatedPrice, 2)} et réduire le coût de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)}. Au volume supposé, la récupération estimée est de ${formatSignedMoney(netRecoveredAnnualProfit, 0)} par an. Il s'agit d'un équilibre crédible entre rentabilité et risque commercial.`;
-  })() : language === "de" ? (() => {
-    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
-    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
-      return `Dieses Szenario senkt den geschätzten monatlichen Gewinn. Die Umsatzänderung gleicht das neue Verhältnis von Preis und Kosten nicht aus. Verringern Sie den angenommenen Absatzrückgang oder erhöhen Sie den Preis über ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
-    }
-    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
-      return `Die Kostensenkung ist in diesem Szenario der wirksamste Hebel. Eine Senkung um ${pct(costReductionPct)} erhöht die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)} bei nur begrenzter Preiserhöhung. Verhandeln Sie zunächst mit dem Lieferanten, bevor Sie den Verkaufspreis ändern.`;
-    }
-    if (displayPriceIncreasePct >= 8) {
-      return `Ein Preis von ${money(simulatedPrice, 2)} hat eine deutliche Wirkung, die Erhöhung um ${pct(displayPriceIncreasePct)} ist jedoch erheblich. Testen Sie sie für einen kurzen Zeitraum oder bei einem Teil des Traffics, um die Nachfragereaktion zu messen.`;
-    }
-    return `Ein Preis von ${money(simulatedPrice, 2)} und eine Kostensenkung um ${pct(costReductionPct)} erhöhen die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)}. Beim angenommenen Volumen beträgt der geschätzte jährliche Gewinnzuwachs ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Dies ist ein glaubwürdiger Ausgleich zwischen Rentabilität und Geschäftsrisiko.`;
-  })() : language === "es" ? (() => {
-    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
-    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
-      return `Este escenario reduce el beneficio mensual estimado. La variación de las ventas no compensa el nuevo equilibrio entre precio y coste. Reduce la caída de ventas asumida o aumenta el precio por encima de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
-    }
-    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
-      return `La reducción de costes es la palanca más eficaz en este escenario. Una reducción del ${pct(costReductionPct)} eleva el margen del ${pct(currentMarginPct)} al ${pct(simulatedMarginPct)} con un aumento de precio limitado. Valora negociar con el proveedor antes de cambiar el precio de venta.`;
-    }
-    if (displayPriceIncreasePct >= 8) {
-      return `Elevar el precio a ${money(simulatedPrice, 2)} genera un impacto importante, pero el aumento del ${pct(displayPriceIncreasePct)} es considerable. Pruébalo durante un periodo corto o en una parte del tráfico para medir la respuesta de la demanda.`;
-    }
-    return `Elevar el precio a ${money(simulatedPrice, 2)} y reducir el coste un ${pct(costReductionPct)} aumenta el margen del ${pct(currentMarginPct)} al ${pct(simulatedMarginPct)}. Con el volumen asumido, la recuperación anual estimada es de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Es un equilibrio razonable entre rentabilidad y riesgo comercial.`;
-  })() : language === "pt-BR" ? (() => {
-    const displayPriceIncreasePct = currentPrice > 0 ? ((simulatedPrice - currentPrice) / currentPrice) * 100 : 0;
-    if (simulatedMonthlyProfit <= currentMonthlyProfit) {
-      return `Este cenário reduz o lucro mensal estimado. A variação das vendas não compensa o novo equilíbrio entre preço e custo. Reduza a queda de vendas presumida ou aumente o preço acima de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
-    }
-    if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
-      return `A redução de custos é a alavanca mais eficaz neste cenário. Uma redução de ${pct(costReductionPct)} eleva a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)} com um aumento de preço limitado. Considere negociar com o fornecedor antes de alterar o preço de venda.`;
-    }
-    if (displayPriceIncreasePct >= 8) {
-      return `Elevar o preço para ${money(simulatedPrice, 2)} gera um impacto importante, mas o aumento de ${pct(displayPriceIncreasePct)} é significativo. Teste por um período curto ou em parte do tráfego para medir a resposta da demanda.`;
-    }
-    return `Elevar o preço para ${money(simulatedPrice, 2)} e reduzir o custo em ${pct(costReductionPct)} aumenta a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)}. Com o volume presumido, a recuperação anual estimada é de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. É um equilíbrio razoável entre lucratividade e risco comercial.`;
-  })() : recommendation;
+  const displayRecommendation =
+    language === "fr"
+      ? (() => {
+          const displayPriceIncreasePct =
+            currentPrice > 0
+              ? ((simulatedPrice - currentPrice) / currentPrice) * 100
+              : 0;
+          if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+            return `Ce scénario réduit le bénéfice mensuel estimé. La variation des ventes ne compense pas le nouvel équilibre entre prix et coût. Réduisez l'hypothèse de baisse des ventes ou augmentez le prix au-dessus de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+          }
+          if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+            return `La réduction des coûts est le levier le plus efficace dans ce scénario. Une réduction de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)} avec une hausse de prix limitée. Envisagez de négocier avec le fournisseur avant de modifier le prix de vente.`;
+          }
+          if (displayPriceIncreasePct >= 8) {
+            return `Porter le prix à ${money(simulatedPrice, 2)} crée un impact important, mais l'augmentation de ${pct(displayPriceIncreasePct)} est significative. Testez-la sur une courte période ou sur une partie du trafic afin de mesurer la réaction de la demande.`;
+          }
+          return `Porter le prix à ${money(simulatedPrice, 2)} et réduire le coût de ${pct(costReductionPct)} fait passer la marge de ${pct(currentMarginPct)} à ${pct(simulatedMarginPct)}. Au volume supposé, la récupération estimée est de ${formatSignedMoney(netRecoveredAnnualProfit, 0)} par an. Il s'agit d'un équilibre crédible entre rentabilité et risque commercial.`;
+        })()
+      : language === "de"
+        ? (() => {
+            const displayPriceIncreasePct =
+              currentPrice > 0
+                ? ((simulatedPrice - currentPrice) / currentPrice) * 100
+                : 0;
+            if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+              return `Dieses Szenario senkt den geschätzten monatlichen Gewinn. Die Umsatzänderung gleicht das neue Verhältnis von Preis und Kosten nicht aus. Verringern Sie den angenommenen Absatzrückgang oder erhöhen Sie den Preis über ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+            }
+            if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+              return `Die Kostensenkung ist in diesem Szenario der wirksamste Hebel. Eine Senkung um ${pct(costReductionPct)} erhöht die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)} bei nur begrenzter Preiserhöhung. Verhandeln Sie zunächst mit dem Lieferanten, bevor Sie den Verkaufspreis ändern.`;
+            }
+            if (displayPriceIncreasePct >= 8) {
+              return `Ein Preis von ${money(simulatedPrice, 2)} hat eine deutliche Wirkung, die Erhöhung um ${pct(displayPriceIncreasePct)} ist jedoch erheblich. Testen Sie sie für einen kurzen Zeitraum oder bei einem Teil des Traffics, um die Nachfragereaktion zu messen.`;
+            }
+            return `Ein Preis von ${money(simulatedPrice, 2)} und eine Kostensenkung um ${pct(costReductionPct)} erhöhen die Marge von ${pct(currentMarginPct)} auf ${pct(simulatedMarginPct)}. Beim angenommenen Volumen beträgt der geschätzte jährliche Gewinnzuwachs ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Dies ist ein glaubwürdiger Ausgleich zwischen Rentabilität und Geschäftsrisiko.`;
+          })()
+        : language === "es"
+          ? (() => {
+              const displayPriceIncreasePct =
+                currentPrice > 0
+                  ? ((simulatedPrice - currentPrice) / currentPrice) * 100
+                  : 0;
+              if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+                return `Este escenario reduce el beneficio mensual estimado. La variación de las ventas no compensa el nuevo equilibrio entre precio y coste. Reduce la caída de ventas asumida o aumenta el precio por encima de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+              }
+              if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+                return `La reducción de costes es la palanca más eficaz en este escenario. Una reducción del ${pct(costReductionPct)} eleva el margen del ${pct(currentMarginPct)} al ${pct(simulatedMarginPct)} con un aumento de precio limitado. Valora negociar con el proveedor antes de cambiar el precio de venta.`;
+              }
+              if (displayPriceIncreasePct >= 8) {
+                return `Elevar el precio a ${money(simulatedPrice, 2)} genera un impacto importante, pero el aumento del ${pct(displayPriceIncreasePct)} es considerable. Pruébalo durante un periodo corto o en una parte del tráfico para medir la respuesta de la demanda.`;
+              }
+              return `Elevar el precio a ${money(simulatedPrice, 2)} y reducir el coste un ${pct(costReductionPct)} aumenta el margen del ${pct(currentMarginPct)} al ${pct(simulatedMarginPct)}. Con el volumen asumido, la recuperación anual estimada es de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. Es un equilibrio razonable entre rentabilidad y riesgo comercial.`;
+            })()
+          : language === "pt-BR"
+            ? (() => {
+                const displayPriceIncreasePct =
+                  currentPrice > 0
+                    ? ((simulatedPrice - currentPrice) / currentPrice) * 100
+                    : 0;
+                if (simulatedMonthlyProfit <= currentMonthlyProfit) {
+                  return `Este cenário reduz o lucro mensal estimado. A variação das vendas não compensa o novo equilíbrio entre preço e custo. Reduza a queda de vendas presumida ou aumente o preço acima de ${money(Math.max(currentPrice, breakEvenPrice), 2)}.`;
+                }
+                if (costReductionPct >= 4 && displayPriceIncreasePct < 4) {
+                  return `A redução de custos é a alavanca mais eficaz neste cenário. Uma redução de ${pct(costReductionPct)} eleva a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)} com um aumento de preço limitado. Considere negociar com o fornecedor antes de alterar o preço de venda.`;
+                }
+                if (displayPriceIncreasePct >= 8) {
+                  return `Elevar o preço para ${money(simulatedPrice, 2)} gera um impacto importante, mas o aumento de ${pct(displayPriceIncreasePct)} é significativo. Teste por um período curto ou em parte do tráfego para medir a resposta da demanda.`;
+                }
+                return `Elevar o preço para ${money(simulatedPrice, 2)} e reduzir o custo em ${pct(costReductionPct)} aumenta a margem de ${pct(currentMarginPct)} para ${pct(simulatedMarginPct)}. Com o volume presumido, a recuperação anual estimada é de ${formatSignedMoney(netRecoveredAnnualProfit, 0)}. É um equilíbrio razoável entre lucratividade e risco comercial.`;
+              })()
+            : recommendation;
 
-  const displaySuggestedActions = language === "fr" ? [
-    { visible: simulatedPrice > currentPrice, text: `Évaluer un prix de vente de ${money(simulatedPrice, 2)}` },
-    { visible: costReductionPct > 0, text: `Négocier une réduction de coût de ${pct(costReductionPct)}` },
-    { visible: salesChangePct < 0, text: "Surveiller une éventuelle baisse de conversion après le changement de prix" },
-    { visible: salesChangePct >= 0, text: "Surveiller les ventes et la marge pour confirmer l'impact réel" },
-  ].filter((item) => item.visible) : language === "de" ? [
-    { visible: simulatedPrice > currentPrice, text: `Verkaufspreis von ${money(simulatedPrice, 2)} prüfen` },
-    { visible: costReductionPct > 0, text: `Kostensenkung um ${pct(costReductionPct)} verhandeln` },
-    { visible: salesChangePct < 0, text: "Möglichen Conversion-Rückgang nach der Preisänderung beobachten" },
-    { visible: salesChangePct >= 0, text: "Umsatz und Marge beobachten, um die tatsächliche Wirkung zu bestätigen" },
-  ].filter((item) => item.visible) : language === "es" ? [
-    { visible: simulatedPrice > currentPrice, text: `Evaluar un precio de venta de ${money(simulatedPrice, 2)}` },
-    { visible: costReductionPct > 0, text: `Negociar una reducción de costes del ${pct(costReductionPct)}` },
-    { visible: salesChangePct < 0, text: "Supervisar una posible caída de la conversión tras el cambio de precio" },
-    { visible: salesChangePct >= 0, text: "Supervisar ventas y margen para confirmar el impacto real" },
-  ].filter((item) => item.visible) : language === "pt-BR" ? [
-    { visible: simulatedPrice > currentPrice, text: `Avaliar um preço de venda de ${money(simulatedPrice, 2)}` },
-    { visible: costReductionPct > 0, text: `Negociar uma redução de custo de ${pct(costReductionPct)}` },
-    { visible: salesChangePct < 0, text: "Monitorar uma possível queda na conversão após a alteração de preço" },
-    { visible: salesChangePct >= 0, text: "Monitorar vendas e margem para confirmar o impacto real" },
-  ].filter((item) => item.visible) : suggestedActions;
+  const displaySuggestedActions =
+    language === "fr"
+      ? [
+          {
+            visible: simulatedPrice > currentPrice,
+            text: `Évaluer un prix de vente de ${money(simulatedPrice, 2)}`,
+          },
+          {
+            visible: costReductionPct > 0,
+            text: `Négocier une réduction de coût de ${pct(costReductionPct)}`,
+          },
+          {
+            visible: salesChangePct < 0,
+            text: "Surveiller une éventuelle baisse de conversion après le changement de prix",
+          },
+          {
+            visible: salesChangePct >= 0,
+            text: "Surveiller les ventes et la marge pour confirmer l'impact réel",
+          },
+        ].filter((item) => item.visible)
+      : language === "de"
+        ? [
+            {
+              visible: simulatedPrice > currentPrice,
+              text: `Verkaufspreis von ${money(simulatedPrice, 2)} prüfen`,
+            },
+            {
+              visible: costReductionPct > 0,
+              text: `Kostensenkung um ${pct(costReductionPct)} verhandeln`,
+            },
+            {
+              visible: salesChangePct < 0,
+              text: "Möglichen Conversion-Rückgang nach der Preisänderung beobachten",
+            },
+            {
+              visible: salesChangePct >= 0,
+              text: "Umsatz und Marge beobachten, um die tatsächliche Wirkung zu bestätigen",
+            },
+          ].filter((item) => item.visible)
+        : language === "es"
+          ? [
+              {
+                visible: simulatedPrice > currentPrice,
+                text: `Evaluar un precio de venta de ${money(simulatedPrice, 2)}`,
+              },
+              {
+                visible: costReductionPct > 0,
+                text: `Negociar una reducción de costes del ${pct(costReductionPct)}`,
+              },
+              {
+                visible: salesChangePct < 0,
+                text: "Supervisar una posible caída de la conversión tras el cambio de precio",
+              },
+              {
+                visible: salesChangePct >= 0,
+                text: "Supervisar ventas y margen para confirmar el impacto real",
+              },
+            ].filter((item) => item.visible)
+          : language === "pt-BR"
+            ? [
+                {
+                  visible: simulatedPrice > currentPrice,
+                  text: `Avaliar um preço de venda de ${money(simulatedPrice, 2)}`,
+                },
+                {
+                  visible: costReductionPct > 0,
+                  text: `Negociar uma redução de custo de ${pct(costReductionPct)}`,
+                },
+                {
+                  visible: salesChangePct < 0,
+                  text: "Monitorar uma possível queda na conversão após a alteração de preço",
+                },
+                {
+                  visible: salesChangePct >= 0,
+                  text: "Monitorar vendas e margem para confirmar o impacto real",
+                },
+              ].filter((item) => item.visible)
+            : suggestedActions;
 
   const handleManualPriceChange = (value: number) => {
     setScenario("custom");
@@ -904,57 +1108,202 @@ export default function RecoverySimulatorPage() {
       ["MarginLab Recovery Simulator"],
       [],
       [language === "it" ? "METADATI" : "METADATA"],
-      [language === "it" ? "Voce" : "Field", language === "it" ? "Valore" : "Value"],
+      [
+        language === "it" ? "Voce" : "Field",
+        language === "it" ? "Valore" : "Value",
+      ],
       [language === "it" ? "Store" : "Store", loaderData.shopHandle || ""],
-      [language === "it" ? "Data esportazione" : "Export date", new Date().toISOString()],
-      [language === "it" ? "Periodo osservato (giorni)" : "Observed period (days)", periodDays],
+      [
+        language === "it" ? "Data esportazione" : "Export date",
+        new Date().toISOString(),
+      ],
+      [
+        language === "it"
+          ? "Periodo osservato (giorni)"
+          : "Observed period (days)",
+        periodDays,
+      ],
       [language === "it" ? "Valuta" : "Currency", currencyCode],
       [language === "it" ? "Lingua" : "Language", language.toUpperCase()],
       [language === "it" ? "Scenario" : "Scenario", scenarioLabel],
       [],
-      [language === "it" ? "PRODOTTO E BASELINE ECONOMICA" : "PRODUCT AND ECONOMIC BASELINE"],
-      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Prodotto" : "Product", selectedProduct.productTitle],
+      [
+        language === "it"
+          ? "PRODOTTO E BASELINE ECONOMICA"
+          : "PRODUCT AND ECONOMIC BASELINE",
+      ],
+      [
+        language === "it" ? "Voce" : "Metric",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it" ? "Prodotto" : "Product",
+        selectedProduct.productTitle,
+      ],
       ["Product ID", selectedProduct.productId],
-      [language === "it" ? "Prezzo attuale" : "Current price", round(currentPrice)],
-      [language === "it" ? "Costo attuale" : "Current cost", round(currentCost)],
-      [language === "it" ? "Unità nel periodo" : "Units in observed period", round(currentPeriodQty)],
-      [language === "it" ? "Unità mensili normalizzate" : "Normalized monthly units", round(currentMonthlyQty)],
-      [language === "it" ? "Ricavi economici mensili attuali" : "Current monthly economic revenue", round(currentMonthlyRevenue)],
-      [language === "it" ? "Profitto economico mensile attuale" : "Current monthly economic profit", round(currentMonthlyProfit)],
-      [language === "it" ? "Margine economico attuale (%)" : "Current economic margin (%)", round(currentMarginPct)],
+      [
+        language === "it" ? "Prezzo attuale" : "Current price",
+        round(currentPrice),
+      ],
+      [
+        language === "it" ? "Costo attuale" : "Current cost",
+        round(currentCost),
+      ],
+      [
+        language === "it" ? "Unità nel periodo" : "Units in observed period",
+        round(currentPeriodQty),
+      ],
+      [
+        language === "it"
+          ? "Unità mensili normalizzate"
+          : "Normalized monthly units",
+        round(currentMonthlyQty),
+      ],
+      [
+        language === "it"
+          ? "Ricavi economici mensili attuali"
+          : "Current monthly economic revenue",
+        round(currentMonthlyRevenue),
+      ],
+      [
+        language === "it"
+          ? "Profitto economico mensile attuale"
+          : "Current monthly economic profit",
+        round(currentMonthlyProfit),
+      ],
+      [
+        language === "it"
+          ? "Margine economico attuale (%)"
+          : "Current economic margin (%)",
+        round(currentMarginPct),
+      ],
       [],
       [language === "it" ? "IPOTESI DELLO SCENARIO" : "SCENARIO ASSUMPTIONS"],
-      [language === "it" ? "Voce" : "Assumption", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Prezzo simulato" : "Simulated price", round(simulatedPrice)],
-      [language === "it" ? "Variazione prezzo (%)" : "Price change (%)", round(priceChangePct)],
-      [language === "it" ? "Riduzione costo (%)" : "Cost reduction (%)", round(costReductionPct)],
-      [language === "it" ? "Variazione vendite (%)" : "Sales change (%)", round(salesChangePct)],
-      [language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)", round(loaderData.assumptions.paymentFeePct)],
-      [language === "it" ? "Commissioni transazione (%)" : "Transaction fees (%)", round(loaderData.assumptions.transactionFeePct)],
-      [language === "it" ? "Riserva fiscale gestionale (%)" : "Business-model tax reserve (%)", round(loaderData.assumptions.taxReservePct)],
+      [
+        language === "it" ? "Voce" : "Assumption",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it" ? "Prezzo simulato" : "Simulated price",
+        round(simulatedPrice),
+      ],
+      [
+        language === "it" ? "Variazione prezzo (%)" : "Price change (%)",
+        round(priceChangePct),
+      ],
+      [
+        language === "it" ? "Riduzione costo (%)" : "Cost reduction (%)",
+        round(costReductionPct),
+      ],
+      [
+        language === "it" ? "Variazione vendite (%)" : "Sales change (%)",
+        round(salesChangePct),
+      ],
+      [
+        language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)",
+        round(loaderData.assumptions.paymentFeePct),
+      ],
+      [
+        language === "it"
+          ? "Commissioni transazione (%)"
+          : "Transaction fees (%)",
+        round(loaderData.assumptions.transactionFeePct),
+      ],
+      [
+        language === "it"
+          ? "Riserva fiscale gestionale (%)"
+          : "Business-model tax reserve (%)",
+        round(loaderData.assumptions.taxReservePct),
+      ],
       [],
       [language === "it" ? "RISULTATO SIMULATO" : "SIMULATED RESULT"],
-      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Costo simulato" : "Simulated cost", round(simulatedCost)],
-      [language === "it" ? "Unità mensili simulate" : "Simulated monthly units", round(simulatedMonthlyQty)],
-      [language === "it" ? "Ricavi mensili simulati" : "Simulated monthly revenue", round(simulatedMonthlyRevenue)],
-      [language === "it" ? "Profitto mensile simulato" : "Simulated monthly profit", round(simulatedMonthlyProfit)],
-      [language === "it" ? "Margine simulato (%)" : "Simulated margin (%)", round(simulatedMarginPct)],
-      [language === "it" ? "Variazione margine (punti %)" : "Margin change (percentage points)", round(marginDelta)],
-      [language === "it" ? "Recupero mensile lordo" : "Gross monthly recovery", round(recoveredMonthlyProfit)],
-      [language === "it" ? "Riserva fiscale mensile" : "Monthly tax reserve", round(taxReserveMonthly)],
-      [language === "it" ? "Recupero mensile netto" : "Net monthly recovery", round(netRecoveredMonthlyProfit)],
-      [language === "it" ? "Recupero annuale netto" : "Net annual recovery", round(netRecoveredAnnualProfit)],
-      [language === "it" ? "Salute del profitto" : "Profit health", profitHealth],
-      [language === "it" ? "Rischio commerciale" : "Commercial risk", riskLabel],
-      [language === "it" ? "Punteggio rischio commerciale" : "Commercial risk score", commercialRiskScore],
-      [language === "it" ? "Data Confidence" : "Data Confidence", dataConfidenceScore],
-      [language === "it" ? "Livello Data Confidence" : "Data Confidence level", confidenceLabel],
+      [
+        language === "it" ? "Voce" : "Metric",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it" ? "Costo simulato" : "Simulated cost",
+        round(simulatedCost),
+      ],
+      [
+        language === "it"
+          ? "Unità mensili simulate"
+          : "Simulated monthly units",
+        round(simulatedMonthlyQty),
+      ],
+      [
+        language === "it"
+          ? "Ricavi mensili simulati"
+          : "Simulated monthly revenue",
+        round(simulatedMonthlyRevenue),
+      ],
+      [
+        language === "it"
+          ? "Profitto mensile simulato"
+          : "Simulated monthly profit",
+        round(simulatedMonthlyProfit),
+      ],
+      [
+        language === "it" ? "Margine simulato (%)" : "Simulated margin (%)",
+        round(simulatedMarginPct),
+      ],
+      [
+        language === "it"
+          ? "Variazione margine (punti %)"
+          : "Margin change (percentage points)",
+        round(marginDelta),
+      ],
+      [
+        language === "it" ? "Recupero mensile lordo" : "Gross monthly recovery",
+        round(recoveredMonthlyProfit),
+      ],
+      [
+        language === "it" ? "Riserva fiscale mensile" : "Monthly tax reserve",
+        round(taxReserveMonthly),
+      ],
+      [
+        language === "it" ? "Recupero mensile netto" : "Net monthly recovery",
+        round(netRecoveredMonthlyProfit),
+      ],
+      [
+        language === "it" ? "Recupero annuale netto" : "Net annual recovery",
+        round(netRecoveredAnnualProfit),
+      ],
+      [
+        language === "it" ? "Salute del profitto" : "Profit health",
+        profitHealth,
+      ],
+      [
+        language === "it" ? "Rischio commerciale" : "Commercial risk",
+        riskLabel,
+      ],
+      [
+        language === "it"
+          ? "Punteggio rischio commerciale"
+          : "Commercial risk score",
+        commercialRiskScore,
+      ],
+      [
+        language === "it" ? "Data Confidence" : "Data Confidence",
+        dataConfidenceScore,
+      ],
+      [
+        language === "it" ? "Livello Data Confidence" : "Data Confidence level",
+        confidenceLabel,
+      ],
       [],
-      [language === "it" ? "IMPATTO ANNUALE PER LEVA" : "ANNUAL IMPACT BY LEVER"],
-      [language === "it" ? "Leva" : "Lever", language === "it" ? "Importo" : "Amount"],
-      ...recoveryBreakdown.map((item) => [item.label, round(item.value)] as CsvValue[]),
+      [
+        language === "it"
+          ? "IMPATTO ANNUALE PER LEVA"
+          : "ANNUAL IMPACT BY LEVER",
+      ],
+      [
+        language === "it" ? "Leva" : "Lever",
+        language === "it" ? "Importo" : "Amount",
+      ],
+      ...recoveryBreakdown.map(
+        (item) => [item.label, round(item.value)] as CsvValue[],
+      ),
       [],
       [language === "it" ? "RACCOMANDAZIONE" : "RECOMMENDATION"],
       [recommendation],
@@ -1104,162 +1453,59 @@ export default function RecoverySimulatorPage() {
       <div className="dashboard-container">
         <DashboardNav active="recovery-simulator" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-              {growthAccess
-                ? copy.auto.s001
-                : copy.auto.s002}
-            </div>
-
-            <div className="eyebrow">
-              {copy.auto.s003}
-            </div>
-
-            <div className="hero-title">
-              {copy.auto.s004}
-            </div>
-
-            <div className="hero-description">
-              {copy.auto.s005}
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              {copy.auto.s006}
-            </div>
-          </div>
-
-          {!growthAccess && (
-            <button
-              className="primary-button recovery-growth-button"
-              onClick={() => navigate("/app/billing")}
-            >
-              {copy.auto.s007}
-            </button>
-          )}
-        </div>
+        <PremiumHero
+          className="recovery-v2-hero"
+          eyebrow={
+            <span className="recovery-v2-hero-eyebrow">
+              <StatusChip tone={growthAccess ? "green" : "orange"}>
+                {growthAccess ? copy.auto.s001 : copy.auto.s002}
+              </StatusChip>
+              <span>{copy.auto.s003}</span>
+            </span>
+          }
+          title={copy.auto.s004}
+          description={copy.auto.s005}
+          actions={
+            <>
+              <StatusChip tone="green">{copy.auto.s006}</StatusChip>
+              {!growthAccess ? (
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.auto.s007}
+                </VisualButton>
+              ) : null}
+            </>
+          }
+        />
 
         <div
-          className="panel"
-          style={{
-            position: "relative",
-            ...(growthAccess ? {} : { overflow: "hidden" }),
-          }}
+          className={`recovery-v2-content${growthAccess ? "" : " is-locked"}`}
         >
           {!growthAccess && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 50,
-                display: "grid",
-                placeItems: "start center",
-                paddingTop: 150,
-                background:
-                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.9))",
-                backdropFilter: "blur(2px)",
-              }}
-            >
-              <div
-                style={{
-                  width: "min(560px, calc(100% - 40px))",
-                  padding: 26,
-                  borderRadius: 24,
-                  textAlign: "center",
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(255,115,60,0.3)",
-                  boxShadow: "0 24px 70px rgba(0,0,0,0.42)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {copy.auto.s008}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "#f8fafc",
-                    fontSize: 24,
-                    lineHeight: 1.25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {copy.auto.s009}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "rgba(255,255,255,0.62)",
-                    fontSize: 13,
-                    lineHeight: 1.65,
-                    fontWeight: 750,
-                  }}
-                >
-                  {copy.auto.s010}
-                </div>
-
-                <button
-                  type="button"
-                  className="primary-button recovery-growth-button"
-                  onClick={() => navigate("/app/billing")}
-                  style={{ marginTop: 18 }}
-                >
+            <div className="recovery-v2-gate">
+              <PremiumPanel tone="orange" className="recovery-v2-gate-card">
+                <div className="ml-v2-eyebrow">{copy.auto.s008}</div>
+                <h2>{copy.auto.s009}</h2>
+                <p>{copy.auto.s010}</p>
+                <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.s011}
-                </button>
-              </div>
+                </VisualButton>
+              </PremiumPanel>
             </div>
           )}
 
-          <div
-            aria-hidden={!growthAccess}
-            style={
-              growthAccess
-                ? undefined
-                : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
-            }
-          >
-            <div style={{ ...cardStyle, padding: 22 }}>
+          <div aria-hidden={!growthAccess} className="recovery-v2-workspace">
+            <PremiumPanel className="recovery-v2-product-picker">
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "minmax(0, 1.25fr) minmax(280px, 0.75fr)",
+                  gridTemplateColumns:
+                    "minmax(0, 1.25fr) minmax(280px, 0.75fr)",
                   gap: 20,
                   alignItems: "end",
                 }}
               >
                 <div>
-                  <div style={mutedLabelStyle}>
-                    {copy.auto.s012}
-                  </div>
+                  <div style={mutedLabelStyle}>{copy.auto.s012}</div>
                   <div
                     style={{
                       marginTop: 9,
@@ -1272,26 +1518,13 @@ export default function RecoverySimulatorPage() {
                   </div>
                 </div>
 
-                <div style={{ position: "relative" }}>
-                  <input
+                <ControlField label={copy.auto.s014}>
+                  <VisualInput
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder={
-                      copy.auto.s014
-                    }
-                    style={{
-                      width: "100%",
-                      boxSizing: "border-box",
-                      borderRadius: 16,
-                      padding: "14px 16px",
-                      color: "#f8fafc",
-                      background: "rgba(255,255,255,0.045)",
-                      border: "1px solid rgba(255,115,60,0.2)",
-                      outline: "none",
-                      fontWeight: 800,
-                    }}
+                    placeholder={copy.auto.s014}
                   />
-                </div>
+                </ControlField>
               </div>
 
               <div
@@ -1307,56 +1540,24 @@ export default function RecoverySimulatorPage() {
                     product.productId === selectedProduct.productId;
 
                   return (
-                    <button
+                    <ChoiceCard
                       key={product.productId || product.productTitle}
-                      type="button"
+                      selected={isActive}
+                      tone="orange"
                       onClick={() => {
                         setSelectedProductId(product.productId);
                         setSearchQuery("");
                       }}
-                      style={{
-                        minHeight: 74,
-                        padding: 14,
-                        borderRadius: 16,
-                        textAlign: "left",
-                        cursor: "pointer",
-                        background: isActive
-                          ? "linear-gradient(135deg, rgba(255,115,60,0.17), rgba(255,115,60,0.07))"
-                          : "rgba(255,255,255,0.035)",
-                        border: isActive
-                          ? "1px solid rgba(255,115,60,0.48)"
-                          : "1px solid rgba(255,255,255,0.075)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: "#f8fafc",
-                          fontWeight: 900,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {product.productTitle}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 7,
-                          color: "rgba(255,255,255,0.52)",
-                          fontSize: 12,
-                          fontWeight: 800,
-                        }}
-                      >
-                        {money(product.avgPrice, 2)} · {product.qty}{" "}
-                        {copy.auto.s015}
-                      </div>
-                    </button>
+                      title={product.productTitle}
+                      description={`${money(product.avgPrice, 2)} · ${product.qty} ${copy.auto.s015}`}
+                    />
                   );
                 })}
               </div>
-            </div>
+            </PremiumPanel>
 
             <div
+              className="recovery-v2-primary-workspace"
               style={{
                 display: "grid",
                 gridTemplateColumns: "minmax(280px, 0.72fr) minmax(0, 1.28fr)",
@@ -1364,10 +1565,8 @@ export default function RecoverySimulatorPage() {
                 marginTop: 24,
               }}
             >
-              <div style={cardStyle}>
-                <div style={mutedLabelStyle}>
-                  {copy.auto.s016}
-                </div>
+              <PremiumPanel tone="cyan" className="recovery-v2-baseline">
+                <div style={mutedLabelStyle}>{copy.auto.s016}</div>
 
                 <div
                   style={{
@@ -1389,21 +1588,22 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   {[
-                    [
-                      copy.auto.s017,
-                      money(currentPrice, 2),
-                    ],
+                    [copy.auto.s017, money(currentPrice, 2)],
                     [copy.auto.s018, money(currentCost, 2)],
+                    [copy.auto.s019, Math.round(currentMonthlyQty).toString()],
+                    [copy.auto.s020, pct(currentMarginPct)],
                     [
-                      copy.auto.s019,
-                      Math.round(currentMonthlyQty).toString(),
-                    ],
-                    [
-                      copy.auto.s020,
-                      pct(currentMarginPct),
-                    ],
-                    [
-                      language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : language === "pt-BR" ? "Lucro mensal" : "Monthly profit",
+                      language === "it"
+                        ? "Profitto mensile"
+                        : language === "fr"
+                          ? "Bénéfice mensuel"
+                          : language === "de"
+                            ? "Monatlicher Gewinn"
+                            : language === "es"
+                              ? "Beneficio mensual"
+                              : language === "pt-BR"
+                                ? "Lucro mensal"
+                                : "Monthly profit",
                       money(currentMonthlyProfit, 0),
                     ],
                   ].map(([label, value]) => (
@@ -1436,16 +1636,24 @@ export default function RecoverySimulatorPage() {
                         </span>
 
                         {label ===
-                          (language === "it" ? "Profitto mensile" : language === "fr" ? "Bénéfice mensuel" : language === "de" ? "Monatlicher Gewinn" : language === "es" ? "Beneficio mensual" : language === "pt-BR" ? "Lucro mensal" : "Monthly profit") && (
-                            <MetricTooltip
-                              content={{
-                                title:
-                                  copy.auto.s023,
-                                description:
-                                  copy.auto.s024,
-                              }}
-                            />
-                          )}
+                          (language === "it"
+                            ? "Profitto mensile"
+                            : language === "fr"
+                              ? "Bénéfice mensuel"
+                              : language === "de"
+                                ? "Monatlicher Gewinn"
+                                : language === "es"
+                                  ? "Beneficio mensual"
+                                  : language === "pt-BR"
+                                    ? "Lucro mensal"
+                                    : "Monthly profit") && (
+                          <MetricTooltip
+                            content={{
+                              title: copy.auto.s023,
+                              description: copy.auto.s024,
+                            }}
+                          />
+                        )}
                       </div>
                       <strong style={{ color: "#f8fafc", fontSize: 16 }}>
                         {value}
@@ -1469,13 +1677,12 @@ export default function RecoverySimulatorPage() {
                         : "1px solid rgba(255,115,60,0.17)",
                   }}
                 >
-                  <div style={mutedLabelStyle}>
-                    {copy.auto.s025}
-                  </div>
+                  <div style={mutedLabelStyle}>{copy.auto.s025}</div>
                   <div
                     style={{
                       marginTop: 8,
-                      color: currentPrice <= currentCost ? "#f87171" : "#ff9a70",
+                      color:
+                        currentPrice <= currentCost ? "#f87171" : "#ff9a70",
                       fontSize: 25,
                       fontWeight: 950,
                     }}
@@ -1494,9 +1701,11 @@ export default function RecoverySimulatorPage() {
                     {copy.auto.s026}
                   </div>
                 </div>
-              </div>
+              </PremiumPanel>
 
-              <div
+              <PremiumPanel
+                tone="orange"
+                className="recovery-v2-levers"
                 style={{
                   ...cardStyle,
                   background:
@@ -1513,9 +1722,7 @@ export default function RecoverySimulatorPage() {
                   }}
                 >
                   <div>
-                    <div style={mutedLabelStyle}>
-                      {copy.auto.s027}
-                    </div>
+                    <div style={mutedLabelStyle}>{copy.auto.s027}</div>
                     <div
                       style={{
                         marginTop: 9,
@@ -1573,7 +1780,9 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {t("recoverySimulatorPage.currentValue", { value: money(currentPrice, 2) })}
+                          {t("recoverySimulatorPage.currentValue", {
+                            value: money(currentPrice, 2),
+                          })}
                         </div>
                       </div>
                       <div
@@ -1641,7 +1850,9 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {t("recoverySimulatorPage.newCost", { value: money(simulatedCost, 2) })}
+                          {t("recoverySimulatorPage.newCost", {
+                            value: money(simulatedCost, 2),
+                          })}
                         </div>
                       </div>
                       <div
@@ -1706,7 +1917,9 @@ export default function RecoverySimulatorPage() {
                             fontWeight: 750,
                           }}
                         >
-                          {t("recoverySimulatorPage.estimatedUnits", { count: Math.round(simulatedMonthlyQty) })}
+                          {t("recoverySimulatorPage.estimatedUnits", {
+                            count: Math.round(simulatedMonthlyQty),
+                          })}
                         </div>
                       </div>
                       <div
@@ -1750,10 +1963,12 @@ export default function RecoverySimulatorPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </PremiumPanel>
             </div>
 
-            <div
+            <PremiumPanel
+              tone="orange"
+              className="recovery-v2-scenarios"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -1771,66 +1986,25 @@ export default function RecoverySimulatorPage() {
                       : copy.auto.s038;
 
                 return (
-                  <button
+                  <ChoiceCard
                     key={item.key}
-                    type="button"
+                    selected={active}
+                    tone="orange"
                     onClick={() => applyScenario(item.key)}
-                    style={{
-                      padding: 18,
-                      borderRadius: 20,
-                      cursor: "pointer",
-                      textAlign: "left",
-                      background: active
-                        ? "linear-gradient(135deg, rgba(255,115,60,0.18), rgba(255,115,60,0.07))"
-                        : "rgba(255,255,255,0.03)",
-                      border: active
-                        ? "1px solid rgba(255,115,60,0.48)"
-                        : "1px solid rgba(255,255,255,0.075)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 9,
-                        color: "#f8fafc",
-                        fontSize: 15,
-                        fontWeight: 950,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 9,
-                          height: 9,
-                          borderRadius: 999,
-                          background: active
-                            ? "#ff733c"
-                            : "rgba(255,255,255,0.2)",
-                        }}
-                      />
-                      {label}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 9,
-                        color: "rgba(255,255,255,0.52)",
-                        fontSize: 12,
-                        lineHeight: 1.55,
-                        fontWeight: 750,
-                      }}
-                    >
-                      {t("recoverySimulatorPage.scenarioSummary", {
-                        price: item.priceChangePct,
-                        cost: item.costReductionPct,
-                        sales: formatSignedPct(item.salesChangePct, 0),
-                      })}
-                    </div>
-                  </button>
+                    title={label}
+                    description={t("recoverySimulatorPage.scenarioSummary", {
+                      price: item.priceChangePct,
+                      cost: item.costReductionPct,
+                      sales: formatSignedPct(item.salesChangePct, 0),
+                    })}
+                  />
                 );
               })}
-            </div>
+            </PremiumPanel>
 
-            <div
+            <PremiumPanel
+              tone="violet"
+              className="recovery-v2-recommendation"
               style={{
                 ...cardStyle,
                 display: "grid",
@@ -1869,54 +2043,26 @@ export default function RecoverySimulatorPage() {
                   {copy.auto.s041}
                 </div>
               </div>
-              <button
-                type="button"
+              <VisualButton
+                variant="secondary"
                 onClick={applyAiSuggestedScenario}
-                style={{
-                  minHeight: 52,
-                  padding: "14px 20px",
-                  borderRadius: 16,
-                  cursor: "pointer",
-                  color: "#fff",
-                  background:
-                    "linear-gradient(135deg, rgba(124,58,237,0.95), rgba(255,115,60,0.9))",
-                  border: "1px solid rgba(255,255,255,0.16)",
-                  boxShadow: "0 14px 34px rgba(124,58,237,0.2)",
-                  fontWeight: 950,
-                }}
               >
                 {copy.auto.s042}
-              </button>
-            </div>
+              </VisualButton>
+            </PremiumPanel>
 
             <div style={{ marginTop: 24 }}>
               <div className="section-header">
                 <div>
-                  <div className="section-title">
-                    {copy.auto.s043}
-                  </div>
-                  <div className="section-subtitle">
-                    {copy.auto.s044}
-                  </div>
+                  <div className="section-title">{copy.auto.s043}</div>
+                  <div className="section-subtitle">{copy.auto.s044}</div>
                 </div>
-                <button
-                  type="button"
+                <VisualButton
+                  variant="secondary"
                   onClick={exportCurrentScenario}
-                  style={{
-                    minHeight: 42,
-                    padding: "0 15px",
-                    borderRadius: 13,
-                    cursor: "pointer",
-                    color: "#f8fafc",
-                    background: "rgba(255,255,255,0.055)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    fontSize: 12,
-                    fontWeight: 900,
-                    whiteSpace: "nowrap",
-                  }}
                 >
                   {copy.auto.s045}
-                </button>
+                </VisualButton>
               </div>
 
               <div
@@ -1935,93 +2081,72 @@ export default function RecoverySimulatorPage() {
                     positive: marginDelta >= 0,
                   },
                   {
-                    label:
-                      copy.auto.s047,
+                    label: copy.auto.s047,
                     value: money(simulatedMonthlyProfit, 0),
                     note: formatSignedPct(profitDeltaPct, 1),
                     positive: recoveredMonthlyProfit >= 0,
                   },
                   {
                     label:
-                      language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : language === "pt-BR" ? "Recuperação mensal líquida" : "Net monthly recovery",
+                      language === "it"
+                        ? "Recupero mensile netto"
+                        : language === "fr"
+                          ? "Récupération mensuelle nette"
+                          : language === "de"
+                            ? "Monatlicher Nettogewinnzuwachs"
+                            : language === "es"
+                              ? "Recuperación mensual neta"
+                              : language === "pt-BR"
+                                ? "Recuperação mensal líquida"
+                                : "Net monthly recovery",
                     value: formatSignedMoney(netRecoveredMonthlyProfit, 0),
-                    note:
-                      copy.auto.s049,
+                    note: copy.auto.s049,
                     positive: netRecoveredMonthlyProfit >= 0,
                   },
                   {
-                    label:
-                      copy.auto.s050,
+                    label: copy.auto.s050,
                     value: formatSignedMoney(netRecoveredAnnualProfit, 0),
-                    note:
-                      copy.auto.s051,
+                    note: copy.auto.s051,
                     positive: netRecoveredAnnualProfit >= 0,
                   },
                 ].map((item) => (
-                  <div
+                  <MetricCard
                     key={`${item.label}-${item.value}`}
                     className="recovery-metric-card"
-                    style={{
-                      borderRadius: 23,
-                      padding: 22,
-                      background: item.positive
-                        ? "radial-gradient(circle at top left, rgba(34,197,94,0.13), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))"
-                        : "radial-gradient(circle at top left, rgba(239,68,68,0.12), transparent 40%), linear-gradient(180deg, rgba(17,24,39,0.97), rgba(7,12,21,0.99))",
-                      border: item.positive
-                        ? "1px solid rgba(34,197,94,0.22)"
-                        : "1px solid rgba(239,68,68,0.22)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        ...mutedLabelStyle,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <span>{item.label}</span>
-
-                      {item.label ===
-                        (language === "it" ? "Recupero mensile netto" : language === "fr" ? "Récupération mensuelle nette" : language === "de" ? "Monatlicher Nettogewinnzuwachs" : language === "es" ? "Recuperación mensual neta" : language === "pt-BR" ? "Recuperação mensal líquida" : "Net monthly recovery") && (
+                    tone={item.positive ? "green" : "red"}
+                    label={
+                      <span className="recovery-v2-metric-label">
+                        <span>{item.label}</span>
+                        {item.label ===
+                          (language === "it"
+                            ? "Recupero mensile netto"
+                            : language === "fr"
+                              ? "Récupération mensuelle nette"
+                              : language === "de"
+                                ? "Monatlicher Nettogewinnzuwachs"
+                                : language === "es"
+                                  ? "Recuperación mensual neta"
+                                  : language === "pt-BR"
+                                    ? "Recuperação mensal líquida"
+                                    : "Net monthly recovery") && (
                           <MetricTooltip
                             content={{
-                              title:
-                                copy.auto.s053,
-                              description:
-                                copy.auto.s054,
+                              title: copy.auto.s053,
+                              description: copy.auto.s054,
                             }}
                           />
                         )}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 12,
-                        color: item.positive ? "#4ade80" : "#f87171",
-                        fontSize: 29,
-                        lineHeight: 1,
-                        fontWeight: 950,
-                        letterSpacing: "-0.035em",
-                      }}
-                    >
-                      {item.value}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 9,
-                        color: "rgba(255,255,255,0.54)",
-                        fontSize: 12,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {item.note}
-                    </div>
-                  </div>
+                      </span>
+                    }
+                    value={item.value}
+                    detail={item.note}
+                  />
                 ))}
               </div>
             </div>
 
-            <div
+            <PremiumPanel
+              className="recovery-v2-saved-scenarios"
               style={{
                 ...cardStyle,
                 marginTop: 24,
@@ -2037,9 +2162,7 @@ export default function RecoverySimulatorPage() {
                 }}
               >
                 <div>
-                  <div style={mutedLabelStyle}>
-                    {copy.auto.s055}
-                  </div>
+                  <div style={mutedLabelStyle}>{copy.auto.s055}</div>
                   <div
                     style={{
                       marginTop: 9,
@@ -2059,72 +2182,29 @@ export default function RecoverySimulatorPage() {
                     alignItems: "center",
                   }}
                 >
-                  <input
+                  <VisualInput
                     value={scenarioName}
                     onChange={(event) => setScenarioName(event.target.value)}
-                    placeholder={
-                      copy.auto.s057
-                    }
-                    style={{
-                      minHeight: 46,
-                      minWidth: 220,
-                      padding: "0 14px",
-                      borderRadius: 14,
-                      color: "#f8fafc",
-                      background: "rgba(255,255,255,0.045)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      outline: "none",
-                      fontWeight: 800,
-                    }}
+                    placeholder={copy.auto.s057}
                   />
-                  <button
-                    type="button"
-                    onClick={saveCurrentScenario}
-                    style={{
-                      minHeight: 46,
-                      padding: "0 18px",
-                      borderRadius: 14,
-                      cursor: "pointer",
-                      color: "#fff",
-                      background: "#ff733c",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      fontWeight: 950,
-                    }}
-                  >
+                  <VisualButton onClick={saveCurrentScenario}>
                     {copy.auto.s058}
-                  </button>
+                  </VisualButton>
                 </div>
               </div>
 
               {saveMessage && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    color: "#86efac",
-                    fontSize: 12,
-                    fontWeight: 900,
-                  }}
+                <FeedbackState
+                  className="recovery-v2-save-feedback"
+                  tone="green"
+                  title={saveMessage}
                 >
-                  ✓ {saveMessage}
-                </div>
+                  {copy.auto.s055}
+                </FeedbackState>
               )}
 
               {savedScenarios.length === 0 ? (
-                <div
-                  style={{
-                    marginTop: 20,
-                    padding: 18,
-                    borderRadius: 16,
-                    color: "rgba(255,255,255,0.5)",
-                    background: "rgba(255,255,255,0.025)",
-                    border: "1px dashed rgba(255,255,255,0.1)",
-                    fontSize: 13,
-                    lineHeight: 1.6,
-                    fontWeight: 750,
-                  }}
-                >
-                  {copy.auto.s059}
-                </div>
+                <PremiumEmptyState tone="cyan" title={copy.auto.s059} />
               ) : (
                 <div
                   style={{
@@ -2178,25 +2258,14 @@ export default function RecoverySimulatorPage() {
                             {saved.productTitle}
                           </div>
                         </div>
-                        <button
-                          type="button"
+                        <VisualButton
+                          variant="ghost"
+                          size="small"
                           onClick={() => deleteSavedScenario(saved.id)}
-                          aria-label={
-                            copy.auto.s060
-                          }
-                          style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 10,
-                            cursor: "pointer",
-                            color: "rgba(255,255,255,0.52)",
-                            background: "rgba(255,255,255,0.04)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            fontWeight: 900,
-                          }}
+                          aria-label={copy.auto.s060}
                         >
                           ×
-                        </button>
+                        </VisualButton>
                       </div>
                       <div
                         style={{
@@ -2207,22 +2276,13 @@ export default function RecoverySimulatorPage() {
                         }}
                       >
                         {[
-                          [
-                            copy.auto.s061,
-                            pct(saved.marginPct),
-                          ],
-                          [
-                            copy.auto.s062,
-                            money(saved.monthlyProfit, 0),
-                          ],
+                          [copy.auto.s061, pct(saved.marginPct)],
+                          [copy.auto.s062, money(saved.monthlyProfit, 0)],
                           [
                             copy.auto.s063,
                             formatSignedMoney(saved.annualRecovery, 0),
                           ],
-                          [
-                            copy.auto.s064,
-                            money(saved.simulatedPrice, 2),
-                          ],
+                          [copy.auto.s064, money(saved.simulatedPrice, 2)],
                         ].map(([label, value]) => (
                           <div
                             key={label}
@@ -2255,30 +2315,21 @@ export default function RecoverySimulatorPage() {
                           </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
+                      <VisualButton
+                        variant="secondary"
+                        size="small"
                         onClick={() => loadSavedScenario(saved)}
-                        style={{
-                          width: "100%",
-                          minHeight: 40,
-                          marginTop: 13,
-                          borderRadius: 12,
-                          cursor: "pointer",
-                          color: "#ff9a70",
-                          background: "rgba(255,115,60,0.075)",
-                          border: "1px solid rgba(255,115,60,0.18)",
-                          fontWeight: 900,
-                        }}
                       >
                         {copy.auto.s065}
-                      </button>
+                      </VisualButton>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </PremiumPanel>
 
             <div
+              className="recovery-v2-analysis-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns:
@@ -2288,9 +2339,7 @@ export default function RecoverySimulatorPage() {
               }}
             >
               <div style={cardStyle}>
-                <div style={mutedLabelStyle}>
-                  {copy.auto.s066}
-                </div>
+                <div style={mutedLabelStyle}>{copy.auto.s066}</div>
                 <div
                   style={{
                     marginTop: 9,
@@ -2340,9 +2389,7 @@ export default function RecoverySimulatorPage() {
                       fontWeight: 950,
                     }}
                   >
-                    <span>
-                      {copy.auto.s068}
-                    </span>
+                    <span>{copy.auto.s068}</span>
                     <span
                       style={{
                         color:
@@ -2368,10 +2415,8 @@ export default function RecoverySimulatorPage() {
 
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.s070,
-                      description:
-                        copy.auto.s071,
+                      title: copy.auto.s070,
+                      description: copy.auto.s071,
                     }}
                   />
                 </div>
@@ -2420,9 +2465,7 @@ export default function RecoverySimulatorPage() {
               </div>
 
               <div style={cardStyle}>
-                <div style={mutedLabelStyle}>
-                  {copy.auto.s072}
-                </div>
+                <div style={mutedLabelStyle}>{copy.auto.s072}</div>
                 <div
                   style={{
                     marginTop: 9,
@@ -2481,9 +2524,7 @@ export default function RecoverySimulatorPage() {
               }}
             >
               <div style={cardStyle}>
-                <div style={mutedLabelStyle}>
-                  {copy.auto.s076}
-                </div>
+                <div style={mutedLabelStyle}>{copy.auto.s076}</div>
                 <div
                   style={{
                     marginTop: 9,
@@ -2506,8 +2547,7 @@ export default function RecoverySimulatorPage() {
                       max: 60,
                     },
                     {
-                      label:
-                        copy.auto.s079,
+                      label: copy.auto.s079,
                       current: money(currentMonthlyProfit, 0),
                       next: money(simulatedMonthlyProfit, 0),
                       currentBar: Math.max(0, currentMonthlyProfit),
@@ -2519,8 +2559,7 @@ export default function RecoverySimulatorPage() {
                       ),
                     },
                     {
-                      label:
-                        copy.auto.s080,
+                      label: copy.auto.s080,
                       current: money(currentMonthlyRevenue, 0),
                       next: money(simulatedMonthlyRevenue, 0),
                       currentBar: Math.max(0, currentMonthlyRevenue),
@@ -2680,7 +2719,9 @@ export default function RecoverySimulatorPage() {
                     fontWeight: 750,
                   }}
                 >
-                  {t("recoverySimulatorPage.afterTaxReserve", { value: pct(taxReserveRate * 100) })}
+                  {t("recoverySimulatorPage.afterTaxReserve", {
+                    value: pct(taxReserveRate * 100),
+                  })}
                 </div>
 
                 {netRecoveredAnnualProfit > 0 && (
@@ -2721,16 +2762,12 @@ export default function RecoverySimulatorPage() {
                           gap: 6,
                         }}
                       >
-                        <span>
-                          {copy.auto.s082}
-                        </span>
+                        <span>{copy.auto.s082}</span>
 
                         <MetricTooltip
                           content={{
-                            title:
-                              copy.auto.s083,
-                            description:
-                              copy.auto.s084,
+                            title: copy.auto.s083,
+                            description: copy.auto.s084,
                           }}
                         />
                       </div>
@@ -2778,7 +2815,9 @@ export default function RecoverySimulatorPage() {
               </div>
             </div>
 
-            <div
+            <PremiumPanel
+              tone="orange"
+              className="recovery-v2-operational-followup"
               style={{
                 ...cardStyle,
                 marginTop: 24,
@@ -2812,35 +2851,21 @@ export default function RecoverySimulatorPage() {
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    padding: "9px 13px",
-                    borderRadius: 999,
-                    background: "rgba(34,197,94,0.1)",
-                    border: "1px solid rgba(34,197,94,0.2)",
-                    color: "#86efac",
-                    fontSize: 12,
-                    fontWeight: 900,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <span>
-                    {copy.auto.s087}:{" "}
-                    {displayConfidenceLabel} · {dataConfidenceScore}% ·{" "}
-                    {copy.auto.s088} {displayRiskLabel}
-                  </span>
-
+                <span className="recovery-v2-status-with-info">
+                  <StatusChip tone="green">
+                    <span>
+                      {copy.auto.s087}: {displayConfidenceLabel} ·{" "}
+                      {dataConfidenceScore}% · {copy.auto.s088}{" "}
+                      {displayRiskLabel}
+                    </span>
+                  </StatusChip>
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.s089,
-                      description:
-                        copy.auto.s090,
+                      title: copy.auto.s089,
+                      description: copy.auto.s090,
                     }}
                   />
-                </div>
+                </span>
               </div>
 
               <div
@@ -2893,50 +2918,27 @@ export default function RecoverySimulatorPage() {
                     borderTop: "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  <button
-                    type="button"
-                    className="primary-button"
-                    onClick={trackCurrentScenario}
-                    style={{ marginRight: 10 }}
-                  >
+                  <VisualButton onClick={trackCurrentScenario}>
                     {messages.profitImpactPage.trackAction}
-                  </button>
+                  </VisualButton>
                   <a
                     href={`https://admin.shopify.com/store/${loaderData.shopHandle}/products/${selectedProduct.productId}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="apply-button"
-                    style={{
-                      textDecoration: "none",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
+                    className="ml-v2-button ml-v2-button-secondary ml-v2-button-medium"
                   >
                     {copy.auto.s091}
                     <span style={{ fontSize: 18 }}>↗</span>
                   </a>
                 </div>
               ) : null}
-            </div>
+            </PremiumPanel>
 
-            <div
-              style={{
-                marginTop: 24,
-                padding: 18,
-                borderRadius: 18,
-                background: "rgba(255,115,60,0.075)",
-                border: "1px solid rgba(255,115,60,0.18)",
-                color: "rgba(255,255,255,0.66)",
-                lineHeight: 1.65,
-                fontSize: 13,
-                fontWeight: 700,
-              }}
-            >
+            <PremiumPanel tone="orange" className="recovery-v2-method-note">
               {growthAccess
                 ? t("recoverySimulatorPage.methodNote", { periodDays })
                 : copy.auto.s092}
-            </div>
+            </PremiumPanel>
           </div>
         </div>
       </div>
