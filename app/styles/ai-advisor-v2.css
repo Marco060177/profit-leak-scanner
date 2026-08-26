@@ -9,73 +9,69 @@
 .advisor-v2-hero {
   margin-bottom: 22px;
 }
-.advisor-v2-identity-visual {
-  position: relative;
+.advisor-v2-hero-health {
   display: grid;
   place-items: center;
   width: min(100%, 430px);
   min-height: 276px;
   padding: 20px;
-  overflow: hidden;
+  text-align: center;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   background:
     radial-gradient(
       circle at 50% 48%,
-      rgb(var(--ml-v2-accent) / 0.12),
+      rgba(34, 197, 94, 0.12),
       transparent 42%
     ),
     linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(4, 8, 15, 0.3));
 }
-.advisor-v2-identity-orbit {
-  width: min(245px, 72vw);
-}
-.advisor-v2-identity-core {
+.advisor-v2-hero-health-ring {
   display: grid;
-  width: 52px;
-  gap: 5px;
-  padding: 13px 11px;
-  border: 1px solid rgb(var(--ml-v2-accent) / 0.32);
-  border-radius: 14px;
-  background: rgba(7, 12, 21, 0.9);
-  box-shadow: 0 0 28px rgb(var(--ml-v2-accent) / 0.15);
+  width: 188px;
+  height: 188px;
+  place-items: center;
+  border-radius: 50%;
 }
-.advisor-v2-identity-core i {
-  display: block;
-  height: 3px;
-  border-radius: 99px;
-  background: linear-gradient(
-    90deg,
-    rgb(var(--ml-v2-accent)),
-    rgba(255, 255, 255, 0.18)
-  );
+.advisor-v2-hero-health-core {
+  display: grid;
+  width: 148px;
+  height: 148px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(14, 21, 34, 1), rgba(7, 12, 21, 1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
-.advisor-v2-identity-core i:nth-child(2) {
-  width: 76%;
+.advisor-v2-hero-health-score {
+  color: #f8fafc;
+  font-size: 52px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.05em;
 }
-.advisor-v2-identity-core i:nth-child(3) {
-  width: 48%;
+.advisor-v2-hero-health-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-.advisor-v2-identity-trace {
-  position: absolute;
-  width: 110px;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgb(var(--ml-v2-accent) / 0.38),
-    transparent
-  );
-  transform: rotate(-24deg);
+.advisor-v2-hero-health-status {
+  margin-top: 14px;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 950;
 }
-.advisor-v2-identity-trace-a {
-  top: 23%;
-  right: -8px;
-}
-.advisor-v2-identity-trace-b {
-  bottom: 20%;
-  left: -10px;
-  transform: rotate(28deg);
+.advisor-v2-hero-health-detail {
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 12px;
+  font-weight: 750;
 }
 
 .advisor-v2-executive {
@@ -307,7 +303,7 @@
   }
 }
 @media (max-width: 760px) {
-  .advisor-v2-identity-visual {
+  .advisor-v2-hero-health {
     width: 100%;
     max-width: 520px;
     margin-inline: auto;
@@ -332,12 +328,16 @@
   .advisor-v2-hero {
     padding: 22px !important;
   }
-  .advisor-v2-identity-visual {
+  .advisor-v2-hero-health {
     padding: 16px;
   }
-  .advisor-v2-identity-orbit {
-    max-width: 210px;
-    margin-inline: auto;
+  .advisor-v2-hero-health-ring {
+    width: 172px;
+    height: 172px;
+  }
+  .advisor-v2-hero-health-core {
+    width: 136px;
+    height: 136px;
   }
   .advisor-v2-executive [style*="repeat(4"],
   .advisor-v2-scorecards,
@@ -362,7 +362,7 @@
   }
 }
 @media (max-width: 390px) {
-  .advisor-v2-identity-visual {
+  .advisor-v2-hero-health {
     min-height: 230px;
   }
   .advisor-v2-executive,

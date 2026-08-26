@@ -8,7 +8,6 @@ import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   MetricCard,
-  OrbitField,
   PremiumHero,
   PremiumPanel,
   StatusChip,
@@ -1482,34 +1481,39 @@ Rules:
             </>
           }
           visual={
-            <div className="advisor-v2-identity-visual" aria-hidden="true">
-              <OrbitField
-                className="advisor-v2-identity-orbit"
-                size="large"
-                motion="ambient"
-                tone="orange"
-                nodes={[
-                  { id: "signal-a", orbit: 1, angle: 38, tone: "orange" },
-                  { id: "signal-b", orbit: 2, angle: 162, tone: "blue" },
-                  { id: "signal-c", orbit: 3, angle: 278, tone: "green" },
-                  {
-                    id: "signal-d",
-                    orbit: 3,
-                    angle: 92,
-                    tone: "violet",
-                    emphasis: "quiet",
-                  },
-                ]}
-                center={
-                  <span className="advisor-v2-identity-core">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                }
-              />
-              <span className="advisor-v2-identity-trace advisor-v2-identity-trace-a" />
-              <span className="advisor-v2-identity-trace advisor-v2-identity-trace-b" />
+            <div className="advisor-v2-hero-health">
+              <div
+                className="advisor-v2-hero-health-ring"
+                style={{
+                  background: `conic-gradient(${healthColor} ${
+                    healthScore * 3.6
+                  }deg, rgba(255,255,255,0.08) 0deg)`,
+                  boxShadow: `0 0 54px ${healthColor}22`,
+                }}
+              >
+                <div className="advisor-v2-hero-health-core">
+                  <div className="advisor-v2-hero-health-score">
+                    {healthScore}
+                  </div>
+                  <div
+                    className="advisor-v2-hero-health-label"
+                    style={{ color: healthColor }}
+                  >
+                    <span>{copy.store_health_2}</span>
+                    <MetricTooltip
+                      content={{
+                        title: copy.store_health_3,
+                        description: copy.a_0_100_score_summarizing_the,
+                        note: copy.it_considers_loss_making_products_missing,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="advisor-v2-hero-health-status">{healthLabel}</div>
+              <div className="advisor-v2-hero-health-detail">
+                {copy.updated_from_current_store_data}
+              </div>
             </div>
           }
         />
@@ -1628,7 +1632,7 @@ Rules:
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "1.2fr 0.8fr",
+                  gridTemplateColumns: "minmax(0, 1fr)",
                   gap: 28,
                   alignItems: "stretch",
                 }}
@@ -1861,110 +1865,6 @@ Rules:
                     >
                       {copy.open_forecast}
                     </button>
-                  </div>
-                </div>
-
-                <div
-                  style={{
-                    borderRadius: 26,
-                    padding: 24,
-                    background:
-                      "radial-gradient(circle at center, rgba(34,197,94,0.13), transparent 42%), rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(34,197,94,0.18)",
-                    display: "grid",
-                    placeItems: "center",
-                  }}
-                >
-                  <div style={{ textAlign: "center" }}>
-                    <div
-                      style={{
-                        width: 188,
-                        height: 188,
-                        margin: "0 auto",
-                        borderRadius: "50%",
-                        display: "grid",
-                        placeItems: "center",
-                        background: `conic-gradient(${healthColor} ${
-                          healthScore * 3.6
-                        }deg, rgba(255,255,255,0.08) 0deg)`,
-                        boxShadow: `0 0 54px ${healthColor}22`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 148,
-                          height: 148,
-                          borderRadius: "50%",
-                          display: "grid",
-                          placeItems: "center",
-                          background:
-                            "linear-gradient(180deg, rgba(14,21,34,1), rgba(7,12,21,1))",
-                          border: "1px solid rgba(255,255,255,0.06)",
-                        }}
-                      >
-                        <div>
-                          <div
-                            style={{
-                              color: "#f8fafc",
-                              fontSize: 52,
-                              fontWeight: 950,
-                              lineHeight: 1,
-                              letterSpacing: "-0.05em",
-                            }}
-                          >
-                            {healthScore}
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 7,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 6,
-                              color: healthColor,
-                              fontSize: 10,
-                              fontWeight: 950,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.1em",
-                            }}
-                          >
-                            <span>{copy.store_health_2}</span>
-
-                            <MetricTooltip
-                              content={{
-                                title: copy.store_health_3,
-
-                                description: copy.a_0_100_score_summarizing_the,
-
-                                note: copy.it_considers_loss_making_products_missing,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 18,
-                        color: "#f8fafc",
-                        fontSize: 20,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {healthLabel}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 7,
-                        color: "rgba(255,255,255,0.52)",
-                        fontSize: 12,
-                        fontWeight: 750,
-                      }}
-                    >
-                      {copy.updated_from_current_store_data}
-                    </div>
                   </div>
                 </div>
               </div>
