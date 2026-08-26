@@ -7,8 +7,20 @@ import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import {
+  MetricCard,
+  PremiumEmptyState,
+  PremiumHero,
+  PremiumPanel,
+  ResponsiveGrid,
+  SegmentedTabs,
+  StatusChip,
+  VisualButton,
+  type VisualTone,
+} from "~/components/ui/VisualSystem";
 
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
+import alertCenterStylesUrl from "~/styles/alert-center-v2.css?url";
 
 import { uiMoney as money } from "~/utils/margin";
 import { useI18n } from "~/components/i18n/I18nProvider";
@@ -40,6 +52,10 @@ export const links = () => [
     rel: "stylesheet",
     href: dashboardStylesUrl,
   },
+  {
+    rel: "stylesheet",
+    href: alertCenterStylesUrl,
+  },
 ];
 
 export const loader = async ({ request }: { request: Request }) => {
@@ -61,11 +77,11 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const data = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const alerts = generateProfitAlerts({
@@ -78,17 +94,22 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const alertStates = growthAccess
     ? await syncProfitMonitor({
-      shop: session.shop,
-      period,
-      alerts,
-      snapshot: {
-        summary: data.summary,
-        economicSnapshot: data.economicSnapshot,
-        alertIds: alerts.map((alert) => alert.id),
-      },
-    })
+        shop: session.shop,
+        period,
+        alerts,
+        snapshot: {
+          summary: data.summary,
+          economicSnapshot: data.economicSnapshot,
+          alertIds: alerts.map((alert) => alert.id),
+        },
+      })
     : {};
-  const trackedActions = growthAccess ? await findProfitImpactActionsBySourceKeys({ shop: session.shop, sourceAlertKeys: alerts.map((alert) => alert.id) }) : [];
+  const trackedActions = growthAccess
+    ? await findProfitImpactActionsBySourceKeys({
+        shop: session.shop,
+        sourceAlertKeys: alerts.map((alert) => alert.id),
+      })
+    : [];
 
   return {
     ...data,
@@ -163,28 +184,72 @@ function getSeverityStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertSeverity, StatusStyle> = {
     critical: {
-      label: language === "it" ? "Critico" : language === "fr" ? "Critique" : language === "de" ? "Kritisch" : language === "es" ? "Crítico" : language === "pt-BR" ? "Crítico" : "Critical",
+      label:
+        language === "it"
+          ? "Critico"
+          : language === "fr"
+            ? "Critique"
+            : language === "de"
+              ? "Kritisch"
+              : language === "es"
+                ? "Crítico"
+                : language === "pt-BR"
+                  ? "Crítico"
+                  : "Critical",
       color: "#ff6b4a",
       background: "rgba(255,107,74,0.11)",
       border: "rgba(255,107,74,0.30)",
     },
 
     warning: {
-      label: language === "it" ? "Attenzione" : language === "fr" ? "Avertissement" : language === "de" ? "Warnung" : language === "es" ? "Advertencia" : language === "pt-BR" ? "Aviso" : "Warning",
+      label:
+        language === "it"
+          ? "Attenzione"
+          : language === "fr"
+            ? "Avertissement"
+            : language === "de"
+              ? "Warnung"
+              : language === "es"
+                ? "Advertencia"
+                : language === "pt-BR"
+                  ? "Aviso"
+                  : "Warning",
       color: "#f59e0b",
       background: "rgba(245,158,11,0.11)",
       border: "rgba(245,158,11,0.28)",
     },
 
     opportunity: {
-      label: language === "it" ? "Opportunità" : language === "fr" ? "Opportunité" : language === "de" ? "Chance" : language === "es" ? "Oportunidad" : language === "pt-BR" ? "Oportunidade" : "Opportunity",
+      label:
+        language === "it"
+          ? "Opportunità"
+          : language === "fr"
+            ? "Opportunité"
+            : language === "de"
+              ? "Chance"
+              : language === "es"
+                ? "Oportunidad"
+                : language === "pt-BR"
+                  ? "Oportunidade"
+                  : "Opportunity",
       color: "#22c55e",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
     },
 
     info: {
-      label: language === "it" ? "Informazione" : language === "fr" ? "Information" : language === "de" ? "Information" : language === "es" ? "Información" : language === "pt-BR" ? "Informação" : "Information",
+      label:
+        language === "it"
+          ? "Informazione"
+          : language === "fr"
+            ? "Information"
+            : language === "de"
+              ? "Information"
+              : language === "es"
+                ? "Información"
+                : language === "pt-BR"
+                  ? "Informação"
+                  : "Information",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
@@ -200,28 +265,72 @@ function getAlertStatusStyle(
 ): StatusStyle {
   const styles: Record<ProfitAlertStatus, StatusStyle> = {
     new: {
-      label: language === "it" ? "Nuovo" : language === "fr" ? "Nouveau" : language === "de" ? "Neu" : language === "es" ? "Nuevo" : language === "pt-BR" ? "Novo" : "New",
+      label:
+        language === "it"
+          ? "Nuovo"
+          : language === "fr"
+            ? "Nouveau"
+            : language === "de"
+              ? "Neu"
+              : language === "es"
+                ? "Nuevo"
+                : language === "pt-BR"
+                  ? "Novo"
+                  : "New",
       color: "#ff875f",
       background: "rgba(255,115,80,0.12)",
       border: "rgba(255,115,80,0.30)",
     },
 
     active: {
-      label: language === "it" ? "Attivo" : language === "fr" ? "Actif" : language === "de" ? "Aktiv" : language === "es" ? "Activo" : language === "pt-BR" ? "Ativo" : "Active",
+      label:
+        language === "it"
+          ? "Attivo"
+          : language === "fr"
+            ? "Actif"
+            : language === "de"
+              ? "Aktiv"
+              : language === "es"
+                ? "Activo"
+                : language === "pt-BR"
+                  ? "Ativo"
+                  : "Active",
       color: "#38bdf8",
       background: "rgba(56,189,248,0.11)",
       border: "rgba(56,189,248,0.28)",
     },
 
     acknowledged: {
-      label: language === "it" ? "Preso in carico" : language === "fr" ? "Pris en compte" : language === "de" ? "Zur Kenntnis genommen" : language === "es" ? "Confirmado" : language === "pt-BR" ? "Reconhecido" : "Acknowledged",
+      label:
+        language === "it"
+          ? "Preso in carico"
+          : language === "fr"
+            ? "Pris en compte"
+            : language === "de"
+              ? "Zur Kenntnis genommen"
+              : language === "es"
+                ? "Confirmado"
+                : language === "pt-BR"
+                  ? "Reconhecido"
+                  : "Acknowledged",
       color: "#c084fc",
       background: "rgba(192,132,252,0.11)",
       border: "rgba(192,132,252,0.28)",
     },
 
     resolved: {
-      label: language === "it" ? "Risolto" : language === "fr" ? "Résolu" : language === "de" ? "Gelöst" : language === "es" ? "Resuelto" : language === "pt-BR" ? "Resolvido" : "Resolved",
+      label:
+        language === "it"
+          ? "Risolto"
+          : language === "fr"
+            ? "Résolu"
+            : language === "de"
+              ? "Gelöst"
+              : language === "es"
+                ? "Resuelto"
+                : language === "pt-BR"
+                  ? "Resolvido"
+                  : "Resolved",
       color: "#4ade80",
       background: "rgba(34,197,94,0.11)",
       border: "rgba(34,197,94,0.28)",
@@ -233,26 +342,64 @@ function getAlertStatusStyle(
 
 function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (!timestamp) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
+    return language === "it"
+      ? "Adesso"
+      : language === "fr"
+        ? "Maintenant"
+        : language === "de"
+          ? "Jetzt"
+          : language === "es"
+            ? "Ahora"
+            : language === "pt-BR"
+              ? "Agora"
+              : "Now";
   }
 
   const date = new Date(timestamp);
 
   if (Number.isNaN(date.getTime())) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
+    return language === "it"
+      ? "Adesso"
+      : language === "fr"
+        ? "Maintenant"
+        : language === "de"
+          ? "Jetzt"
+          : language === "es"
+            ? "Ahora"
+            : language === "pt-BR"
+              ? "Agora"
+              : "Now";
   }
 
   const differenceMs = Date.now() - date.getTime();
   const differenceMinutes = Math.max(0, Math.floor(differenceMs / 60000));
 
   if (differenceMinutes < 1) {
-    return language === "it" ? "Adesso" : language === "fr" ? "Maintenant" : language === "de" ? "Jetzt" : language === "es" ? "Ahora" : language === "pt-BR" ? "Agora" : "Now";
+    return language === "it"
+      ? "Adesso"
+      : language === "fr"
+        ? "Maintenant"
+        : language === "de"
+          ? "Jetzt"
+          : language === "es"
+            ? "Ahora"
+            : language === "pt-BR"
+              ? "Agora"
+              : "Now";
   }
 
   if (differenceMinutes < 60) {
     return language === "it"
       ? `${differenceMinutes} min fa`
-      : language === "fr" ? `il y a ${differenceMinutes} min` : language === "de" ? `vor ${differenceMinutes} Min.` : language === "es" ? `hace ${differenceMinutes} min` : language === "pt-BR" ? `há ${differenceMinutes} min` : `${differenceMinutes} min ago`;
+      : language === "fr"
+        ? `il y a ${differenceMinutes} min`
+        : language === "de"
+          ? `vor ${differenceMinutes} Min.`
+          : language === "es"
+            ? `hace ${differenceMinutes} min`
+            : language === "pt-BR"
+              ? `há ${differenceMinutes} min`
+              : `${differenceMinutes} min ago`;
   }
 
   const differenceHours = Math.floor(differenceMinutes / 60);
@@ -260,19 +407,45 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
   if (differenceHours < 24) {
     return language === "it"
       ? `${differenceHours} ore fa`
-      : language === "fr" ? `il y a ${differenceHours} h` : language === "de" ? `vor ${differenceHours} Std.` : language === "es" ? `hace ${differenceHours} h` : language === "pt-BR" ? `há ${differenceHours} h` : `${differenceHours}h ago`;
+      : language === "fr"
+        ? `il y a ${differenceHours} h`
+        : language === "de"
+          ? `vor ${differenceHours} Std.`
+          : language === "es"
+            ? `hace ${differenceHours} h`
+            : language === "pt-BR"
+              ? `há ${differenceHours} h`
+              : `${differenceHours}h ago`;
   }
 
   const differenceDays = Math.floor(differenceHours / 24);
 
   if (differenceDays === 1) {
-    return language === "it" ? "Ieri" : language === "fr" ? "Hier" : language === "de" ? "Gestern" : language === "es" ? "Ayer" : language === "pt-BR" ? "Ontem" : "Yesterday";
+    return language === "it"
+      ? "Ieri"
+      : language === "fr"
+        ? "Hier"
+        : language === "de"
+          ? "Gestern"
+          : language === "es"
+            ? "Ayer"
+            : language === "pt-BR"
+              ? "Ontem"
+              : "Yesterday";
   }
 
   if (differenceDays < 7) {
     return language === "it"
       ? `${differenceDays} giorni fa`
-      : language === "fr" ? `il y a ${differenceDays} jours` : language === "de" ? `vor ${differenceDays} Tagen` : language === "es" ? `hace ${differenceDays} días` : language === "pt-BR" ? `há ${differenceDays} dias` : `${differenceDays} days ago`;
+      : language === "fr"
+        ? `il y a ${differenceDays} jours`
+        : language === "de"
+          ? `vor ${differenceDays} Tagen`
+          : language === "es"
+            ? `hace ${differenceDays} días`
+            : language === "pt-BR"
+              ? `há ${differenceDays} dias`
+              : `${differenceDays} days ago`;
   }
 
   return new Intl.DateTimeFormat(getLanguageLocale(language), {
@@ -283,116 +456,141 @@ function formatTimestamp(timestamp: string | undefined, language: Language) {
 }
 
 function getAlertCategoryLabel(category: string, language: Language) {
-  if (language === "fr") return ({ pricing: "Tarification", "data-quality": "Qualité des données", margin: "Marge", discounts: "Remises", refunds: "Remboursements", growth: "Croissance" } as Record<string, string>)[category] ?? category;
-  if (language === "de") return ({ pricing: "Preisgestaltung", "data-quality": "Datenqualität", margin: "Marge", discounts: "Rabatte", refunds: "Erstattungen", growth: "Wachstum" } as Record<string, string>)[category] ?? category;
-  if (language === "es") return ({ pricing: "Precios", "data-quality": "Calidad de datos", margin: "Margen", discounts: "Descuentos", refunds: "Reembolsos", growth: "Crecimiento" } as Record<string, string>)[category] ?? category;
-  if (language === "pt-BR") return ({ pricing: "Precificação", "data-quality": "Qualidade dos dados", margin: "Margem", discounts: "Descontos", refunds: "Reembolsos", growth: "Crescimento" } as Record<string, string>)[category] ?? category;
+  if (language === "fr")
+    return (
+      (
+        {
+          pricing: "Tarification",
+          "data-quality": "Qualité des données",
+          margin: "Marge",
+          discounts: "Remises",
+          refunds: "Remboursements",
+          growth: "Croissance",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "de")
+    return (
+      (
+        {
+          pricing: "Preisgestaltung",
+          "data-quality": "Datenqualität",
+          margin: "Marge",
+          discounts: "Rabatte",
+          refunds: "Erstattungen",
+          growth: "Wachstum",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "es")
+    return (
+      (
+        {
+          pricing: "Precios",
+          "data-quality": "Calidad de datos",
+          margin: "Margen",
+          discounts: "Descuentos",
+          refunds: "Reembolsos",
+          growth: "Crecimiento",
+        } as Record<string, string>
+      )[category] ?? category
+    );
+  if (language === "pt-BR")
+    return (
+      (
+        {
+          pricing: "Precificação",
+          "data-quality": "Qualidade dos dados",
+          margin: "Margem",
+          discounts: "Descontos",
+          refunds: "Reembolsos",
+          growth: "Crescimento",
+        } as Record<string, string>
+      )[category] ?? category
+    );
   return category;
 }
 
 function getBusinessActionLabel(action: string, language: Language) {
-  if (language === "fr") return ({ action: "Action", review: "Examen", optimize: "Optimisation", monitor: "Suivi" } as Record<string, string>)[action] ?? action;
-  if (language === "de") return ({ action: "Aktion", review: "Prüfung", optimize: "Optimierung", monitor: "Überwachung" } as Record<string, string>)[action] ?? action;
-  if (language === "es") return ({ action: "Acción", review: "Revisión", optimize: "Optimización", monitor: "Seguimiento" } as Record<string, string>)[action] ?? action;
-  if (language === "pt-BR") return ({ action: "Ação", review: "Revisão", optimize: "Otimização", monitor: "Monitoramento" } as Record<string, string>)[action] ?? action;
+  if (language === "fr")
+    return (
+      (
+        {
+          action: "Action",
+          review: "Examen",
+          optimize: "Optimisation",
+          monitor: "Suivi",
+        } as Record<string, string>
+      )[action] ?? action
+    );
+  if (language === "de")
+    return (
+      (
+        {
+          action: "Aktion",
+          review: "Prüfung",
+          optimize: "Optimierung",
+          monitor: "Überwachung",
+        } as Record<string, string>
+      )[action] ?? action
+    );
+  if (language === "es")
+    return (
+      (
+        {
+          action: "Acción",
+          review: "Revisión",
+          optimize: "Optimización",
+          monitor: "Seguimiento",
+        } as Record<string, string>
+      )[action] ?? action
+    );
+  if (language === "pt-BR")
+    return (
+      (
+        {
+          action: "Ação",
+          review: "Revisão",
+          optimize: "Otimização",
+          monitor: "Monitoramento",
+        } as Record<string, string>
+      )[action] ?? action
+    );
   return action;
 }
 
 function getModuleDisplayName(module: string, language: Language) {
-  return module === "Products" ? (language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : module) : module;
+  return module === "Products"
+    ? language === "fr"
+      ? "Produits"
+      : language === "de"
+        ? "Produkte"
+        : language === "es"
+          ? "Productos"
+          : language === "pt-BR"
+            ? "Produtos"
+            : module
+    : module;
 }
 
-function TinyBadge({
-  children,
-  color,
-}: {
-  children: React.ReactNode;
-  color: string;
-}) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        minHeight: 27,
-        padding: "6px 9px",
-        borderRadius: 999,
-        background: `${color}16`,
-        border: `1px solid ${color}36`,
-        color,
-        fontSize: 9,
-        fontWeight: 950,
-        letterSpacing: "0.06em",
-        textTransform: "uppercase",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {children}
-    </span>
-  );
+function getSeverityTone(severity: ProfitAlertSeverity): VisualTone {
+  return severity === "critical"
+    ? "red"
+    : severity === "warning"
+      ? "amber"
+      : severity === "opportunity"
+        ? "green"
+        : "cyan";
 }
 
-function SummaryCard({
-  label,
-  value,
-  note,
-  color,
-}: {
-  label: string;
-  value: string;
-  note: string;
-  color: string;
-}) {
-  return (
-    <div
-      style={{
-        minWidth: 0,
-        borderRadius: 21,
-        padding: 20,
-        background:
-          "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-        border: `1px solid ${color}35`,
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.025)",
-      }}
-    >
-      <div
-        style={{
-          color,
-          fontSize: 9,
-          fontWeight: 950,
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-        }}
-      >
-        {label}
-      </div>
-
-      <div
-        style={{
-          marginTop: 11,
-          color: "#f8fafc",
-          fontSize: 32,
-          lineHeight: 1,
-          fontWeight: 950,
-          letterSpacing: "-0.04em",
-        }}
-      >
-        {value}
-      </div>
-
-      <div
-        style={{
-          marginTop: 8,
-          color: "rgba(255,255,255,0.48)",
-          fontSize: 11,
-          lineHeight: 1.45,
-          fontWeight: 750,
-        }}
-      >
-        {note}
-      </div>
-    </div>
-  );
+function getLifecycleTone(status: ProfitAlertStatus): VisualTone {
+  return status === "acknowledged"
+    ? "violet"
+    : status === "resolved"
+      ? "green"
+      : status === "active"
+        ? "cyan"
+        : "orange";
 }
 
 function AlertCard({
@@ -410,7 +608,10 @@ function AlertCard({
   onOpen: (alert: ProfitAlert) => void;
   onAcknowledge: (alertId: string) => void;
   trackedAction?: { id: string; status: string };
-  onTrack: (alert: ProfitAlert, trackedAction?: { id: string; status: string }) => void;
+  onTrack: (
+    alert: ProfitAlert,
+    trackedAction?: { id: string; status: string },
+  ) => void;
 }) {
   const { messages } = useI18n();
   const copy = messages.alertCenterPage;
@@ -420,65 +621,22 @@ function AlertCard({
   const lifecycleStatus: ProfitAlertStatus = state?.status ?? "new";
 
   const severityStyle = getSeverityStyle(alert.severity, language);
-
   const lifecycleStyle = getAlertStatusStyle(lifecycleStatus, language);
-
   const isUnread = state ? !state.isRead : true;
   const isAcknowledged = lifecycleStatus === "acknowledged";
+  const severityTone = getSeverityTone(alert.severity);
+  const lifecycleTone = getLifecycleTone(lifecycleStatus);
 
   return (
-    <article
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 24,
-        padding: 22,
-        background: isUnread
-          ? `radial-gradient(circle at top right, ${severityStyle.background}, transparent 38%), linear-gradient(145deg, rgba(17,24,39,0.99), rgba(7,12,21,0.99))`
-          : "linear-gradient(145deg, rgba(15,22,35,0.97), rgba(7,12,21,0.98))",
-        border: isUnread
-          ? `1px solid ${severityStyle.border}`
-          : "1px solid rgba(255,255,255,0.075)",
-        boxShadow: isUnread ? "0 20px 55px rgba(0,0,0,0.25)" : "none",
-      }}
+    <PremiumPanel
+      as="article"
+      tone={severityTone}
+      className={`alert-center-v2-alert${isUnread ? " is-unread" : ""}`}
     >
-      {isUnread && (
-        <div
-          style={{
-            position: "absolute",
-            top: 18,
-            right: 18,
-            width: 9,
-            height: 9,
-            borderRadius: "50%",
-            background: severityStyle.color,
-            boxShadow: `0 0 18px ${severityStyle.color}`,
-          }}
-        />
-      )}
+      {isUnread ? <span className="alert-center-v2-unread-node" /> : null}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "54px minmax(0,1fr) auto",
-          gap: 17,
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 17,
-            display: "grid",
-            placeItems: "center",
-            color: severityStyle.color,
-            background: severityStyle.background,
-            border: `1px solid ${severityStyle.border}`,
-            fontSize: 20,
-            fontWeight: 950,
-          }}
-        >
+      <div className="alert-center-v2-alert-layout">
+        <div className="alert-center-v2-alert-icon" aria-hidden="true">
           {alert.severity === "critical"
             ? "!"
             : alert.severity === "warning"
@@ -488,108 +646,37 @@ function AlertCard({
                 : "i"}
         </div>
 
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <TinyBadge color={severityStyle.color}>
-              {severityStyle.label}
-            </TinyBadge>
-
-            <TinyBadge color={lifecycleStyle.color}>
-              {lifecycleStyle.label}
-            </TinyBadge>
-
-            <TinyBadge color="#94a3b8">{getAlertCategoryLabel(alert.category, language)}</TinyBadge>
+        <div className="alert-center-v2-alert-copy">
+          <div className="alert-center-v2-chips">
+            <StatusChip tone={severityTone}>{severityStyle.label}</StatusChip>
+            <StatusChip tone={lifecycleTone}>{lifecycleStyle.label}</StatusChip>
+            <StatusChip tone="neutral">
+              {getAlertCategoryLabel(alert.category, language)}
+            </StatusChip>
           </div>
 
-          <h2
-            style={{
-              margin: "12px 0 0",
-              color: "#f8fafc",
-              fontSize: 20,
-              lineHeight: 1.28,
-              fontWeight: 950,
-              letterSpacing: "-0.025em",
-            }}
-          >
-            {alert.title}
-          </h2>
+          <h2>{alert.title}</h2>
+          <p>{alert.description}</p>
 
-          <p
-            style={{
-              margin: "8px 0 0",
-              maxWidth: 850,
-              color: "rgba(255,255,255,0.59)",
-              fontSize: 13,
-              lineHeight: 1.65,
-              fontWeight: 720,
-            }}
-          >
-            {alert.description}
-          </p>
-
-          <div
-            style={{
-              marginTop: 13,
-              display: "flex",
-              gap: 8,
-              flexWrap: "wrap",
-            }}
-          >
-            <TinyBadge color="#38bdf8">{alert.estimatedMinutes} min</TinyBadge>
-
-            <TinyBadge color="#c084fc">{getModuleDisplayName(alert.recommendedModule, language)}</TinyBadge>
-
-            <TinyBadge color="#64748b">
+          <div className="alert-center-v2-context">
+            <StatusChip tone="cyan">{alert.estimatedMinutes} min</StatusChip>
+            <StatusChip tone="violet">
+              {getModuleDisplayName(alert.recommendedModule, language)}
+            </StatusChip>
+            <StatusChip tone="neutral">
               {formatTimestamp(state?.firstSeenAt, language)}
-            </TinyBadge>
+            </StatusChip>
           </div>
         </div>
 
-        <div
-          style={{
-            minWidth: 175,
-            textAlign: "right",
-          }}
-        >
-          <div
-            style={{
-              color:
-                economicKind === "opportunity"
-                  ? "#22c55e"
-                  : economicKind === "exposure"
-                    ? "#f59e0b"
-                    : severityStyle.color,
-              fontSize: 23,
-              lineHeight: 1,
-              fontWeight: 950,
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div className="alert-center-v2-alert-operation">
+          <div className="alert-center-v2-impact">
             {alert.monthlyImpact > 0
               ? money(alert.monthlyImpact)
               : copy.qualitative_signal}
           </div>
 
-          <div
-            style={{
-              marginTop: 7,
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              color: "rgba(255,255,255,0.42)",
-              fontSize: 9,
-              fontWeight: 850,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-            }}
-          >
+          <div className="alert-center-v2-impact-label">
             <span>
               {alert.monthlyImpact > 0
                 ? economicKind === "loss"
@@ -604,9 +691,7 @@ function AlertCard({
 
             <MetricTooltip
               content={{
-                title:
-                  copy.alert_economic_impact,
-
+                title: copy.alert_economic_impact,
                 description:
                   economicKind === "loss"
                     ? copy.economic_loss_description
@@ -615,170 +700,85 @@ function AlertCard({
                       : economicKind === "opportunity"
                         ? copy.economic_opportunity_description
                         : copy.economic_qualitative_description,
-
-                note:
-                  copy.this_is_an_estimate_based_on,
+                note: copy.this_is_an_estimate_based_on,
               }}
             />
           </div>
 
-          <div
-            style={{
-              marginTop: 15,
-              display: "grid",
-              gap: 8,
-            }}
-          >
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => onOpen(alert)}
-            >
+          <div className="alert-center-v2-actions">
+            <VisualButton size="small" onClick={() => onOpen(alert)}>
               {copy.open_module}
-            </button>
+            </VisualButton>
 
             {!isAcknowledged && (
-              <button
-                type="button"
-                className="apply-button"
+              <VisualButton
+                variant="secondary"
+                size="small"
                 onClick={() => onAcknowledge(alert.id)}
               >
                 {copy.acknowledge}
-              </button>
+              </VisualButton>
             )}
-            {alert.productId && lifecycleStatus !== "resolved" ? <button type="button" className="apply-button" onClick={() => onTrack(alert, trackedAction)}>{trackedAction ? messages.profitImpactPage.openTrackedAction : messages.profitImpactPage.trackAction}</button> : null}
-            {lifecycleStatus === "resolved" && trackedAction?.status === "MEASURING" ? <small>{messages.profitImpactPage.alertResolvedMeasuring}</small> : null}
+            {alert.productId && lifecycleStatus !== "resolved" ? (
+              <VisualButton
+                variant="ghost"
+                size="small"
+                onClick={() => onTrack(alert, trackedAction)}
+              >
+                {trackedAction
+                  ? messages.profitImpactPage.openTrackedAction
+                  : messages.profitImpactPage.trackAction}
+              </VisualButton>
+            ) : null}
+            {lifecycleStatus === "resolved" &&
+            trackedAction?.status === "MEASURING" ? (
+              <small>{messages.profitImpactPage.alertResolvedMeasuring}</small>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          marginTop: 19,
-          paddingTop: 16,
-          borderTop: "1px solid rgba(255,255,255,0.065)",
-          display: "grid",
-          gridTemplateColumns: "repeat(3,minmax(0,1fr))",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              color: "rgba(255,255,255,0.35)",
-              fontSize: 8,
-              fontWeight: 950,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            <span>
-              {copy.priority}
-            </span>
+      <div className="alert-center-v2-alert-metrics">
+        <div className="alert-center-v2-alert-metric">
+          <div className="alert-center-v2-alert-metric-label">
+            <span>{copy.priority}</span>
 
             <MetricTooltip
               content={{
-                title:
-                  copy.alert_priority,
-
-                description:
-                  copy.a_0_100_score_showing_how,
-
-                note:
-                  copy.the_higher_the_score_the_higher,
+                title: copy.alert_priority,
+                description: copy.a_0_100_score_showing_how,
+                note: copy.the_higher_the_score_the_higher,
               }}
             />
           </div>
-
-          <div
-            style={{
-              marginTop: 5,
-              color: "#f8fafc",
-              fontSize: 14,
-              fontWeight: 900,
-            }}
-          >
-            {alert.priority}/100
-          </div>
+          <strong>{alert.priority}/100</strong>
         </div>
 
-        <div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              color: "rgba(255,255,255,0.35)",
-              fontSize: 8,
-              fontWeight: 950,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            <span>
-              {copy.business_action}
-            </span>
+        <div className="alert-center-v2-alert-metric">
+          <div className="alert-center-v2-alert-metric-label">
+            <span>{copy.business_action}</span>
 
             <MetricTooltip
               content={{
-                title:
-                  copy.business_action_2,
-
-                description:
-                  copy.shows_the_type_of_response_marginlab,
-
-                note:
-                  copy.action_calls_for_direct_intervention_review,
+                title: copy.business_action_2,
+                description: copy.shows_the_type_of_response_marginlab,
+                note: copy.action_calls_for_direct_intervention_review,
               }}
             />
           </div>
-
-          <div
-            style={{
-              marginTop: 5,
-              color: severityStyle.color,
-              fontSize: 14,
-              fontWeight: 900,
-              textTransform: "capitalize",
-            }}
-          >
+          <strong>
             {getBusinessActionLabel(alert.businessAction, language)}
-          </div>
+          </strong>
         </div>
 
-        <div>
-          <div
-            style={{
-              color: "rgba(255,255,255,0.35)",
-              fontSize: 8,
-              fontWeight: 950,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
+        <div className="alert-center-v2-alert-metric">
+          <div className="alert-center-v2-alert-metric-label">
             {copy.product}
           </div>
-
-          <div
-            style={{
-              marginTop: 5,
-              color: "#f8fafc",
-              fontSize: 14,
-              fontWeight: 900,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {alert.productTitle ??
-              (copy.store_wide)}
-          </div>
+          <strong>{alert.productTitle ?? copy.store_wide}</strong>
         </div>
       </div>
-    </article>
+    </PremiumPanel>
   );
 }
 
@@ -801,11 +801,34 @@ export default function AlertCenterPage() {
 
   const { language, locale, messages } = useI18n();
   const copy = messages.alertCenterPage;
-  const trackedByAlert = React.useMemo(() => new Map(trackedActions.filter((item) => item.sourceAlertKey).map((item) => [item.sourceAlertKey!, item])), [trackedActions]);
-  const handleTrack = (alert: ProfitAlert, tracked?: { id: string; status: string }) => {
-    if (tracked) { navigate(`/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`); return; }
+  const trackedByAlert = React.useMemo(
+    () =>
+      new Map(
+        trackedActions
+          .filter((item) => item.sourceAlertKey)
+          .map((item) => [item.sourceAlertKey!, item]),
+      ),
+    [trackedActions],
+  );
+  const handleTrack = (
+    alert: ProfitAlert,
+    tracked?: { id: string; status: string },
+  ) => {
+    if (tracked) {
+      navigate(
+        `/app/profit-impact?actionId=${encodeURIComponent(tracked.id)}&lang=${language}`,
+      );
+      return;
+    }
     if (!alert.productId) return;
-    const params = new URLSearchParams({ sourceModule: "ALERT_CENTER", sourceAlertKey: alert.id, productId: alert.productId, period: String(period), lang: language, intentKey: window.crypto.randomUUID() });
+    const params = new URLSearchParams({
+      sourceModule: "ALERT_CENTER",
+      sourceAlertKey: alert.id,
+      productId: alert.productId,
+      period: String(period),
+      lang: language,
+      intentKey: window.crypto.randomUUID(),
+    });
     navigate(`/app/profit-impact?${params.toString()}`);
   };
 
@@ -925,13 +948,6 @@ export default function AlertCenterPage() {
         ? copy.medium
         : copy.low;
 
-  const confidenceColor =
-    dataConfidence.level === "high"
-      ? "#22c55e"
-      : dataConfidence.level === "medium"
-        ? "#f59e0b"
-        : "#ff6b4a";
-
   const storeMoney = (value: number) => money(value, currencyCode, locale);
 
   const criticalCount = severityCounts.critical;
@@ -940,33 +956,24 @@ export default function AlertCenterPage() {
   const businessStatus =
     criticalCount > 0
       ? {
-        label: copy.action_required,
-        description:
-          copy.at_least_one_critical_profitability_risk,
-        color: "#ff6b4a",
-      }
+          label: copy.action_required,
+          description: copy.at_least_one_critical_profitability_risk,
+        }
       : warningCount > 0
         ? {
-          label:
-            copy.review_recommended,
-          description:
-            copy.there_is_no_broad_emergency_but,
-          color: "#f59e0b",
-        }
+            label: copy.review_recommended,
+            description: copy.there_is_no_broad_emergency_but,
+          }
         : severityCounts.opportunity > 0
           ? {
-            label:
-              copy.opportunities_available,
-            description:
-              copy.the_business_is_relatively_stable_and,
-            color: "#22c55e",
-          }
+              label: copy.opportunities_available,
+              description: copy.the_business_is_relatively_stable_and,
+            }
           : {
-            label: copy.stable_status,
-            description:
-              copy.no_significant_profitability_risk_requires_immediate,
-            color: "#38bdf8",
-          };
+              label: copy.stable_status,
+              description:
+                copy.no_significant_profitability_risk_requires_immediate,
+            };
 
   const handleOpenAlert = (alert: ProfitAlert) => {
     if (!growthAccess) {
@@ -1067,7 +1074,9 @@ export default function AlertCenterPage() {
     const dateTime = (value: string | undefined) => {
       if (!value) return "";
       const date = new Date(value);
-      return Number.isNaN(date.getTime()) ? "" : date.toLocaleString(exportLocale);
+      return Number.isNaN(date.getTime())
+        ? ""
+        : date.toLocaleString(exportLocale);
     };
 
     const severityLabel = (severity: ProfitAlertSeverity) =>
@@ -1093,109 +1102,109 @@ export default function AlertCenterPage() {
     const labels =
       language === "it"
         ? {
-          report: "Report",
-          store: "Store",
-          period: "Periodo (giorni)",
-          currency: "Valuta",
-          language: "Lingua",
-          generated: "Generato il",
-          storage: "Storico stati",
-          storageValue: "Database MarginLab",
-          summary: "RIEPILOGO",
-          metric: "Metrica",
-          value: "Valore",
-          currentAlerts: "Alert correnti",
-          newAlerts: "Nuovi",
-          unreadCurrent: "Alert correnti non letti",
-          active: "Attivi",
-          acknowledged: "Presi in carico",
-          historicalResolved: "Risolti storici",
-          totalExported: "Record totali esportati",
-          critical: "Critici",
-          warnings: "Attenzione",
-          opportunities: "Opportunità",
-          information: "Informazioni",
-          monthlyLoss: "Perdita mensile stimata",
-          monthlyExposure: "Esposizione ricavi per costi mancanti",
-          monthlyOpportunity:
-            "Gap mensile stimato verso il target (non cumulabile)",
-          confidence: "Affidabilità dati",
-          cogsCoverage: "Copertura COGS",
-          alerts: "DETTAGLIO ALERT",
-          columns: [
-            "ID",
-            "Titolo",
-            "Descrizione",
-            "Categoria",
-            "Severità",
-            "Stato",
-            "Letto",
-            "Natura economica",
-            "Importo economico mensile",
-            "Priorità",
-            "Azione",
-            "Prodotto",
-            "Tempo stimato (min)",
-            "Modulo consigliato",
-            "Percorso",
-            "Prima rilevazione",
-            "Ultima rilevazione",
-            "Preso in carico il",
-            "Risolto il",
-          ],
-        }
+            report: "Report",
+            store: "Store",
+            period: "Periodo (giorni)",
+            currency: "Valuta",
+            language: "Lingua",
+            generated: "Generato il",
+            storage: "Storico stati",
+            storageValue: "Database MarginLab",
+            summary: "RIEPILOGO",
+            metric: "Metrica",
+            value: "Valore",
+            currentAlerts: "Alert correnti",
+            newAlerts: "Nuovi",
+            unreadCurrent: "Alert correnti non letti",
+            active: "Attivi",
+            acknowledged: "Presi in carico",
+            historicalResolved: "Risolti storici",
+            totalExported: "Record totali esportati",
+            critical: "Critici",
+            warnings: "Attenzione",
+            opportunities: "Opportunità",
+            information: "Informazioni",
+            monthlyLoss: "Perdita mensile stimata",
+            monthlyExposure: "Esposizione ricavi per costi mancanti",
+            monthlyOpportunity:
+              "Gap mensile stimato verso il target (non cumulabile)",
+            confidence: "Affidabilità dati",
+            cogsCoverage: "Copertura COGS",
+            alerts: "DETTAGLIO ALERT",
+            columns: [
+              "ID",
+              "Titolo",
+              "Descrizione",
+              "Categoria",
+              "Severità",
+              "Stato",
+              "Letto",
+              "Natura economica",
+              "Importo economico mensile",
+              "Priorità",
+              "Azione",
+              "Prodotto",
+              "Tempo stimato (min)",
+              "Modulo consigliato",
+              "Percorso",
+              "Prima rilevazione",
+              "Ultima rilevazione",
+              "Preso in carico il",
+              "Risolto il",
+            ],
+          }
         : {
-          report: "Report",
-          store: "Store",
-          period: "Period (days)",
-          currency: "Currency",
-          language: "Language",
-          generated: "Generated at",
-          storage: "Status history",
-          storageValue: "MarginLab database",
-          summary: "SUMMARY",
-          metric: "Metric",
-          value: "Value",
-          currentAlerts: "Current alerts",
-          newAlerts: "New",
-          unreadCurrent: "Unread current alerts",
-          active: "Active",
-          acknowledged: "Acknowledged",
-          historicalResolved: "Historical resolved",
-          totalExported: "Total exported records",
-          critical: "Critical",
-          warnings: "Warnings",
-          opportunities: "Opportunities",
-          information: "Information",
-          monthlyLoss: "Estimated monthly loss",
-          monthlyExposure: "Missing-cost revenue exposure",
-          monthlyOpportunity:
-            "Estimated monthly profit gap to target (non-additive)",
-          confidence: "Data confidence",
-          cogsCoverage: "COGS coverage",
-          alerts: "ALERT DETAILS",
-          columns: [
-            "ID",
-            "Title",
-            "Description",
-            "Category",
-            "Severity",
-            "Status",
-            "Read",
-            "Economic kind",
-            "Monthly economic amount",
-            "Priority",
-            "Business action",
-            "Product",
-            "Estimated time (min)",
-            "Recommended module",
-            "Route",
-            "First seen",
-            "Last seen",
-            "Acknowledged at",
-            "Resolved at",
-          ],
-        };
+            report: "Report",
+            store: "Store",
+            period: "Period (days)",
+            currency: "Currency",
+            language: "Language",
+            generated: "Generated at",
+            storage: "Status history",
+            storageValue: "MarginLab database",
+            summary: "SUMMARY",
+            metric: "Metric",
+            value: "Value",
+            currentAlerts: "Current alerts",
+            newAlerts: "New",
+            unreadCurrent: "Unread current alerts",
+            active: "Active",
+            acknowledged: "Acknowledged",
+            historicalResolved: "Historical resolved",
+            totalExported: "Total exported records",
+            critical: "Critical",
+            warnings: "Warnings",
+            opportunities: "Opportunities",
+            information: "Information",
+            monthlyLoss: "Estimated monthly loss",
+            monthlyExposure: "Missing-cost revenue exposure",
+            monthlyOpportunity:
+              "Estimated monthly profit gap to target (non-additive)",
+            confidence: "Data confidence",
+            cogsCoverage: "COGS coverage",
+            alerts: "ALERT DETAILS",
+            columns: [
+              "ID",
+              "Title",
+              "Description",
+              "Category",
+              "Severity",
+              "Status",
+              "Read",
+              "Economic kind",
+              "Monthly economic amount",
+              "Priority",
+              "Business action",
+              "Product",
+              "Estimated time (min)",
+              "Recommended module",
+              "Route",
+              "First seen",
+              "Last seen",
+              "Acknowledged at",
+              "Resolved at",
+            ],
+          };
 
     const currentAlertIds = new Set(alerts.map((alert) => alert.id));
     const currentStates = alerts.map(
@@ -1292,7 +1301,7 @@ export default function AlertCenterPage() {
           alert.priority,
           alert.businessAction,
           alert.productTitle ??
-          (language === "it" ? "Intero store" : "Store-wide"),
+            (language === "it" ? "Intero store" : "Store-wide"),
           alert.estimatedMinutes,
           alert.recommendedModule,
           alert.route,
@@ -1327,520 +1336,230 @@ export default function AlertCenterPage() {
     id: SeverityFilter;
     label: string;
     count: number;
-    color: string;
   }> = [
-      {
-        id: "all",
-        label: copy.all,
-        count: severityCounts.total,
-        color: "#f8fafc",
-      },
-      {
-        id: "critical",
-        label: copy.critical,
-        count: severityCounts.critical,
-        color: "#ff6b4a",
-      },
-      {
-        id: "warning",
-        label: copy.warnings,
-        count: severityCounts.warning,
-        color: "#f59e0b",
-      },
-      {
-        id: "opportunity",
-        label: copy.opportunities,
-        count: severityCounts.opportunity,
-        color: "#22c55e",
-      },
-      {
-        id: "info",
-        label: copy.information,
-        count: severityCounts.info,
-        color: "#38bdf8",
-      },
-    ];
+    {
+      id: "all",
+      label: copy.all,
+      count: severityCounts.total,
+    },
+    {
+      id: "critical",
+      label: copy.critical,
+      count: severityCounts.critical,
+    },
+    {
+      id: "warning",
+      label: copy.warnings,
+      count: severityCounts.warning,
+    },
+    {
+      id: "opportunity",
+      label: copy.opportunities,
+      count: severityCounts.opportunity,
+    },
+    {
+      id: "info",
+      label: copy.information,
+      count: severityCounts.info,
+    },
+  ];
 
   return (
     <div className="dashboard-shell">
       <div className="dashboard-container">
         <DashboardNav active="alert-center" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-
-              {growthAccess
-                ? copy.growth_plan_active
-                : copy.growth_feature}
-            </div>
-
-            <div className="eyebrow">ALERT CENTER</div>
-
-            <div className="hero-title">
-              {copy.the_signals_that_deserve_your_attention}
-            </div>
-
-            <div className="hero-description">
-              {copy.marginlab_monitors_margins_costs_refunds_and}
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              {copy.tax_aware_economic_basis}
-            </div>
-          </div>
-
-          {growthAccess ? (
-            <button
-              type="button"
-              className="apply-button"
-              onClick={handleMarkAllRead}
-              disabled={lifecycleCounts.unread === 0}
-              style={{
-                opacity: lifecycleCounts.unread === 0 ? 0.55 : 1,
-              }}
-            >
-              {copy.mark_all_as_read}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-            >
-              {copy.unlock_growth}
-            </button>
-          )}
-        </div>
+        <PremiumHero
+          className="alert-center-v2-hero"
+          tone={criticalCount > 0 ? "red" : warningCount > 0 ? "amber" : "cyan"}
+          eyebrow={
+            <span className="alert-center-v2-hero-eyebrow">
+              <StatusChip tone={growthAccess ? "green" : "orange"}>
+                {growthAccess ? copy.growth_plan_active : copy.growth_feature}
+              </StatusChip>
+              <span>ALERT CENTER</span>
+            </span>
+          }
+          title={copy.the_signals_that_deserve_your_attention}
+          description={copy.marginlab_monitors_margins_costs_refunds_and}
+          actions={
+            <>
+              <StatusChip tone="green">
+                {copy.tax_aware_economic_basis}
+              </StatusChip>
+              {growthAccess ? (
+                <VisualButton
+                  variant="secondary"
+                  onClick={handleMarkAllRead}
+                  disabled={lifecycleCounts.unread === 0}
+                >
+                  {copy.mark_all_as_read}
+                </VisualButton>
+              ) : (
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.unlock_growth}
+                </VisualButton>
+              )}
+            </>
+          }
+        />
 
         <div
-          style={{
-            position: "relative",
-            ...(growthAccess ? {} : { overflow: "hidden", borderRadius: 30 }),
-          }}
+          className={`alert-center-v2-content${growthAccess ? "" : " is-locked"}`}
         >
           {!growthAccess && (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                zIndex: 80,
-                display: "grid",
-                placeItems: "start center",
-                paddingTop: 150,
-                background:
-                  "linear-gradient(180deg, rgba(5,9,16,0.28), rgba(5,9,16,0.74) 26%, rgba(5,9,16,0.92))",
-                backdropFilter: "blur(2px)",
-              }}
-            >
-              <div
-                style={{
-                  width: "min(560px, calc(100% - 40px))",
-                  padding: 26,
-                  borderRadius: 24,
-                  textAlign: "center",
-                  background:
-                    "linear-gradient(180deg, rgba(17,24,39,0.99), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(255,115,60,0.30)",
-                  boxShadow: "0 24px 70px rgba(0,0,0,0.44)",
-                }}
-              >
-                <div
-                  style={{
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {copy.growth_feature_2}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "#f8fafc",
-                    fontSize: 24,
-                    lineHeight: 1.25,
-                    fontWeight: 950,
-                  }}
-                >
-                  {copy.alert_center_is_included_with_growth}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: "rgba(255,255,255,0.62)",
-                    fontSize: 13,
-                    lineHeight: 1.65,
-                    fontWeight: 750,
-                  }}
-                >
-                  {copy.upgrade_to_growth_to_manage_alerts}
-                </div>
-
-                <button
-                  type="button"
-                  className="primary-button"
-                  onClick={() => navigate("/app/billing")}
-                  style={{ marginTop: 18 }}
-                >
+            <div className="alert-center-v2-gate">
+              <PremiumPanel tone="orange" className="alert-center-v2-gate-card">
+                <div className="ml-v2-eyebrow">{copy.growth_feature_2}</div>
+                <h2>{copy.alert_center_is_included_with_growth}</h2>
+                <p>{copy.upgrade_to_growth_to_manage_alerts}</p>
+                <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.unlock_growth}
-                </button>
-              </div>
+                </VisualButton>
+              </PremiumPanel>
             </div>
           )}
 
           <div
             aria-hidden={!growthAccess}
-            style={
-              growthAccess
-                ? undefined
-                : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
-            }
+            className="alert-center-v2-workspace"
           >
-            <section
-              style={{
-                marginBottom: 25,
-                borderRadius: 30,
-                padding: 28,
-                background: `radial-gradient(circle at 12% 15%, ${businessStatus.color}20, transparent 32%), radial-gradient(circle at 88% 12%, rgba(255,115,80,0.10), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))`,
-                border: `1px solid ${businessStatus.color}38`,
-                boxShadow:
-                  "0 28px 90px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.03)",
-              }}
+            <PremiumPanel
+              tone={
+                criticalCount > 0 ? "red" : warningCount > 0 ? "amber" : "green"
+              }
+              className="alert-center-v2-status"
             >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.1fr 0.9fr",
-                  gap: 25,
-                  alignItems: "center",
-                }}
-              >
-                <div>
-                  <div
-                    style={{
-                      color: businessStatus.color,
-                      fontSize: 10,
-                      fontWeight: 950,
-                      letterSpacing: "0.14em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {copy.monitoring_status}
-                  </div>
-
-                  <h2
-                    style={{
-                      margin: "11px 0 0",
-                      color: "#f8fafc",
-                      fontSize: 36,
-                      lineHeight: 1.12,
-                      fontWeight: 950,
-                      letterSpacing: "-0.045em",
-                    }}
-                  >
-                    {businessStatus.label}
-                  </h2>
-
-                  <p
-                    style={{
-                      margin: "12px 0 0",
-                      maxWidth: 720,
-                      color: "rgba(255,255,255,0.64)",
-                      fontSize: 14,
-                      lineHeight: 1.7,
-                      fontWeight: 730,
-                    }}
-                  >
-                    {businessStatus.description}
-                  </p>
-
-                  <div
-                    style={{
-                      marginTop: 20,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <TinyBadge color={businessStatus.color}>
-                      {lifecycleCounts.unread}{" "}
-                      {copy.unread}
-                    </TinyBadge>
-
-                    <TinyBadge color="#38bdf8">
-                      {lifecycleCounts.active}{" "}
-                      {copy.active}
-                    </TinyBadge>
-
-                    <TinyBadge color="#c084fc">
-                      {lifecycleCounts.acknowledged}{" "}
-                      {copy.acknowledged}
-                    </TinyBadge>
+              <div className="alert-center-v2-status-layout">
+                <div className="alert-center-v2-status-copy">
+                  <div className="ml-v2-eyebrow">{copy.monitoring_status}</div>
+                  <h2>{businessStatus.label}</h2>
+                  <p>{businessStatus.description}</p>
+                  <div className="alert-center-v2-chips">
+                    <StatusChip tone="orange">
+                      {lifecycleCounts.unread} {copy.unread}
+                    </StatusChip>
+                    <StatusChip tone="cyan">
+                      {lifecycleCounts.active} {copy.active}
+                    </StatusChip>
+                    <StatusChip tone="violet">
+                      {lifecycleCounts.acknowledged} {copy.acknowledged}
+                    </StatusChip>
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    borderRadius: 25,
-                    padding: 23,
-                    background: "rgba(255,255,255,0.025)",
-                    border: "1px solid rgba(255,255,255,0.075)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      color: "rgba(255,255,255,0.42)",
-                      fontSize: 9,
-                      fontWeight: 950,
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    <span>
-                      {copy.monthly_economic_impacts}
-                    </span>
-
+                <div className="alert-center-v2-economics">
+                  <div className="alert-center-v2-economics-label">
+                    <span>{copy.monthly_economic_impacts}</span>
                     <MetricTooltip
                       content={{
-                        title:
-                          copy.monthly_economic_impacts_2,
-
+                        title: copy.monthly_economic_impacts_2,
                         description:
                           copy.shows_three_separate_values_estimated_loss,
-
-                        note:
-                          copy.these_values_should_not_be_added,
+                        note: copy.these_values_should_not_be_added,
                       }}
                     />
                   </div>
-
-                  <div
-                    style={{
-                      marginTop: 13,
-                      color: "#f8fafc",
-                      fontSize: 47,
-                      lineHeight: 1,
-                      fontWeight: 950,
-                      letterSpacing: "-0.055em",
-                    }}
-                  >
-                    <span style={{ color: "#ff6b4a" }}>
+                  <div className="alert-center-v2-economics-values">
+                    <span className="is-loss">
                       {storeMoney(economicTotals.monthlyLoss)}
                     </span>
-                    <span
-                      style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
-                    >
-                      ·
-                    </span>
-                    <span style={{ color: "#f59e0b" }}>
+                    <span aria-hidden="true">·</span>
+                    <span className="is-exposure">
                       {storeMoney(economicTotals.monthlyExposure)}
                     </span>
-                    <span
-                      style={{ color: "rgba(255,255,255,0.32)", margin: "0 10px" }}
-                    >
-                      ·
-                    </span>
-                    <span style={{ color: "#22c55e" }}>
+                    <span aria-hidden="true">·</span>
+                    <span className="is-opportunity">
                       {storeMoney(economicTotals.monthlyOpportunity)}
                     </span>
                   </div>
-
-                  <div
-                    style={{
-                      marginTop: 9,
-                      color: "rgba(255,255,255,0.47)",
-                      fontSize: 11,
-                      lineHeight: 1.55,
-                      fontWeight: 750,
-                    }}
-                  >
-                    {copy.loss_exposure_profit_gap_to_target}
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 15,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      gap: 9,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <TinyBadge color={confidenceColor}>
-                        {copy.confidence_badge} {dataConfidence.score}% · {confidenceLabel}
-                      </TinyBadge>
-
+                  <p>{copy.loss_exposure_profit_gap_to_target}</p>
+                  <div className="alert-center-v2-chips">
+                    <span className="alert-center-v2-chip-with-info">
+                      <StatusChip
+                        tone={
+                          dataConfidence.level === "high"
+                            ? "green"
+                            : dataConfidence.level === "medium"
+                              ? "amber"
+                              : "red"
+                        }
+                      >
+                        {copy.confidence_badge} {dataConfidence.score}% ·{" "}
+                        {confidenceLabel}
+                      </StatusChip>
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.data_confidence,
-
+                          title: copy.data_confidence,
                           description:
                             copy.shows_how_reliable_marginlab_considers_the,
-
-                          note:
-                            copy.a_higher_value_means_the_analysis,
+                          note: copy.a_higher_value_means_the_analysis,
                         }}
                       />
-                    </div>
-
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
-                    >
-                      <TinyBadge color="#60a5fa">
-                        {copy.cogs_coverage_badge} {Math.round(dataConfidence.cogsCoveragePct)}%
-                      </TinyBadge>
-
+                    </span>
+                    <span className="alert-center-v2-chip-with-info">
+                      <StatusChip tone="blue">
+                        {copy.cogs_coverage_badge}{" "}
+                        {Math.round(dataConfidence.cogsCoveragePct)}%
+                      </StatusChip>
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.cogs_coverage,
-
-                          description:
-                            copy.shows_how_much_of_the_analyzed,
-
-                          note:
-                            copy.low_coverage_can_make_margins_losses,
+                          title: copy.cogs_coverage,
+                          description: copy.shows_how_much_of_the_analyzed,
+                          note: copy.low_coverage_can_make_margins_losses,
                         }}
                       />
-                    </div>
-
+                    </span>
                     {!dataConfidence.comparisonAvailable ? (
-                      <TinyBadge color="#94a3b8">
+                      <StatusChip tone="neutral">
                         {copy.comparison_unavailable}
-                      </TinyBadge>
+                      </StatusChip>
                     ) : null}
                   </div>
                 </div>
               </div>
-            </section>
+            </PremiumPanel>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                gap: 13,
-                marginBottom: 25,
-              }}
-            >
-              <SummaryCard
+            <ResponsiveGrid columns={4} className="alert-center-v2-summary">
+              <MetricCard
+                density="compact"
+                tone="red"
                 label={copy.critical}
                 value={`${severityCounts.critical}`}
-                note={
-                  copy.require_priority
-                }
-                color="#ff6b4a"
+                detail={copy.require_priority}
               />
-
-              <SummaryCard
+              <MetricCard
+                density="compact"
+                tone="amber"
                 label={copy.warnings}
                 value={`${severityCounts.warning}`}
-                note={copy.need_review}
-                color="#f59e0b"
+                detail={copy.need_review}
               />
-
-              <SummaryCard
+              <MetricCard
+                density="compact"
+                tone="green"
                 label={copy.opportunities}
                 value={`${severityCounts.opportunity}`}
-                note={
-                  copy.potential_improvement
-                }
-                color="#22c55e"
+                detail={copy.potential_improvement}
               />
-
-              <SummaryCard
+              <MetricCard
+                density="compact"
+                tone="cyan"
                 label={copy.unread_2}
                 value={`${lifecycleCounts.unread}`}
-                note={copy.new_signals}
-                color="#38bdf8"
+                detail={copy.new_signals}
               />
-            </div>
+            </ResponsiveGrid>
 
-            <section
-              className="panel"
-              style={{
-                margin: 0,
-                padding: 22,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 16,
-                  flexWrap: "wrap",
-                }}
-              >
+            <PremiumPanel className="alert-center-v2-feed">
+              <div className="alert-center-v2-feed-header">
                 <div>
-                  <div className="panel-eyebrow">
-                    {copy.active_signals}
-                  </div>
-
-                  <h2 className="panel-title" style={{ marginTop: 6 }}>
-                    {copy.profit_alert_feed}
-                  </h2>
+                  <div className="ml-v2-eyebrow">{copy.active_signals}</div>
+                  <h2>{copy.profit_alert_feed}</h2>
                 </div>
 
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    flexWrap: "wrap",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <label
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 9,
-                      color: "rgba(255,255,255,0.55)",
-                      fontSize: 11,
-                      fontWeight: 800,
-                      cursor: "pointer",
-                    }}
-                  >
+                <div className="alert-center-v2-feed-controls">
+                  <label className="alert-center-v2-checkbox">
                     <input
                       type="checkbox"
                       checked={showAcknowledged}
@@ -1849,73 +1568,27 @@ export default function AlertCenterPage() {
                         setShowAcknowledged(event.target.checked)
                       }
                     />
-
                     {copy.show_acknowledged}
                   </label>
-
-                  <button
-                    type="button"
-                    className="apply-button"
-                    onClick={handleExportCsv}
-                  >
+                  <VisualButton variant="secondary" onClick={handleExportCsv}>
                     {copy.export_csv}
-                  </button>
+                  </VisualButton>
                 </div>
               </div>
 
-              <div
-                style={{
-                  marginTop: 20,
-                  display: "flex",
-                  gap: 9,
-                  flexWrap: "wrap",
-                }}
-              >
-                {filters.map((filter) => {
-                  const selected = severityFilter === filter.id;
+              <SegmentedTabs
+                className="alert-center-v2-tabs"
+                ariaLabel={copy.active_signals}
+                activeId={severityFilter}
+                onChange={(id) => setSeverityFilter(id as SeverityFilter)}
+                tabs={filters.map((filter) => ({
+                  id: filter.id,
+                  label: filter.label,
+                  count: filter.count,
+                }))}
+              />
 
-                  return (
-                    <button
-                      key={filter.id}
-                      type="button"
-                      onClick={() => setSeverityFilter(filter.id)}
-                      style={{
-                        cursor: "pointer",
-                        minHeight: 38,
-                        padding: "9px 13px",
-                        borderRadius: 999,
-                        color: selected ? filter.color : "rgba(255,255,255,0.52)",
-                        background: selected
-                          ? `${filter.color}16`
-                          : "rgba(255,255,255,0.025)",
-                        border: selected
-                          ? `1px solid ${filter.color}42`
-                          : "1px solid rgba(255,255,255,0.07)",
-                        fontSize: 10,
-                        fontWeight: 900,
-                      }}
-                    >
-                      {filter.label}{" "}
-                      <span
-                        style={{
-                          marginLeft: 5,
-                          opacity: 0.72,
-                        }}
-                      >
-                        {filter.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div
-                style={{
-                  marginTop: 21,
-                  display: "grid",
-                  gap: 14,
-                }}
-              >
+              <div className="alert-center-v2-list">
                 {filteredAlerts.length > 0 ? (
                   filteredAlerts.map((alert) => (
                     <AlertCard
@@ -1930,40 +1603,17 @@ export default function AlertCenterPage() {
                     />
                   ))
                 ) : (
-                  <div
-                    style={{
-                      padding: 32,
-                      textAlign: "center",
-                      borderRadius: 21,
-                      color: "rgba(255,255,255,0.54)",
-                      background: "rgba(255,255,255,0.025)",
-                      border: "1px solid rgba(255,255,255,0.07)",
-                      fontSize: 13,
-                      fontWeight: 760,
-                    }}
-                  >
-                    {copy.no_alerts_match_the_selected_filters}
-                  </div>
+                  <PremiumEmptyState
+                    tone="green"
+                    title={copy.no_alerts_match_the_selected_filters}
+                  />
                 )}
               </div>
-            </section>
+            </PremiumPanel>
 
-            <div
-              style={{
-                marginTop: 23,
-                marginBottom: 24,
-                padding: 18,
-                borderRadius: 18,
-                background: "rgba(255,115,60,0.065)",
-                border: "1px solid rgba(255,115,60,0.18)",
-                color: "rgba(255,255,255,0.62)",
-                fontSize: 12,
-                lineHeight: 1.65,
-                fontWeight: 700,
-              }}
-            >
+            <PremiumPanel tone="orange" className="alert-center-v2-note">
               {copy.alerts_are_generated_using_the_tax}
-            </div>
+            </PremiumPanel>
           </div>
         </div>
       </div>

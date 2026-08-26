@@ -1,0 +1,435 @@
+.alert-center-v2-hero,
+.alert-center-v2-status,
+.alert-center-v2-summary,
+.alert-center-v2-feed {
+  margin-bottom: 24px;
+}
+
+.alert-center-v2-hero-eyebrow,
+.alert-center-v2-chips,
+.alert-center-v2-context,
+.alert-center-v2-chip-with-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alert-center-v2-content {
+  position: relative;
+}
+
+.alert-center-v2-content.is-locked {
+  overflow: hidden;
+  border-radius: var(--ml-v2-radius-panel);
+}
+
+.alert-center-v2-content.is-locked .alert-center-v2-workspace {
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.42;
+}
+
+.alert-center-v2-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: start center;
+  padding-top: 150px;
+  background: linear-gradient(
+    180deg,
+    rgb(5 9 16 / 0.26),
+    rgb(5 9 16 / 0.8) 28%,
+    rgb(5 9 16 / 0.94)
+  );
+  backdrop-filter: blur(2px);
+}
+
+.alert-center-v2-gate-card {
+  width: min(560px, calc(100% - 40px));
+  text-align: center;
+}
+
+.alert-center-v2-gate-card h2,
+.alert-center-v2-status h2,
+.alert-center-v2-feed h2 {
+  margin: 10px 0 0;
+  color: var(--ml-v2-text);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+}
+
+.alert-center-v2-gate-card h2 {
+  font-size: clamp(21px, 3vw, 27px);
+}
+
+.alert-center-v2-gate-card p,
+.alert-center-v2-status p,
+.alert-center-v2-economics p {
+  color: var(--ml-v2-text-muted);
+  line-height: 1.65;
+}
+
+.alert-center-v2-gate-card .ml-v2-button {
+  margin-top: 18px;
+}
+
+.alert-center-v2-status-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  align-items: center;
+  gap: 28px;
+}
+
+.alert-center-v2-status h2 {
+  font-size: clamp(30px, 4vw, 42px);
+}
+
+.alert-center-v2-status-copy p {
+  max-width: 700px;
+  margin: 12px 0 19px;
+}
+
+.alert-center-v2-economics {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--ml-v2-border-subtle);
+  border-radius: var(--ml-v2-radius-card);
+  background: rgb(255 255 255 / 0.025);
+}
+
+.alert-center-v2-economics-label,
+.alert-center-v2-impact-label,
+.alert-center-v2-alert-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ml-v2-text-faint);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.alert-center-v2-economics-values {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 14px;
+  font-size: clamp(24px, 3.3vw, 43px);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.alert-center-v2-economics-values > span[aria-hidden] {
+  color: rgb(255 255 255 / 0.28);
+}
+
+.alert-center-v2-economics-values .is-loss {
+  color: rgb(var(--ml-v2-red));
+}
+
+.alert-center-v2-economics-values .is-exposure {
+  color: rgb(var(--ml-v2-amber));
+}
+
+.alert-center-v2-economics-values .is-opportunity {
+  color: rgb(var(--ml-v2-green));
+}
+
+.alert-center-v2-economics p {
+  margin: 9px 0 15px;
+  font-size: 11px;
+}
+
+.alert-center-v2-feed-header,
+.alert-center-v2-feed-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.alert-center-v2-feed h2 {
+  font-size: 25px;
+}
+
+.alert-center-v2-feed-controls {
+  justify-content: flex-end;
+}
+
+.alert-center-v2-checkbox {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  gap: 9px;
+  color: var(--ml-v2-text-muted);
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.alert-center-v2-checkbox input {
+  width: 18px;
+  height: 18px;
+  accent-color: rgb(var(--ml-v2-orange));
+}
+
+.alert-center-v2-checkbox:focus-within {
+  outline: 2px solid rgb(var(--ml-v2-orange) / 0.7);
+  outline-offset: 4px;
+  border-radius: 5px;
+}
+
+.alert-center-v2-tabs {
+  margin-top: 20px;
+}
+
+.alert-center-v2-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 21px;
+}
+
+.alert-center-v2-alert {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+}
+
+.alert-center-v2-alert.is-unread {
+  border-color: rgb(var(--ml-v2-accent) / 0.34);
+  box-shadow: 0 20px 52px rgb(0 0 0 / 0.22);
+}
+
+.alert-center-v2-unread-node {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--ml-v2-accent));
+  box-shadow: 0 0 16px rgb(var(--ml-v2-accent) / 0.72);
+}
+
+.alert-center-v2-alert-layout {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) minmax(170px, auto);
+  align-items: start;
+  gap: 17px;
+}
+
+.alert-center-v2-alert-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgb(var(--ml-v2-accent) / 0.28);
+  border-radius: 17px;
+  background: rgb(var(--ml-v2-accent) / 0.1);
+  color: rgb(var(--ml-v2-accent));
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.alert-center-v2-alert-copy {
+  min-width: 0;
+}
+
+.alert-center-v2-alert-copy h2 {
+  margin: 12px 0 0;
+  color: var(--ml-v2-text);
+  font-size: 20px;
+  line-height: 1.28;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+.alert-center-v2-alert-copy > p {
+  max-width: 850px;
+  margin: 8px 0 13px;
+  color: var(--ml-v2-text-muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.alert-center-v2-alert-operation {
+  min-width: 175px;
+  text-align: right;
+}
+
+.alert-center-v2-impact {
+  color: rgb(var(--ml-v2-accent));
+  font-size: 23px;
+  line-height: 1;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.alert-center-v2-impact-label {
+  justify-content: flex-end;
+  margin-top: 7px;
+}
+
+.alert-center-v2-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 15px;
+}
+
+.alert-center-v2-actions small {
+  color: var(--ml-v2-text-muted);
+  line-height: 1.45;
+}
+
+.alert-center-v2-alert-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 19px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ml-v2-border-subtle);
+}
+
+.alert-center-v2-alert-metric {
+  min-width: 0;
+}
+
+.alert-center-v2-alert-metric strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 6px;
+  color: var(--ml-v2-text);
+  font-size: 14px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alert-center-v2-note {
+  margin: 23px 0 24px;
+  color: var(--ml-v2-text-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+@media (max-width: 980px) {
+  .alert-center-v2-status-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-center-v2-alert-layout {
+    grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .alert-center-v2-alert-operation {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 0.55fr);
+    align-items: start;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .alert-center-v2-impact-label {
+    justify-content: flex-start;
+  }
+
+  .alert-center-v2-actions {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .alert-center-v2-feed-header,
+  .alert-center-v2-feed-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .alert-center-v2-feed-controls .ml-v2-button {
+    width: 100%;
+  }
+
+  .alert-center-v2-tabs {
+    width: 100%;
+  }
+
+  .alert-center-v2-alert-layout {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 13px;
+  }
+
+  .alert-center-v2-alert-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .alert-center-v2-alert-operation {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-center-v2-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .alert-center-v2-hero-eyebrow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .alert-center-v2-gate {
+    padding-top: 80px;
+  }
+
+  .alert-center-v2-economics,
+  .alert-center-v2-alert {
+    padding: 18px;
+  }
+
+  .alert-center-v2-alert-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-center-v2-alert-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .alert-center-v2-alert-operation {
+    grid-column: 1;
+  }
+
+  .alert-center-v2-alert-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-center-v2-alert-metric strong {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 390px) {
+  .alert-center-v2-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .alert-center-v2-economics-values {
+    font-size: 23px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alert-center-v2-alert,
+  .alert-center-v2-unread-node {
+    transition: none;
+  }
+}
