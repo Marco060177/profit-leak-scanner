@@ -8,11 +8,13 @@ import type {
 
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { uiMoney as money } from "~/utils/margin";
+import { PremiumPanel, VisualButton } from "~/components/ui/VisualSystem";
 
 type Props = {
   alerts: ProfitAlert[];
   navigate: (path: string) => void;
   maxItems?: number;
+  className?: string;
 };
 
 type ActionStyle = {
@@ -68,9 +70,10 @@ function getEffortLabel(
   return labels[effort];
 }
 
-function getBusinessStatus(
-  alerts: ProfitAlert[],
-): { key: BusinessStatusKey; color: string } {
+function getBusinessStatus(alerts: ProfitAlert[]): {
+  key: BusinessStatusKey;
+  color: string;
+} {
   if (alerts.some((alert) => alert.businessAction === "action")) {
     return { key: "action", color: "#ff6b4a" };
   }
@@ -220,9 +223,7 @@ function PrimaryPriority({
           }}
         >
           <span>{style.icon}</span>
-          <span>
-            {copy.primaryDecision}
-          </span>
+          <span>{copy.primaryDecision}</span>
         </div>
 
         <span
@@ -328,15 +329,11 @@ function PrimaryPriority({
           value={
             alert.monthlyImpact > 0
               ? `${alert.businessAction === "optimize" ? "+" : ""}${money(
-                alert.monthlyImpact,
-              )}`
+                  alert.monthlyImpact,
+                )}`
               : copy.qualitative
           }
-          color={
-            alert.businessAction === "optimize"
-              ? "#22c55e"
-              : style.color
-          }
+          color={alert.businessAction === "optimize" ? "#22c55e" : style.color}
         />
 
         <Metric
@@ -371,18 +368,23 @@ function PrimaryPriority({
             letterSpacing: "0.1em",
           }}
         >
-          {copy.recommendedModule}
-          :{" "}
+          {copy.recommendedModule}:{" "}
           <strong style={{ color: "#f8fafc" }}>
             {alert.recommendedModule === "Products"
-              ? language === "fr" ? "Produits" : language === "de" ? "Produkte" : language === "es" ? "Productos" : language === "pt-BR" ? "Produtos" : alert.recommendedModule
+              ? language === "fr"
+                ? "Produits"
+                : language === "de"
+                  ? "Produkte"
+                  : language === "es"
+                    ? "Productos"
+                    : language === "pt-BR"
+                      ? "Produtos"
+                      : alert.recommendedModule
               : alert.recommendedModule}
           </strong>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
+        <VisualButton
           style={{
             width: "fit-content",
             minWidth: 240,
@@ -398,8 +400,9 @@ function PrimaryPriority({
             copy.moduleButtons as Record<string, string>,
             copy.openModuleFallback,
             t,
-          )} →
-        </button>
+          )}{" "}
+          →
+        </VisualButton>
       </div>
     </article>
   );
@@ -514,9 +517,7 @@ function SecondaryPriority({
           style={{
             marginTop: 15,
             color:
-              alert.businessAction === "optimize"
-                ? "#22c55e"
-                : style.color,
+              alert.businessAction === "optimize" ? "#22c55e" : style.color,
             fontSize: 24,
             lineHeight: 1,
             fontWeight: 950,
@@ -528,9 +529,8 @@ function SecondaryPriority({
       )}
 
       <div style={{ marginTop: "auto", paddingTop: 30 }}>
-        <button
-          type="button"
-          className="apply-button"
+        <VisualButton
+          variant="secondary"
           style={{ width: "100%", justifyContent: "center" }}
           onClick={() => navigate(alert.route)}
         >
@@ -539,8 +539,9 @@ function SecondaryPriority({
             copy.moduleButtons as Record<string, string>,
             copy.openModuleFallback,
             t,
-          )} →
-        </button>
+          )}{" "}
+          →
+        </VisualButton>
       </div>
     </article>
   );
@@ -550,6 +551,7 @@ export default function BusinessPriorities({
   alerts,
   navigate,
   maxItems = 3,
+  className,
 }: Props) {
   const { messages } = useI18n();
   const copy = messages.businessPriorities;
@@ -558,9 +560,7 @@ export default function BusinessPriorities({
     () =>
       [...alerts]
         .filter(
-          (alert) =>
-            alert.businessAction !== "monitor" ||
-            alerts.length === 1,
+          (alert) => alert.businessAction !== "monitor" || alerts.length === 1,
         )
         .sort((a, b) => {
           if (b.priority !== a.priority) {
@@ -574,9 +574,7 @@ export default function BusinessPriorities({
   );
 
   const displayed =
-    priorities.length > 0
-      ? priorities
-      : alerts.slice(0, maxItems);
+    priorities.length > 0 ? priorities : alerts.slice(0, maxItems);
 
   const primary = displayed[0];
   const secondary = displayed.slice(1, 3);
@@ -588,24 +586,12 @@ export default function BusinessPriorities({
   const statusDescription = copy.statusDescription[status.key];
 
   const visibleImpact = displayed.reduce(
-    (sum, alert) =>
-      sum + Math.max(0, alert.monthlyImpact),
+    (sum, alert) => sum + Math.max(0, alert.monthlyImpact),
     0,
   );
 
   return (
-    <section
-      style={{
-        marginTop: 34,
-        padding: 30,
-        borderRadius: 30,
-        background:
-          "radial-gradient(circle at 10% 8%, rgba(255,115,80,0.12), transparent 30%), radial-gradient(circle at 92% 18%, rgba(34,197,94,0.08), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-        border: "1px solid rgba(255,115,60,0.23)",
-        boxShadow:
-          "0 30px 88px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.035)",
-      }}
-    >
+    <PremiumPanel className={className} tone="orange">
       <div
         style={{
           display: "grid",
@@ -710,10 +696,7 @@ export default function BusinessPriorities({
           gap: 18,
         }}
       >
-        <PrimaryPriority
-          alert={primary}
-          navigate={navigate}
-        />
+        <PrimaryPriority alert={primary} navigate={navigate} />
 
         {secondary.length > 0 && (
           <div
@@ -778,16 +761,10 @@ export default function BusinessPriorities({
           </div>
         </div>
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() =>
-            navigate("/app/recommendations")
-          }
-        >
+        <VisualButton onClick={() => navigate("/app/recommendations")}>
           {copy.openProfitActionCenter}
-        </button>
+        </VisualButton>
       </div>
-    </section>
+    </PremiumPanel>
   );
 }

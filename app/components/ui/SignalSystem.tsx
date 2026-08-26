@@ -3,6 +3,15 @@ import type { VisualTone } from "~/components/ui/VisualSystem";
 
 type SignalSize = "small" | "medium" | "large";
 type SignalMotion = "none" | "ambient" | "active";
+type SignalRingVariant = "default" | "hero" | "compact" | "embedded";
+
+export type RingNode = {
+  id: string;
+  angle: number;
+  tone?: VisualTone;
+  emphasis?: "quiet" | "normal" | "strong";
+  label?: string;
+};
 
 type SignalStyle = CSSProperties &
   Record<`--ml-signal-${string}`, string | number>;
@@ -22,6 +31,13 @@ export function SignalRing({
   motion = "none",
   label,
   detail,
+  score,
+  suffix,
+  status,
+  info,
+  ariaLabel,
+  nodes = [],
+  variant = "default",
   marker = true,
   className,
 }: {
@@ -31,6 +47,13 @@ export function SignalRing({
   motion?: SignalMotion;
   label?: ReactNode;
   detail?: ReactNode;
+  score?: ReactNode;
+  suffix?: ReactNode;
+  status?: ReactNode;
+  info?: ReactNode;
+  ariaLabel?: string;
+  nodes?: RingNode[];
+  variant?: SignalRingVariant;
   marker?: boolean;
   className?: string;
 }) {
@@ -44,13 +67,17 @@ export function SignalRing({
       className={classes(
         "ml-signal-ring",
         `ml-signal-size-${size}`,
+        `ml-signal-ring-${variant}`,
         `ml-signal-motion-${motion}`,
         `ml-v2-tone-${tone}`,
         className,
       )}
-      role={typeof label === "string" ? "img" : undefined}
-      aria-labelledby={typeof label === "string" ? titleId : undefined}
-      aria-hidden={label == null ? true : undefined}
+      role={ariaLabel || typeof label === "string" ? "img" : undefined}
+      aria-label={ariaLabel}
+      aria-labelledby={
+        !ariaLabel && typeof label === "string" ? titleId : undefined
+      }
+      aria-hidden={!ariaLabel && label == null ? true : undefined}
       style={{ "--ml-signal-value": normalizedValue } as SignalStyle}
     >
       {typeof label === "string" ? (
@@ -81,15 +108,47 @@ export function SignalRing({
           />
         ) : null}
       </svg>
-      {(label != null || detail != null) && (
+      {nodes.map((node) => (
+        <span
+          key={node.id}
+          className={classes(
+            "ml-signal-ring-node-anchor",
+            `ml-v2-tone-${node.tone ?? tone}`,
+          )}
+          style={{ "--ml-signal-angle": `${node.angle}deg` } as SignalStyle}
+        >
+          <i
+            className={`ml-signal-ring-node ml-signal-ring-node-${node.emphasis ?? "normal"}`}
+            title={node.label}
+          />
+        </span>
+      ))}
+      {(score != null || label != null || detail != null || status != null) && (
         <div className="ml-signal-ring-content">
-          {label != null && typeof label !== "string" ? (
-            <strong>{label}</strong>
+          {score != null ? (
+            <div className="ml-signal-ring-score">
+              <strong>{score}</strong>
+              {suffix != null ? <small>{suffix}</small> : null}
+            </div>
           ) : null}
-          {typeof label === "string" ? (
-            <strong aria-hidden="true">{label}</strong>
+          {label != null ? (
+            <div className="ml-signal-ring-label">
+              <strong
+                aria-hidden={typeof label === "string" ? true : undefined}
+              >
+                {label}
+              </strong>
+              {info != null ? (
+                <span className="ml-signal-ring-info">{info}</span>
+              ) : null}
+            </div>
           ) : null}
-          {detail != null ? <span>{detail}</span> : null}
+          {status != null ? (
+            <span className="ml-signal-ring-status">{status}</span>
+          ) : null}
+          {detail != null ? (
+            <span className="ml-signal-ring-detail">{detail}</span>
+          ) : null}
         </div>
       )}
     </figure>

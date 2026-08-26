@@ -1,7 +1,18 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
+import type {
+  ButtonHTMLAttributes,
+  HTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from "react";
 
 export { FlowPath, OrbitField, SignalRing } from "~/components/ui/SignalSystem";
-export type { FlowNode, OrbitNode } from "~/components/ui/SignalSystem";
+export type {
+  FlowNode,
+  OrbitNode,
+  RingNode,
+} from "~/components/ui/SignalSystem";
 
 export type VisualTone =
   | "neutral"
@@ -51,6 +62,7 @@ export function PremiumHero({
   actions,
   visual,
   tone = "orange",
+  mobileVisualPosition = "first",
   className,
 }: {
   eyebrow?: ReactNode;
@@ -59,6 +71,7 @@ export function PremiumHero({
   actions?: ReactNode;
   visual?: ReactNode;
   tone?: VisualTone;
+  mobileVisualPosition?: "first" | "after-copy";
   className?: string;
 }) {
   return (
@@ -66,6 +79,7 @@ export function PremiumHero({
       className={classes(
         "ml-v2-hero",
         Boolean(visual) && "ml-v2-hero-with-visual",
+        `ml-v2-hero-mobile-${mobileVisualPosition}`,
         `ml-v2-tone-${tone}`,
         className,
       )}
@@ -91,6 +105,7 @@ export function MetricCard({
   visual,
   tone = "orange",
   empty = false,
+  density = "regular",
   className,
 }: {
   label: ReactNode;
@@ -100,6 +115,7 @@ export function MetricCard({
   visual?: ReactNode;
   tone?: VisualTone;
   empty?: boolean;
+  density?: "regular" | "compact" | "dense";
   className?: string;
 }) {
   return (
@@ -107,6 +123,7 @@ export function MetricCard({
       className={classes(
         "ml-v2-metric-card",
         `ml-v2-tone-${tone}`,
+        `ml-v2-metric-${density}`,
         empty && "ml-v2-is-empty",
         className,
       )}
@@ -280,5 +297,191 @@ export function VisualButton({
       <span>{children}</span>
       {trailing ? <span aria-hidden="true">{trailing}</span> : null}
     </button>
+  );
+}
+
+export function ControlField({
+  label,
+  helper,
+  error,
+  required = false,
+  htmlFor,
+  className,
+  children,
+}: {
+  label?: ReactNode;
+  helper?: ReactNode;
+  error?: ReactNode;
+  required?: boolean;
+  htmlFor?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={classes(
+        "ml-v2-field",
+        error && "ml-v2-field-error",
+        className,
+      )}
+    >
+      {label != null ? (
+        <label className="ml-v2-field-label" htmlFor={htmlFor}>
+          {label}
+          {required ? <span aria-hidden="true">*</span> : null}
+        </label>
+      ) : null}
+      {children}
+      {error != null ? (
+        <div className="ml-v2-field-message" role="alert">
+          {error}
+        </div>
+      ) : helper != null ? (
+        <div className="ml-v2-field-message">{helper}</div>
+      ) : null}
+    </div>
+  );
+}
+
+export function VisualInput({
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  return <input className={classes("ml-v2-control", className)} {...props} />;
+}
+
+export function VisualTextarea({
+  className,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      className={classes("ml-v2-control", "ml-v2-textarea", className)}
+      {...props}
+    />
+  );
+}
+
+export function VisualSelect({
+  className,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <select
+      className={classes("ml-v2-control", "ml-v2-select", className)}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
+export function ChoiceCard({
+  selected = false,
+  tone = "orange",
+  leading,
+  title,
+  description,
+  meta,
+  className,
+  type = "button",
+  ...props
+}: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "title"> & {
+  selected?: boolean;
+  tone?: VisualTone;
+  leading?: ReactNode;
+  title: ReactNode;
+  description?: ReactNode;
+  meta?: ReactNode;
+}) {
+  return (
+    <button
+      type={type}
+      className={classes(
+        "ml-v2-choice-card",
+        `ml-v2-tone-${tone}`,
+        selected && "is-selected",
+        className,
+      )}
+      aria-pressed={selected}
+      {...props}
+    >
+      {leading ? (
+        <span className="ml-v2-choice-leading" aria-hidden="true">
+          {leading}
+        </span>
+      ) : null}
+      <span className="ml-v2-choice-copy">
+        <strong>{title}</strong>
+        {description != null ? <span>{description}</span> : null}
+      </span>
+      {meta != null ? <span className="ml-v2-choice-meta">{meta}</span> : null}
+      <i className="ml-v2-choice-signal" aria-hidden="true" />
+    </button>
+  );
+}
+
+export function FeedbackState({
+  tone = "neutral",
+  title,
+  children,
+  icon,
+  className,
+}: {
+  tone?: VisualTone;
+  title?: ReactNode;
+  children: ReactNode;
+  icon?: ReactNode;
+  className?: string;
+}) {
+  const assertive = tone === "red";
+  return (
+    <div
+      className={classes("ml-v2-feedback", `ml-v2-tone-${tone}`, className)}
+      role={assertive ? "alert" : "status"}
+    >
+      <span className="ml-v2-feedback-icon" aria-hidden="true">
+        {icon ?? <i />}
+      </span>
+      <div>
+        {title != null ? <strong>{title}</strong> : null}
+        <div>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export function ResponsiveGrid({
+  columns = 4,
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & { columns?: 2 | 3 | 4 | 5 }) {
+  return (
+    <div
+      className={classes("ml-v2-grid", `ml-v2-grid-${columns}`, className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function SplitLayout({
+  ratio = "balanced",
+  className,
+  children,
+  ...props
+}: HTMLAttributes<HTMLDivElement> & {
+  ratio?: "balanced" | "content" | "aside";
+}) {
+  return (
+    <div
+      className={classes("ml-v2-split", `ml-v2-split-${ratio}`, className)}
+      {...props}
+    >
+      {children}
+    </div>
   );
 }

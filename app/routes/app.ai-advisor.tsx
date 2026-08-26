@@ -7,10 +7,16 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import BusinessPriorities from "~/components/dashboard/BusinessPriorities";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
+  ChoiceCard,
+  FeedbackState,
   MetricCard,
   PremiumHero,
   PremiumPanel,
+  ResponsiveGrid,
+  SignalRing,
+  SplitLayout,
   StatusChip,
+  VisualInput,
   VisualButton,
 } from "~/components/ui/VisualSystem";
 import {
@@ -1457,6 +1463,7 @@ Rules:
         <PremiumHero
           className="advisor-v2-hero"
           tone="orange"
+          mobileVisualPosition="after-copy"
           eyebrow={copy.profit_copilot}
           title={copy.your_store_briefing_already_prepared}
           description={
@@ -1481,39 +1488,34 @@ Rules:
             </>
           }
           visual={
-            <div className="advisor-v2-hero-health">
-              <div
-                className="advisor-v2-hero-health-ring"
-                style={{
-                  background: `conic-gradient(${healthColor} ${
-                    healthScore * 3.6
-                  }deg, rgba(255,255,255,0.08) 0deg)`,
-                  boxShadow: `0 0 54px ${healthColor}22`,
-                }}
-              >
-                <div className="advisor-v2-hero-health-core">
-                  <div className="advisor-v2-hero-health-score">
-                    {healthScore}
-                  </div>
-                  <div
-                    className="advisor-v2-hero-health-label"
-                    style={{ color: healthColor }}
-                  >
-                    <span>{copy.store_health_2}</span>
-                    <MetricTooltip
-                      content={{
-                        title: copy.store_health_3,
-                        description: copy.a_0_100_score_summarizing_the,
-                        note: copy.it_considers_loss_making_products_missing,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="advisor-v2-hero-health-status">{healthLabel}</div>
-              <div className="advisor-v2-hero-health-detail">
-                {copy.updated_from_current_store_data}
-              </div>
+            <div className="advisor-v2-health-visual">
+              <SignalRing
+                value={healthScore}
+                variant="hero"
+                motion="ambient"
+                tone={
+                  healthScore < 40
+                    ? "red"
+                    : healthScore < 70
+                      ? "amber"
+                      : "green"
+                }
+                score={healthScore}
+                suffix="/100"
+                label={copy.store_health_2}
+                status={healthLabel}
+                detail={copy.updated_from_current_store_data}
+                ariaLabel={`${copy.store_health_2}: ${healthScore}/100, ${healthLabel}`}
+                info={
+                  <MetricTooltip
+                    content={{
+                      title: copy.store_health_3,
+                      description: copy.a_0_100_score_summarizing_the,
+                      note: copy.it_considers_loss_making_products_missing,
+                    }}
+                  />
+                }
+              />
             </div>
           }
         />
@@ -1586,14 +1588,12 @@ Rules:
                   {copy.upgrade_to_growth_for_ai_briefings}
                 </div>
 
-                <button
-                  type="button"
-                  className="primary-button"
+                <VisualButton
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
                   {copy.unlock_growth}
-                </button>
+                </VisualButton>
               </div>
             </div>
           )}
@@ -1619,15 +1619,6 @@ Rules:
                     ? "amber"
                     : "green"
               }
-              style={{
-                borderRadius: 30,
-                padding: 28,
-                background:
-                  "radial-gradient(circle at 12% 14%, rgba(255,115,80,0.14), transparent 30%), radial-gradient(circle at 88% 18%, rgba(34,197,94,0.13), transparent 32%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-                border: "1px solid rgba(255,115,60,0.22)",
-                boxShadow:
-                  "0 28px 90px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03)",
-              }}
             >
               <div
                 style={{
@@ -1674,39 +1665,16 @@ Rules:
                         flexWrap: "wrap",
                       }}
                     >
-                      <div
-                        style={{
-                          padding: "7px 11px",
-                          borderRadius: 999,
-                          color:
-                            primaryProfitAlert.severity === "critical"
-                              ? "#ff8a6b"
-                              : primaryProfitAlert.severity === "warning"
-                                ? "#fbbf24"
-                                : primaryProfitAlert.severity === "opportunity"
-                                  ? "#4ade80"
-                                  : "#7dd3fc",
-                          background:
-                            primaryProfitAlert.severity === "critical"
-                              ? "rgba(255,107,74,0.10)"
-                              : primaryProfitAlert.severity === "warning"
-                                ? "rgba(245,158,11,0.10)"
-                                : primaryProfitAlert.severity === "opportunity"
-                                  ? "rgba(34,197,94,0.10)"
-                                  : "rgba(56,189,248,0.10)",
-                          border:
-                            primaryProfitAlert.severity === "critical"
-                              ? "1px solid rgba(255,107,74,0.24)"
-                              : primaryProfitAlert.severity === "warning"
-                                ? "1px solid rgba(245,158,11,0.24)"
-                                : primaryProfitAlert.severity === "opportunity"
-                                  ? "1px solid rgba(34,197,94,0.24)"
-                                  : "1px solid rgba(56,189,248,0.24)",
-                          fontSize: 9,
-                          fontWeight: 950,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.1em",
-                        }}
+                      <StatusChip
+                        tone={
+                          primaryProfitAlert.severity === "critical"
+                            ? "red"
+                            : primaryProfitAlert.severity === "warning"
+                              ? "amber"
+                              : primaryProfitAlert.severity === "opportunity"
+                                ? "green"
+                                : "blue"
+                        }
                       >
                         {primaryProfitAlert.severity === "critical"
                           ? copy.critical_priority
@@ -1715,7 +1683,7 @@ Rules:
                             : primaryProfitAlert.severity === "opportunity"
                               ? copy.opportunity_detected
                               : copy.profit_monitor_signal}
-                      </div>
+                      </StatusChip>
 
                       <div
                         style={{
@@ -1729,12 +1697,11 @@ Rules:
                     </div>
                   )}
 
-                  <div
+                  <ResponsiveGrid
+                    columns={4}
+                    className="advisor-v2-kpis"
                     style={{
                       marginTop: 22,
-                      display: "grid",
-                      gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                      gap: 12,
                     }}
                   >
                     {[
@@ -1832,7 +1799,7 @@ Rules:
                         detail={item.note}
                       />
                     ))}
-                  </div>
+                  </ResponsiveGrid>
 
                   <div
                     style={{
@@ -1842,29 +1809,25 @@ Rules:
                       flexWrap: "wrap",
                     }}
                   >
-                    <button
-                      type="button"
-                      className="primary-button"
+                    <VisualButton
                       onClick={() => navigate("/app/recommendations")}
                     >
                       {copy.open_action_plan}
-                    </button>
+                    </VisualButton>
 
-                    <button
-                      type="button"
-                      className="apply-button"
+                    <VisualButton
+                      variant="secondary"
                       onClick={() => navigate("/app/recovery-simulator")}
                     >
                       {copy.simulate_recovery}
-                    </button>
+                    </VisualButton>
 
-                    <button
-                      type="button"
-                      className="apply-button"
+                    <VisualButton
+                      variant="secondary"
                       onClick={() => navigate("/app/forecasting")}
                     >
                       {copy.open_forecast}
-                    </button>
+                    </VisualButton>
                   </div>
                 </div>
               </div>
@@ -1874,157 +1837,89 @@ Rules:
               alerts={profitAlerts}
               navigate={navigate}
               maxItems={3}
+              className="advisor-v2-priorities"
             />
 
-            <div
+            <ResponsiveGrid
+              columns={5}
               className="advisor-v2-scorecards"
-              style={{
-                marginTop: 24,
-                display: "grid",
-                gridTemplateColumns: "repeat(5,minmax(0,1fr))",
-                gap: 14,
-              }}
+              style={{ marginTop: 24 }}
             >
               {scorecards.map((card) => (
-                <div
+                <MetricCard
                   key={card.key}
-                  style={{
-                    padding: 18,
-                    borderRadius: 20,
-                    background:
-                      "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-                    border: "1px solid rgba(255,115,60,0.14)",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      color: "rgba(255,255,255,0.45)",
-                      fontSize: 9,
-                      fontWeight: 950,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    <span>{card.label}</span>
-
-                    <MetricTooltip
-                      content={
-                        card.key === "health"
-                          ? {
-                              title: copy.store_health_3,
-                              description:
-                                copy.summarizes_the_overall_health_of_the,
-                              note: copy.considers_losses_missing_costs_and_weak,
-                            }
-                          : card.key === "profit"
+                  density="compact"
+                  tone={
+                    card.value < 40
+                      ? "red"
+                      : card.value < 70
+                        ? "amber"
+                        : "green"
+                  }
+                  label={
+                    <span className="advisor-v2-metric-label">
+                      {card.label}
+                      <MetricTooltip
+                        content={
+                          card.key === "health"
                             ? {
-                                title: copy.profit_quality_2,
+                                title: copy.store_health_3,
                                 description:
-                                  copy.measures_how_healthy_the_margins_are,
-                                note: copy.a_higher_score_indicates_more_products,
+                                  copy.summarizes_the_overall_health_of_the,
+                                note: copy.considers_losses_missing_costs_and_weak,
                               }
-                            : card.key === "pricing"
+                            : card.key === "profit"
                               ? {
-                                  title: copy.pricing_efficiency_2,
+                                  title: copy.profit_quality_2,
                                   description:
-                                    copy.shows_how_effectively_current_prices_support,
-                                  note: copy.a_lower_score_indicates_a_larger,
+                                    copy.measures_how_healthy_the_margins_are,
+                                  note: copy.a_higher_score_indicates_more_products,
                                 }
-                              : card.key === "data"
+                              : card.key === "pricing"
                                 ? {
-                                    title: copy.data_quality_2,
+                                    title: copy.pricing_efficiency_2,
                                     description:
-                                      copy.measures_how_complete_the_available_data,
-                                    note: copy.product_cost_coverage_is_one_of,
+                                      copy.shows_how_effectively_current_prices_support,
+                                    note: copy.a_lower_score_indicates_a_larger,
                                   }
-                                : {
-                                    title: copy.execution_readiness_2,
-                                    description:
-                                      copy.shows_how_much_actionable_evidence_marginlab,
-                                    note: copy.higher_scores_indicate_more_opportunities_to,
-                                  }
-                      }
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 11,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "end",
-                      gap: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        color: card.color,
-                        fontSize: 30,
-                        fontWeight: 950,
-                        lineHeight: 1,
-                      }}
-                    >
+                                : card.key === "data"
+                                  ? {
+                                      title: copy.data_quality_2,
+                                      description:
+                                        copy.measures_how_complete_the_available_data,
+                                      note: copy.product_cost_coverage_is_one_of,
+                                    }
+                                  : {
+                                      title: copy.execution_readiness_2,
+                                      description:
+                                        copy.shows_how_much_actionable_evidence_marginlab,
+                                      note: copy.higher_scores_indicate_more_opportunities_to,
+                                    }
+                        }
+                      />
+                    </span>
+                  }
+                  value={
+                    <>
                       {card.value}
-                    </div>
-
-                    <div
-                      style={{
-                        color: "rgba(255,255,255,0.35)",
-                        fontSize: 10,
-                        fontWeight: 850,
-                      }}
-                    >
-                      /100
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: 12,
-                      height: 7,
-                      borderRadius: 999,
-                      background: "rgba(255,255,255,0.08)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: `${card.value}%`,
-                        height: "100%",
-                        borderRadius: 999,
-                        background: card.color,
-                        boxShadow: `0 0 14px ${card.color}55`,
-                      }}
-                    />
-                  </div>
-                </div>
+                      <small>/100</small>
+                    </>
+                  }
+                  visual={
+                    <span className="advisor-v2-score-rail">
+                      <i style={{ width: `${card.value}%` }} />
+                    </span>
+                  }
+                />
               ))}
-            </div>
+            </ResponsiveGrid>
 
-            <div
+            <SplitLayout
+              ratio="aside"
               className="advisor-v2-workspace"
-              style={{
-                marginTop: 24,
-                display: "grid",
-                gridTemplateColumns: "0.9fr 1.1fr",
-                gap: 22,
-                alignItems: "start",
-              }}
+              style={{ marginTop: 24 }}
             >
-              <PremiumPanel
-                className="advisor-v2-mission"
-                tone="blue"
-                style={{
-                  borderRadius: 26,
-                  padding: "24px 24px 32px",
-                  background:
-                    "radial-gradient(circle at top right, rgba(56,189,248,0.10), transparent 40%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(56,189,248,0.18)",
-                }}
-              >
+              <PremiumPanel className="advisor-v2-mission" tone="blue">
                 <div
                   style={{
                     color: "#7dd3fc",
@@ -2139,9 +2034,8 @@ Rules:
                   ))}
                 </div>
 
-                <button
-                  type="button"
-                  className="primary-button"
+                <VisualButton
+                  className="advisor-v2-mission-action"
                   style={{
                     width: "100%",
                     marginTop: 20,
@@ -2150,11 +2044,11 @@ Rules:
                   onClick={() => navigate(weeklyReport.route)}
                 >
                   {missionAlert?.actionLabel ?? copy.open_action_plan}
-                </button>
+                </VisualButton>
               </PremiumPanel>
 
               <PremiumPanel
-                className="panel advisor-v2-feed"
+                className="advisor-v2-feed"
                 tone="orange"
                 style={{ margin: 0, padding: 24 }}
               >
@@ -2278,363 +2172,266 @@ Rules:
                   )}
                 </div>
               </PremiumPanel>
+            </SplitLayout>
 
+            <PremiumPanel className="advisor-v2-analysis" tone="violet">
               <div
-                className="advisor-v2-analysis"
                 style={{
-                  marginTop: 24,
-                  borderRadius: 26,
-                  padding: 24,
-                  background:
-                    "linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(255,115,60,0.20)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  alignItems: "center",
+                  flexWrap: "wrap",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 16,
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        color: "#ff9a70",
-                        fontSize: 11,
-                        fontWeight: 950,
-                        letterSpacing: "0.13em",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {copy.deep_analysis}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 8,
-                        color: "#f8fafc",
-                        fontSize: 22,
-                        fontWeight: 950,
-                      }}
-                    >
-                      {copy.generate_the_full_advisor_report}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 6,
-                        color: "rgba(255,255,255,0.54)",
-                        fontSize: 12,
-                        fontWeight: 730,
-                      }}
-                    >
-                      {copy.ai_will_use_all_real_store}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 18,
-                        display: "grid",
-                        gap: 8,
-                      }}
-                    >
-                      {[
-                        copy.analyzes_the_highest_priority_business_risk,
-
-                        copy.identifies_the_first_products_to_fix,
-
-                        copy.estimates_profit_gaps_and_recommended_actions,
-                      ].map((item) => (
-                        <div
-                          key={item}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            color: "rgba(255,255,255,0.70)",
-                            fontSize: 12,
-                            fontWeight: 720,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: "50%",
-                              background: "#22c55e",
-                              boxShadow: "0 0 10px rgba(34,197,94,0.5)",
-                              flexShrink: 0,
-                            }}
-                          />
-
-                          <span>{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <aiFetcher.Form
-                    method="post"
-                    onSubmit={() => setShowAiReport(false)}
-                  >
-                    <input type="hidden" name="language" value={language} />
-                    <input type="hidden" name="period" value={period} />
-
-                    <button
-                      type="submit"
-                      className="primary-button"
-                      disabled={aiFetcher.state !== "idle"}
-                    >
-                      {aiFetcher.state !== "idle"
-                        ? copy.analyzing
-                        : copy.generate_ai_analysis}
-                    </button>
-
-                    <div
-                      style={{
-                        marginTop: 9,
-                        color: "rgba(255,255,255,0.42)",
-                        fontSize: 10,
-                        fontWeight: 750,
-                      }}
-                    >
-                      {t("aiAdvisorPage.ai_requests_used", {
-                        used: aiUsage.used,
-                        limit: aiUsage.limit,
-                      })}
-                    </div>
-                  </aiFetcher.Form>
-                </div>
-
-                {showAiReport && aiFetcher.data?.text && (
+                <div>
                   <div
-                    className="advisor-v2-response"
-                    style={{ marginTop: 20 }}
+                    style={{
+                      color: "#ff9a70",
+                      fontSize: 11,
+                      fontWeight: 950,
+                      letterSpacing: "0.13em",
+                      textTransform: "uppercase",
+                    }}
                   >
-                    <div
-                      style={{
-                        padding: 22,
-                        borderRadius: 19,
-                        background: "rgba(255,255,255,0.035)",
-                        border: "1px solid rgba(34,197,94,0.20)",
-                        color: "rgba(255,255,255,0.84)",
-                        fontSize: 14,
-                        lineHeight: 1.85,
-                        fontWeight: 720,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {aiFetcher.data.text}
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: 14,
-                        display: "flex",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        className="primary-button"
-                        onClick={() =>
-                          downloadAiReportPdf(
-                            String(aiFetcher.data?.text),
-                            language,
-                          )
-                        }
-                      >
-                        {copy.download_pdf_report}
-                      </button>
-                    </div>
+                    {copy.deep_analysis}
                   </div>
-                )}
-              </div>
 
-              <div
-                className="advisor-v2-ask"
-                style={{
-                  marginTop: 24,
-                  borderRadius: 26,
-                  padding: 24,
-                  background:
-                    "radial-gradient(circle at top left, rgba(255,115,80,0.10), transparent 38%), linear-gradient(180deg, rgba(16,23,37,0.98), rgba(7,12,21,0.99))",
-                  border: "1px solid rgba(255,115,60,0.20)",
-                }}
-              >
-                <div
-                  className="advisor-v2-questions"
-                  style={{
-                    color: "#ff9a70",
-                    fontSize: 11,
-                    fontWeight: 950,
-                    letterSpacing: "0.13em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {copy.ask_the_copilot}
+                  <div
+                    style={{
+                      marginTop: 8,
+                      color: "#f8fafc",
+                      fontSize: 22,
+                      fontWeight: 950,
+                    }}
+                  >
+                    {copy.generate_the_full_advisor_report}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 6,
+                      color: "rgba(255,255,255,0.54)",
+                      fontSize: 12,
+                      fontWeight: 730,
+                    }}
+                  >
+                    {copy.ai_will_use_all_real_store}
+                  </div>
+
+                  <div
+                    style={{
+                      marginTop: 18,
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    {[
+                      copy.analyzes_the_highest_priority_business_risk,
+
+                      copy.identifies_the_first_products_to_fix,
+
+                      copy.estimates_profit_gaps_and_recommended_actions,
+                    ].map((item) => (
+                      <div
+                        key={item}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          color: "rgba(255,255,255,0.70)",
+                          fontSize: 12,
+                          fontWeight: 720,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "#22c55e",
+                            boxShadow: "0 0 10px rgba(34,197,94,0.5)",
+                            flexShrink: 0,
+                          }}
+                        />
+
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    marginTop: 8,
-                    color: "#f8fafc",
-                    fontSize: 22,
-                    fontWeight: 950,
-                  }}
+                <aiFetcher.Form
+                  method="post"
+                  onSubmit={() => setShowAiReport(false)}
                 >
-                  {copy.explore_a_specific_decision}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 6,
-                    color: "rgba(255,255,255,0.54)",
-                    fontSize: 12,
-                    fontWeight: 730,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {copy.questions_adapt_to_the_risks_and}
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 18,
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4,minmax(0,1fr))",
-                    gap: 11,
-                  }}
-                >
-                  {visibleQuestions.map((presetQuestion) => (
-                    <button
-                      key={presetQuestion.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedQuestion(
-                          presetQuestion.id as SelectedQuestion,
-                        );
-                        setQuestion(presetQuestion.displayLabel);
-
-                        const formData = new FormData();
-                        formData.append("intent", "ask");
-                        formData.append("question", presetQuestion.promptText);
-                        formData.append("language", language);
-                        formData.append("period", period);
-
-                        askFetcher.submit(formData, {
-                          method: "post",
-                        });
-                      }}
-                      style={{
-                        padding: "14px 15px",
-                        minHeight: 76,
-                        borderRadius: 15,
-                        cursor: "pointer",
-                        textAlign: "left",
-                        color: "#f8fafc",
-                        background:
-                          selectedQuestion === presetQuestion.id
-                            ? "rgba(255,115,80,0.14)"
-                            : "rgba(255,255,255,0.035)",
-                        border:
-                          selectedQuestion === presetQuestion.id
-                            ? "1px solid rgba(255,115,80,0.42)"
-                            : "1px solid rgba(255,255,255,0.07)",
-                        fontSize: 12,
-                        fontWeight: 850,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {presetQuestion.displayLabel}
-                    </button>
-                  ))}
-                </div>
-
-                <askFetcher.Form method="post">
-                  <input type="hidden" name="intent" value="ask" />
                   <input type="hidden" name="language" value={language} />
                   <input type="hidden" name="period" value={period} />
 
+                  <VisualButton
+                    type="submit"
+                    disabled={aiFetcher.state !== "idle"}
+                  >
+                    {aiFetcher.state !== "idle"
+                      ? copy.analyzing
+                      : copy.generate_ai_analysis}
+                  </VisualButton>
+
                   <div
                     style={{
-                      marginTop: 16,
-                      display: "grid",
-                      gridTemplateColumns: "1fr auto",
-                      gap: 11,
+                      marginTop: 9,
+                      color: "rgba(255,255,255,0.42)",
+                      fontSize: 10,
+                      fontWeight: 750,
                     }}
                   >
-                    <input
-                      className="advisor-v2-composer"
-                      name="question"
-                      value={question}
-                      onChange={(event) => setQuestion(event.target.value)}
-                      placeholder={copy.ask_a_profitability_question}
-                      style={{
-                        width: "100%",
-                        padding: "15px 16px",
-                        borderRadius: 14,
-                        color: "#ffffff",
-                        background: "rgba(255,255,255,0.035)",
-                        border: "1px solid rgba(255,115,60,0.18)",
-                        outline: "none",
-                        fontWeight: 800,
-                      }}
-                    />
+                    {t("aiAdvisorPage.ai_requests_used", {
+                      used: aiUsage.used,
+                      limit: aiUsage.limit,
+                    })}
+                  </div>
+                </aiFetcher.Form>
+              </div>
 
-                    <button
-                      type="submit"
-                      className="primary-button"
-                      disabled={askFetcher.state !== "idle" || !question.trim()}
+              {showAiReport && aiFetcher.data?.text && (
+                <div className="advisor-v2-response" style={{ marginTop: 20 }}>
+                  <PremiumPanel
+                    className="advisor-v2-response-body"
+                    tone="green"
+                  >
+                    {aiFetcher.data.text}
+                  </PremiumPanel>
+
+                  <div
+                    style={{
+                      marginTop: 14,
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <VisualButton
+                      onClick={() =>
+                        downloadAiReportPdf(
+                          String(aiFetcher.data?.text),
+                          language,
+                        )
+                      }
                     >
-                      {askFetcher.state !== "idle"
-                        ? copy.thinking
-                        : copy.ask_ai}
-                    </button>
+                      {copy.download_pdf_report}
+                    </VisualButton>
                   </div>
-                </askFetcher.Form>
+                </div>
+              )}
+            </PremiumPanel>
 
-                {askFetcher.data?.text && (
-                  <div
-                    className="advisor-v2-response advisor-v2-answer"
-                    style={{
-                      marginTop: 18,
-                      padding: 21,
-                      borderRadius: 18,
-                      background: "rgba(34,197,94,0.055)",
-                      border: "1px solid rgba(34,197,94,0.20)",
-                      color: "rgba(255,255,255,0.84)",
-                      lineHeight: 1.8,
-                      fontSize: 14,
-                      fontWeight: 730,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {askFetcher.data.text}
-                  </div>
-                )}
+            <PremiumPanel className="advisor-v2-ask" tone="violet">
+              <div
+                className="advisor-v2-questions"
+                style={{
+                  color: "#ff9a70",
+                  fontSize: 11,
+                  fontWeight: 950,
+                  letterSpacing: "0.13em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {copy.ask_the_copilot}
               </div>
 
               <div
-                className="advisor-v2-methodology"
                 style={{
-                  marginTop: 22,
-                  padding: 18,
-                  borderRadius: 18,
-                  background: "rgba(255,115,60,0.07)",
-                  border: "1px solid rgba(255,115,60,0.18)",
-                  color: "rgba(255,255,255,0.64)",
-                  lineHeight: 1.6,
-                  fontSize: 12,
-                  fontWeight: 700,
+                  marginTop: 8,
+                  color: "#f8fafc",
+                  fontSize: 22,
+                  fontWeight: 950,
                 }}
               >
-                {copy.profit_copilot_uses_the_tax_aware}
+                {copy.explore_a_specific_decision}
               </div>
-            </div>
+
+              <div
+                style={{
+                  marginTop: 6,
+                  color: "rgba(255,255,255,0.54)",
+                  fontSize: 12,
+                  fontWeight: 730,
+                  lineHeight: 1.5,
+                }}
+              >
+                {copy.questions_adapt_to_the_risks_and}
+              </div>
+
+              <ResponsiveGrid columns={4} className="advisor-v2-question-grid">
+                {visibleQuestions.map((presetQuestion) => (
+                  <ChoiceCard
+                    key={presetQuestion.id}
+                    title={presetQuestion.displayLabel}
+                    tone="violet"
+                    selected={selectedQuestion === presetQuestion.id}
+                    disabled={askFetcher.state !== "idle"}
+                    onClick={() => {
+                      setSelectedQuestion(
+                        presetQuestion.id as SelectedQuestion,
+                      );
+                      setQuestion(presetQuestion.displayLabel);
+
+                      const formData = new FormData();
+                      formData.append("intent", "ask");
+                      formData.append("question", presetQuestion.promptText);
+                      formData.append("language", language);
+                      formData.append("period", period);
+
+                      askFetcher.submit(formData, {
+                        method: "post",
+                      });
+                    }}
+                  />
+                ))}
+              </ResponsiveGrid>
+
+              <askFetcher.Form method="post">
+                <input type="hidden" name="intent" value="ask" />
+                <input type="hidden" name="language" value={language} />
+                <input type="hidden" name="period" value={period} />
+
+                <div
+                  style={{
+                    marginTop: 16,
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    gap: 11,
+                  }}
+                >
+                  <VisualInput
+                    className="advisor-v2-composer"
+                    name="question"
+                    value={question}
+                    onChange={(event) => setQuestion(event.target.value)}
+                    placeholder={copy.ask_a_profitability_question}
+                  />
+
+                  <VisualButton
+                    type="submit"
+                    disabled={askFetcher.state !== "idle" || !question.trim()}
+                  >
+                    {askFetcher.state !== "idle" ? copy.thinking : copy.ask_ai}
+                  </VisualButton>
+                </div>
+              </askFetcher.Form>
+
+              {askFetcher.data?.text && (
+                <PremiumPanel
+                  className="advisor-v2-response advisor-v2-answer"
+                  tone="green"
+                >
+                  {askFetcher.data.text}
+                </PremiumPanel>
+              )}
+            </PremiumPanel>
+
+            <FeedbackState tone="orange" className="advisor-v2-methodology">
+              {copy.profit_copilot_uses_the_tax_aware}
+            </FeedbackState>
           </div>
         </div>
       </div>
