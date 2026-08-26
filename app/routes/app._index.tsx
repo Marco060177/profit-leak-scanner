@@ -4,7 +4,9 @@ import { authenticate } from "~/shopify.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
-import ScoreCard from "~/components/dashboard/ScoreCard";
+import ScoreCard, {
+  MarginHealthSignal,
+} from "~/components/dashboard/ScoreCard";
 import TrendChart from "~/components/dashboard/TrendChart";
 import KpiGrid from "~/components/dashboard/KpiGrid";
 import TopLeaksPanel from "~/components/dashboard/TopLeaksPanel";
@@ -972,6 +974,7 @@ export default function DashboardV2() {
           analysisSteps={analysisSteps}
           setAnalysisLoading={setAnalysisLoading}
           setAnalysisText={setAnalysisText}
+          visual={<MarginHealthSignal assessment={marginAssessment} />}
         />
 
         {shouldShowAdvancedTaxSetup ? (

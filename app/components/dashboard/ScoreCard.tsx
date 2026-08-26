@@ -6,7 +6,6 @@ import {
   MetricCard,
   PremiumPanel,
   SignalRing,
-  SplitLayout,
   StatusChip,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
@@ -97,8 +96,6 @@ export default function ScoreCard({
   const { messages, t } = useI18n();
   const copy = messages.scoreCard;
   const presentation = getScorePresentation(assessment, t);
-  const score = presentation.score;
-  const gaugeScore = score ?? 0;
   const tone: VisualTone =
     assessment.economicStatus === "healthy"
       ? "green"
@@ -110,93 +107,109 @@ export default function ScoreCard({
 
   return (
     <PremiumPanel className="dashboard-v2-health" tone={tone}>
-      <SplitLayout ratio="content" className="dashboard-v2-health-layout">
-        <div className="score-content">
-          <div
-            className="section-eyebrow"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
+      <div className="score-content">
+        <div
+          className="section-eyebrow"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+          }}
+        >
+          <span>{copy.eyebrow}</span>
+
+          <MetricTooltip
+            content={{
+              title: copy.tooltipTitle,
+              description: copy.tooltipDescription,
+              note: copy.tooltipNote,
             }}
-          >
-            <span>{copy.eyebrow}</span>
-
-            <MetricTooltip
-              content={{
-                title: copy.tooltipTitle,
-                description: copy.tooltipDescription,
-                note: copy.tooltipNote,
-              }}
-            />
-          </div>
-
-          <StatusChip tone={tone}>{presentation.label}</StatusChip>
-
-          <div className="score-copy">
-            {getAssessmentCopy(assessment, visualLeak, t)}
-          </div>
-
-          <div className="score-mini-grid dashboard-v2-health-metrics">
-            <MetricCard
-              density="dense"
-              tone="red"
-              label={copy.confirmedLoss}
-              value={money(visualLeak)}
-            />
-            <MetricCard
-              density="dense"
-              tone="amber"
-              label={copy.productsAtRisk}
-              value={t("scoreCard.productsDetected", {
-                count: visualProductsAtRisk,
-              })}
-            />
-            <MetricCard
-              density="dense"
-              tone="green"
-              label={copy.margin}
-              value={pct(visualMarginPct)}
-            />
-          </div>
-        </div>
-        <div className="dashboard-v2-health-signal">
-          <SignalRing
-            value={gaugeScore}
-            variant="embedded"
-            size="large"
-            motion="ambient"
-            tone={tone}
-            score={score ?? "—"}
-            suffix={score === null ? undefined : "/100"}
-            label={copy.eyebrow}
-            status={presentation.label}
-            info={
-              <MetricTooltip
-                content={{
-                  title: copy.tooltipTitle,
-                  description: copy.tooltipDescription,
-                  note: copy.tooltipNote,
-                }}
-              />
-            }
-            detail={
-              score === null
-                ? t("scoreCard.hiddenScore", {
-                    orderCount: assessment.evidence.orderCount,
-                    activeDays: assessment.evidence.activeDays,
-                  })
-                : copy.scoreBasis
-            }
-            nodes={[
-              { id: "loss", angle: 35, tone: "red" },
-              { id: "risk", angle: 150, tone: "amber" },
-              { id: "margin", angle: 265, tone: "green" },
-            ]}
-            ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
           />
         </div>
-      </SplitLayout>
+
+        <StatusChip tone={tone}>{presentation.label}</StatusChip>
+
+        <div className="score-copy">
+          {getAssessmentCopy(assessment, visualLeak, t)}
+        </div>
+
+        <div className="score-mini-grid dashboard-v2-health-metrics">
+          <MetricCard
+            density="dense"
+            tone="red"
+            label={copy.confirmedLoss}
+            value={money(visualLeak)}
+          />
+          <MetricCard
+            density="dense"
+            tone="amber"
+            label={copy.productsAtRisk}
+            value={t("scoreCard.productsDetected", {
+              count: visualProductsAtRisk,
+            })}
+          />
+          <MetricCard
+            density="dense"
+            tone="green"
+            label={copy.margin}
+            value={pct(visualMarginPct)}
+          />
+        </div>
+      </div>
     </PremiumPanel>
+  );
+}
+
+export function MarginHealthSignal({ assessment }: Pick<Props, "assessment">) {
+  const { messages, t } = useI18n();
+  const copy = messages.scoreCard;
+  const presentation = getScorePresentation(assessment, t);
+  const score = presentation.score;
+  const tone: VisualTone =
+    assessment.economicStatus === "healthy"
+      ? "green"
+      : assessment.economicStatus === "monitor"
+        ? "amber"
+        : assessment.economicStatus === "insufficient_data"
+          ? "cyan"
+          : "red";
+
+  return (
+    <div className="dashboard-v2-health-signal">
+      <SignalRing
+        value={score ?? 0}
+        variant="hero"
+        size="large"
+        motion="ambient"
+        tone={tone}
+        score={score ?? "—"}
+        suffix={score === null ? undefined : "/100"}
+        label={copy.eyebrow}
+        status={presentation.label}
+        info={
+          <MetricTooltip
+            content={{
+              title: copy.tooltipTitle,
+              description: copy.tooltipDescription,
+              note: copy.tooltipNote,
+            }}
+          />
+        }
+        detail={
+          score === null
+            ? t("scoreCard.hiddenScore", {
+                orderCount: assessment.evidence.orderCount,
+                activeDays: assessment.evidence.activeDays,
+              })
+            : copy.scoreBasis
+        }
+        nodes={[
+          { id: "loss", angle: 35, tone: "red" },
+          { id: "risk", angle: 150, tone: "amber" },
+          { id: "margin", angle: 265, tone: "green" },
+        ]}
+        ariaLabel={`${copy.eyebrow}: ${score ?? presentation.label}`}
+      />
+    </div>
   );
 }

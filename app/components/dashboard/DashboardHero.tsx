@@ -1,4 +1,5 @@
 import DashboardNav from "./DashboardNav";
+import type { ReactNode } from "react";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import {
   PremiumHero,
@@ -11,6 +12,7 @@ type Props = {
   setPeriod: (next: "7" | "30" | "90") => void;
   navigate: (path: string) => void;
   scrollToSection: (id: string) => void;
+  visual: ReactNode;
 
   analysisLoading: boolean;
   analysisText: string;
@@ -25,6 +27,7 @@ export default function DashboardHero({
   setPeriod,
   navigate,
   scrollToSection,
+  visual,
   analysisLoading,
   analysisText,
   analysisSteps,
@@ -42,6 +45,8 @@ export default function DashboardHero({
         eyebrow={copy.eyebrow}
         title={copy.title}
         description={copy.description}
+        visual={visual}
+        mobileVisualPosition="after-copy"
         actions={
           <div className="dashboard-v2-hero-actions">
             <SegmentedTabs
