@@ -17,8 +17,18 @@ import { formatMoneyCompact } from "~/utils/formatting";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
+import {
+  FlowPath,
+  MetricCard as V2MetricCard,
+  PremiumHero,
+  PremiumPanel,
+  SegmentedTabs,
+  StatusChip,
+  VisualButton,
+} from "~/components/ui/VisualSystem";
 
 import "~/styles/dashboard.css";
+import "~/styles/forecasting-v2.css";
 
 type Assumptions = {
   monthlyAds: number;
@@ -77,35 +87,35 @@ export async function loader({ request }: { request: Request }) {
 
   const dashboardData = growthAccess
     ? await loadMarginDashboardData({
-      admin,
-      session,
-      period,
-      locale,
-      billingStatus: billing,
-    })
+        admin,
+        session,
+        period,
+        locale,
+        billingStatus: billing,
+      })
     : createGrowthPreviewData({ billing, period, shop: session.shop });
 
   const assumptions = growthAccess
-    ? (await prisma.profitAssumptions.findUnique({
-      where: {
-        shop: session.shop,
-      },
-    })) ?? {
-      monthlyAds: 0,
-      monthlyShipping: 0,
-      monthlyOperating: 0,
-      paymentFeePct: 0,
-      transactionFeePct: 0,
-      taxReservePct: 0,
-    }
+    ? ((await prisma.profitAssumptions.findUnique({
+        where: {
+          shop: session.shop,
+        },
+      })) ?? {
+        monthlyAds: 0,
+        monthlyShipping: 0,
+        monthlyOperating: 0,
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      })
     : {
-      monthlyAds: 0,
-      monthlyShipping: 0,
-      monthlyOperating: 0,
-      paymentFeePct: 0,
-      transactionFeePct: 0,
-      taxReservePct: 0,
-    };
+        monthlyAds: 0,
+        monthlyShipping: 0,
+        monthlyOperating: 0,
+        paymentFeePct: 0,
+        transactionFeePct: 0,
+        taxReservePct: 0,
+      };
 
   return {
     ...dashboardData,
@@ -156,6 +166,7 @@ function SliderControl({
 
   return (
     <div
+      className="forecast-v2-slider"
       style={{
         padding: 18,
         borderRadius: 18,
@@ -283,7 +294,7 @@ function SliderControl({
   );
 }
 
-function MetricCard({
+function ForecastMetricCard({
   label,
   value,
   note,
@@ -299,62 +310,18 @@ function MetricCard({
   tooltip?: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        minWidth: 0,
-        borderRadius: 22,
-        padding: 22,
-        background: highlighted
-          ? "radial-gradient(circle at top left, rgba(34,197,94,0.17), transparent 42%), linear-gradient(180deg, rgba(17,24,39,0.98), rgba(7,12,21,0.99))"
-          : "linear-gradient(180deg, rgba(17,24,39,0.96), rgba(8,13,22,0.98))",
-        border: highlighted
-          ? "1px solid rgba(34,197,94,0.30)"
-          : "1px solid rgba(255,115,60,0.17)",
-        boxShadow: highlighted ? "0 18px 45px rgba(34,197,94,0.08)" : "none",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-          color: highlighted ? "#4ade80" : "rgba(255,255,255,0.52)",
-          fontSize: 10,
-          fontWeight: 950,
-          letterSpacing: "0.13em",
-          textTransform: "uppercase",
-        }}
-      >
-        <span>{label}</span>
-        {tooltip}
-      </div>
-
-      <div
-        style={{
-          marginTop: 13,
-          color: positive || highlighted ? "#22c55e" : "#f8fafc",
-          fontSize: 30,
-          lineHeight: 1,
-          fontWeight: 950,
-          letterSpacing: "-0.04em",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {value}
-      </div>
-
-      <div
-        style={{
-          marginTop: 9,
-          color: "rgba(255,255,255,0.58)",
-          fontSize: 12,
-          lineHeight: 1.45,
-          fontWeight: 750,
-        }}
-      >
-        {note}
-      </div>
-    </div>
+    <V2MetricCard
+      className="forecast-v2-metric"
+      tone={highlighted || positive ? "green" : "blue"}
+      label={
+        <span className="forecast-v2-metric-label">
+          {label}
+          {tooltip}
+        </span>
+      }
+      value={value}
+      detail={note}
+    />
   );
 }
 
@@ -372,12 +339,11 @@ export default function ForecastingPage() {
     economicSnapshot,
     shopHandle,
     growthAccess,
-  } =
-    useLoaderData() as LoaderData & {
-      growthAccess: boolean;
-      assumptions: Assumptions;
-      forecastPeriod: number;
-    };
+  } = useLoaderData() as LoaderData & {
+    growthAccess: boolean;
+    assumptions: Assumptions;
+    forecastPeriod: number;
+  };
 
   const money = (value: number, digits = 0) =>
     formatStoreMoney(value, currencyCode, locale, digits);
@@ -402,9 +368,7 @@ export default function ForecastingPage() {
     summary.economicRevenue ?? summary.revenue,
   );
 
-  const economicCogsInPeriod = safeNumber(
-    summary.economicCogs ?? summary.cogs,
-  );
+  const economicCogsInPeriod = safeNumber(summary.economicCogs ?? summary.cogs);
 
   const economicProfitInPeriod = safeNumber(
     summary.economicProfit ?? summary.profit,
@@ -537,19 +501,18 @@ export default function ForecastingPage() {
         revenue * (baselineGrossMarginPct / 100),
       );
       const marginImprovementValue = roundMoney(
-        revenue *
-        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
+        revenue * ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
       );
 
       const capturedRecovery = roundMoney(
         monthlyRecoverableProfit *
-        (recoveryCapture / 100) *
-        Math.min(1, month / Math.max(1, horizon / 2)),
+          (recoveryCapture / 100) *
+          Math.min(1, month / Math.max(1, horizon / 2)),
       );
 
       const grossProfit = roundMoney(
         baselineGrossProfit +
-        Math.max(marginImprovementValue, capturedRecovery),
+          Math.max(marginImprovementValue, capturedRecovery),
       );
 
       const fixedCosts = roundMoney(monthlyFixedCosts * costGrowthFactor);
@@ -604,6 +567,12 @@ export default function ForecastingPage() {
     cumulativeLift: 0,
     month: horizon,
   };
+  const forecastTrajectory: "rising" | "steady" | "falling" =
+    finalPoint.netProfit > currentMonthlyNetProfit
+      ? "rising"
+      : finalPoint.netProfit < currentMonthlyNetProfit
+        ? "falling"
+        : "steady";
 
   const scenarioComparison = (
     Object.entries(SCENARIO_INPUTS) as Array<
@@ -617,8 +586,7 @@ export default function ForecastingPage() {
 
     for (let month = 1; month <= horizon; month += 1) {
       const revenue = roundMoney(
-        monthlyRevenue *
-        Math.pow(1 + inputs.monthlyRevenueGrowth / 100, month),
+        monthlyRevenue * Math.pow(1 + inputs.monthlyRevenueGrowth / 100, month),
       );
       const baselineGrossMarginPct =
         monthlyRevenue > 0 ? (monthlyGrossProfit / monthlyRevenue) * 100 : 0;
@@ -631,21 +599,19 @@ export default function ForecastingPage() {
         revenue * (baselineGrossMarginPct / 100),
       );
       const marginImprovementValue = roundMoney(
-        revenue *
-        ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
+        revenue * ((improvedGrossMarginPct - baselineGrossMarginPct) / 100),
       );
       const capturedRecovery = roundMoney(
         monthlyRecoverableProfit *
-        (inputs.recoveryCapture / 100) *
-        Math.min(1, month / Math.max(1, horizon / 2)),
+          (inputs.recoveryCapture / 100) *
+          Math.min(1, month / Math.max(1, horizon / 2)),
       );
       const grossProfit = roundMoney(
         baselineGrossProfit +
-        Math.max(marginImprovementValue, capturedRecovery),
+          Math.max(marginImprovementValue, capturedRecovery),
       );
       const fixedCosts = roundMoney(
-        monthlyFixedCosts *
-        Math.pow(1 + inputs.monthlyCostGrowth / 100, month),
+        monthlyFixedCosts * Math.pow(1 + inputs.monthlyCostGrowth / 100, month),
       );
       const variableFees = roundMoney(revenue * (variableFeePct / 100));
 
@@ -657,9 +623,7 @@ export default function ForecastingPage() {
       );
       finalNetProfit = roundMoney(profitBeforeTaxReserve - taxReserve);
       finalNetMargin = revenue > 0 ? (finalNetProfit / revenue) * 100 : 0;
-      cumulativeNetProfit = roundMoney(
-        cumulativeNetProfit + finalNetProfit,
-      );
+      cumulativeNetProfit = roundMoney(cumulativeNetProfit + finalNetProfit);
     }
 
     return {
@@ -712,9 +676,9 @@ export default function ForecastingPage() {
     economicSnapshot?.confidence.score ??
     clamp(
       45 +
-      Math.min(25, rows.length * 1.5) +
-      (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
-      (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
+        Math.min(25, rows.length * 1.5) +
+        (periodDays >= 30 ? 15 : periodDays >= 14 ? 8 : 0) +
+        (monthlyFixedCosts > 0 || variableFeePct > 0 ? 15 : 0),
       45,
       98,
     );
@@ -738,7 +702,7 @@ export default function ForecastingPage() {
 
   const strongestLever =
     marginImprovement >= monthlyRevenueGrowth &&
-      marginImprovement >= recoveryCapture / 25
+    marginImprovement >= recoveryCapture / 25
       ? language === "it"
         ? "miglioramento del margine"
         : "margin improvement"
@@ -752,189 +716,207 @@ export default function ForecastingPage() {
 
   const recommendation =
     language === "it"
-      ? `Lo scenario ${selectedScenario === "custom"
-        ? "personalizzato"
-        : selectedScenario === "expected"
-          ? "realistico"
-          : selectedScenario === "worst"
-            ? "negativo"
-            : "positivo"
-      } porta il profitto netto mensile stimato da ${money(
-        currentMonthlyNetProfit,
-      )} a ${money(
-        finalPoint.netProfit,
-      )} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${number(
-        marginImprovement,
-        1,
-      )} punti e il recupero del ${pct(
-        recoveryCapture,
-        0,
-      )} delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
-        finalPoint.cumulativeLift,
-      )}.`
-      : `The ${selectedScenario === "custom"
-        ? "custom"
-        : selectedScenario === "expected"
-          ? "expected-case"
-          : selectedScenario === "worst"
-            ? "worst-case"
-            : "best-case"
-      } scenario moves estimated monthly net profit from ${money(
-        currentMonthlyNetProfit,
-      )} to ${money(
-        finalPoint.netProfit,
-      )} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${number(
-        marginImprovement,
-        1,
-      )}-point margin improvement and ${pct(
-        recoveryCapture,
-        0,
-      )} of identified opportunities captured, estimated cumulative additional profit is ${money(
-        finalPoint.cumulativeLift,
-      )}.`;
+      ? `Lo scenario ${
+          selectedScenario === "custom"
+            ? "personalizzato"
+            : selectedScenario === "expected"
+              ? "realistico"
+              : selectedScenario === "worst"
+                ? "negativo"
+                : "positivo"
+        } porta il profitto netto mensile stimato da ${money(
+          currentMonthlyNetProfit,
+        )} a ${money(
+          finalPoint.netProfit,
+        )} entro ${horizon} mesi. La leva con l'impatto maggiore è il ${strongestLever}. Con un miglioramento del margine di ${number(
+          marginImprovement,
+          1,
+        )} punti e il recupero del ${pct(
+          recoveryCapture,
+          0,
+        )} delle opportunità individuate, il profitto cumulativo aggiuntivo stimato è ${money(
+          finalPoint.cumulativeLift,
+        )}.`
+      : `The ${
+          selectedScenario === "custom"
+            ? "custom"
+            : selectedScenario === "expected"
+              ? "expected-case"
+              : selectedScenario === "worst"
+                ? "worst-case"
+                : "best-case"
+        } scenario moves estimated monthly net profit from ${money(
+          currentMonthlyNetProfit,
+        )} to ${money(
+          finalPoint.netProfit,
+        )} within ${horizon} months. The strongest lever is ${strongestLever}. With a ${number(
+          marginImprovement,
+          1,
+        )}-point margin improvement and ${pct(
+          recoveryCapture,
+          0,
+        )} of identified opportunities captured, estimated cumulative additional profit is ${money(
+          finalPoint.cumulativeLift,
+        )}.`;
 
   const actions =
     language === "it"
       ? [
-        marginImprovement > 0
-          ? `Porta gradualmente il margine economico a +${number(
-            marginImprovement,
-            1,
-          )} punti rispetto al livello attuale.`
-          : "Mantieni stabile il margine economico e monitora i prodotti più deboli.",
-        recoveryCapture > 0
-          ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
-          : "Valuta almeno una parte delle opportunità di recupero già individuate.",
-        monthlyCostGrowth > 1
-          ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
-          : "La crescita dei costi è sotto controllo nello scenario selezionato.",
-      ]
+          marginImprovement > 0
+            ? `Porta gradualmente il margine economico a +${number(
+                marginImprovement,
+                1,
+              )} punti rispetto al livello attuale.`
+            : "Mantieni stabile il margine economico e monitora i prodotti più deboli.",
+          recoveryCapture > 0
+            ? `Intervieni prima sui ${impactedProducts} prodotti con opportunità di recupero.`
+            : "Valuta almeno una parte delle opportunità di recupero già individuate.",
+          monthlyCostGrowth > 1
+            ? "Contieni la crescita dei costi mensili: sta riducendo il beneficio della crescita."
+            : "La crescita dei costi è sotto controllo nello scenario selezionato.",
+        ]
       : [
-        marginImprovement > 0
-          ? `Gradually lift economic margin by ${number(
-            marginImprovement,
-            1,
-          )} points from the current level.`
-          : "Keep economic margin stable and monitor the weakest products.",
-        recoveryCapture > 0
-          ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
-          : "Capture at least part of the recovery opportunities already identified.",
-        monthlyCostGrowth > 1
-          ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
-          : "Cost growth remains controlled in the selected scenario.",
-      ];
+          marginImprovement > 0
+            ? `Gradually lift economic margin by ${number(
+                marginImprovement,
+                1,
+              )} points from the current level.`
+            : "Keep economic margin stable and monitor the weakest products.",
+          recoveryCapture > 0
+            ? `Prioritize the ${impactedProducts} products with identified recovery potential.`
+            : "Capture at least part of the recovery opportunities already identified.",
+          monthlyCostGrowth > 1
+            ? "Contain monthly cost growth because it is reducing the benefit of revenue growth."
+            : "Cost growth remains controlled in the selected scenario.",
+        ];
 
-  const displayHealth = language === "fr"
-    ? finalPoint.netMargin >= 20
-      ? "Très solide"
-      : finalPoint.netMargin >= 10
-        ? "En amélioration"
-        : finalPoint.netMargin >= 0
-          ? "Fragile"
-          : "À risque"
-    : language === "de"
+  const displayHealth =
+    language === "fr"
       ? finalPoint.netMargin >= 20
-        ? "Sehr solide"
+        ? "Très solide"
         : finalPoint.netMargin >= 10
-          ? "Verbessert sich"
+          ? "En amélioration"
           : finalPoint.netMargin >= 0
-            ? "Anfällig"
-            : "Gefährdet"
-      : language === "es"
+            ? "Fragile"
+            : "À risque"
+      : language === "de"
         ? finalPoint.netMargin >= 20
-          ? "Muy sólida"
+          ? "Sehr solide"
           : finalPoint.netMargin >= 10
-            ? "Mejorando"
+            ? "Verbessert sich"
             : finalPoint.netMargin >= 0
-              ? "Frágil"
-              : "En riesgo"
-      : language === "pt-BR"
-        ? finalPoint.netMargin >= 20
-          ? "Muito saudável"
-          : finalPoint.netMargin >= 10
-            ? "Em melhora"
-            : finalPoint.netMargin >= 0
-              ? "Frágil"
-              : "Em risco"
-      : health;
+              ? "Anfällig"
+              : "Gefährdet"
+        : language === "es"
+          ? finalPoint.netMargin >= 20
+            ? "Muy sólida"
+            : finalPoint.netMargin >= 10
+              ? "Mejorando"
+              : finalPoint.netMargin >= 0
+                ? "Frágil"
+                : "En riesgo"
+          : language === "pt-BR"
+            ? finalPoint.netMargin >= 20
+              ? "Muito saudável"
+              : finalPoint.netMargin >= 10
+                ? "Em melhora"
+                : finalPoint.netMargin >= 0
+                  ? "Frágil"
+                  : "Em risco"
+            : health;
 
-  const displayStrongestLever = language === "fr"
-    ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
-      ? "l'amélioration de la marge"
-      : monthlyRevenueGrowth >= recoveryCapture / 25
-        ? "la croissance du chiffre d'affaires"
-        : "la récupération des opportunités"
-    : language === "de"
-      ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
-        ? "die Margenverbesserung"
+  const displayStrongestLever =
+    language === "fr"
+      ? marginImprovement >= monthlyRevenueGrowth &&
+        marginImprovement >= recoveryCapture / 25
+        ? "l'amélioration de la marge"
         : monthlyRevenueGrowth >= recoveryCapture / 25
-          ? "das Umsatzwachstum"
-          : "die Nutzung von Gewinnpotenzialen"
-      : language === "es"
-        ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
-          ? "la mejora del margen"
+          ? "la croissance du chiffre d'affaires"
+          : "la récupération des opportunités"
+      : language === "de"
+        ? marginImprovement >= monthlyRevenueGrowth &&
+          marginImprovement >= recoveryCapture / 25
+          ? "die Margenverbesserung"
           : monthlyRevenueGrowth >= recoveryCapture / 25
-            ? "el crecimiento de los ingresos"
-            : "la recuperación de oportunidades"
-      : language === "pt-BR"
-        ? marginImprovement >= monthlyRevenueGrowth && marginImprovement >= recoveryCapture / 25
-          ? "a melhoria da margem"
-          : monthlyRevenueGrowth >= recoveryCapture / 25
-            ? "o crescimento da receita"
-            : "a recuperação de oportunidades"
-      : strongestLever;
+            ? "das Umsatzwachstum"
+            : "die Nutzung von Gewinnpotenzialen"
+        : language === "es"
+          ? marginImprovement >= monthlyRevenueGrowth &&
+            marginImprovement >= recoveryCapture / 25
+            ? "la mejora del margen"
+            : monthlyRevenueGrowth >= recoveryCapture / 25
+              ? "el crecimiento de los ingresos"
+              : "la recuperación de oportunidades"
+          : language === "pt-BR"
+            ? marginImprovement >= monthlyRevenueGrowth &&
+              marginImprovement >= recoveryCapture / 25
+              ? "a melhoria da margem"
+              : monthlyRevenueGrowth >= recoveryCapture / 25
+                ? "o crescimento da receita"
+                : "a recuperação de oportunidades"
+            : strongestLever;
 
-  const displayRecommendation = language === "fr"
-    ? `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`
-    : language === "de"
-      ? `Das ${selectedScenario === "custom" ? "benutzerdefinierte" : selectedScenario === "expected" ? "realistische" : selectedScenario === "worst" ? "ungünstige" : "günstige"} Szenario erhöht den geschätzten monatlichen Nettogewinn innerhalb von ${horizon} Monaten von ${money(currentMonthlyNetProfit)} auf ${money(finalPoint.netProfit)}. Der stärkste Hebel ist ${displayStrongestLever}. Bei einer Margenverbesserung um ${number(marginImprovement, 1)} Punkte und der Nutzung von ${pct(recoveryCapture, 0)} der erkannten Potenziale beträgt der geschätzte kumulierte Zusatzgewinn ${money(finalPoint.cumulativeLift)}.`
-      : language === "es"
-        ? `El escenario ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorable" : "favorable"} eleva el beneficio neto mensual estimado de ${money(currentMonthlyNetProfit)} a ${money(finalPoint.netProfit)} en ${horizon} meses. La palanca más importante es ${displayStrongestLever}. Con una mejora del margen de ${number(marginImprovement, 1)} puntos y la recuperación del ${pct(recoveryCapture, 0)} de las oportunidades identificadas, el beneficio adicional acumulado estimado alcanza ${money(finalPoint.cumulativeLift)}.`
-      : language === "pt-BR"
-        ? `O cenário ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorável" : "favorável"} eleva o lucro líquido mensal estimado de ${money(currentMonthlyNetProfit)} para ${money(finalPoint.netProfit)} em ${horizon} meses. A principal alavanca é ${displayStrongestLever}. Com uma melhoria de margem de ${number(marginImprovement, 1)} pontos e a recuperação de ${pct(recoveryCapture, 0)} das oportunidades identificadas, o lucro adicional acumulado estimado chega a ${money(finalPoint.cumulativeLift)}.`
-      : recommendation;
+  const displayRecommendation =
+    language === "fr"
+      ? `Le scénario ${selectedScenario === "custom" ? "personnalisé" : selectedScenario === "expected" ? "prévu" : selectedScenario === "worst" ? "défavorable" : "favorable"} fait passer le bénéfice net mensuel estimé de ${money(currentMonthlyNetProfit)} à ${money(finalPoint.netProfit)} en ${horizon} mois. Le levier le plus important est ${displayStrongestLever}. Avec une amélioration de la marge de ${number(marginImprovement, 1)} points et la récupération de ${pct(recoveryCapture, 0)} des opportunités identifiées, le bénéfice supplémentaire cumulé estimé atteint ${money(finalPoint.cumulativeLift)}.`
+      : language === "de"
+        ? `Das ${selectedScenario === "custom" ? "benutzerdefinierte" : selectedScenario === "expected" ? "realistische" : selectedScenario === "worst" ? "ungünstige" : "günstige"} Szenario erhöht den geschätzten monatlichen Nettogewinn innerhalb von ${horizon} Monaten von ${money(currentMonthlyNetProfit)} auf ${money(finalPoint.netProfit)}. Der stärkste Hebel ist ${displayStrongestLever}. Bei einer Margenverbesserung um ${number(marginImprovement, 1)} Punkte und der Nutzung von ${pct(recoveryCapture, 0)} der erkannten Potenziale beträgt der geschätzte kumulierte Zusatzgewinn ${money(finalPoint.cumulativeLift)}.`
+        : language === "es"
+          ? `El escenario ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorable" : "favorable"} eleva el beneficio neto mensual estimado de ${money(currentMonthlyNetProfit)} a ${money(finalPoint.netProfit)} en ${horizon} meses. La palanca más importante es ${displayStrongestLever}. Con una mejora del margen de ${number(marginImprovement, 1)} puntos y la recuperación del ${pct(recoveryCapture, 0)} de las oportunidades identificadas, el beneficio adicional acumulado estimado alcanza ${money(finalPoint.cumulativeLift)}.`
+          : language === "pt-BR"
+            ? `O cenário ${selectedScenario === "custom" ? "personalizado" : selectedScenario === "expected" ? "previsto" : selectedScenario === "worst" ? "desfavorável" : "favorável"} eleva o lucro líquido mensal estimado de ${money(currentMonthlyNetProfit)} para ${money(finalPoint.netProfit)} em ${horizon} meses. A principal alavanca é ${displayStrongestLever}. Com uma melhoria de margem de ${number(marginImprovement, 1)} pontos e a recuperação de ${pct(recoveryCapture, 0)} das oportunidades identificadas, o lucro adicional acumulado estimado chega a ${money(finalPoint.cumulativeLift)}.`
+            : recommendation;
 
-  const displayActions = language === "fr" ? [
-    marginImprovement > 0
-      ? `Augmentez progressivement la marge économique de ${number(marginImprovement, 1)} points par rapport au niveau actuel.`
-      : "Maintenez la marge économique stable et surveillez les produits les plus faibles.",
-    recoveryCapture > 0
-      ? `Donnez la priorité aux ${impactedProducts} produits présentant un potentiel de récupération identifié.`
-      : "Exploitez au moins une partie des opportunités de récupération déjà identifiées.",
-    monthlyCostGrowth > 1
-      ? "Contenez la croissance mensuelle des coûts, car elle réduit le bénéfice de la croissance du chiffre d'affaires."
-      : "La croissance des coûts reste maîtrisée dans le scénario sélectionné.",
-  ] : language === "de" ? [
-    marginImprovement > 0
-      ? `Erhöhen Sie die wirtschaftliche Marge schrittweise um ${number(marginImprovement, 1)} Punkte gegenüber dem aktuellen Niveau.`
-      : "Halten Sie die wirtschaftliche Marge stabil und beobachten Sie die schwächsten Produkte.",
-    recoveryCapture > 0
-      ? `Priorisieren Sie die ${impactedProducts} Produkte mit erkanntem Gewinnpotenzial.`
-      : "Nutzen Sie mindestens einen Teil der bereits erkannten Gewinnpotenziale.",
-    monthlyCostGrowth > 1
-      ? "Begrenzen Sie das monatliche Kostenwachstum, da es den Nutzen des Umsatzwachstums verringert."
-      : "Das Kostenwachstum bleibt im ausgewählten Szenario unter Kontrolle.",
-  ] : language === "es" ? [
-    marginImprovement > 0
-      ? `Aumenta gradualmente el margen económico en ${number(marginImprovement, 1)} puntos respecto al nivel actual.`
-      : "Mantén estable el margen económico y supervisa los productos más débiles.",
-    recoveryCapture > 0
-      ? `Prioriza los ${impactedProducts} productos con potencial de recuperación identificado.`
-      : "Aprovecha al menos una parte de las oportunidades de recuperación ya identificadas.",
-    monthlyCostGrowth > 1
-      ? "Contén el crecimiento mensual de los costes, ya que reduce el beneficio del crecimiento de los ingresos."
-      : "El crecimiento de los costes se mantiene controlado en el escenario seleccionado.",
-  ] : language === "pt-BR" ? [
-    marginImprovement > 0
-      ? `Aumente gradualmente a margem econômica em ${number(marginImprovement, 1)} pontos em relação ao nível atual.`
-      : "Mantenha a margem econômica estável e monitore os produtos mais fracos.",
-    recoveryCapture > 0
-      ? `Priorize os ${impactedProducts} produtos com potencial de recuperação identificado.`
-      : "Capture pelo menos parte das oportunidades de recuperação já identificadas.",
-    monthlyCostGrowth > 1
-      ? "Contenha o crescimento mensal dos custos, pois ele reduz o benefício do crescimento da receita."
-      : "O crescimento dos custos permanece controlado no cenário selecionado.",
-  ] : actions;
+  const displayActions =
+    language === "fr"
+      ? [
+          marginImprovement > 0
+            ? `Augmentez progressivement la marge économique de ${number(marginImprovement, 1)} points par rapport au niveau actuel.`
+            : "Maintenez la marge économique stable et surveillez les produits les plus faibles.",
+          recoveryCapture > 0
+            ? `Donnez la priorité aux ${impactedProducts} produits présentant un potentiel de récupération identifié.`
+            : "Exploitez au moins une partie des opportunités de récupération déjà identifiées.",
+          monthlyCostGrowth > 1
+            ? "Contenez la croissance mensuelle des coûts, car elle réduit le bénéfice de la croissance du chiffre d'affaires."
+            : "La croissance des coûts reste maîtrisée dans le scénario sélectionné.",
+        ]
+      : language === "de"
+        ? [
+            marginImprovement > 0
+              ? `Erhöhen Sie die wirtschaftliche Marge schrittweise um ${number(marginImprovement, 1)} Punkte gegenüber dem aktuellen Niveau.`
+              : "Halten Sie die wirtschaftliche Marge stabil und beobachten Sie die schwächsten Produkte.",
+            recoveryCapture > 0
+              ? `Priorisieren Sie die ${impactedProducts} Produkte mit erkanntem Gewinnpotenzial.`
+              : "Nutzen Sie mindestens einen Teil der bereits erkannten Gewinnpotenziale.",
+            monthlyCostGrowth > 1
+              ? "Begrenzen Sie das monatliche Kostenwachstum, da es den Nutzen des Umsatzwachstums verringert."
+              : "Das Kostenwachstum bleibt im ausgewählten Szenario unter Kontrolle.",
+          ]
+        : language === "es"
+          ? [
+              marginImprovement > 0
+                ? `Aumenta gradualmente el margen económico en ${number(marginImprovement, 1)} puntos respecto al nivel actual.`
+                : "Mantén estable el margen económico y supervisa los productos más débiles.",
+              recoveryCapture > 0
+                ? `Prioriza los ${impactedProducts} productos con potencial de recuperación identificado.`
+                : "Aprovecha al menos una parte de las oportunidades de recuperación ya identificadas.",
+              monthlyCostGrowth > 1
+                ? "Contén el crecimiento mensual de los costes, ya que reduce el beneficio del crecimiento de los ingresos."
+                : "El crecimiento de los costes se mantiene controlado en el escenario seleccionado.",
+            ]
+          : language === "pt-BR"
+            ? [
+                marginImprovement > 0
+                  ? `Aumente gradualmente a margem econômica em ${number(marginImprovement, 1)} pontos em relação ao nível atual.`
+                  : "Mantenha a margem econômica estável e monitore os produtos mais fracos.",
+                recoveryCapture > 0
+                  ? `Priorize os ${impactedProducts} produtos com potencial de recuperação identificado.`
+                  : "Capture pelo menos parte das oportunidades de recuperação já identificadas.",
+                monthlyCostGrowth > 1
+                  ? "Contenha o crescimento mensal dos custos, pois ele reduz o benefício do crescimento da receita."
+                  : "O crescimento dos custos permanece controlado no cenário selecionado.",
+              ]
+            : actions;
 
   const exportForecastCsv = () => {
     type CsvValue = string | number;
@@ -970,73 +952,288 @@ export default function ForecastingPage() {
       ["MarginLab Profit Forecasting"],
       [],
       [language === "it" ? "METADATI" : "METADATA"],
-      [language === "it" ? "Voce" : "Field", language === "it" ? "Valore" : "Value"],
+      [
+        language === "it" ? "Voce" : "Field",
+        language === "it" ? "Valore" : "Value",
+      ],
       ["Store", shopHandle ?? ""],
-      [language === "it" ? "Data esportazione" : "Export date", new Date().toISOString()],
-      [language === "it" ? "Periodo osservato (giorni)" : "Observed period (days)", periodDays],
-      [language === "it" ? "Orizzonte previsione (mesi)" : "Forecast horizon (months)", horizon],
+      [
+        language === "it" ? "Data esportazione" : "Export date",
+        new Date().toISOString(),
+      ],
+      [
+        language === "it"
+          ? "Periodo osservato (giorni)"
+          : "Observed period (days)",
+        periodDays,
+      ],
+      [
+        language === "it"
+          ? "Orizzonte previsione (mesi)"
+          : "Forecast horizon (months)",
+        horizon,
+      ],
       [language === "it" ? "Valuta" : "Currency", currencyCode],
       [language === "it" ? "Lingua" : "Language", language.toUpperCase()],
-      [language === "it" ? "Scenario selezionato" : "Selected scenario", scenarioLabels[selectedScenario]],
+      [
+        language === "it" ? "Scenario selezionato" : "Selected scenario",
+        scenarioLabels[selectedScenario],
+      ],
       ["Data Confidence", round(dataConfidence)],
       [],
-      [language === "it" ? "BASELINE ECONOMICA MENSILE" : "MONTHLY ECONOMIC BASELINE"],
-      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Ricavi economici mensili" : "Monthly economic revenue", round(monthlyRevenue)],
+      [
+        language === "it"
+          ? "BASELINE ECONOMICA MENSILE"
+          : "MONTHLY ECONOMIC BASELINE",
+      ],
+      [
+        language === "it" ? "Voce" : "Metric",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it"
+          ? "Ricavi economici mensili"
+          : "Monthly economic revenue",
+        round(monthlyRevenue),
+      ],
       ["COGS", round(monthlyCogs)],
-      [language === "it" ? "Profitto economico mensile" : "Monthly economic profit", round(monthlyGrossProfit)],
-      [language === "it" ? "Costi fissi mensili" : "Monthly fixed costs", round(monthlyFixedCosts)],
-      [language === "it" ? "Commissioni variabili mensili" : "Monthly variable fees", round(currentMonthlyVariableFees)],
-      [language === "it" ? "Riserva fiscale gestionale mensile" : "Monthly business-model tax reserve", round(currentMonthlyTaxReserve)],
-      [language === "it" ? "Profitto netto mensile" : "Monthly net profit", round(currentMonthlyNetProfit)],
-      [language === "it" ? "Margine netto attuale (%)" : "Current net margin (%)", round(currentNetMargin)],
-      [language === "it" ? "Opportunita mensile recuperabile" : "Monthly recoverable opportunity", round(monthlyRecoverableProfit)],
-      [language === "it" ? "Prodotti con opportunita" : "Products with opportunity", impactedProducts],
+      [
+        language === "it"
+          ? "Profitto economico mensile"
+          : "Monthly economic profit",
+        round(monthlyGrossProfit),
+      ],
+      [
+        language === "it" ? "Costi fissi mensili" : "Monthly fixed costs",
+        round(monthlyFixedCosts),
+      ],
+      [
+        language === "it"
+          ? "Commissioni variabili mensili"
+          : "Monthly variable fees",
+        round(currentMonthlyVariableFees),
+      ],
+      [
+        language === "it"
+          ? "Riserva fiscale gestionale mensile"
+          : "Monthly business-model tax reserve",
+        round(currentMonthlyTaxReserve),
+      ],
+      [
+        language === "it" ? "Profitto netto mensile" : "Monthly net profit",
+        round(currentMonthlyNetProfit),
+      ],
+      [
+        language === "it"
+          ? "Margine netto attuale (%)"
+          : "Current net margin (%)",
+        round(currentNetMargin),
+      ],
+      [
+        language === "it"
+          ? "Opportunita mensile recuperabile"
+          : "Monthly recoverable opportunity",
+        round(monthlyRecoverableProfit),
+      ],
+      [
+        language === "it"
+          ? "Prodotti con opportunita"
+          : "Products with opportunity",
+        impactedProducts,
+      ],
       [],
       [language === "it" ? "IPOTESI DELLO SCENARIO" : "SCENARIO ASSUMPTIONS"],
-      [language === "it" ? "Ipotesi" : "Assumption", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Crescita mensile ricavi (%)" : "Monthly revenue growth (%)", round(monthlyRevenueGrowth)],
-      [language === "it" ? "Miglioramento margine (punti %)" : "Margin improvement (percentage points)", round(marginImprovement)],
-      [language === "it" ? "Crescita mensile costi (%)" : "Monthly cost growth (%)", round(monthlyCostGrowth)],
-      [language === "it" ? "Recupero opportunita (%)" : "Opportunity recovery (%)", round(recoveryCapture)],
-      [language === "it" ? "Obiettivo profitto mensile" : "Monthly profit goal", round(profitGoal)],
-      [language === "it" ? "Spesa pubblicitaria mensile" : "Monthly advertising", round(assumptions.monthlyAds)],
-      [language === "it" ? "Spedizioni mensili" : "Monthly shipping", round(assumptions.monthlyShipping)],
-      [language === "it" ? "Costi operativi mensili" : "Monthly operating costs", round(assumptions.monthlyOperating)],
-      [language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)", round(assumptions.paymentFeePct)],
-      [language === "it" ? "Commissioni transazione (%)" : "Transaction fees (%)", round(assumptions.transactionFeePct)],
-      [language === "it" ? "Riserva fiscale gestionale (%)" : "Business-model tax reserve (%)", round(assumptions.taxReservePct)],
+      [
+        language === "it" ? "Ipotesi" : "Assumption",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it"
+          ? "Crescita mensile ricavi (%)"
+          : "Monthly revenue growth (%)",
+        round(monthlyRevenueGrowth),
+      ],
+      [
+        language === "it"
+          ? "Miglioramento margine (punti %)"
+          : "Margin improvement (percentage points)",
+        round(marginImprovement),
+      ],
+      [
+        language === "it"
+          ? "Crescita mensile costi (%)"
+          : "Monthly cost growth (%)",
+        round(monthlyCostGrowth),
+      ],
+      [
+        language === "it"
+          ? "Recupero opportunita (%)"
+          : "Opportunity recovery (%)",
+        round(recoveryCapture),
+      ],
+      [
+        language === "it"
+          ? "Obiettivo profitto mensile"
+          : "Monthly profit goal",
+        round(profitGoal),
+      ],
+      [
+        language === "it"
+          ? "Spesa pubblicitaria mensile"
+          : "Monthly advertising",
+        round(assumptions.monthlyAds),
+      ],
+      [
+        language === "it" ? "Spedizioni mensili" : "Monthly shipping",
+        round(assumptions.monthlyShipping),
+      ],
+      [
+        language === "it"
+          ? "Costi operativi mensili"
+          : "Monthly operating costs",
+        round(assumptions.monthlyOperating),
+      ],
+      [
+        language === "it" ? "Commissioni pagamento (%)" : "Payment fees (%)",
+        round(assumptions.paymentFeePct),
+      ],
+      [
+        language === "it"
+          ? "Commissioni transazione (%)"
+          : "Transaction fees (%)",
+        round(assumptions.transactionFeePct),
+      ],
+      [
+        language === "it"
+          ? "Riserva fiscale gestionale (%)"
+          : "Business-model tax reserve (%)",
+        round(assumptions.taxReservePct),
+      ],
       [],
       [language === "it" ? "RISULTATI DELLA PREVISIONE" : "FORECAST RESULTS"],
-      [language === "it" ? "Voce" : "Metric", language === "it" ? "Valore" : "Value"],
-      [language === "it" ? "Ricavi totali previsti" : "Total projected revenue", round(totalProjectedRevenue)],
-      [language === "it" ? "Profitto netto totale previsto" : "Total projected net profit", round(totalProjectedNetProfit)],
-      [language === "it" ? "Margine netto medio (%)" : "Average net margin (%)", round(averageProjectedNetMargin)],
-      [language === "it" ? "Profitto netto al mese finale" : "Final-month net profit", round(finalPoint.netProfit)],
-      [language === "it" ? "Margine netto al mese finale (%)" : "Final-month net margin (%)", round(finalPoint.netMargin)],
-      [language === "it" ? "Profitto aggiuntivo cumulativo" : "Cumulative profit lift", round(finalPoint.cumulativeLift)],
+      [
+        language === "it" ? "Voce" : "Metric",
+        language === "it" ? "Valore" : "Value",
+      ],
+      [
+        language === "it"
+          ? "Ricavi totali previsti"
+          : "Total projected revenue",
+        round(totalProjectedRevenue),
+      ],
+      [
+        language === "it"
+          ? "Profitto netto totale previsto"
+          : "Total projected net profit",
+        round(totalProjectedNetProfit),
+      ],
+      [
+        language === "it"
+          ? "Margine netto medio (%)"
+          : "Average net margin (%)",
+        round(averageProjectedNetMargin),
+      ],
+      [
+        language === "it"
+          ? "Profitto netto al mese finale"
+          : "Final-month net profit",
+        round(finalPoint.netProfit),
+      ],
+      [
+        language === "it"
+          ? "Margine netto al mese finale (%)"
+          : "Final-month net margin (%)",
+        round(finalPoint.netMargin),
+      ],
+      [
+        language === "it"
+          ? "Profitto aggiuntivo cumulativo"
+          : "Cumulative profit lift",
+        round(finalPoint.cumulativeLift),
+      ],
       [language === "it" ? "Mese migliore" : "Best month", bestMonth.month],
-      [language === "it" ? "Profitto nel mese migliore" : "Best-month net profit", round(bestMonth.netProfit)],
-      [language === "it" ? "Primo mese obiettivo" : "First goal month", firstGoalMonth ?? (language === "it" ? "Oltre l'orizzonte" : "Beyond horizon")],
+      [
+        language === "it"
+          ? "Profitto nel mese migliore"
+          : "Best-month net profit",
+        round(bestMonth.netProfit),
+      ],
+      [
+        language === "it" ? "Primo mese obiettivo" : "First goal month",
+        firstGoalMonth ??
+          (language === "it" ? "Oltre l'orizzonte" : "Beyond horizon"),
+      ],
       [language === "it" ? "Salute prevista" : "Forecast health", health],
-      [language === "it" ? "Leva principale" : "Strongest lever", strongestLever],
+      [
+        language === "it" ? "Leva principale" : "Strongest lever",
+        strongestLever,
+      ],
       [],
       [language === "it" ? "DETTAGLIO MENSILE" : "MONTHLY DETAIL"],
-      [language === "it" ? "Mese" : "Month", language === "it" ? "Ricavi" : "Revenue", language === "it" ? "Profitto lordo" : "Gross profit", language === "it" ? "Profitto netto" : "Net profit", language === "it" ? "Margine netto (%)" : "Net margin (%)", language === "it" ? "Profitto netto cumulativo" : "Cumulative net profit", language === "it" ? "Incremento cumulativo" : "Cumulative lift"],
-      ...forecast.map((item) => [item.month, round(item.revenue), round(item.grossProfit), round(item.netProfit), round(item.netMargin), round(item.cumulativeNetProfit), round(item.cumulativeLift)] as CsvValue[]),
+      [
+        language === "it" ? "Mese" : "Month",
+        language === "it" ? "Ricavi" : "Revenue",
+        language === "it" ? "Profitto lordo" : "Gross profit",
+        language === "it" ? "Profitto netto" : "Net profit",
+        language === "it" ? "Margine netto (%)" : "Net margin (%)",
+        language === "it"
+          ? "Profitto netto cumulativo"
+          : "Cumulative net profit",
+        language === "it" ? "Incremento cumulativo" : "Cumulative lift",
+      ],
+      ...forecast.map(
+        (item) =>
+          [
+            item.month,
+            round(item.revenue),
+            round(item.grossProfit),
+            round(item.netProfit),
+            round(item.netMargin),
+            round(item.cumulativeNetProfit),
+            round(item.cumulativeLift),
+          ] as CsvValue[],
+      ),
       [],
       [language === "it" ? "CONFRONTO SCENARI" : "SCENARIO COMPARISON"],
-      [language === "it" ? "Scenario" : "Scenario", language === "it" ? "Profitto netto mese finale" : "Final-month net profit", language === "it" ? "Margine netto finale (%)" : "Final net margin (%)", language === "it" ? "Profitto netto cumulativo" : "Cumulative net profit", language === "it" ? "Differenza cumulativa dalla baseline" : "Cumulative difference from baseline"],
-      ...scenarioComparison.map((item) => [comparisonLabels[item.key], round(item.finalNetProfit), round(item.finalNetMargin), round(item.cumulativeNetProfit), round(item.differenceFromCurrent)] as CsvValue[]),
+      [
+        language === "it" ? "Scenario" : "Scenario",
+        language === "it"
+          ? "Profitto netto mese finale"
+          : "Final-month net profit",
+        language === "it" ? "Margine netto finale (%)" : "Final net margin (%)",
+        language === "it"
+          ? "Profitto netto cumulativo"
+          : "Cumulative net profit",
+        language === "it"
+          ? "Differenza cumulativa dalla baseline"
+          : "Cumulative difference from baseline",
+      ],
+      ...scenarioComparison.map(
+        (item) =>
+          [
+            comparisonLabels[item.key],
+            round(item.finalNetProfit),
+            round(item.finalNetMargin),
+            round(item.cumulativeNetProfit),
+            round(item.differenceFromCurrent),
+          ] as CsvValue[],
+      ),
       [],
       [language === "it" ? "RACCOMANDAZIONE" : "RECOMMENDATION"],
       [recommendation],
       [],
       [language === "it" ? "AZIONI CONSIGLIATE" : "RECOMMENDED ACTIONS"],
-      [language === "it" ? "Priorita" : "Priority", language === "it" ? "Azione" : "Action"],
+      [
+        language === "it" ? "Priorita" : "Priority",
+        language === "it" ? "Azione" : "Action",
+      ],
       ...actions.map((action, index) => [index + 1, action] as CsvValue[]),
       [],
-      [language === "it" ? "Nota: questa previsione e uno scenario decisionale basato sui dati e sulle ipotesi correnti, non un risultato garantito. Gli scenari alternativi non sono additivi." : "Note: this forecast is a decision scenario based on current data and assumptions, not a guaranteed outcome. Alternative scenarios are non-additive."],
+      [
+        language === "it"
+          ? "Nota: questa previsione e uno scenario decisionale basato sui dati e sulle ipotesi correnti, non un risultato garantito. Gli scenari alternativi non sono additivi."
+          : "Note: this forecast is a decision scenario based on current data and assumptions, not a guaranteed outcome. Alternative scenarios are non-additive.",
+      ],
     ];
 
     const csv = `\uFEFF${rowsToExport.map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
@@ -1044,7 +1241,12 @@ export default function ForecastingPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${shopHandle || "store"}-forecast-${scenarioLabels[selectedScenario].toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}-${horizon}m.csv`;
+    link.download = `${shopHandle || "store"}-forecast-${scenarioLabels[
+      selectedScenario
+    ]
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")}-${horizon}m.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -1056,62 +1258,85 @@ export default function ForecastingPage() {
       <div className="dashboard-container">
         <DashboardNav active="forecasting" navigate={navigate} />
 
-        <div className="hero-header">
-          <div>
-            <div className="alert-pill">
-              <span className="alert-dot" />
-              {growthAccess
-                ? copy.auto.f001
-                : copy.auto.f002}
+        <PremiumHero
+          className="forecast-v2-hero"
+          tone={
+            forecastTrajectory === "rising"
+              ? "green"
+              : forecastTrajectory === "falling"
+                ? "red"
+                : "blue"
+          }
+          eyebrow={copy.auto.f003}
+          title={copy.auto.f004}
+          description={copy.auto.f005}
+          actions={
+            <>
+              <StatusChip
+                tone={growthAccess ? "green" : "amber"}
+                pulse={growthAccess}
+              >
+                {growthAccess ? copy.auto.f001 : copy.auto.f002}
+              </StatusChip>
+              <StatusChip tone="blue">{copy.auto.f006}</StatusChip>
+              {!growthAccess ? (
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.auto.f007}
+                </VisualButton>
+              ) : null}
+            </>
+          }
+          visual={
+            <div className="forecast-v2-trajectory">
+              <FlowPath
+                tone={
+                  forecastTrajectory === "rising"
+                    ? "green"
+                    : forecastTrajectory === "falling"
+                      ? "red"
+                      : "blue"
+                }
+                trajectory={forecastTrajectory}
+                motion="ambient"
+                label={copy.auto.f005}
+                nodes={[
+                  {
+                    id: "current",
+                    progress: 0.04,
+                    tone: "blue",
+                    label: copy.auto.f012,
+                  },
+                  {
+                    id: "projected",
+                    progress: 0.58,
+                    tone: "violet",
+                    label: t("forecastingPage.profitAtMonth", { horizon }),
+                  },
+                  {
+                    id: "future",
+                    progress: 0.96,
+                    tone:
+                      forecastTrajectory === "rising"
+                        ? "green"
+                        : forecastTrajectory === "falling"
+                          ? "red"
+                          : "blue",
+                    emphasis: "strong",
+                    label: copy.auto.f015,
+                  },
+                ]}
+              />
+              <div className="forecast-v2-trajectory-values" aria-hidden="true">
+                <span>{money(currentMonthlyNetProfit)}</span>
+                <strong>{money(finalPoint.netProfit)}</strong>
+              </div>
             </div>
+          }
+        />
 
-            <div className="eyebrow">
-              {copy.auto.f003}
-            </div>
-
-            <div className="hero-title">
-              {copy.auto.f004}
-            </div>
-
-            <div className="hero-description">
-              {copy.auto.f005}
-            </div>
-
-            <div
-              style={{
-                marginTop: 14,
-                display: "inline-flex",
-                padding: "7px 11px",
-                borderRadius: 999,
-                background: "rgba(34,197,94,0.08)",
-                border: "1px solid rgba(34,197,94,0.18)",
-                color: "#4ade80",
-                fontSize: 10,
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-              }}
-            >
-              {copy.auto.f006}
-            </div>
-          </div>
-
-          {!growthAccess && (
-            <button
-              className="primary-button"
-              onClick={() => navigate("/app/billing")}
-              style={{
-                boxShadow:
-                  "0 12px 30px rgba(255,115,80,0.28), 0 0 28px rgba(255,115,80,0.16)",
-              }}
-            >
-              {copy.auto.f007}
-            </button>
-          )}
-        </div>
-
-        <div
-          className="panel"
+        <PremiumPanel
+          className="forecast-v2-workspace"
+          tone="blue"
           style={{
             position: "relative",
             ...(growthAccess ? {} : { overflow: "hidden" }),
@@ -1119,6 +1344,7 @@ export default function ForecastingPage() {
         >
           {!growthAccess && (
             <div
+              className="forecast-v2-gate"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -1179,14 +1405,12 @@ export default function ForecastingPage() {
                   {copy.auto.f010}
                 </div>
 
-                <button
-                  type="button"
-                  className="primary-button"
+                <VisualButton
                   onClick={() => navigate("/app/billing")}
                   style={{ marginTop: 18 }}
                 >
                   {copy.auto.f011}
-                </button>
+                </VisualButton>
               </div>
             </div>
           )}
@@ -1197,87 +1421,73 @@ export default function ForecastingPage() {
               growthAccess
                 ? undefined
                 : {
-                  pointerEvents: "none",
-                  userSelect: "none",
-                  opacity: 0.5,
-                }
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    opacity: 0.5,
+                  }
             }
           >
             <div
+              className="forecast-v2-kpis"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(4,minmax(0,1fr))",
                 gap: 16,
               }}
             >
-              <MetricCard
-                label={
-                  copy.auto.f012
-                }
+              <ForecastMetricCard
+                label={copy.auto.f012}
                 value={money(currentMonthlyNetProfit)}
-                note={
-                  t("forecastingPage.netMarginBasis", { value: pct(currentNetMargin) })
-                }
+                note={t("forecastingPage.netMarginBasis", {
+                  value: pct(currentNetMargin),
+                })}
                 tooltip={
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.f013,
-                      description:
-                        copy.auto.f014,
+                      title: copy.auto.f013,
+                      description: copy.auto.f014,
                     }}
                   />
                 }
               />
 
-              <MetricCard
-                label={
-                  t("forecastingPage.profitAtMonth", { horizon })
-                }
+              <ForecastMetricCard
+                label={t("forecastingPage.profitAtMonth", { horizon })}
                 value={money(finalPoint.netProfit)}
-                note={
-                  t("forecastingPage.projectedNetMargin", { value: pct(finalPoint.netMargin) })
-                }
+                note={t("forecastingPage.projectedNetMargin", {
+                  value: pct(finalPoint.netMargin),
+                })}
                 positive={finalPoint.netProfit >= currentMonthlyNetProfit}
               />
 
-              <MetricCard
-                label={
-                  copy.auto.f015
-                }
+              <ForecastMetricCard
+                label={copy.auto.f015}
                 value={
                   finalPoint.cumulativeLift > 0
                     ? `+${money(finalPoint.cumulativeLift)}`
                     : money(finalPoint.cumulativeLift)
                 }
-                note={
-                  t("forecastingPage.totalImpact", { horizon })
-                }
+                note={t("forecastingPage.totalImpact", { horizon })}
                 highlighted={finalPoint.cumulativeLift >= 0}
                 tooltip={
                   <MetricTooltip
                     content={{
-                      title:
-                        copy.auto.f016,
-                      description:
-                        copy.auto.f017,
+                      title: copy.auto.f016,
+                      description: copy.auto.f017,
                     }}
                   />
                 }
               />
 
-              <MetricCard
-                label={
-                  copy.auto.f018
-                }
+              <ForecastMetricCard
+                label={copy.auto.f018}
                 value={compactMoney(totalProjectedRevenue)}
-                note={
-                  t("forecastingPage.forecastTotal", { horizon })
-                }
+                note={t("forecastingPage.forecastTotal", { horizon })}
               />
             </div>
 
             <div
+              className="forecast-v2-main-grid"
               style={{
                 marginTop: 22,
                 display: "grid",
@@ -1287,6 +1497,7 @@ export default function ForecastingPage() {
               }}
             >
               <div
+                className="forecast-v2-controls"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1331,53 +1542,19 @@ export default function ForecastingPage() {
                   {copy.auto.f021}
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3,1fr)",
-                    gap: 9,
-                    marginTop: 18,
-                  }}
-                >
-                  {(
-                    [
-                      [
-                        "worst",
-                        copy.auto.f022,
-                      ],
-                      [
-                        "expected",
-                        copy.auto.f023,
-                      ],
-                      ["best", copy.auto.f024],
-                    ] as Array<[Exclude<ScenarioKey, "custom">, string]>
-                  ).map(([key, label]) => {
-                    const active = selectedScenario === key;
-
-                    return (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => applyScenario(key)}
-                        style={{
-                          padding: "12px 8px",
-                          borderRadius: 14,
-                          cursor: "pointer",
-                          color: active ? "#ffffff" : "rgba(255,255,255,0.68)",
-                          background: active
-                            ? "linear-gradient(135deg, rgba(255,115,80,0.30), rgba(255,115,80,0.12))"
-                            : "rgba(255,255,255,0.035)",
-                          border: active
-                            ? "1px solid rgba(255,115,80,0.55)"
-                            : "1px solid rgba(255,255,255,0.08)",
-                          fontWeight: 900,
-                        }}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
+                <SegmentedTabs
+                  className="forecast-v2-scenario-tabs"
+                  tabs={[
+                    { id: "worst", label: copy.auto.f022 },
+                    { id: "expected", label: copy.auto.f023 },
+                    { id: "best", label: copy.auto.f024 },
+                  ]}
+                  activeId={selectedScenario}
+                  onChange={(key) =>
+                    applyScenario(key as Exclude<ScenarioKey, "custom">)
+                  }
+                  ariaLabel={copy.auto.f020}
+                />
 
                 {selectedScenario === "custom" && (
                   <div
@@ -1400,34 +1577,26 @@ export default function ForecastingPage() {
                   }}
                 >
                   <SliderControl
-                    label={
-                      copy.auto.f026
-                    }
+                    label={copy.auto.f026}
                     value={monthlyRevenueGrowth}
                     min={-5}
                     max={8}
                     step={0.5}
                     suffix="%"
-                    helper={
-                      copy.auto.f027
-                    }
+                    helper={copy.auto.f027}
                     onChange={(value) =>
                       setCustomValue(setMonthlyRevenueGrowth, value)
                     }
                   />
 
                   <SliderControl
-                    label={
-                      copy.auto.f028
-                    }
+                    label={copy.auto.f028}
                     value={marginImprovement}
                     min={0}
                     max={10}
                     step={0.5}
                     suffix=" pt"
-                    helper={
-                      copy.auto.f029
-                    }
+                    helper={copy.auto.f029}
                     onChange={(value) =>
                       setCustomValue(setMarginImprovement, value)
                     }
@@ -1435,17 +1604,13 @@ export default function ForecastingPage() {
                   />
 
                   <SliderControl
-                    label={
-                      copy.auto.f030
-                    }
+                    label={copy.auto.f030}
                     value={monthlyCostGrowth}
                     min={-2}
                     max={6}
                     step={0.5}
                     suffix="%"
-                    helper={
-                      copy.auto.f031
-                    }
+                    helper={copy.auto.f031}
                     onChange={(value) =>
                       setCustomValue(setMonthlyCostGrowth, value)
                     }
@@ -1453,17 +1618,13 @@ export default function ForecastingPage() {
                   />
 
                   <SliderControl
-                    label={
-                      copy.auto.f032
-                    }
+                    label={copy.auto.f032}
                     value={recoveryCapture}
                     min={0}
                     max={100}
                     step={5}
                     suffix="%"
-                    helper={
-                      copy.auto.f033
-                    }
+                    helper={copy.auto.f033}
                     onChange={(value) =>
                       setCustomValue(setRecoveryCapture, value)
                     }
@@ -1471,10 +1632,8 @@ export default function ForecastingPage() {
                     tooltip={
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.auto.f034,
-                          description:
-                            copy.auto.f035,
+                          title: copy.auto.f034,
+                          description: copy.auto.f035,
                         }}
                       />
                     }
@@ -1483,6 +1642,7 @@ export default function ForecastingPage() {
               </div>
 
               <div
+                className="forecast-v2-chart-panel"
                 style={{
                   borderRadius: 26,
                   padding: 24,
@@ -1535,61 +1695,28 @@ export default function ForecastingPage() {
                       flexWrap: "wrap",
                     }}
                   >
-                    <button
-                      type="button"
+                    <VisualButton
                       onClick={exportForecastCsv}
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 12,
-                        cursor: "pointer",
-                        border: "1px solid rgba(74,222,128,0.28)",
-                        background: "rgba(34,197,94,0.10)",
-                        color: "#bbf7d0",
-                        fontWeight: 900,
-                      }}
+                      variant="secondary"
+                      size="small"
                     >
                       {copy.auto.f038}
-                    </button>
+                    </VisualButton>
 
-                    <div
-                      style={{
-                        display: "flex",
-                        padding: 4,
-                        borderRadius: 14,
-                        background: "rgba(255,255,255,0.045)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                      }}
-                    >
-                      {[3, 6, 12].map((months) => (
-                        <button
-                          key={months}
-                          type="button"
-                          onClick={() => setHorizon(months)}
-                          style={{
-                            minWidth: 48,
-                            padding: "9px 11px",
-                            borderRadius: 10,
-                            cursor: "pointer",
-                            border: 0,
-                            background:
-                              horizon === months
-                                ? "rgba(255,115,80,0.22)"
-                                : "transparent",
-                            color:
-                              horizon === months
-                                ? "#ffffff"
-                                : "rgba(255,255,255,0.52)",
-                            fontWeight: 950,
-                          }}
-                        >
-                          {months}M
-                        </button>
-                      ))}
-                    </div>
+                    <SegmentedTabs
+                      tabs={[3, 6, 12].map((months) => ({
+                        id: String(months),
+                        label: `${months}M`,
+                      }))}
+                      activeId={String(horizon)}
+                      onChange={(value) => setHorizon(Number(value))}
+                      ariaLabel={copy.auto.f037}
+                    />
                   </div>
                 </div>
 
                 <div
+                  className="forecast-v2-chart"
                   style={{
                     marginTop: 24,
                     height: 285,
@@ -1793,16 +1920,12 @@ export default function ForecastingPage() {
                         textTransform: "uppercase",
                       }}
                     >
-                      <span>
-                        {copy.auto.f043}
-                      </span>
+                      <span>{copy.auto.f043}</span>
 
                       <MetricTooltip
                         content={{
-                          title:
-                            copy.auto.f044,
-                          description:
-                            copy.auto.f045,
+                          title: copy.auto.f044,
+                          description: copy.auto.f045,
                         }}
                       />
                     </div>
@@ -1894,6 +2017,7 @@ export default function ForecastingPage() {
 
                   return (
                     <button
+                      className={`forecast-v2-scenario-card${active ? " is-active" : ""}`}
                       key={scenario.key}
                       type="button"
                       onClick={() => applyScenario(scenario.key)}
@@ -1924,18 +2048,9 @@ export default function ForecastingPage() {
                       </div>
 
                       {[
-                        [
-                          copy.auto.f050,
-                          money(scenario.finalNetProfit),
-                        ],
-                        [
-                          copy.auto.f051,
-                          pct(scenario.finalNetMargin),
-                        ],
-                        [
-                          copy.auto.f052,
-                          money(scenario.cumulativeNetProfit),
-                        ],
+                        [copy.auto.f050, money(scenario.finalNetProfit)],
+                        [copy.auto.f051, pct(scenario.finalNetMargin)],
+                        [copy.auto.f052, money(scenario.cumulativeNetProfit)],
                         [
                           copy.auto.f053,
                           `${scenario.differenceFromCurrent >= 0 ? "+" : ""}${money(
@@ -1966,9 +2081,8 @@ export default function ForecastingPage() {
                           <span
                             style={{
                               color:
-                                metricLabel ===
-                                  (copy.auto.f054) &&
-                                  scenario.differenceFromCurrent < 0
+                                metricLabel === copy.auto.f054 &&
+                                scenario.differenceFromCurrent < 0
                                   ? "#fb7185"
                                   : "#f8fafc",
                               fontSize: 12,
@@ -1987,6 +2101,7 @@ export default function ForecastingPage() {
             </div>
 
             <div
+              className="forecast-v2-insights-grid"
               style={{
                 marginTop: 22,
                 display: "grid",
@@ -1995,6 +2110,7 @@ export default function ForecastingPage() {
               }}
             >
               <div
+                className="forecast-v2-recommendation"
                 style={{
                   borderRadius: 24,
                   padding: 24,
@@ -2051,15 +2167,15 @@ export default function ForecastingPage() {
                     }}
                   >
                     <span>
-                      {t("forecastingPage.dataQuality", { value: pct(dataConfidence, 0) })}
+                      {t("forecastingPage.dataQuality", {
+                        value: pct(dataConfidence, 0),
+                      })}
                     </span>
 
                     <MetricTooltip
                       content={{
-                        title:
-                          copy.auto.f057,
-                        description:
-                          copy.auto.f058,
+                        title: copy.auto.f057,
+                        description: copy.auto.f058,
                       }}
                     />
                   </div>
@@ -2130,6 +2246,7 @@ export default function ForecastingPage() {
               </div>
 
               <div
+                className="forecast-v2-goal"
                 style={{
                   borderRadius: 24,
                   padding: 24,
@@ -2182,12 +2299,15 @@ export default function ForecastingPage() {
                   </div>
 
                   <input
+                    className="forecast-v2-number-input"
                     type="number"
                     min={0}
                     step={100}
                     value={profitGoal}
                     onChange={(event) =>
-                      setProfitGoal(Math.max(0, Number(event.target.value) || 0))
+                      setProfitGoal(
+                        Math.max(0, Number(event.target.value) || 0),
+                      )
                     }
                     style={{
                       width: "100%",
@@ -2224,23 +2344,20 @@ export default function ForecastingPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: 6,
-                      color: firstGoalMonth !== undefined ? "#86efac" : "#fbbf24",
+                      color:
+                        firstGoalMonth !== undefined ? "#86efac" : "#fbbf24",
                       fontSize: 11,
                       fontWeight: 950,
                       textTransform: "uppercase",
                       letterSpacing: "0.10em",
                     }}
                   >
-                    <span>
-                      {copy.auto.f062}
-                    </span>
+                    <span>{copy.auto.f062}</span>
 
                     <MetricTooltip
                       content={{
-                        title:
-                          copy.auto.f063,
-                        description:
-                          copy.auto.f064,
+                        title: copy.auto.f063,
+                        description: copy.auto.f064,
                       }}
                     />
                   </div>
@@ -2269,17 +2386,20 @@ export default function ForecastingPage() {
                     }}
                   >
                     {firstGoalMonth !== undefined
-                      ? t("forecastingPage.goalReached", { goal: money(profitGoal) })
+                      ? t("forecastingPage.goalReached", {
+                          goal: money(profitGoal),
+                        })
                       : t("forecastingPage.goalNotReached", {
-                        goal: money(profitGoal),
-                        horizon,
-                      })}
+                          goal: money(profitGoal),
+                          horizon,
+                        })}
                   </div>
                 </div>
               </div>
             </div>
 
             <div
+              className="forecast-v2-method"
               style={{
                 marginTop: 22,
                 padding: 18,
@@ -2295,7 +2415,7 @@ export default function ForecastingPage() {
               {t("forecastingPage.methodNote", { periodDays })}
             </div>
           </div>
-        </div>
+        </PremiumPanel>
       </div>
     </div>
   );
