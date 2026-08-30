@@ -288,6 +288,13 @@
   background: rgb(var(--ml-v2-accent));
   box-shadow: 0 0 8px rgba(var(--ml-v2-accent), 0.75);
 }
+
+.ml-v2-growth-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .ml-v2-status-pulse > i {
   animation: ml-v2-signal-pulse var(--ml-v2-motion-signal) ease-in-out infinite;
 }

@@ -19,6 +19,7 @@ import { getRequestLanguage } from "~/utils/i18n.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import {
   FlowPath,
+  GrowthHeroEyebrow,
   MetricCard as V2MetricCard,
   PremiumHero,
   PremiumPanel,
@@ -1267,17 +1268,18 @@ export default function ForecastingPage() {
                 ? "red"
                 : "blue"
           }
-          eyebrow={copy.auto.f003}
+          eyebrow={
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={growthAccess ? copy.auto.f001 : copy.auto.f002}
+            >
+              {copy.auto.f003}
+            </GrowthHeroEyebrow>
+          }
           title={copy.auto.f004}
           description={copy.auto.f005}
           actions={
             <>
-              <StatusChip
-                tone={growthAccess ? "green" : "amber"}
-                pulse={growthAccess}
-              >
-                {growthAccess ? copy.auto.f001 : copy.auto.f002}
-              </StatusChip>
               <StatusChip tone="blue">{copy.auto.f006}</StatusChip>
               {!growthAccess ? (
                 <VisualButton onClick={() => navigate("/app/billing")}>

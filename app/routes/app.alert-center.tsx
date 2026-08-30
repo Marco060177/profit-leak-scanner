@@ -9,6 +9,7 @@ import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   FlowPath,
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -1373,12 +1374,14 @@ export default function AlertCenterPage() {
         <PremiumHero
           className="dashboard-v2-hero alert-center-v2-hero"
           eyebrow={
-            <span className="alert-center-v2-hero-eyebrow">
-              <StatusChip tone={growthAccess ? "green" : "orange"}>
-                {growthAccess ? copy.growth_plan_active : copy.growth_feature}
-              </StatusChip>
-              <span>ALERT CENTER</span>
-            </span>
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={
+                growthAccess ? copy.growth_plan_active : copy.growth_feature
+              }
+            >
+              ALERT CENTER
+            </GrowthHeroEyebrow>
           }
           title={copy.the_signals_that_deserve_your_attention}
           description={copy.marginlab_monitors_margins_costs_refunds_and}

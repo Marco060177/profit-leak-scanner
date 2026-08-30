@@ -7,6 +7,7 @@ import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -964,12 +965,12 @@ export default function RecommendationsPage() {
         <PremiumHero
           className="dashboard-v2-hero recommendations-v2-hero"
           eyebrow={
-            <span className="recommendations-v2-hero-eyebrow">
-              <StatusChip tone={growthAccess ? "green" : "orange"}>
-                {growthAccess ? copy.auto.r014 : copy.auto.r015}
-              </StatusChip>
-              <span>{copy.auto.r016}</span>
-            </span>
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={growthAccess ? copy.auto.r014 : copy.auto.r015}
+            >
+              {copy.auto.r016}
+            </GrowthHeroEyebrow>
           }
           title={copy.auto.r017}
           description={copy.auto.r018}

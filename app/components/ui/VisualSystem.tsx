@@ -168,6 +168,23 @@ export function StatusChip({
   );
 }
 
+export function GrowthHeroEyebrow({
+  active,
+  status,
+  children,
+}: {
+  active: boolean;
+  status: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <span className="ml-v2-growth-hero-eyebrow">
+      <StatusChip tone={active ? "green" : "orange"}>{status}</StatusChip>
+      <span>{children}</span>
+    </span>
+  );
+}
+
 export type SegmentedTab = {
   id: string;
   label: ReactNode;

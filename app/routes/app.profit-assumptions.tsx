@@ -17,6 +17,7 @@ import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import {
   FlowPath,
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumHero,
   PremiumPanel,
@@ -1194,17 +1195,18 @@ export default function ProfitAssumptionsPage() {
         <PremiumHero
           className="model-v2-hero"
           tone={estimatedNetProfit >= 0 ? "green" : "red"}
-          eyebrow={copy.auto.a003}
+          eyebrow={
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={growthAccess ? copy.auto.a001 : copy.auto.a002}
+            >
+              {copy.auto.a003}
+            </GrowthHeroEyebrow>
+          }
           title={copy.auto.a004}
           description={copy.auto.a005}
           actions={
             <>
-              <StatusChip
-                tone={growthAccess ? "green" : "amber"}
-                pulse={growthAccess}
-              >
-                {growthAccess ? copy.auto.a001 : copy.auto.a002}
-              </StatusChip>
               <StatusChip
                 tone={
                   healthScore >= 80

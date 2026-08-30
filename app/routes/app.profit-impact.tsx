@@ -13,6 +13,7 @@ import {
   ControlField,
   FeedbackState,
   FlowPath,
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -527,7 +528,18 @@ export default function ProfitImpactPage() {
         <DashboardNav active="profit-impact" navigate={navigate} />
         <PremiumHero
           className="impact-hero"
-          eyebrow={copy.eyebrow}
+          eyebrow={
+            <GrowthHeroEyebrow
+              active={data.growthAccess}
+              status={
+                data.growthAccess
+                  ? messages.alertCenterPage.growth_plan_active
+                  : messages.alertCenterPage.growth_feature
+              }
+            >
+              {copy.eyebrow}
+            </GrowthHeroEyebrow>
+          }
           title="Profit Impact Tracker"
           description={copy.description}
           actions={

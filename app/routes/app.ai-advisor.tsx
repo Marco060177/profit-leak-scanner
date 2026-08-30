@@ -9,6 +9,7 @@ import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
   ChoiceCard,
   FeedbackState,
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumHero,
   PremiumPanel,
@@ -1464,19 +1465,22 @@ Rules:
           className="dashboard-v2-hero advisor-v2-hero"
           tone="orange"
           mobileVisualPosition="after-copy"
-          eyebrow={copy.profit_copilot}
+          eyebrow={
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={
+                growthAccess ? copy.growth_plan_active : copy.growth_feature
+              }
+            >
+              {copy.profit_copilot}
+            </GrowthHeroEyebrow>
+          }
           title={copy.your_store_briefing_already_prepared}
           description={
             copy.marginlab_automatically_analyzes_profitability_risk_opportunities
           }
           actions={
             <div className="dashboard-v2-hero-actions">
-              <StatusChip
-                tone={growthAccess ? "green" : "orange"}
-                pulse={growthAccess}
-              >
-                {growthAccess ? copy.growth_plan_active : copy.growth_feature}
-              </StatusChip>
               <StatusChip tone="green">
                 {copy.tax_aware_economic_basis}
               </StatusChip>

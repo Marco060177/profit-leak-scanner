@@ -8,6 +8,7 @@ import {
   ControlField,
   FeedbackState,
   FlowPath,
+  GrowthHeroEyebrow,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -1457,12 +1458,12 @@ export default function RecoverySimulatorPage() {
         <PremiumHero
           className="dashboard-v2-hero recovery-v2-hero"
           eyebrow={
-            <span className="recovery-v2-hero-eyebrow">
-              <StatusChip tone={growthAccess ? "green" : "orange"}>
-                {growthAccess ? copy.auto.s001 : copy.auto.s002}
-              </StatusChip>
-              <span>{copy.auto.s003}</span>
-            </span>
+            <GrowthHeroEyebrow
+              active={growthAccess}
+              status={growthAccess ? copy.auto.s001 : copy.auto.s002}
+            >
+              {copy.auto.s003}
+            </GrowthHeroEyebrow>
           }
           title={copy.auto.s004}
           description={copy.auto.s005}
