@@ -3,6 +3,9 @@ import { deleteShopData } from "~/services/shop-data-redaction.server";
 
 export const action = async ({ request }: { request: Request }) => {
   const { shop, topic } = await authenticate.webhook(request);
+  if (topic !== "SHOP_REDACT") {
+    return new Response("Unexpected webhook topic", { status: 400 });
+  }
 
   try {
     const removed = await deleteShopData(shop);

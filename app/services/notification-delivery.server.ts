@@ -8,6 +8,8 @@ import {
   type NotificationLanguage,
 } from "~/services/notification.server";
 import { sendEmail } from "~/services/email.server";
+import { unauthenticated } from "~/shopify.server";
+import { getBillingStatus, hasStarterAccess } from "~/utils/billing.server";
 import { formatUiMoney } from "~/utils/formatting";
 import { getLanguageLocale } from "~/utils/i18n";
 
@@ -830,13 +832,15 @@ export async function processPendingNotificationDeliveries({
   limit = 25,
   currencyCode = "USD",
   notificationType,
+  shop,
 }: {
   limit?: number;
   currencyCode?: string;
   notificationType?: "profit_alert" | "weekly_profit_report";
+  shop?: string;
 } = {}) {
   const staleRecovery =
-    await recoverStaleProcessingNotificationDeliveries();
+    await recoverStaleProcessingNotificationDeliveries({ shop });
 
   if (staleRecovery.count > 0) {
     console.info("[NOTIFICATION DELIVERY] Recovered stale processing deliveries.", {
@@ -853,6 +857,7 @@ export async function processPendingNotificationDeliveries({
    */
   const pendingDeliveries = await listPendingNotificationDeliveries({
     limit: notificationType ? 200 : limit,
+    shop,
   });
 
   const deliveries = notificationType
@@ -872,6 +877,21 @@ export async function processPendingNotificationDeliveries({
     stage: "delivery";
     message: string;
   }> = [];
+  const accessByShop = new Map<string, Promise<boolean>>();
+
+  const hasCurrentAccess = (deliveryShop: string) => {
+    const cached = accessByShop.get(deliveryShop);
+    if (cached) return cached;
+
+    const lookup = (async () => {
+      const { admin } = await unauthenticated.admin(deliveryShop);
+      const billing = await getBillingStatus(admin);
+      return hasStarterAccess(billing);
+    })();
+
+    accessByShop.set(deliveryShop, lookup);
+    return lookup;
+  };
 
   for (const delivery of deliveries) {
     if (delivery.channel !== "email") {
@@ -895,6 +915,12 @@ export async function processPendingNotificationDeliveries({
     }
 
     try {
+      if (!(await hasCurrentAccess(delivery.shop))) {
+        throw new Error(
+          "Notification delivery blocked: active Starter or Growth plan required.",
+        );
+      }
+
       const email =
         delivery.notificationType === "profit_alert"
           ? (() => {

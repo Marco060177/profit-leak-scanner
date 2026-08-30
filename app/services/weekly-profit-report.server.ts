@@ -7,7 +7,11 @@ import {
   type NotificationLanguage,
 } from "~/services/notification.server";
 import { getLanguageLocale } from "~/utils/i18n";
-import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import {
+  getBillingStatus,
+  hasGrowthAccess,
+  hasStarterAccess,
+} from "~/utils/billing.server";
 import { buildWeeklyProfitImpactSummary } from "~/services/profit-impact-context.server";
 import { listProfitImpactActionsForShop } from "~/services/profit-impact.server";
 
@@ -120,6 +124,15 @@ export async function prepareWeeklyProfitReport({
   now?: Date;
   deliveryMode?: "scheduled" | "test";
 }) {
+  const billing = await getBillingStatus(admin);
+
+  if (!hasStarterAccess(billing)) {
+    return {
+      prepared: false as const,
+      reason: "starter_access_required",
+    };
+  }
+
   const preferences = await getNotificationPreferences(session.shop);
 
   if (!preferences) {
@@ -145,8 +158,6 @@ export async function prepareWeeklyProfitReport({
 
   const language = normalizeNotificationLanguage(preferences.language);
   const locale = getLanguageLocale(language);
-  const billing = await getBillingStatus(admin);
-
   const data = await loadMarginDashboardData({
     admin,
     session,

@@ -19,6 +19,7 @@ export async function action({ request }: { request: Request }) {
     const result = await processPendingNotificationDeliveries({
       limit: 1,
       notificationType: "weekly_profit_report",
+      shop: session.shop,
     });
 
     return {

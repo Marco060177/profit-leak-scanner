@@ -3,9 +3,6 @@ CREATE TABLE "ProfitImpactAction" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "shop" TEXT NOT NULL,
     "idempotencyKey" TEXT NOT NULL,
-    "measuringProductKey" TEXT,
-    "measurementClaimType" TEXT,
-    "measurementClaimedAt" DATETIME,
     "actionType" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'ACCEPTED',
     "sourceModule" TEXT NOT NULL,
@@ -88,9 +85,6 @@ CREATE INDEX "ProfitImpactAction_shop_sourceAlertKey_idx" ON "ProfitImpactAction
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ProfitImpactAction_shop_idempotencyKey_key" ON "ProfitImpactAction"("shop", "idempotencyKey");
-
--- CreateIndex
-CREATE UNIQUE INDEX "ProfitImpactAction_shop_measuringProductKey_key" ON "ProfitImpactAction"("shop", "measuringProductKey");
 
 -- CreateIndex
 CREATE INDEX "ProfitImpactMeasurement_actionId_capturedAt_idx" ON "ProfitImpactMeasurement"("actionId", "capturedAt");

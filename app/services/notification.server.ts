@@ -390,9 +390,11 @@ export const STALE_NOTIFICATION_PROCESSING_MS = 15 * 60 * 1000;
 export async function recoverStaleProcessingNotificationDeliveries({
   now = new Date(),
   staleAfterMs = STALE_NOTIFICATION_PROCESSING_MS,
+  shop,
 }: {
   now?: Date;
   staleAfterMs?: number;
+  shop?: string;
 } = {}) {
   const safeStaleAfterMs = Math.max(60_000, staleAfterMs);
   const staleBefore = new Date(now.getTime() - safeStaleAfterMs);
@@ -401,6 +403,7 @@ export async function recoverStaleProcessingNotificationDeliveries({
     where: {
       status: "processing",
       updatedAt: { lte: staleBefore },
+      ...(shop ? { shop } : {}),
     },
     data: {
       status: "pending",
@@ -430,14 +433,17 @@ export async function markNotificationDeliveryFailed({
 export async function listPendingNotificationDeliveries({
   limit = 50,
   now = new Date(),
+  shop,
 }: {
   limit?: number;
   now?: Date;
+  shop?: string;
 } = {}) {
   return prisma.notificationDelivery.findMany({
     where: {
       status: "pending",
       OR: [{ scheduledFor: null }, { scheduledFor: { lte: now } }],
+      ...(shop ? { shop } : {}),
     },
     orderBy: { createdAt: "asc" },
     take: clampInt(limit, 1, 200),

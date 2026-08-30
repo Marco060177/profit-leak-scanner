@@ -6,6 +6,7 @@ import {
     shouldNotifyAlert,
     type NotificationLanguage,
 } from "~/services/notification.server";
+import { getBillingStatus, hasStarterAccess } from "~/utils/billing.server";
 
 type OrderLineItemPayload = {
     product_id?: number | string | null;
@@ -192,6 +193,12 @@ export async function queueProductSaleAlertsFromOrder({
     shop: string;
     payload: OrderCreatePayload;
 }) {
+    const billing = await getBillingStatus(admin);
+
+    if (!hasStarterAccess(billing)) {
+        return { queued: 0, reason: "starter_access_required" } as const;
+    }
+
     const preferences = await getNotificationPreferences(shop);
 
     if (!preferences || !preferences.recipientEmail || !preferences.emailAlertsEnabled) {

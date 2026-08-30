@@ -5,6 +5,7 @@ import {
   useLoaderData,
   useNavigation,
   useNavigate,
+  redirect,
 } from "react-router";
 
 import { authenticate } from "~/shopify.server";
@@ -17,6 +18,7 @@ import {
 } from "~/services/notification.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { getRequestLanguage } from "~/utils/i18n.server";
+import { getBillingStatus, hasStarterAccess } from "~/utils/billing.server";
 import {
   FlowPath,
   MetricCard,
@@ -45,7 +47,12 @@ function parseNumber(value: FormDataEntryValue | null, fallback: number) {
 const dayOptions = [0, 1, 2, 3, 4, 5, 6];
 
 export async function loader({ request }: { request: Request }) {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+  const billing = await getBillingStatus(admin);
+
+  if (!hasStarterAccess(billing)) {
+    throw redirect("/app/billing");
+  }
 
   const language: NotificationLanguage = getRequestLanguage(request);
 
@@ -58,7 +65,13 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { session } = await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+  const billing = await getBillingStatus(admin);
+
+  if (!hasStarterAccess(billing)) {
+    throw redirect("/app/billing");
+  }
+
   const formData = await request.formData();
   const language = normalizeNotificationLanguage(
     String(formData.get("language") || ""),
