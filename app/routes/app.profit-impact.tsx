@@ -1048,38 +1048,34 @@ export default function ProfitImpactPage() {
                     },
                     {
                       id: "action",
-                      progress: 0.27,
+                      progress: 0.34,
                       tone: "blue",
-                      label: copy.trackAction,
-                    },
-                    {
-                      id: "baseline",
-                      progress: 0.5,
-                      tone: "cyan",
-                      label: copy.baseline,
+                      label: copy.journeyAction,
                     },
                     {
                       id: "measurement",
-                      progress: 0.73,
+                      progress: 0.66,
                       tone: "violet",
-                      label: copy.MEASURING,
+                      label: copy.journeyMeasurement,
                     },
                     {
-                      id: "result",
+                      id: "evidence",
                       progress: 0.96,
                       tone: "green",
                       emphasis: "strong",
-                      label: copy.viewMeasuredImpact,
+                      label: copy.journeyEvidence,
                     },
                   ]}
                 />
                 <div className="impact-journey-stages">
                   {[
                     [copy.signalDetected, copy.signalDetectedDescription],
-                    [copy.trackAction, copy.actionSelectedDescription],
-                    [copy.baseline, copy.baselineCapturedDescription],
-                    [copy.MEASURING, copy.measurementJourneyDescription],
-                    [copy.viewMeasuredImpact, copy.resultDescription],
+                    [copy.journeyAction, copy.actionSelectedDescription],
+                    [
+                      copy.journeyMeasurement,
+                      copy.measurementJourneyDescription,
+                    ],
+                    [copy.journeyEvidence, copy.resultDescription],
                   ].map(([title, description]) => (
                     <span key={title}>
                       <strong>{title}</strong>

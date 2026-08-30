@@ -1941,20 +1941,23 @@ export const it = {
       "Profit Impact confronta la baseline economica con il periodo osservato dopo l’azione.",
     marginMeasureDescription:
       "Mostra come è cambiato il margine economico tra periodi comparabili.",
-    journeyTitle: "Dalla raccomandazione all’impatto misurato",
+    journeyTitle: "Dal segnale all’evidenza",
     journeyIntro:
-      "MarginLab non si ferma alla raccomandazione. Segue l’azione durante la misurazione per mostrare se la redditività è realmente migliorata.",
+      "Profit Impact chiude il ciclo decisionale di MarginLab trasformando un segnale economico in evidenza su ciò che è cambiato.",
     signalDetected: "Segnale rilevato",
     signalDetectedDescription:
-      "Profit Monitor o un altro modulo MarginLab identifica un segnale economico.",
+      "MarginLab individua un problema o un’opportunità di redditività.",
+    journeyAction: "Azione intrapresa",
     actionSelectedDescription:
-      "Il merchant seleziona e registra l’azione da monitorare.",
+      "L’azione scelta viene registrata per misurare cosa succede dopo.",
+    journeyMeasurement: "Impatto misurato",
     baselineCapturedDescription:
       "MarginLab acquisisce il periodo economico di riferimento precedente all’azione.",
     measurementJourneyDescription:
-      "L’economia post-azione viene osservata rispetto alla baseline.",
+      "MarginLab confronta la performance successiva con la baseline precedente.",
+    journeyEvidence: "Evidenza creata",
     resultDescription:
-      "Il tracker mostra variazione misurata, attribuzione e confidenza quando disponibili.",
+      "Il risultato mostra cosa è cambiato e quanto prudentemente il cambiamento può essere associato all’azione.",
   },
   taxProfilePage: {
     tax: "fiscali",

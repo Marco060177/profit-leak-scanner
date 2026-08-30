@@ -1967,20 +1967,23 @@ export const de = {
       "Profit Impact vergleicht die wirtschaftliche Ausgangsbasis mit dem beobachteten Zeitraum nach der Maßnahme.",
     marginMeasureDescription:
       "Zeigt, wie sich die wirtschaftliche Marge zwischen vergleichbaren Zeiträumen verändert hat.",
-    journeyTitle: "Von der Empfehlung zur gemessenen Wirkung",
+    journeyTitle: "Vom Signal zum Nachweis",
     journeyIntro:
-      "MarginLab bleibt nicht bei einer Empfehlung stehen. Es begleitet die Maßnahme durch die Messung und zeigt, ob sich die Rentabilität tatsächlich verbessert hat.",
+      "Profit Impact schließt den MarginLab-Entscheidungskreislauf, indem es ein wirtschaftliches Signal in einen Nachweis der Veränderung überführt.",
     signalDetected: "Signal erkannt",
     signalDetectedDescription:
-      "Profit Monitor oder ein anderes MarginLab-Modul erkennt ein wirtschaftliches Signal.",
+      "MarginLab erkennt ein Rentabilitätsproblem oder eine Chance.",
+    journeyAction: "Maßnahme ergriffen",
     actionSelectedDescription:
-      "Der Händler wählt die zu verfolgende Maßnahme aus und erfasst sie.",
+      "Die ausgewählte Maßnahme wird erfasst, damit die anschließende Wirkung gemessen werden kann.",
+    journeyMeasurement: "Wirkung gemessen",
     baselineCapturedDescription:
       "MarginLab erfasst den wirtschaftlichen Referenzzeitraum vor der Maßnahme.",
     measurementJourneyDescription:
-      "Die Wirtschaftlichkeit nach der Maßnahme wird mit der Ausgangsbasis verglichen.",
+      "MarginLab vergleicht die anschließende Leistung mit der vorherigen Ausgangsbasis.",
+    journeyEvidence: "Nachweis erstellt",
     resultDescription:
-      "Der Tracker zeigt gemessene Veränderung, Zuordnung und Konfidenz, sofern verfügbar.",
+      "Das Ergebnis zeigt die Veränderung und wie vorsichtig sie der Maßnahme zugeordnet werden kann.",
   },
   taxProfilePage: {
     tax: "Steuer",

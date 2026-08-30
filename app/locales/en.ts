@@ -1918,20 +1918,23 @@ export const en = {
       "Profit Impact compares the economic baseline with the observed post-action period.",
     marginMeasureDescription:
       "Shows how economic margin changed between comparable periods.",
-    journeyTitle: "From recommendation to measured impact",
+    journeyTitle: "From signal to evidence",
     journeyIntro:
-      "MarginLab does not stop at recommending an action. It follows the action through measurement to show whether profitability actually improved.",
+      "Profit Impact closes the MarginLab decision loop by turning an economic signal into evidence of what changed.",
     signalDetected: "Signal detected",
     signalDetectedDescription:
-      "Profit Monitor or another MarginLab module identifies an economic signal.",
+      "MarginLab identifies a profitability problem or opportunity.",
+    journeyAction: "Action taken",
     actionSelectedDescription:
-      "The merchant selects and records the action to track.",
+      "The selected action is recorded so MarginLab can measure what happens next.",
+    journeyMeasurement: "Impact measured",
     baselineCapturedDescription:
       "MarginLab captures the pre-action economic reference period.",
     measurementJourneyDescription:
-      "Post-action economics are observed against the baseline.",
+      "MarginLab compares subsequent performance with the previous baseline.",
+    journeyEvidence: "Evidence created",
     resultDescription:
-      "The tracker reports measured change, attribution and confidence when available.",
+      "The result shows what changed and how cautiously that change can be associated with the action.",
   },
   taxProfilePage: {
     tax: "tax",

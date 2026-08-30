@@ -1955,20 +1955,23 @@ export const ptBR = {
       "O Profit Impact compara a referência econômica com o período observado após a ação.",
     marginMeasureDescription:
       "Mostra como a margem econômica mudou entre períodos comparáveis.",
-    journeyTitle: "Da recomendação ao impacto medido",
+    journeyTitle: "Do sinal à evidência",
     journeyIntro:
-      "A MarginLab não para na recomendação. Ela acompanha a ação durante a medição para mostrar se a lucratividade realmente melhorou.",
+      "O Profit Impact fecha o ciclo de decisão da MarginLab transformando um sinal econômico em evidência do que mudou.",
     signalDetected: "Sinal detectado",
     signalDetectedDescription:
-      "O Profit Monitor ou outro módulo da MarginLab identifica um sinal econômico.",
+      "A MarginLab identifica um problema ou uma oportunidade de lucratividade.",
+    journeyAction: "Ação realizada",
     actionSelectedDescription:
-      "O lojista seleciona e registra a ação que será acompanhada.",
+      "A ação escolhida é registrada para medir o que acontece depois.",
+    journeyMeasurement: "Impacto medido",
     baselineCapturedDescription:
       "A MarginLab captura o período econômico de referência anterior à ação.",
     measurementJourneyDescription:
-      "A economia pós-ação é observada em relação à referência.",
+      "A MarginLab compara o desempenho posterior com a referência anterior.",
+    journeyEvidence: "Evidência criada",
     resultDescription:
-      "O tracker apresenta a mudança medida, a atribuição e a confiança quando disponíveis.",
+      "O resultado mostra o que mudou e com que cautela essa mudança pode ser associada à ação.",
   },
   taxProfilePage: {
     tax: "imposto",
