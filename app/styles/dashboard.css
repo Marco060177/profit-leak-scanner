@@ -3374,7 +3374,7 @@ table {
   background:
     radial-gradient(
       circle at 8% 0%,
-      rgb(var(--ml-v2-orange) / 0.075),
+      rgb(var(--ml-v2-orange) / 0.0375),
       transparent 31%
     ),
     radial-gradient(
@@ -3702,7 +3702,7 @@ table {
     background:
       radial-gradient(
         circle at 8% 0%,
-        rgb(var(--ml-v2-orange) / 0.06),
+        rgb(var(--ml-v2-orange) / 0.03),
         transparent 27%
       ),
       radial-gradient(
