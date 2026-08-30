@@ -9,6 +9,8 @@ import {
   hasGrowthAccess,
 } from "~/utils/billing.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
+import { translations } from "~/utils/i18n";
+import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
 
@@ -54,67 +56,45 @@ export async function action({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
   const formData = await request.formData();
 
-  const language =
-    String(formData.get("language") ?? "en") === "it" ? "it" : "en";
+  const language = getRequestLanguage(request);
+  const errors = translations[language].supportPage.errors;
 
   const email = String(formData.get("email") ?? "").trim();
   const topic = String(formData.get("topic") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const message = String(formData.get("message") ?? "").trim();
 
-  const respondError = (
-    it: string,
-    en: string,
-    status = 400,
-  ) =>
+  const respondError = (error: string, status = 400) =>
     Response.json(
       {
         ok: false,
-        error: language === "it" ? it : en,
+        error,
       } satisfies SupportActionData,
       { status },
     );
 
   if (!email || !isValidEmail(email)) {
-    return respondError(
-      "Inserisci un indirizzo email valido.",
-      "Enter a valid email address.",
-    );
+    return respondError(errors.invalidEmail);
   }
 
   if (!topic) {
-    return respondError(
-      "Seleziona l'argomento della richiesta.",
-      "Select a support topic.",
-    );
+    return respondError(errors.missingTopic);
   }
 
   if (!subject || subject.length < 3) {
-    return respondError(
-      "Inserisci un oggetto di almeno 3 caratteri.",
-      "Enter a subject of at least 3 characters.",
-    );
+    return respondError(errors.subjectTooShort);
   }
 
   if (subject.length > 140) {
-    return respondError(
-      "L'oggetto è troppo lungo.",
-      "The subject is too long.",
-    );
+    return respondError(errors.subjectTooLong);
   }
 
   if (!message || message.length < 10) {
-    return respondError(
-      "Descrivi il problema con almeno 10 caratteri.",
-      "Describe the issue using at least 10 characters.",
-    );
+    return respondError(errors.messageTooShort);
   }
 
   if (message.length > 6000) {
-    return respondError(
-      "Il messaggio è troppo lungo.",
-      "The message is too long.",
-    );
+    return respondError(errors.messageTooLong);
   }
 
   const supportEmail = "support@marginlab.net";
@@ -179,11 +159,7 @@ export async function action({ request }: { request: Request }) {
   } catch (sendError) {
     console.error("[MarginLab Support] Email send failed", sendError);
 
-    return respondError(
-      "Non è stato possibile inviare il messaggio. Riprova tra poco.",
-      "The message could not be sent. Please try again shortly.",
-      500,
-    );
+    return respondError(errors.sendFailed, 500);
   }
 }
 
@@ -211,10 +187,7 @@ export default function SupportPage() {
     }
   }, [supportFetcher.data?.ok]);
 
-  const whatsappMessage =
-    language === "it"
-      ? "Ciao, ho bisogno di assistenza con MarginLab."
-      : "Hi, I need help with MarginLab.";
+  const whatsappMessage = copy.whatsappPrefill;
 
   const whatsappUrl =
     whatsappAvailable && whatsappNumber

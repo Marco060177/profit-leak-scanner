@@ -127,14 +127,25 @@ function Toggle({
   label: string;
   description: string;
 }) {
+  const inputId = `reports-toggle-${name}`;
+
   return (
-    <label className="reports-v2-toggle">
+    <label
+      className="reports-v2-toggle"
+      htmlFor={inputId}
+      aria-label={label}
+    >
       <div>
         <strong>{label}</strong>
         <span>{description}</span>
       </div>
       <span className="reports-v2-switch">
-        <input type="checkbox" name={name} defaultChecked={defaultChecked} />
+        <input
+          id={inputId}
+          type="checkbox"
+          name={name}
+          defaultChecked={defaultChecked}
+        />
         <i aria-hidden="true" />
       </span>
     </label>

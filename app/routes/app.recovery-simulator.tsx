@@ -94,6 +94,27 @@ type Scenario = {
   salesChangePct: number;
 };
 
+const SCENARIOS: Scenario[] = [
+  {
+    key: "conservative",
+    priceChangePct: 2,
+    costReductionPct: 1,
+    salesChangePct: 0,
+  },
+  {
+    key: "balanced",
+    priceChangePct: 5,
+    costReductionPct: 3,
+    salesChangePct: 0,
+  },
+  {
+    key: "aggressive",
+    priceChangePct: 10,
+    costReductionPct: 5,
+    salesChangePct: -5,
+  },
+];
+
 type SavedScenario = {
   id: string;
   name: string;
@@ -255,32 +276,11 @@ export default function RecoverySimulatorPage() {
     [availableProducts, selectedProductId],
   );
 
-  const scenarios: Scenario[] = [
-    {
-      key: "conservative",
-      priceChangePct: 2,
-      costReductionPct: 1,
-      salesChangePct: 0,
-    },
-    {
-      key: "balanced",
-      priceChangePct: 5,
-      costReductionPct: 3,
-      salesChangePct: 0,
-    },
-    {
-      key: "aggressive",
-      priceChangePct: 10,
-      costReductionPct: 5,
-      salesChangePct: -5,
-    },
-  ];
-
   const applyScenario = React.useCallback(
     (nextScenario: Exclude<ScenarioKey, "custom">) => {
       if (!selectedProduct) return;
 
-      const config = scenarios.find((item) => item.key === nextScenario);
+      const config = SCENARIOS.find((item) => item.key === nextScenario);
       if (!config) return;
 
       setScenario(nextScenario);
@@ -298,7 +298,7 @@ export default function RecoverySimulatorPage() {
   React.useEffect(() => {
     if (!selectedProduct) return;
 
-    const balanced = scenarios.find((item) => item.key === "balanced");
+    const balanced = SCENARIOS.find((item) => item.key === "balanced");
     if (!balanced) return;
 
     setScenario("balanced");
@@ -309,7 +309,7 @@ export default function RecoverySimulatorPage() {
     );
     setCostReductionPct(balanced.costReductionPct);
     setSalesChangePct(balanced.salesChangePct);
-  }, [selectedProduct?.productId]);
+  }, [selectedProduct]);
 
   React.useEffect(() => {
     if (
@@ -2053,7 +2053,7 @@ export default function RecoverySimulatorPage() {
                 marginTop: 24,
               }}
             >
-              {scenarios.map((item) => {
+              {SCENARIOS.map((item) => {
                 const active = scenario === item.key;
                 const label =
                   item.key === "conservative"

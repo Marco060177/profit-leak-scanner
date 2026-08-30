@@ -1592,6 +1592,16 @@ export const de = {
     messagePlaceholder:
       "Teilen Sie uns mit, was Sie benötigen, oder beschreiben Sie das Problem...",
     sentSuccessfully: "Ihre Nachricht wurde erfolgreich an MarginLab gesendet.",
+    errors: {
+      invalidEmail: "Geben Sie eine gültige E-Mail-Adresse ein.",
+      missingTopic: "Wählen Sie ein Support-Thema aus.",
+      subjectTooShort: "Geben Sie einen Betreff mit mindestens 3 Zeichen ein.",
+      subjectTooLong: "Der Betreff ist zu lang.",
+      messageTooShort: "Beschreiben Sie das Problem mit mindestens 10 Zeichen.",
+      messageTooLong: "Die Nachricht ist zu lang.",
+      sendFailed: "Die Nachricht konnte nicht gesendet werden. Versuchen Sie es gleich erneut.",
+    },
+    whatsappPrefill: "Hallo, ich benötige Hilfe mit MarginLab.",
     sending: "Senden...",
     sendMessage: "Nachricht senden",
     whatsappEyebrow: "DIREKTER WHATSAPP-SUPPORT",

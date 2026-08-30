@@ -48,9 +48,9 @@ function getRecommendationAction(title: string) {
 }
 
 export default function RecommendationsPanel({ recommendations }: Props) {
-  if (recommendations.length === 0) return null;
-
   const navigate = useNavigate();
+
+  if (recommendations.length === 0) return null;
 
   return (
     <div className="ai-panel" id="recommendations-section">

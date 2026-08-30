@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link, useLocation } from "react-router";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { isSupportedLanguage, type Language } from "~/utils/i18n";
 
@@ -34,6 +35,7 @@ export default function DashboardNav({
   navigate,
 }: Props) {
   const { language, messages: t, setLanguage } = useI18n();
+  const location = useLocation();
 
   const [growthOpen, setGrowthOpen] =
     React.useState(false);
@@ -218,17 +220,12 @@ export default function DashboardNav({
     );
   };
 
-  const openPage = (
+  const buildPagePath = (
     id: NavId,
     path: string,
   ) => {
-    setGrowthOpen(false);
-    setMoreOpen(false);
-
-    if (active === id) return;
-
     const currentParams = new URLSearchParams(
-      window.location.search,
+      location.search,
     );
 
     const nextParams = new URLSearchParams();
@@ -264,7 +261,19 @@ export default function DashboardNav({
 
     const query = nextParams.toString();
 
-    navigate(query ? `${path}?${query}` : path);
+    return query ? `${path}?${query}` : path;
+  };
+
+  const openPage = (
+    id: NavId,
+    path: string,
+  ) => {
+    setGrowthOpen(false);
+    setMoreOpen(false);
+
+    if (active === id) return;
+
+    navigate(buildPagePath(id, path));
   };
 
   const mainItems = [
@@ -388,31 +397,35 @@ export default function DashboardNav({
 
   return (
     <div className="navbar">
-      <div
+      <Link
+        to={buildPagePath("overview", "/app")}
         className="logo"
-        onClick={() =>
-          openPage("overview", "/app")
-        }
-        style={{ cursor: "pointer" }}
+        onClick={(event) => {
+          if (active === "overview") event.preventDefault();
+        }}
+        style={{ cursor: "pointer", textDecoration: "none" }}
       >
         MARGIN<span>LAB</span>
-      </div>
+      </Link>
 
       <div className="nav-tabs">
         {mainItems.map((item) => (
-          <div
+          <Link
             key={item.id}
+            to={buildPagePath(item.id, item.path)}
             className={
               active === item.id
                 ? "nav-tab active"
                 : "nav-tab"
             }
-            onClick={() =>
-              openPage(item.id, item.path)
-            }
+            aria-current={active === item.id ? "page" : undefined}
+            onClick={(event) => {
+              if (active === item.id) event.preventDefault();
+            }}
+            style={{ textDecoration: "none" }}
           >
             {item.label}
-          </div>
+          </Link>
         ))}
 
         {/* GROWTH */}

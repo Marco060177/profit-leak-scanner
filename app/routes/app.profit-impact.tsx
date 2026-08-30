@@ -212,7 +212,7 @@ export async function action({ request }: { request: Request }) {
       const row = data.rows.find((r) => r.productId === productId);
       if (!row)
         throw new Response("Product context not found.", { status: 404 });
-      let sourceAlertKey = txt(form, "sourceAlertKey") || null;
+      const sourceAlertKey = txt(form, "sourceAlertKey") || null;
       let actionType = txt(form, "actionType");
       let title = txt(form, "title");
       let description = txt(form, "changeDescription");
