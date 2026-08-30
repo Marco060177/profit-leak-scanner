@@ -12,6 +12,7 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import {
   ControlField,
   FeedbackState,
+  FlowPath,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -920,6 +921,172 @@ export default function ProfitImpactPage() {
                   <strong>{copy.attributionConfidence}</strong>
                   {copy.attributionConfidenceDefinition}
                 </p>
+              </div>
+            </PremiumPanel>
+
+            <PremiumPanel className="impact-explainer impact-how" tone="orange">
+              <div className="impact-explainer-heading">
+                <div className="panel-eyebrow">{copy.howItWorksTitle}</div>
+                <h2>{copy.howItWorksTitle}</h2>
+                <p>{copy.howItWorksIntro}</p>
+              </div>
+              <div className="impact-workflow">
+                {[
+                  {
+                    step: "01",
+                    title: copy.baseline,
+                    description: copy.baselineStageDescription,
+                    duration: copy.dayFourteen,
+                    tone: "orange",
+                  },
+                  {
+                    step: "02",
+                    title: copy.markApplied,
+                    description: copy.appliedStageDescription,
+                    duration: copy.dayZero,
+                    tone: "blue",
+                  },
+                  {
+                    step: "03",
+                    title: copy.MEASURING,
+                    description: copy.measuringStageDescription,
+                    duration: copy.daySeven,
+                    tone: "cyan",
+                  },
+                  {
+                    step: "04",
+                    title: copy.COMPLETED,
+                    description: copy.completedStageDescription,
+                    duration: copy.dayFourteen,
+                    tone: "green",
+                  },
+                ].map((stage) => (
+                  <article
+                    key={stage.step}
+                    className={`impact-workflow-stage is-${stage.tone}`}
+                  >
+                    <div>
+                      <span>{stage.step}</span>
+                      <small>{stage.duration}</small>
+                    </div>
+                    <strong>{stage.title}</strong>
+                    <p>{stage.description}</p>
+                  </article>
+                ))}
+              </div>
+            </PremiumPanel>
+
+            <PremiumPanel
+              className="impact-explainer impact-measures"
+              tone="cyan"
+            >
+              <div className="impact-explainer-heading">
+                <div className="panel-eyebrow">{copy.whatMeasuresTitle}</div>
+                <h2>{copy.whatMeasuresTitle}</h2>
+                <p>{copy.whatMeasuresIntro}</p>
+              </div>
+              <div className="impact-measure-chain">
+                <article className="is-margin">
+                  <span>⌁</span>
+                  <small>{copy.measuredMarginChange}</small>
+                  <strong>
+                    {data.summary.averageMarginLift == null
+                      ? "—"
+                      : `${data.summary.averageMarginLift.toFixed(1)} pp`}
+                  </strong>
+                  <p>{copy.marginMeasureDescription}</p>
+                </article>
+                <article className="is-profit">
+                  <span>↗</span>
+                  <small>{copy.measuredProfitChange}</small>
+                  <strong>
+                    {uiMoney(
+                      data.summary.measuredProfitChange,
+                      currency,
+                      locale,
+                    )}
+                  </strong>
+                  <p>{copy.measuredChangeDefinition}</p>
+                </article>
+                <article className="is-attribution">
+                  <span>◇</span>
+                  <small>{copy.estimatedAttributableImpact}</small>
+                  <strong>
+                    {data.summary.estimatedAttributableProfit == null
+                      ? copy.notEstimated
+                      : uiMoney(
+                          data.summary.estimatedAttributableProfit,
+                          currency,
+                          locale,
+                        )}
+                  </strong>
+                  <p>{copy.attributableDefinition}</p>
+                </article>
+              </div>
+            </PremiumPanel>
+
+            <PremiumPanel
+              className="impact-explainer impact-journey"
+              tone="blue"
+            >
+              <div className="impact-explainer-heading">
+                <div className="panel-eyebrow">{copy.journeyTitle}</div>
+                <h2>{copy.journeyTitle}</h2>
+                <p>{copy.journeyIntro}</p>
+              </div>
+              <div className="impact-journey-visual">
+                <FlowPath
+                  tone="orange"
+                  trajectory="rising"
+                  label={copy.journeyTitle}
+                  nodes={[
+                    {
+                      id: "signal",
+                      progress: 0.04,
+                      tone: "orange",
+                      label: copy.signalDetected,
+                    },
+                    {
+                      id: "action",
+                      progress: 0.27,
+                      tone: "blue",
+                      label: copy.trackAction,
+                    },
+                    {
+                      id: "baseline",
+                      progress: 0.5,
+                      tone: "cyan",
+                      label: copy.baseline,
+                    },
+                    {
+                      id: "measurement",
+                      progress: 0.73,
+                      tone: "violet",
+                      label: copy.MEASURING,
+                    },
+                    {
+                      id: "result",
+                      progress: 0.96,
+                      tone: "green",
+                      emphasis: "strong",
+                      label: copy.viewMeasuredImpact,
+                    },
+                  ]}
+                />
+                <div className="impact-journey-stages">
+                  {[
+                    [copy.signalDetected, copy.signalDetectedDescription],
+                    [copy.trackAction, copy.actionSelectedDescription],
+                    [copy.baseline, copy.baselineCapturedDescription],
+                    [copy.MEASURING, copy.measurementJourneyDescription],
+                    [copy.viewMeasuredImpact, copy.resultDescription],
+                  ].map(([title, description]) => (
+                    <span key={title}>
+                      <strong>{title}</strong>
+                      <small>{description}</small>
+                    </span>
+                  ))}
+                </div>
               </div>
             </PremiumPanel>
           </>

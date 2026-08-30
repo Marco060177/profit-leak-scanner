@@ -102,7 +102,8 @@ export const es = {
       "Del análisis a la decisión: vea lo que más importa, simule antes de actuar y céntrese en los cambios con mayor impacto potencial.",
     growthTrial: "Todo en Starter + herramientas avanzadas",
     decisionRecoverySystem: "SISTEMA DE DECISIÓN Y RECUPERACIÓN",
-    growthValueTitle: "No te detengas en ver el problema. Decide qué hacer a continuación.",
+    growthValueTitle:
+      "No te detengas en ver el problema. Decide qué hacer a continuación.",
     growthValueText:
       "Growth conecta señales, prioridades, simulaciones, pronósticos e inteligencia artificial para ayudarlo a decidir qué intervención evaluar primero y qué impacto podría tener.",
     billingNote:
@@ -117,33 +118,89 @@ export const es = {
       "Prueba gratuita de 14 días. MarginLab no gestiona su pago directamente: su suscripción sigue siendo gestionada por Shopify.",
     viewPlansOnShopify: "Ver planes en Shopify →",
     starterFeatures: [
-      ["Panel de fuga de ganancias", "Vea dónde se están debilitando las ganancias y qué áreas merecen atención primero."],
-      ["Análisis de riesgos del producto", "Detecte productos críticos, márgenes débiles, costos faltantes y diferencias de precios antes de que se conviertan en problemas mayores."],
-      ["Profit Intelligence", "Comprenda qué está comprimiendo la rentabilidad en términos de concentración, descuentos, reembolsos, envíos y calidad de los márgenes."],
-      ["Tax-Aware Profit Engine", "Calcule las ganancias y los márgenes con VAT, GST y los efectos del impuesto sobre las ventas, incluidos los valores brutos/netos y el impuesto soportado recuperable cuando corresponda."],
-      ["Exportación CSV + PDF", "Exporte análisis e informes listos para compartir para su revisión, archivo y decisiones operativas."],
-      ["Alertas por correo electrónico de productos", "MarginLab sigue monitoreando la tienda y le notifica cuando se vende un producto problemático."],
-      ["Informe de ganancias semanal", "Reciba un resumen semanal de rentabilidad con desempeño, riesgos y señales para revisar, incluso cuando no abra la aplicación."],
-      ["Soporte por correo electrónico", "Comuníquese con MarginLab directamente desde la aplicación siempre que necesite ayuda o aclaración sobre el producto."],
+      [
+        "Panel de fuga de ganancias",
+        "Vea dónde se están debilitando las ganancias y qué áreas merecen atención primero.",
+      ],
+      [
+        "Análisis de riesgos del producto",
+        "Detecte productos críticos, márgenes débiles, costos faltantes y diferencias de precios antes de que se conviertan en problemas mayores.",
+      ],
+      [
+        "Profit Intelligence",
+        "Comprenda qué está comprimiendo la rentabilidad en términos de concentración, descuentos, reembolsos, envíos y calidad de los márgenes.",
+      ],
+      [
+        "Tax-Aware Profit Engine",
+        "Calcule las ganancias y los márgenes con VAT, GST y los efectos del impuesto sobre las ventas, incluidos los valores brutos/netos y el impuesto soportado recuperable cuando corresponda.",
+      ],
+      [
+        "Exportación CSV + PDF",
+        "Exporte análisis e informes listos para compartir para su revisión, archivo y decisiones operativas.",
+      ],
+      [
+        "Alertas por correo electrónico de productos",
+        "MarginLab sigue monitoreando la tienda y le notifica cuando se vende un producto problemático.",
+      ],
+      [
+        "Informe de ganancias semanal",
+        "Reciba un resumen semanal de rentabilidad con desempeño, riesgos y señales para revisar, incluso cuando no abra la aplicación.",
+      ],
+      [
+        "Soporte por correo electrónico",
+        "Comuníquese con MarginLab directamente desde la aplicación siempre que necesite ayuda o aclaración sobre el producto.",
+      ],
     ],
     growthFeatures: [
-      ["Profit Action Center", "Convierta las señales de rentabilidad en un plan clasificado por impacto, urgencia y prioridad."],
-      ["Alert Center", "Centralizar las señales que necesitan atención y gestionarlas mediante resolución."],
-      ["AI Advisor Pro", "Cuestione los datos reales de su tienda para comprender los riesgos, las prioridades y las decisiones con más contexto."],
-      ["Recovery Simulator V2", "Pruebe los cambios de precios, costos y ventas y mida el impacto económico antes de aplicarlos a su tienda."],
-      ["Profit Forecast V2", "Proyecte ganancias para los próximos meses y compare escenarios antes de tomar decisiones de crecimiento."],
-      ["Business Model Studio", "Incorpore los costos operativos, las tarifas y las reservas al modelo para estimar la ganancia neta y el punto de equilibrio."],
-      ["Recomendaciones avanzadas", "Obtenga orientación operativa más profunda sobre dónde actuar y qué impacto modelado evaluar primero."],
-      ["Soporte directo WhatsApp", "Utilice un canal de soporte directo de MarginLab cuando desee una aclaración rápida sobre la aplicación o su análisis."],
+      [
+        "Profit Action Center",
+        "Convierta las señales de rentabilidad en un plan clasificado por impacto, urgencia y prioridad.",
+      ],
+      [
+        "Alert Center",
+        "Centralizar las señales que necesitan atención y gestionarlas mediante resolución.",
+      ],
+      [
+        "AI Advisor Pro",
+        "Cuestione los datos reales de su tienda para comprender los riesgos, las prioridades y las decisiones con más contexto.",
+      ],
+      [
+        "Recovery Simulator V2",
+        "Pruebe los cambios de precios, costos y ventas y mida el impacto económico antes de aplicarlos a su tienda.",
+      ],
+      [
+        "Profit Forecast V2",
+        "Proyecte ganancias para los próximos meses y compare escenarios antes de tomar decisiones de crecimiento.",
+      ],
+      [
+        "Business Model Studio",
+        "Incorpore los costos operativos, las tarifas y las reservas al modelo para estimar la ganancia neta y el punto de equilibrio.",
+      ],
+      [
+        "Recomendaciones avanzadas",
+        "Obtenga orientación operativa más profunda sobre dónde actuar y qué impacto modelado evaluar primero.",
+      ],
+      [
+        "Soporte directo WhatsApp",
+        "Utilice un canal de soporte directo de MarginLab cuando desee una aclaración rápida sobre la aplicación o su análisis.",
+      ],
     ],
     compareRows: [
       ["Comprender dónde se están debilitando las ganancias", true, true],
       ["Analizar productos, márgenes y riesgos.", true, true],
-      ["Beneficio con fiscalidad integrada más allá de ingresos − COGS", true, true],
+      [
+        "Beneficio con fiscalidad integrada más allá de ingresos − COGS",
+        true,
+        true,
+      ],
       ["Monitoreo continuo, informes, alertas y exportaciones", true, true],
       ["Simular el impacto antes de cambiar precios o costos", false, true],
       ["Previsión de dónde pueden ir las ganancias", false, true],
-      ["Sepa qué hacer primero con la IA y las prioridades operativas", false, true],
+      [
+        "Sepa qué hacer primero con la IA y las prioridades operativas",
+        false,
+        true,
+      ],
       ["Gestionar señales activas + soporte directo WhatsApp", false, true],
     ],
   },
@@ -162,13 +219,15 @@ export const es = {
     growthDescription: "Herramientas avanzadas para aumentar las ganancias",
     alertsDescription: "Seguimiento de beneficios, prioridades y alertas",
     profitCopilotDescription: "Información, prioridades y consejos sobre IA",
-    profitActionCenterDescription: "Acciones clasificadas por impacto y urgencia",
+    profitActionCenterDescription:
+      "Acciones clasificadas por impacto y urgencia",
     recoverySimulatorDescription: "Simular precios, costos y ventas.",
     profitForecastDescription: "Previsiones a 3, 6 y 12 meses",
     businessModelStudioDescription: "Costos, tarifas y punto de equilibrio",
     taxProfileDescription: "Régimen VAT y configuración fiscal",
     reportsNotifications: "Informes y notificaciones",
-    reportsNotificationsDescription: "Correo electrónico, informes semanales y alertas",
+    reportsNotificationsDescription:
+      "Correo electrónico, informes semanales y alertas",
     glossaryDescription: "Métricas, conceptos y términos de MarginLab",
     supportDescription: "Soporte por correo electrónico y directo para Growth",
     billingDescription: "Planes y suscripción Shopify",
@@ -184,10 +243,13 @@ export const es = {
   },
   topLeaksPanel: {
     title: "Principales fugas de beneficios detectadas",
-    subtitle: "Problemas priorizados encontrados a partir de los datos reales de su pedido Shopify.",
+    subtitle:
+      "Problemas priorizados encontrados a partir de los datos reales de su pedido Shopify.",
     analyzeProducts: "Analizar productos",
-    noMajorLeaks: "✅ No se detectaron fugas importantes de beneficios en el periodo seleccionado.",
-    optimizationOpportunity: "Oportunidad de optimización de márgenes detectada",
+    noMajorLeaks:
+      "✅ No se detectaron fugas importantes de beneficios en el periodo seleccionado.",
+    optimizationOpportunity:
+      "Oportunidad de optimización de márgenes detectada",
     estimatedImpact: "impacto estimado",
   },
   copilotConfidenceBar: {
@@ -230,7 +292,8 @@ export const es = {
     marginLossTooltipNote:
       "No es una segunda categoría de costos y no debe agregarse a COGS y Profit.",
     title: "Desglose del margen",
-    subtitle: "Distribución de ingresos entre costos, ganancias y fugas detectadas.",
+    subtitle:
+      "Distribución de ingresos entre costos, ganancias y fugas detectadas.",
   },
   glossary: {
     knowledgeBase: "BASE DE CONOCIMIENTOS MARGINLAB",
@@ -248,7 +311,8 @@ export const es = {
       data: "Datos Shopify",
     },
     heroTitle: "El lenguaje de la rentabilidad, aclarado.",
-    heroDescription: "Definiciones prácticas de los conceptos utilizados por MarginLab. No es un diccionario de finanzas genérico: cada término se explica en el contexto de los análisis, simulaciones y decisiones de tienda de MarginLab.",
+    heroDescription:
+      "Definiciones prácticas de los conceptos utilizados por MarginLab. No es un diccionario de finanzas genérico: cada término se explica en el contexto de los análisis, simulaciones y decisiones de tienda de MarginLab.",
     statsTerms: "Términos",
     statsAreas: "Áreas",
     statsLanguages: "Idiomas",
@@ -259,222 +323,314 @@ export const es = {
     noTermsFound: "No se encontraron términos",
     noTermsHint: "Pruebe con otra búsqueda o borre el filtro de categorías.",
     referenceTitle: "De la definición a la decisión.",
-    referenceDescription: "El Glosario explica los conceptos. Los módulos operativos MarginLab los convierten en análisis y acciones concretas.",
+    referenceDescription:
+      "El Glosario explica los conceptos. Los módulos operativos MarginLab los convierten en análisis y acciones concretas.",
     backToDashboard: "Volver al panel →",
     collapse: "Colapso",
     expand: "Expandir",
     terms: {
       "action-score": {
-        short: "Puntuación resumida que indica cuánto trabajo operativo relevante ha identificado MarginLab.",
-        detail: "Combina acciones disponibles, valor económico potencial y prioridad media. Una puntuación alta no significa necesariamente que la tienda no sea saludable; significa que las decisiones significativas merecen atención.",
+        short:
+          "Puntuación resumida que indica cuánto trabajo operativo relevante ha identificado MarginLab.",
+        detail:
+          "Combina acciones disponibles, valor económico potencial y prioridad media. Una puntuación alta no significa necesariamente que la tienda no sea saludable; significa que las decisiones significativas merecen atención.",
       },
       "annual-impact": {
         short: "Proyección a 12 meses de un impacto económico estimado.",
-        detail: "Generalmente se calcula anualizando un escenario mensual. No es una ganancia realizada y supone que las condiciones del escenario siguen siendo válidas.",
+        detail:
+          "Generalmente se calcula anualizando un escenario mensual. No es una ganancia realizada y supone que las condiciones del escenario siguen siendo válidas.",
       },
       "annual-net-profit": {
-        short: "Utilidad neta anualizada derivada de la base mensual del modelo.",
-        detail: "MarginLab lo utiliza como una proyección económica, no como un resultado contable histórico.",
+        short:
+          "Utilidad neta anualizada derivada de la base mensual del modelo.",
+        detail:
+          "MarginLab lo utiliza como una proyección económica, no como un resultado contable histórico.",
       },
       "average-margin": {
-        short: "Margen medio calculado entre los ingresos y beneficios analizados.",
-        detail: "En Previsión, puede referirse al margen promedio proyectado en todo el horizonte seleccionado.",
+        short:
+          "Margen medio calculado entre los ingresos y beneficios analizados.",
+        detail:
+          "En Previsión, puede referirse al margen promedio proyectado en todo el horizonte seleccionado.",
       },
-      "baseline": {
+      baseline: {
         short: "Posición económica inicial utilizada como referencia.",
-        detail: "En MarginLab, la línea de base proviene de los datos de Shopify para el período seleccionado y puede normalizarse mensualmente.",
+        detail:
+          "En MarginLab, la línea de base proviene de los datos de Shopify para el período seleccionado y puede normalizarse mensualmente.",
       },
       "break-even-price": {
-        short: "Precio mínimo requerido para que un producto cubra los costos considerados.",
-        detail: "Por debajo de este precio, el producto no genera beneficio económico bajo la estructura de costes del modelo.",
+        short:
+          "Precio mínimo requerido para que un producto cubra los costos considerados.",
+        detail:
+          "Por debajo de este precio, el producto no genera beneficio económico bajo la estructura de costes del modelo.",
       },
       "break-even-revenue": {
         short: "Ingresos necesarios para llegar a cero beneficios.",
-        detail: "Ingresos mensuales estimados necesarios para cubrir los costos fijos y variables configurados. Por encima de este nivel, el modelo comienza a generar beneficios.",
+        detail:
+          "Ingresos mensuales estimados necesarios para cubrir los costos fijos y variables configurados. Por encima de este nivel, el modelo comienza a generar beneficios.",
       },
       "business-tax-reserve": {
-        short: "Reserva gerencial utilizada como supuesto económico conservador.",
-        detail: "No reemplaza VAT, GST, impuestos sobre las ventas, declaraciones de impuestos ni obligaciones tributarias reales. Es una suposición financiera utilizada por Business Model Studio.",
+        short:
+          "Reserva gerencial utilizada como supuesto económico conservador.",
+        detail:
+          "No reemplaza VAT, GST, impuestos sobre las ventas, declaraciones de impuestos ni obligaciones tributarias reales. Es una suposición financiera utilizada por Business Model Studio.",
       },
-      "cogs": {
-        short: "Costo de bienes vendidos: costo de los productos realmente vendidos.",
-        detail: "Un componente central de los cálculos de ganancias y márgenes. MarginLab podrá ajustarlo económicamente a través del Tax Engine cuando la configuración de impuestos lo requiera.",
+      cogs: {
+        short:
+          "Costo de bienes vendidos: costo de los productos realmente vendidos.",
+        detail:
+          "Un componente central de los cálculos de ganancias y márgenes. MarginLab podrá ajustarlo económicamente a través del Tax Engine cuando la configuración de impuestos lo requiera.",
       },
       "cogs-coverage": {
-        short: "Porcentaje de datos analizados para los cuales MarginLab tiene información de costos utilizable.",
-        detail: "Una mayor cobertura fortalece el análisis de ganancias. Los costos omitidos pueden reducir la confiabilidad de las estimaciones.",
+        short:
+          "Porcentaje de datos analizados para los cuales MarginLab tiene información de costos utilizable.",
+        detail:
+          "Una mayor cobertura fortalece el análisis de ganancias. Los costos omitidos pueden reducir la confiabilidad de las estimaciones.",
       },
       "commercial-risk": {
         short: "Estimación del riesgo comercial asociado a un escenario.",
-        detail: "En Recovery Simulator, considera principalmente los cambios de precios y la posible respuesta de ventas. No es una previsión estadística de la demanda.",
+        detail:
+          "En Recovery Simulator, considera principalmente los cambios de precios y la posible respuesta de ventas. No es una previsión estadística de la demanda.",
       },
-      "confidence": {
-        short: "Indicador de la solidez de los datos que respaldan una estimación.",
-        detail: "No representa la probabilidad de que suceda un resultado económico proyectado. Evalúa factores como disponibilidad de costos, cobertura e historial de utilización.",
+      confidence: {
+        short:
+          "Indicador de la solidez de los datos que respaldan una estimación.",
+        detail:
+          "No representa la probabilidad de que suceda un resultado económico proyectado. Evalúa factores como disponibilidad de costos, cobertura e historial de utilización.",
       },
       "contribution-margin": {
-        short: "Margen restante después de los costos variables para ayudar a cubrir los costos fijos.",
-        detail: "Útil para comprender cuánto contribuye cada unidad de ingresos a la estructura económica de la tienda.",
+        short:
+          "Margen restante después de los costos variables para ayudar a cubrir los costos fijos.",
+        detail:
+          "Útil para comprender cuánto contribuye cada unidad de ingresos a la estructura económica de la tienda.",
       },
       "cumulative-profit": {
-        short: "Suma de las ganancias generadas en múltiples períodos consecutivos.",
-        detail: "En Previsión, representa el beneficio total proyectado acumulado en el horizonte seleccionado.",
+        short:
+          "Suma de las ganancias generadas en múltiples períodos consecutivos.",
+        detail:
+          "En Previsión, representa el beneficio total proyectado acumulado en el horizonte seleccionado.",
       },
       "cumulative-profit-lift": {
-        short: "Beneficio adicional acumulado generado por un escenario versus la base de referencia de hoy.",
-        detail: "Diferencia entre el beneficio del escenario y el beneficio que resultaría de mantener sin cambios el beneficio mensual actual.",
+        short:
+          "Beneficio adicional acumulado generado por un escenario versus la base de referencia de hoy.",
+        detail:
+          "Diferencia entre el beneficio del escenario y el beneficio que resultaría de mantener sin cambios el beneficio mensual actual.",
       },
       "data-quality": {
-        short: "Evaluación de la integridad y confiabilidad de los datos utilizados por el modelo.",
-        detail: "No mide la probabilidad de éxito del escenario. Mide la calidad de la información con la que trabaja MarginLab.",
+        short:
+          "Evaluación de la integridad y confiabilidad de los datos utilizados por el modelo.",
+        detail:
+          "No mide la probabilidad de éxito del escenario. Mide la calidad de la información con la que trabaja MarginLab.",
       },
       "default-tax-rate": {
-        short: "Tasa impositiva alternativa utilizada cuando una línea impositiva más específica no está disponible.",
-        detail: "Las líneas de impuestos Shopify reales tienen prioridad. La tasa predeterminada no anula automáticamente los impuestos registrados en los pedidos.",
+        short:
+          "Tasa impositiva alternativa utilizada cuando una línea impositiva más específica no está disponible.",
+        detail:
+          "Las líneas de impuestos Shopify reales tienen prioridad. La tasa predeterminada no anula automáticamente los impuestos registrados en los pedidos.",
       },
       "discount-exposure": {
-        short: "Medida de cómo los descuentos y promociones afectan la rentabilidad.",
-        detail: "Ayuda a distinguir el crecimiento de los ingresos del crecimiento genuinamente rentable.",
+        short:
+          "Medida de cómo los descuentos y promociones afectan la rentabilidad.",
+        detail:
+          "Ayuda a distinguir el crecimiento de los ingresos del crecimiento genuinamente rentable.",
       },
       "economic-cogs": {
-        short: "Costo económico del producto después de los ajustes impositivos aplicables.",
-        detail: "Puede diferir del costo bruto de Shopify cuando el impuesto soportado está incluido y es recuperable.",
+        short:
+          "Costo económico del producto después de los ajustes impositivos aplicables.",
+        detail:
+          "Puede diferir del costo bruto de Shopify cuando el impuesto soportado está incluido y es recuperable.",
       },
       "economic-margin": {
-        short: "Margen calculado sobre la base económica realmente utilizada por MarginLab.",
-        detail: "Refleja los ajustes necesarios para representar correctamente los ingresos y costos económicos.",
+        short:
+          "Margen calculado sobre la base económica realmente utilizada por MarginLab.",
+        detail:
+          "Refleja los ajustes necesarios para representar correctamente los ingresos y costos económicos.",
       },
       "economic-profit": {
-        short: "Beneficio calculado después de reconstruir los ingresos y costos sobre la base económica de MarginLab.",
-        detail: "Utilizado por muchas funciones de Growth antes de que se apliquen costos o suposiciones adicionales.",
+        short:
+          "Beneficio calculado después de reconstruir los ingresos y costos sobre la base económica de MarginLab.",
+        detail:
+          "Utilizado por muchas funciones de Growth antes de que se apliquen costos o suposiciones adicionales.",
       },
       "economic-revenue": {
-        short: "Ingresos utilizados por MarginLab para medir la rentabilidad económica.",
-        detail: "Puede diferir de los ingresos brutos de Shopify cuando es necesario separar los componentes impositivos.",
+        short:
+          "Ingresos utilizados por MarginLab para medir la rentabilidad económica.",
+        detail:
+          "Puede diferir de los ingresos brutos de Shopify cuando es necesario separar los componentes impositivos.",
       },
       "estimated-profit-model": {
-        short: "Modelo de beneficios que combina datos observados y supuestos comerciales.",
-        detail: "En Business Model Studio incluye costos fijos configurados, tarifas variables y reservas. No es una cuenta de pérdidas y ganancias contable oficial.",
+        short:
+          "Modelo de beneficios que combina datos observados y supuestos comerciales.",
+        detail:
+          "En Business Model Studio incluye costos fijos configurados, tarifas variables y reservas. No es una cuenta de pérdidas y ganancias contable oficial.",
       },
       "estimated-timing": {
-        short: "Primer periodo en el que un escenario alcanza un objetivo configurado.",
-        detail: "Depende completamente de los supuestos del escenario y no es una fecha garantizada.",
+        short:
+          "Primer periodo en el que un escenario alcanza un objetivo configurado.",
+        detail:
+          "Depende completamente de los supuestos del escenario y no es una fecha garantizada.",
       },
       "fixed-costs": {
-        short: "Los costos que el modelo trata como independientes del volumen de ventas individual.",
-        detail: "Los ejemplos típicos incluyen publicidad mensual, software, personal y otros costos operativos ingresados en Business Model Studio.",
+        short:
+          "Los costos que el modelo trata como independientes del volumen de ventas individual.",
+        detail:
+          "Los ejemplos típicos incluyen publicidad mensual, software, personal y otros costos operativos ingresados en Business Model Studio.",
       },
       "forecast-health": {
-        short: "Evaluación resumida de la fortaleza económica de un escenario futuro.",
-        detail: "En MarginLab, se basa principalmente en el margen neto proyectado al final del horizonte seleccionado.",
+        short:
+          "Evaluación resumida de la fortaleza económica de un escenario futuro.",
+        detail:
+          "En MarginLab, se basa principalmente en el margen neto proyectado al final del horizonte seleccionado.",
       },
       "gross-margin": {
-        short: "Porcentaje de ingresos restante después del costo de los bienes vendidos.",
+        short:
+          "Porcentaje de ingresos restante después del costo de los bienes vendidos.",
         detail: "Fórmula simplificada: (Ingresos − COGS) / Ingresos × 100.",
       },
       "gross-profit": {
         short: "Ingresos menos costo de los bienes vendidos.",
-        detail: "No incluye necesariamente publicidad, software, personal, honorarios u otros gastos operativos.",
+        detail:
+          "No incluye necesariamente publicidad, software, personal, honorarios u otros gastos operativos.",
       },
       "input-tax-recovery": {
-        short: "Proporción de impuestos implícitos en los costos tratados como económicamente recuperables.",
-        detail: "Se utiliza para reconstruir el costo económico. No determina el derecho legal real del comerciante a recuperar el impuesto.",
+        short:
+          "Proporción de impuestos implícitos en los costos tratados como económicamente recuperables.",
+        detail:
+          "Se utiliza para reconstruir el costo económico. No determina el derecho legal real del comerciante a recuperar el impuesto.",
       },
       "low-margin-product": {
-        short: "Producto con margen inferior al umbral económico utilizado por MarginLab.",
-        detail: "No significa necesariamente que el producto deba retirarse; Es posible que sea necesario revisar la fijación de precios, costos, descuentos o función estratégica.",
+        short:
+          "Producto con margen inferior al umbral económico utilizado por MarginLab.",
+        detail:
+          "No significa necesariamente que el producto deba retirarse; Es posible que sea necesario revisar la fijación de precios, costos, descuentos o función estratégica.",
       },
       "margin-deterioration": {
         short: "Disminución del margen frente a un período de comparación.",
-        detail: "Puede indicar costos crecientes, mayores descuentos, cambios en la combinación de productos u otros problemas que requieren investigación.",
+        detail:
+          "Puede indicar costos crecientes, mayores descuentos, cambios en la combinación de productos u otros problemas que requieren investigación.",
       },
       "margin-improvement": {
         short: "Aumento supuesto del margen durante un escenario.",
-        detail: "En Forecasting, se expresa en puntos porcentuales y se aplica progresivamente a lo largo del horizonte seleccionado.",
+        detail:
+          "En Forecasting, se expresa en puntos porcentuales y se aplica progresivamente a lo largo del horizonte seleccionado.",
       },
       "missing-cost": {
         short: "Producto para el cual faltan datos de costos utilizables.",
-        detail: "Sin datos de costos, MarginLab no puede medir las ganancias y el margen del producto con la misma precisión.",
+        detail:
+          "Sin datos de costos, MarginLab no puede medir las ganancias y el margen del producto con la misma precisión.",
       },
       "model-health": {
         short: "Puntuación resumen de la sostenibilidad del modelo económico.",
-        detail: "Considera el margen neto estimado, la carga de costos y la concentración de los principales elementos de costos.",
+        detail:
+          "Considera el margen neto estimado, la carga de costos y la concentración de los principales elementos de costos.",
       },
       "monthly-net-profit": {
         short: "Beneficio neto estimado mensualmente.",
-        detail: "El significado exacto depende del módulo y puede incluir costos fijos, tarifas variables y reservas comerciales además de la base económica de la tienda.",
+        detail:
+          "El significado exacto depende del módulo y puede incluir costos fijos, tarifas variables y reservas comerciales además de la base económica de la tienda.",
       },
       "monthly-profit-gap": {
-        short: "Diferencia mensual estimada entre la situación actual y un escenario objetivo.",
-        detail: "Es una oportunidad económica modelada, no una ganancia perdida ni garantizada.",
+        short:
+          "Diferencia mensual estimada entre la situación actual y un escenario objetivo.",
+        detail:
+          "Es una oportunidad económica modelada, no una ganancia perdida ni garantizada.",
       },
       "net-margin": {
-        short: "Porcentaje de ingresos que queda como beneficio neto después de los costos incluidos.",
-        detail: "Una medida de rentabilidad más completa que el margen bruto cuando se incluyen los costos operativos y las tarifas.",
+        short:
+          "Porcentaje de ingresos que queda como beneficio neto después de los costos incluidos.",
+        detail:
+          "Una medida de rentabilidad más completa que el margen bruto cuando se incluyen los costos operativos y las tarifas.",
       },
       "net-monthly-recovery": {
-        short: "Mejora neta mensual estimada generada por un escenario versus la línea base.",
-        detail: "Es un resultado simulado y no representa dinero ya recuperado.",
+        short:
+          "Mejora neta mensual estimada generada por un escenario versus la línea base.",
+        detail:
+          "Es un resultado simulado y no representa dinero ya recuperado.",
       },
-      "opportunity": {
+      opportunity: {
         short: "Área donde MarginLab identifica posibles mejoras económicas.",
-        detail: "Una oportunidad no es necesariamente un problema; indica una posible palanca de optimización.",
+        detail:
+          "Una oportunidad no es necesariamente un problema; indica una posible palanca de optimización.",
       },
-      "priority": {
-        short: "Indicador utilizado para clasificar las acciones por relevancia y urgencia.",
-        detail: "Ayuda a distinguir lo que necesita atención inmediata de lo que se puede planificar o simplemente monitorear.",
+      priority: {
+        short:
+          "Indicador utilizado para clasificar las acciones por relevancia y urgencia.",
+        detail:
+          "Ayuda a distinguir lo que necesita atención inmediata de lo que se puede planificar o simplemente monitorear.",
       },
       "profit-action-center": {
-        short: "Área MarginLab que convierte señales económicas en una cola de acciones ordenadas.",
-        detail: "No agrega automáticamente todos los impactos de las acciones individuales porque algunas oportunidades pueden superponerse.",
+        short:
+          "Área MarginLab que convierte señales económicas en una cola de acciones ordenadas.",
+        detail:
+          "No agrega automáticamente todos los impactos de las acciones individuales porque algunas oportunidades pueden superponerse.",
       },
       "profit-health": {
         short: "Clasificación resumida del nivel de margen alcanzado.",
-        detail: "En Recovery Simulator, puede clasificar un escenario como deficitario, crítico, débil, saludable o fuerte.",
+        detail:
+          "En Recovery Simulator, puede clasificar un escenario como deficitario, crítico, débil, saludable o fuerte.",
       },
       "profit-leak": {
-        short: "Situación en la que los ingresos o las ventas no se convierten en beneficios económicos esperados.",
-        detail: "Puede deberse a costos elevados, precios débiles, descuentos, reembolsos, tarifas u otros factores.",
+        short:
+          "Situación en la que los ingresos o las ventas no se convierten en beneficios económicos esperados.",
+        detail:
+          "Puede deberse a costos elevados, precios débiles, descuentos, reembolsos, tarifas u otros factores.",
       },
       "recoverable-profit": {
-        short: "Beneficio potencial que puede recuperarse mejorando una situación económica identificada.",
-        detail: "Es una estimación de oportunidad y no debe interpretarse como una ganancia garantizada.",
+        short:
+          "Beneficio potencial que puede recuperarse mejorando una situación económica identificada.",
+        detail:
+          "Es una estimación de oportunidad y no debe interpretarse como una ganancia garantizada.",
       },
       "recovery-opportunities-captured": {
-        short: "Parte del beneficio recuperable que se supone que se realizará en un escenario.",
-        detail: "100% significa modelar la oportunidad estimada completa, sin garantizar que el 100% realmente se recupere.",
+        short:
+          "Parte del beneficio recuperable que se supone que se realizará en un escenario.",
+        detail:
+          "100% significa modelar la oportunidad estimada completa, sin garantizar que el 100% realmente se recupere.",
       },
       "refund-exposure": {
-        short: "Medida del impacto económico de las devoluciones sobre la rentabilidad.",
-        detail: "Ayuda a identificar productos o períodos en los que los reembolsos están erosionando las ganancias.",
+        short:
+          "Medida del impacto económico de las devoluciones sobre la rentabilidad.",
+        detail:
+          "Ayuda a identificar productos o períodos en los que los reembolsos están erosionando las ganancias.",
       },
       "revenue-growth": {
         short: "Cambio en los ingresos a lo largo del tiempo.",
-        detail: "En las previsiones, se trata de un supuesto de escenario, no necesariamente de un crecimiento observado.",
+        detail:
+          "En las previsiones, se trata de un supuesto de escenario, no necesariamente de un crecimiento observado.",
       },
-      "scenario": {
-        short: "Combinación de supuestos utilizados para simular un posible resultado económico.",
-        detail: "Los escenarios apoyan la toma de decisiones. No son pronósticos garantizados y no se deben sumar escenarios alternativos.",
+      scenario: {
+        short:
+          "Combinación de supuestos utilizados para simular un posible resultado económico.",
+        detail:
+          "Los escenarios apoyan la toma de decisiones. No son pronósticos garantizados y no se deben sumar escenarios alternativos.",
       },
       "tax-aware-economic-basis": {
-        short: "Base económica que incorpora el tratamiento fiscal disponible a partir de los datos de Shopify y el perfil fiscal.",
-        detail: "Ayuda a evitar que los componentes tributarios sean tratados incorrectamente como ingresos, costos o ganancias económicos.",
+        short:
+          "Base económica que incorpora el tratamiento fiscal disponible a partir de los datos de Shopify y el perfil fiscal.",
+        detail:
+          "Ayuda a evitar que los componentes tributarios sean tratados incorrectamente como ingresos, costos o ganancias económicos.",
       },
       "tax-lines": {
-        short: "Detalles fiscales registrados por Shopify en las transacciones.",
-        detail: "Cuando están disponibles, MarginLab las trata como autorizadas sobre las tasas de reserva configuradas en el perfil fiscal.",
+        short:
+          "Detalles fiscales registrados por Shopify en las transacciones.",
+        detail:
+          "Cuando están disponibles, MarginLab las trata como autorizadas sobre las tasas de reserva configuradas en el perfil fiscal.",
       },
       "target-margin": {
-        short: "Nivel de margen utilizado como objetivo económico en análisis o simulación.",
-        detail: "No representa necesariamente un margen de tienda universalmente ideal; es un umbral operativo utilizado por el modelo.",
+        short:
+          "Nivel de margen utilizado como objetivo económico en análisis o simulación.",
+        detail:
+          "No representa necesariamente un margen de tienda universalmente ideal; es un umbral operativo utilizado por el modelo.",
       },
       "variable-fees": {
-        short: "Tarifas que aumentan o disminuyen con los ingresos o el volumen de transacciones.",
-        detail: "Los ejemplos típicos incluyen tarifas de procesamiento de pagos y tarifas de transacción.",
+        short:
+          "Tarifas que aumentan o disminuyen con los ingresos o el volumen de transacciones.",
+        detail:
+          "Los ejemplos típicos incluyen tarifas de procesamiento de pagos y tarifas de transacción.",
       },
       "weak-best-seller": {
         short: "Producto de gran venta con rentabilidad relativamente débil.",
-        detail: "Especialmente importante porque un producto de gran venta puede generar ingresos sustanciales sin contribuir proporcionalmente a las ganancias.",
+        detail:
+          "Especialmente importante porque un producto de gran venta puede generar ingresos sustanciales sin contribuir proporcionalmente a las ganancias.",
       },
     },
   },
@@ -486,7 +642,8 @@ export const es = {
     profitMarginTooltipTitle: "margen de beneficio",
     profitMarginTooltipDescription:
       "El porcentaje de ingresos del producto restante después de restar el costo de los productos vendidos.",
-    profitMarginTooltipFormula: "(Beneficio del producto ÷ Ingresos del producto) × 100",
+    profitMarginTooltipFormula:
+      "(Beneficio del producto ÷ Ingresos del producto) × 100",
     profitMarginTooltipNote:
       "Puede diferir del Margen Económico, que también considera los ajustes tributarios aplicables.",
     revenue: "Ingresos",
@@ -519,7 +676,8 @@ export const es = {
     tooltipTitle: "Salud del margen",
     tooltipDescription:
       "Una puntuación de 0 a 100 que resume qué tan saludable es la rentabilidad de la tienda. Considera pérdidas, márgenes, cobertura de costos y calidad de los datos.",
-    tooltipNote: "Cuanto mayor sea la puntuación, más saludable será el margen.",
+    tooltipNote:
+      "Cuanto mayor sea la puntuación, más saludable será el margen.",
     confirmedLoss: "Pérdida confirmada",
     productsAtRisk: "Productos en riesgo",
     productsDetected: "{{count}} detectado",
@@ -565,10 +723,14 @@ export const es = {
       stable: "Estado estable",
     },
     statusDescription: {
-      action: "Al menos una cuestión importante requiere actualmente una decisión priorizada.",
-      review: "No existe una emergencia generalizada, pero se deben revisar algunas áreas.",
-      optimize: "El negocio es estable. Las prioridades actuales se centran en la mejora.",
-      stable: "Ningún problema importante de rentabilidad requiere acción inmediata.",
+      action:
+        "Al menos una cuestión importante requiere actualmente una decisión priorizada.",
+      review:
+        "No existe una emergencia generalizada, pero se deben revisar algunas áreas.",
+      optimize:
+        "El negocio es estable. Las prioridades actuales se centran en la mejora.",
+      stable:
+        "Ningún problema importante de rentabilidad requiere acción inmediata.",
     },
     eyebrow: "PRIORIDADES DE NEGOCIO",
     title: "Las decisiones que merecen atención ahora",
@@ -605,7 +767,8 @@ export const es = {
     tooltipTitle: "Señales de rentabilidad",
     tooltipDescription:
       "Problemas, riesgos u oportunidades MarginLab detectados al analizar los datos de su tienda.",
-    tooltipNote: "Las señales se clasifican por importancia e impacto económico.",
+    tooltipNote:
+      "Las señales se clasifican por importancia e impacto económico.",
     description:
       "MarginLab analizó márgenes, productos, costos, descuentos, reembolsos y oportunidades. Los eventos se clasifican automáticamente por urgencia e impacto.",
     monitorStatus: "Estado del monitor",
@@ -620,7 +783,8 @@ export const es = {
   recoverySimulatorPage: {
     emptyEyebrow: "SIMULADOR DE RECUPERACIÓN",
     emptyTitle: "No hay productos disponibles para simulación.",
-    emptyDescription: "MarginLab necesita al menos un producto con precio de venta y ventas registradas en el período seleccionado.",
+    emptyDescription:
+      "MarginLab necesita al menos un producto con precio de venta y ventas registradas en el período seleccionado.",
     suggestedScenarioApplied: "Escenario sugerido aplicado",
     scenarioSaved: "Escenario guardado",
     scenarioLoaded: "Escenario cargado",
@@ -628,10 +792,13 @@ export const es = {
     newCost: "Nuevo costo {{value}}",
     estimatedUnits: "{{count}} unidades mensuales estimadas",
     scenarioSummary: "Precio +{{price}}% · Costo −{{cost}}% · Ventas {{sales}}",
-    validationNote: "Cambio de precio {{price}} y respuesta de ventas {{sales}}. Validar el resultado real durante 30 días.",
-    afterTaxReserve: "Beneficio neto estimado después de la reserva fiscal {{value}}.",
+    validationNote:
+      "Cambio de precio {{price}} y respuesta de ventas {{sales}}. Validar el resultado real durante 30 días.",
+    afterTaxReserve:
+      "Beneficio neto estimado después de la reserva fiscal {{value}}.",
     annualProfitUnlocked: "Beneficio anual neto de {{value}} desbloqueado",
-    methodNote: "Las estimaciones parten de la base económica basada en impuestos construida a partir de datos de Shopify durante los últimos días de {{periodDays}} y se normalizan mensualmente. La reserva fiscal para el modelo de negocio sigue siendo un supuesto independiente de Business Model Studio. El simulador no cambia automáticamente los precios ni los costos.",
+    methodNote:
+      "Las estimaciones parten de la base económica basada en impuestos construida a partir de datos de Shopify durante los últimos días de {{periodDays}} y se normalizan mensualmente. La reserva fiscal para el modelo de negocio sigue siendo un supuesto independiente de Business Model Studio. El simulador no cambia automáticamente los precios ni los costos.",
     auto: {
       s001: "Plan Growth activo",
       s002: "Vista previa del plan Growth",
@@ -724,10 +891,13 @@ export const es = {
     },
   },
   profitAssumptionsPage: {
-    positiveModel: "El modelo genera un beneficio neto mensual positivo de {{profit}}. El punto de equilibrio estimado es {{breakEven}} en ingresos mensuales.",
-    negativeModel: "El modelo actual produce una pérdida mensual estimada de {{loss}}. Reduzca costos o mejore el margen antes de escalar.",
+    positiveModel:
+      "El modelo genera un beneficio neto mensual positivo de {{profit}}. El punto de equilibrio estimado es {{breakEven}} en ingresos mensuales.",
+    negativeModel:
+      "El modelo actual produce una pérdida mensual estimada de {{loss}}. Reduzca costos o mejore el margen antes de escalar.",
     annualImpact: "Impacto anual estimado: +{{value}}",
-    methodNote: "Los valores ingresados manualmente se guardan y se aplican a la base económica basada en impuestos observada durante los últimos días de {{periodDays}}. Los resultados etiquetados mensualmente están normalizados a 30 días y las proyecciones anuales se derivan de esa base mensual normalizada. La reserva de impuestos comerciales es una suposición separada y no reemplaza el tratamiento de impuestos sobre las ventas/VAT/GST del motor de impuestos.",
+    methodNote:
+      "Los valores ingresados manualmente se guardan y se aplican a la base económica basada en impuestos observada durante los últimos días de {{periodDays}}. Los resultados etiquetados mensualmente están normalizados a 30 días y las proyecciones anuales se derivan de esa base mensual normalizada. La reserva de impuestos comerciales es una suposición separada y no reemplaza el tratamiento de impuestos sobre las ventas/VAT/GST del motor de impuestos.",
     auto: {
       a001: "Plan Growth activo",
       a002: "Característica Growth",
@@ -812,12 +982,29 @@ export const es = {
   recommendationsPage: {
     confidence: { high: "Alto", medium: "Medio", low: "Bajo" },
     businessStatus: {
-      action: { label: "Acción requerida", description: "Al menos una cuestión importante requiere una decisión priorizada." },
-      review: { label: "Revisión recomendada", description: "No existe una emergencia generalizada, pero algunas señales merecen revisión." },
-      optimize: { label: "Optimización disponible", description: "El negocio es relativamente estable. Las prioridades actuales se centran en la mejora." },
-      stable: { label: "Estado estable", description: "Ningún problema importante de rentabilidad requiere acción inmediata." },
+      action: {
+        label: "Acción requerida",
+        description:
+          "Al menos una cuestión importante requiere una decisión priorizada.",
+      },
+      review: {
+        label: "Revisión recomendada",
+        description:
+          "No existe una emergencia generalizada, pero algunas señales merecen revisión.",
+      },
+      optimize: {
+        label: "Optimización disponible",
+        description:
+          "El negocio es relativamente estable. Las prioridades actuales se centran en la mejora.",
+      },
+      stable: {
+        label: "Estado estable",
+        description:
+          "Ningún problema importante de rentabilidad requiere acción inmediata.",
+      },
     },
-    operationalPriorities: "Las prioridades operativas de {{count}} están disponibles. La diferencia de beneficios anual estimada a la que apuntar, según el escenario actual, es {{opportunity}}.",
+    operationalPriorities:
+      "Las prioridades operativas de {{count}} están disponibles. La diferencia de beneficios anual estimada a la que apuntar, según el escenario actual, es {{opportunity}}.",
     auto: {
       r001: "MÁXIMA PRIORIDAD",
       r002: "Impacto mensual",
@@ -902,12 +1089,15 @@ export const es = {
     projectedNetMargin: "{{value}} margen neto proyectado",
     totalImpact: "Impacto total en los próximos meses {{horizon}}",
     forecastTotal: "Total de pronóstico en los meses {{horizon}}",
-    possibleOutcomes: "Tres posibles resultados durante los meses de {{horizon}}",
+    possibleOutcomes:
+      "Tres posibles resultados durante los meses de {{horizon}}",
     dataQuality: "Calidad de datos {{value}}",
     month: "Mes {{month}}",
     goalReached: "Bajo estos supuestos, la ganancia mensual excede {{goal}}.",
-    goalNotReached: "El escenario no llega a {{goal}} dentro de los meses {{horizon}}.",
-    methodNote: "Los pronósticos parten de la base económica consciente de los impuestos construida a partir de los últimos días {{periodDays}} de los datos Shopify y normalizados mensualmente. Los costos, las tarifas y la reserva fiscal Business Model Studio siguen siendo supuestos separados que se aplican al pronóstico. Estos son escenarios de decisión, no resultados garantizados.",
+    goalNotReached:
+      "El escenario no llega a {{goal}} dentro de los meses {{horizon}}.",
+    methodNote:
+      "Los pronósticos parten de la base económica consciente de los impuestos construida a partir de los últimos días {{periodDays}} de los datos Shopify y normalizados mensualmente. Los costos, las tarifas y la reserva fiscal Business Model Studio siguen siendo supuestos separados que se aplican al pronóstico. Estos son escenarios de decisión, no resultados garantizados.",
     auto: {
       f001: "Plan Growth activo",
       f002: "Característica Growth",
@@ -977,21 +1167,30 @@ export const es = {
     },
   },
   dashboardPage: {
-    analysisSteps: ["Escaneando pedidos de Shopify...", "Comprobando costos de productos...", "Detectando fugas de precios...", "Análisis completo..."],
+    analysisSteps: [
+      "Escaneando pedidos de Shopify...",
+      "Comprobando costos de productos...",
+      "Detectando fugas de precios...",
+      "Análisis completo...",
+    ],
     productsCount: "Productos {{count}}",
     atRiskCount: "{{count}} en riesgo",
     revenueBadge: "Ingresos de {{value}}",
-    advancedTaxDescription: "MarginLab detectó un perfil {{taxSystem}} avanzado disponible para esta tienda. Configure el tratamiento fiscal de precios, costos y envío para mejorar la precisión de las ganancias económicas.",
-    taxAwarePeriod: "Base basada en el conocimiento de impuestos · últimos días de {{period}}",
+    advancedTaxDescription:
+      "MarginLab detectó un perfil {{taxSystem}} avanzado disponible para esta tienda. Configure el tratamiento fiscal de precios, costos y envío para mejorar la precisión de las ganancias económicas.",
+    taxAwarePeriod:
+      "Base basada en el conocimiento de impuestos · últimos días de {{period}}",
     economicMarginNote: "{{value}} margen económico",
     productProfitComparison: "{{value}} frente al beneficio del producto",
     requireReview: "{{count}} requiere revisión",
     estimatedLoss: "Pérdida estimada de {{value}}",
-    taxBasisDescription: "Esta sección explica cómo MarginLab pasa de la ganancia observada del producto a la ganancia económica basada en impuestos, utilizando los datos fiscales de Shopify y, cuando esté disponible, un perfil avanzado de costos de {{taxSystem}}.",
+    taxBasisDescription:
+      "Esta sección explica cómo MarginLab pasa de la ganancia observada del producto a la ganancia económica basada en impuestos, utilizando los datos fiscales de Shopify y, cuando esté disponible, un perfil avanzado de costos de {{taxSystem}}.",
     shopifyTaxDetected: "Shopify {{taxSystem}} detectado",
     noTaxApplied: "No se aplicó {{taxSystem}}",
     taxFromProfile: "{{taxSystem}} desde perfil avanzado",
-    executiveSummary: "MarginLab detectó riesgos críticos {{critical}}, advertencias {{warning}} y oportunidades {{opportunity}}. La diferencia de beneficios mensual estimada con respecto al objetivo es {{gap}}.",
+    executiveSummary:
+      "MarginLab detectó riesgos críticos {{critical}}, advertencias {{warning}} y oportunidades {{opportunity}}. La diferencia de beneficios mensual estimada con respecto al objetivo es {{gap}}.",
     auto: {
       d001: "Productos que se venden por debajo del costo.",
       d002: "Alto",
@@ -1084,24 +1283,53 @@ export const es = {
   },
   profitIntelligencePage: {
     businessDrivers: {
-      discounts: { label: "Descuentos", description: "Reducción de ingresos mediante descuentos promocionales." },
-      refunds: { label: "Reembolsos", description: "Ingresos revertidos a través de pedidos devueltos." },
-      shipping: { label: "Envío", description: "Gastos de envío registrados en los pedidos." },
+      discounts: {
+        label: "Descuentos",
+        description: "Reducción de ingresos mediante descuentos promocionales.",
+      },
+      refunds: {
+        label: "Reembolsos",
+        description: "Ingresos revertidos a través de pedidos devueltos.",
+      },
+      shipping: {
+        label: "Envío",
+        description: "Gastos de envío registrados en los pedidos.",
+      },
     },
     dependencyLevels: { high: "Alto", moderate: "moderado", low: "Bajo" },
     concentrationRisk: "Riesgo de concentración {{level}}",
     impact: "Impacto de {{value}}",
     productRevenueShare: "{{value}} de ingresos por productos",
     timeline: {
-      marginDown: "Deteriorándose", stable: "Estable", marginDropped: "El margen cayó {{value}} en comparación con el período anterior.", marginStable: "El margen es estable en comparación con el período anterior.",
-      profitDown: "En declive", profitDeclined: "El beneficio disminuyó en {{value}} en la ventana de tendencia seleccionada.", profitChanged: "Beneficio cambiado por {{value}} en la ventana de tendencia seleccionada.",
-      weakening: "Debilitamiento", aligned: "Alineado", growthWeakening: "Los ingresos crecen mientras que las ganancias caen. La calidad del Growth puede estar debilitándose.", growthAligned: "El movimiento de ingresos y beneficios no muestra actualmente una divergencia importante.",
+      marginDown: "Deteriorándose",
+      stable: "Estable",
+      marginDropped:
+        "El margen cayó {{value}} en comparación con el período anterior.",
+      marginStable:
+        "El margen es estable en comparación con el período anterior.",
+      profitDown: "En declive",
+      profitDeclined:
+        "El beneficio disminuyó en {{value}} en la ventana de tendencia seleccionada.",
+      profitChanged:
+        "Beneficio cambiado por {{value}} en la ventana de tendencia seleccionada.",
+      weakening: "Debilitamiento",
+      aligned: "Alineado",
+      growthWeakening:
+        "Los ingresos crecen mientras que las ganancias caen. La calidad del Growth puede estar debilitándose.",
+      growthAligned:
+        "El movimiento de ingresos y beneficios no muestra actualmente una divergencia importante.",
     },
     concentration: {
-      revenueHigh: "Alta dependencia", revenueModerate: "Dependencia moderada", revenueLow: "Baja dependencia", dependency: "Dependencia de {{level}}",
-      profitHigh: "Alta dependencia de las ganancias", profitModerate: "Dependencia moderada de las ganancias", profitLow: "Baja dependencia de las ganancias",
+      revenueHigh: "Alta dependencia",
+      revenueModerate: "Dependencia moderada",
+      revenueLow: "Baja dependencia",
+      dependency: "Dependencia de {{level}}",
+      profitHigh: "Alta dependencia de las ganancias",
+      profitModerate: "Dependencia moderada de las ganancias",
+      profitLow: "Baja dependencia de las ganancias",
     },
-    marginHealth: "Los productos {{healthy}} muestran márgenes saludables, mientras que los productos {{weak}} muestran una calidad de ganancias débil.",
+    marginHealth:
+      "Los productos {{healthy}} muestran márgenes saludables, mientras que los productos {{weak}} muestran una calidad de ganancias débil.",
     auto: {
       p001: "INTELIGENCIA DE BENEFICIOS",
       p002: "Profit Intelligence",
@@ -1188,69 +1416,142 @@ export const es = {
   productsPage: {
     eyebrow: "INTELIGENCIA DE PRODUCTOS",
     title: "Análisis de riesgos del producto",
-    description: "Analice productos de bajo margen, costos faltantes, riesgos de precios y oportunidades de ganancias utilizando la base económica con conocimiento de impuestos de MarginLab.",
+    description:
+      "Analice productos de bajo margen, costos faltantes, riesgos de precios y oportunidades de ganancias utilizando la base económica con conocimiento de impuestos de MarginLab.",
     taxAwareBasis: "Base económica consciente de los impuestos",
     score: {
-      eyebrow: "PUNTUACIÓN DE INTELIGENCIA DEL PRODUCTO", tooltipTitle: "Puntuación de inteligencia del producto",
-      tooltipDescription: "Una puntuación de 0 a 100 que resume el estado de rentabilidad del catálogo en función de los productos críticos y los productos que requieren atención.",
-      tooltipNote: "Una puntuación más alta indica un catálogo general más saludable.",
-      critical: "Producto crítico detectado", moderate: "Riesgo de catálogo moderado", healthy: "Catálogo Saludable",
-      description: "MarginLab clasifica los productos según los ingresos económicos, COGS, las ganancias y el margen cuando están disponibles, manteniendo separados los descuentos, los reembolsos y la calidad de los datos.",
-      highRisk: "Alto riesgo", moderateRisk: "Riesgo moderado", healthyLabel: "saludable",
+      eyebrow: "PUNTUACIÓN DE INTELIGENCIA DEL PRODUCTO",
+      tooltipTitle: "Puntuación de inteligencia del producto",
+      tooltipDescription:
+        "Una puntuación de 0 a 100 que resume el estado de rentabilidad del catálogo en función de los productos críticos y los productos que requieren atención.",
+      tooltipNote:
+        "Una puntuación más alta indica un catálogo general más saludable.",
+      critical: "Producto crítico detectado",
+      moderate: "Riesgo de catálogo moderado",
+      healthy: "Catálogo Saludable",
+      description:
+        "MarginLab clasifica los productos según los ingresos económicos, COGS, las ganancias y el margen cuando están disponibles, manteniendo separados los descuentos, los reembolsos y la calidad de los datos.",
+      highRisk: "Alto riesgo",
+      moderateRisk: "Riesgo moderado",
+      healthyLabel: "saludable",
     },
-    summary: { productsAtRisk: "Productos en riesgo", criticalProducts: "Productos críticos", economicLosses: "Pérdidas económicas", healthyProducts: "Productos saludables" },
-    biggestRisk: { eyebrow: "MAYOR RIESGO DE PRODUCTO", description: "Producto con la mayor exposición económica que actualmente opera por debajo del umbral de margen objetivo." },
-    labels: { revenue: "Ingresos", margin: "Margen", profitGapTitle: "Brecha de ganancias", profitGap: "Brecha de ganancias", marginGap: "Brecha de margen" },
+    summary: {
+      productsAtRisk: "Productos en riesgo",
+      criticalProducts: "Productos críticos",
+      economicLosses: "Pérdidas económicas",
+      healthyProducts: "Productos saludables",
+    },
+    biggestRisk: {
+      eyebrow: "MAYOR RIESGO DE PRODUCTO",
+      description:
+        "Producto con la mayor exposición económica que actualmente opera por debajo del umbral de margen objetivo.",
+    },
+    labels: {
+      revenue: "Ingresos",
+      margin: "Margen",
+      profitGapTitle: "Brecha de ganancias",
+      profitGap: "Brecha de ganancias",
+      marginGap: "Brecha de margen",
+    },
     distribution: {
-      eyebrow: "DISTRIBUCIÓN DE RIESGOS DEL PRODUCTO", title: "Resumen de riesgos del catálogo",
-      critical: { label: "Crítico", description: "Productos con márgenes negativos o muy débiles." },
-      high: { label: "Alto", description: "Productos que requieren revisión de precios o costos." },
-      healthy: { label: "saludable", description: "Productos que actualmente operan dentro de márgenes saludables." },
+      eyebrow: "DISTRIBUCIÓN DE RIESGOS DEL PRODUCTO",
+      title: "Resumen de riesgos del catálogo",
+      critical: {
+        label: "Crítico",
+        description: "Productos con márgenes negativos o muy débiles.",
+      },
+      high: {
+        label: "Alto",
+        description: "Productos que requieren revisión de precios o costos.",
+      },
+      healthy: {
+        label: "saludable",
+        description:
+          "Productos que actualmente operan dentro de márgenes saludables.",
+      },
       catalogShare: "{{value}} de catálogo",
     },
     revenueAtRisk: {
-      eyebrow: "INGRESOS EN RIESGO", tooltipTitle: "Ingresos en riesgo",
-      tooltipDescription: "Ingresos generados por productos que actualmente operan por debajo del margen objetivo. Esto no significa que estos ingresos se hayan perdido.",
-      tooltipNote: "MarginLab los destaca porque las mejoras en el precio, el costo o el margen pueden tener un impacto económico significativo.",
+      eyebrow: "INGRESOS EN RIESGO",
+      tooltipTitle: "Ingresos en riesgo",
+      tooltipDescription:
+        "Ingresos generados por productos que actualmente operan por debajo del margen objetivo. Esto no significa que estos ingresos se hayan perdido.",
+      tooltipNote:
+        "MarginLab los destaca porque las mejoras en el precio, el costo o el margen pueden tener un impacto económico significativo.",
       title: "Productos con altos ingresos y bajos márgenes",
-      description: "{{revenue}} en ingresos económicos opera actualmente por debajo del margen objetivo de {{target}}, con una brecha de ganancias estimada de {{gap}} con respecto al objetivo.",
-      cardDescription: "Producto de alto ingreso económico que opera por debajo del margen objetivo del 20%. El valor mostrado es la diferencia de beneficios necesaria para alcanzar el objetivo, no un beneficio recuperable garantizado.",
-      empty: "Actualmente, ningún producto de altos ingresos está por debajo del margen objetivo.",
+      description:
+        "{{revenue}} en ingresos económicos opera actualmente por debajo del margen objetivo de {{target}}, con una brecha de ganancias estimada de {{gap}} con respecto al objetivo.",
+      cardDescription:
+        "Producto de alto ingreso económico que opera por debajo del margen objetivo del 20%. El valor mostrado es la diferencia de beneficios necesaria para alcanzar el objetivo, no un beneficio recuperable garantizado.",
+      empty:
+        "Actualmente, ningún producto de altos ingresos está por debajo del margen objetivo.",
     },
     riskLevels: { critical: "Crítico", high: "Alto", medium: "Medio" },
     showLimit: "Mostrar {{limit}}",
   },
   productRiskTable: {
-    increasePriceForHealthierMargin: "Aumente el precio a {{price}} para alcanzar un margen más saludable.",
-    criticalMarginsRecommendation: "Los márgenes actuales están críticamente por debajo del objetivo. Revisar los costos de los productos, la estructura de precios y los descuentos.",
-    considerPriceIncrease: "Considere aumentar el precio a {{price}} para mejorar el margen del producto.",
-    stablePricesRecommendation: "Los precios y los márgenes parecen estables según los datos disponibles.",
+    increasePriceForHealthierMargin:
+      "Aumente el precio a {{price}} para alcanzar un margen más saludable.",
+    criticalMarginsRecommendation:
+      "Los márgenes actuales están críticamente por debajo del objetivo. Revisar los costos de los productos, la estructura de precios y los descuentos.",
+    considerPriceIncrease:
+      "Considere aumentar el precio a {{price}} para mejorar el margen del producto.",
+    stablePricesRecommendation:
+      "Los precios y los márgenes parecen estables según los datos disponibles.",
     eyebrow: "CLASIFICACIÓN DE RIESGOS DEL PRODUCTO",
     title: "Revisión de productos priorizados",
-    description: "Productos clasificados por riesgo de margen, datos de costos faltantes y posible fuga de ganancias.",
+    description:
+      "Productos clasificados por riesgo de margen, datos de costos faltantes y posible fuga de ganancias.",
     allProducts: "Todos los productos",
     losingOnly: "perdiendo solo",
     exportCsv: "Exportar CSV",
-    columns: { product: "Producto", profit: "beneficio", targetPrice: "Precio objetivo", margin: "Margen", riskScore: "Puntuación de riesgo", risk: "Riesgo" },
+    columns: {
+      product: "Producto",
+      profit: "beneficio",
+      targetPrice: "Precio objetivo",
+      margin: "Margen",
+      riskScore: "Puntuación de riesgo",
+      risk: "Riesgo",
+    },
     tooltips: {
-      targetPrice: { title: "Precio objetivo", description: "El precio de venta estimado requerido para alcanzar el margen objetivo manteniendo sin cambios el costo actual del producto.", formula: "Costo promedio ÷ (1 − margen objetivo)", note: "Es una referencia de precios modelada, no un precio de venta garantizado o recomendado automáticamente." },
-      delta: { title: "Delta de precios", description: "La diferencia entre el precio de venta promedio actual del producto y el precio objetivo calculado por MarginLab.", formula: "Precio objetivo - Precio promedio actual", note: "Un valor positivo indica cuánto necesitaría aumentar el precio, sin cambios en los costos, para alcanzar el margen objetivo." },
-      riskScore: { title: "Puntuación de riesgo", description: "Una puntuación de 0 a 100 indica cuánta atención requiere un producto en función de las pérdidas, el margen, los costos faltantes y la distancia de su precio objetivo.", note: "Cuanto mayor sea la puntuación, mayor será la prioridad de revisión del producto." },
+      targetPrice: {
+        title: "Precio objetivo",
+        description:
+          "El precio de venta estimado requerido para alcanzar el margen objetivo manteniendo sin cambios el costo actual del producto.",
+        formula: "Costo promedio ÷ (1 − margen objetivo)",
+        note: "Es una referencia de precios modelada, no un precio de venta garantizado o recomendado automáticamente.",
+      },
+      delta: {
+        title: "Delta de precios",
+        description:
+          "La diferencia entre el precio de venta promedio actual del producto y el precio objetivo calculado por MarginLab.",
+        formula: "Precio objetivo - Precio promedio actual",
+        note: "Un valor positivo indica cuánto necesitaría aumentar el precio, sin cambios en los costos, para alcanzar el margen objetivo.",
+      },
+      riskScore: {
+        title: "Puntuación de riesgo",
+        description:
+          "Una puntuación de 0 a 100 indica cuánta atención requiere un producto en función de las pérdidas, el margen, los costos faltantes y la distancia de su precio objetivo.",
+        note: "Cuanto mayor sea la puntuación, mayor será la prioridad de revisión del producto.",
+      },
     },
     avgPrice: "Precio medio",
     avgCost: "Costo promedio",
     setCost: "Establecer costo",
     missing: "Faltante",
-    missingCostRecommendation: "Faltan datos de costos para este producto. Agregue el costo del producto en Shopify para desbloquear un seguimiento de márgenes y un análisis de riesgos precisos.",
+    missingCostRecommendation:
+      "Faltan datos de costos para este producto. Agregue el costo del producto en Shopify para desbloquear un seguimiento de márgenes y un análisis de riesgos precisos.",
     aiRecommendedAction: "Acción recomendada por la IA",
     openInShopify: "Abrir en Shopify",
   },
   supportPage: {
     eyebrow: "SOPORTE DE MARGINLAB",
     title: "¿Necesitas ayuda? Habla con MarginLab.",
-    description: "Soporte para configuración, uso del producto, comprensión de análisis MarginLab y problemas técnicos. Los usuarios de Growth también reciben soporte directo para WhatsApp.",
+    description:
+      "Soporte para configuración, uso del producto, comprensión de análisis MarginLab y problemas técnicos. Los usuarios de Growth también reciben soporte directo para WhatsApp.",
     emailTitle: "Envía un mensaje a MarginLab directamente",
-    emailDescription: "Su mensaje se envía directamente al soporte de MarginLab sin depender de una aplicación de correo electrónico instalada en su dispositivo.",
+    emailDescription:
+      "Su mensaje se envía directamente al soporte de MarginLab sin depender de una aplicación de correo electrónico instalada en su dispositivo.",
     yourEmail: "Tu correo electrónico",
     topic: "Tema",
     selectTopic: "Seleccione...",
@@ -1271,61 +1572,95 @@ export const es = {
     sendMessage: "enviar mensaje",
     whatsappEyebrow: "SOPORTE DIRECTO POR WHATSAPP",
     whatsappTitle: "Habla directamente con nosotros",
-    whatsappDescription: "Los usuarios de Growth pueden comunicarse con MarginLab directamente en WhatsApp para obtener ayuda con la aplicación y comprender los análisis disponibles.",
+    whatsappDescription:
+      "Los usuarios de Growth pueden comunicarse con MarginLab directamente en WhatsApp para obtener ayuda con la aplicación y comprender los análisis disponibles.",
     includedGrowth: "Incluido en tu plan Growth",
     openWhatsapp: "Abrir WhatsApp",
-    whatsappUnavailable: "El soporte WhatsApp estará disponible una vez que se configure el número de soporte.",
+    whatsappUnavailable:
+      "El soporte WhatsApp estará disponible una vez que se configure el número de soporte.",
     growthFeature: "CARACTERÍSTICA DE CRECIMIENTO",
-    growthDescription: "Actualice a Growth para agregar soporte directo de WhatsApp a las herramientas avanzadas de MarginLab.",
+    growthDescription:
+      "Actualice a Growth para agregar soporte directo de WhatsApp a las herramientas avanzadas de MarginLab.",
     exploreGrowth: "Explorar Growth →",
     helpEyebrow: "CÓMO PODEMOS AYUDAR",
     helpTitle: "Ayuda práctica para usar MarginLab",
     helpItems: [
-      { title: "Configuración", description: "Configuración, costos, perfil fiscal y configuración inicial." },
-      { title: "Análisis", description: "Comprender las métricas, márgenes y señales de MarginLab." },
-      { title: "Características", description: "Ayuda con simuladores, pronósticos, informes y herramientas." },
-      { title: "Problemas técnicos", description: "Informar errores o comportamiento inesperado de la aplicación." },
+      {
+        title: "Configuración",
+        description:
+          "Configuración, costos, perfil fiscal y configuración inicial.",
+      },
+      {
+        title: "Análisis",
+        description:
+          "Comprender las métricas, márgenes y señales de MarginLab.",
+      },
+      {
+        title: "Características",
+        description:
+          "Ayuda con simuladores, pronósticos, informes y herramientas.",
+      },
+      {
+        title: "Problemas técnicos",
+        description:
+          "Informar errores o comportamiento inesperado de la aplicación.",
+      },
     ],
-    footerNote: "El soporte de MarginLab cubre el uso y la interpretación del producto. MarginLab no sustituye al asesoramiento fiscal, contable o profesional.",
+    footerNote:
+      "El soporte de MarginLab cubre el uso y la interpretación del producto. MarginLab no sustituye al asesoramiento fiscal, contable o profesional.",
   },
   alertCenterPage: {
     qualitative_signal: "Señal cualitativa",
     estimated_monthly_loss: "Pérdida mensual estimada",
     estimated_monthly_exposure: "Exposición mensual estimada",
-    estimated_monthly_profit_gap_to_target: "Diferencia de beneficio mensual estimada respecto al objetivo",
+    estimated_monthly_profit_gap_to_target:
+      "Diferencia de beneficio mensual estimada respecto al objetivo",
     indicative_monthly_value: "Valor mensual indicativo",
     impact_to_review: "Impacto a revisar",
     alert_economic_impact: "Alerta impacto económico",
-    this_is_an_estimate_based_on: "Esta es una estimación basada en datos observados y no representa un resultado futuro garantizado.",
+    this_is_an_estimate_based_on:
+      "Esta es una estimación basada en datos observados y no representa un resultado futuro garantizado.",
     open_module: "Abrir módulo →",
     acknowledge: "Reconocer",
     priority: "Prioridad",
     alert_priority: "Prioridad de alerta",
-    a_0_100_score_showing_how: "Una puntuación de 0 a 100 muestra la urgencia con la que esta señal merece atención en comparación con las demás.",
-    the_higher_the_score_the_higher: "Cuanto mayor sea la puntuación, mayor será la prioridad. No es un porcentaje de pérdida o riesgo.",
+    a_0_100_score_showing_how:
+      "Una puntuación de 0 a 100 muestra la urgencia con la que esta señal merece atención en comparación con las demás.",
+    the_higher_the_score_the_higher:
+      "Cuanto mayor sea la puntuación, mayor será la prioridad. No es un porcentaje de pérdida o riesgo.",
     business_action: "Acción empresarial",
     business_action_2: "Acción empresarial",
-    shows_the_type_of_response_marginlab: "Muestra el tipo de respuesta que MarginLab considera más adecuada para esta señal.",
-    action_calls_for_direct_intervention_review: "La acción requiere intervención directa, revisión para investigación y optimización para mejora.",
+    shows_the_type_of_response_marginlab:
+      "Muestra el tipo de respuesta que MarginLab considera más adecuada para esta señal.",
+    action_calls_for_direct_intervention_review:
+      "La acción requiere intervención directa, revisión para investigación y optimización para mejora.",
     product: "Producto",
     store_wide: "En toda la tienda",
     high: "Alto",
     medium: "Medio",
     low: "Bajo",
-    economic_loss_description: "Pérdida económica mensual estimada asociada al problema detectado.",
-    economic_exposure_description: "Valor económico mensual expuesto a la emisión detectada. No significa que esta cantidad ya se haya perdido.",
-    economic_opportunity_description: "Beneficio mensual adicional estimado necesario para alcanzar el objetivo modelado.",
-    economic_qualitative_description: "Valor económico indicativo asociado a la señal.",
+    economic_loss_description:
+      "Pérdida económica mensual estimada asociada al problema detectado.",
+    economic_exposure_description:
+      "Valor económico mensual expuesto a la emisión detectada. No significa que esta cantidad ya se haya perdido.",
+    economic_opportunity_description:
+      "Beneficio mensual adicional estimado necesario para alcanzar el objetivo modelado.",
+    economic_qualitative_description:
+      "Valor económico indicativo asociado a la señal.",
     confidence_badge: "CONFIANZA",
     cogs_coverage_badge: "COBERTURA COGS",
     action_required: "Acción requerida",
-    at_least_one_critical_profitability_risk: "Al menos un riesgo crítico de rentabilidad requiere una revisión prioritaria.",
+    at_least_one_critical_profitability_risk:
+      "Al menos un riesgo crítico de rentabilidad requiere una revisión prioritaria.",
     review_recommended: "Revisión recomendada",
-    there_is_no_broad_emergency_but: "No existe una emergencia generalizada, pero algunas señales merecen atención.",
+    there_is_no_broad_emergency_but:
+      "No existe una emergencia generalizada, pero algunas señales merecen atención.",
     opportunities_available: "Oportunidades disponibles",
-    the_business_is_relatively_stable_and: "El negocio es relativamente estable y hay oportunidades de optimización disponibles.",
+    the_business_is_relatively_stable_and:
+      "El negocio es relativamente estable y hay oportunidades de optimización disponibles.",
     stable_status: "Estado estable",
-    no_significant_profitability_risk_requires_immediate: "Ningún riesgo significativo de rentabilidad requiere acción inmediata.",
+    no_significant_profitability_risk_requires_immediate:
+      "Ningún riesgo significativo de rentabilidad requiere acción inmediata.",
     all: "Todos",
     critical: "Crítico",
     warnings: "Advertencias",
@@ -1333,29 +1668,39 @@ export const es = {
     information: "Información",
     growth_plan_active: "Plan Growth activo",
     growth_feature: "Característica Growth",
-    the_signals_that_deserve_your_attention: "Las señales que merecen tu atención.",
-    marginlab_monitors_margins_costs_refunds_and: "MarginLab monitorea márgenes, costos, reembolsos y oportunidades. Aquí sólo se ven señales que pueden afectar materialmente a la rentabilidad de la tienda.",
+    the_signals_that_deserve_your_attention:
+      "Las señales que merecen tu atención.",
+    marginlab_monitors_margins_costs_refunds_and:
+      "MarginLab monitorea márgenes, costos, reembolsos y oportunidades. Aquí sólo se ven señales que pueden afectar materialmente a la rentabilidad de la tienda.",
     tax_aware_economic_basis: "Base económica consciente de los impuestos",
     mark_all_as_read: "Marcar todo como leído",
     unlock_growth: "Desbloquear Growth →",
     growth_feature_2: "CARACTERÍSTICA DE CRECIMIENTO",
     alert_center_is_included_with_growth: "Alert Center se incluye con Growth",
-    upgrade_to_growth_to_manage_alerts: "Actualice a Growth para administrar alertas, realizar un seguimiento de las prioridades, mantener el historial de alertas y exportar datos de monitoreo.",
+    upgrade_to_growth_to_manage_alerts:
+      "Actualice a Growth para administrar alertas, realizar un seguimiento de las prioridades, mantener el historial de alertas y exportar datos de monitoreo.",
     monitoring_status: "ESTADO DE MONITOREO",
     unread: "no leído",
     active: "activo",
     acknowledged: "reconocido",
     monthly_economic_impacts: "IMPACTOS ECONÓMICOS MENSUALES",
     monthly_economic_impacts_2: "Impactos económicos mensuales",
-    shows_three_separate_values_estimated_loss: "Muestra tres valores separados: pérdida estimada, exposición económica y brecha de ganancias con respecto al objetivo.",
-    these_values_should_not_be_added: "Estos valores no deben sumarse porque representan diferentes efectos económicos.",
-    loss_exposure_profit_gap_to_target: "Pérdida · exposición · diferencia de beneficios con respecto al objetivo. Valores separados, no aditivos.",
+    shows_three_separate_values_estimated_loss:
+      "Muestra tres valores separados: pérdida estimada, exposición económica y brecha de ganancias con respecto al objetivo.",
+    these_values_should_not_be_added:
+      "Estos valores no deben sumarse porque representan diferentes efectos económicos.",
+    loss_exposure_profit_gap_to_target:
+      "Pérdida · exposición · diferencia de beneficios con respecto al objetivo. Valores separados, no aditivos.",
     data_confidence: "Confianza en los datos",
-    shows_how_reliable_marginlab_considers_the: "Muestra cuán confiable considera MarginLab el análisis en función de la integridad y calidad de los datos disponibles.",
-    a_higher_value_means_the_analysis: "Un valor más alto significa que el análisis se basa en datos más completos y utilizables.",
+    shows_how_reliable_marginlab_considers_the:
+      "Muestra cuán confiable considera MarginLab el análisis en función de la integridad y calidad de los datos disponibles.",
+    a_higher_value_means_the_analysis:
+      "Un valor más alto significa que el análisis se basa en datos más completos y utilizables.",
     cogs_coverage: "Cobertura COGS",
-    shows_how_much_of_the_analyzed: "Muestra qué parte de los datos analizados tiene suficiente información sobre el costo del producto para realizar cálculos confiables de rentabilidad.",
-    low_coverage_can_make_margins_losses: "Una cobertura baja puede hacer que los márgenes, las pérdidas y las prioridades sean menos confiables.",
+    shows_how_much_of_the_analyzed:
+      "Muestra qué parte de los datos analizados tiene suficiente información sobre el costo del producto para realizar cálculos confiables de rentabilidad.",
+    low_coverage_can_make_margins_losses:
+      "Una cobertura baja puede hacer que los márgenes, las pérdidas y las prioridades sean menos confiables.",
     comparison_unavailable: "COMPARACIÓN NO DISPONIBLE",
     require_priority: "Requerir prioridad",
     need_review: "Necesita revisión",
@@ -1366,8 +1711,10 @@ export const es = {
     profit_alert_feed: "Feed de alerta de ganancias",
     show_acknowledged: "Mostrar reconocido",
     export_csv: "Exportar CSV",
-    no_alerts_match_the_selected_filters: "Ninguna alerta coincide con los filtros seleccionados.",
-    alerts_are_generated_using_the_tax: "Las alertas se generan utilizando la base económica basada en impuestos creada a partir de datos Shopify para el período seleccionado. La pérdida, la exposición y la brecha de ganancias con respecto al objetivo son estimaciones separadas y no representan ganancias perdidas o recuperadas verificadas. MarginLab no modifica automáticamente productos, precios, costos o campañas.",
+    no_alerts_match_the_selected_filters:
+      "Ninguna alerta coincide con los filtros seleccionados.",
+    alerts_are_generated_using_the_tax:
+      "Las alertas se generan utilizando la base económica basada en impuestos creada a partir de datos Shopify para el período seleccionado. La pérdida, la exposición y la brecha de ganancias con respecto al objetivo son estimaciones separadas y no representan ganancias perdidas o recuperadas verificadas. MarginLab no modifica automáticamente productos, precios, costos o campañas.",
   },
   aiAdvisorPage: {
     high_risk: "Alto riesgo",
@@ -1376,10 +1723,14 @@ export const es = {
     product_priorities_count: "Prioridades de producto {{count}}",
     critical_count: "{{count}} crítico",
     estimated_minutes_count: "{{count}} minutos estimados",
-    ai_requests_used: "{{used}} de solicitudes de IA {{limit}} utilizadas este mes",
-    continue_monitoring_store_profitability: "Continuar monitoreando la rentabilidad de la tienda",
-    review_risks_and_opportunities_regularly: "Revisar los riesgos y oportunidades periódicamente",
-    profit_monitor_detected_no_urgent_risks: "Profit Monitor no detectó riesgos urgentes. La estructura de beneficios parece estable según los datos disponibles.",
+    ai_requests_used:
+      "{{used}} de solicitudes de IA {{limit}} utilizadas este mes",
+    continue_monitoring_store_profitability:
+      "Continuar monitoreando la rentabilidad de la tienda",
+    review_risks_and_opportunities_regularly:
+      "Revisar los riesgos y oportunidades periódicamente",
+    profit_monitor_detected_no_urgent_risks:
+      "Profit Monitor no detectó riesgos urgentes. La estructura de beneficios parece estable según los datos disponibles.",
     new_opportunity: "Nueva oportunidad",
     immediate_priority: "Prioridad inmediata",
     needs_review: "Necesita revisión",
@@ -1393,27 +1744,35 @@ export const es = {
     growth_feature: "Característica Growth",
     profit_copilot: "COPILOTO DE BENEFICIOS",
     your_store_briefing_already_prepared: "Tu briefing de tienda, ya preparado",
-    marginlab_automatically_analyzes_profitability_risk_opportunities: "MarginLab analiza automáticamente la rentabilidad, el riesgo, las oportunidades y las prioridades. Primero le dice lo que importa y luego responde a sus preguntas.",
+    marginlab_automatically_analyzes_profitability_risk_opportunities:
+      "MarginLab analiza automáticamente la rentabilidad, el riesgo, las oportunidades y las prioridades. Primero le dice lo que importa y luego responde a sus preguntas.",
     tax_aware_economic_basis: "Base económica consciente de los impuestos",
     unlock_growth: "Desbloquear Growth →",
     growth_feature_2: "CARACTERÍSTICA DE CRECIMIENTO",
-    profit_copilot_is_included_with_growth: "Profit Copilot se incluye con Growth",
-    upgrade_to_growth_for_ai_briefings: "Actualice a Growth para obtener informes de IA, análisis profundos y respuestas basadas en los datos reales de rentabilidad de su tienda.",
+    profit_copilot_is_included_with_growth:
+      "Profit Copilot se incluye con Growth",
+    upgrade_to_growth_for_ai_briefings:
+      "Actualice a Growth para obtener informes de IA, análisis profundos y respuestas basadas en los datos reales de rentabilidad de su tienda.",
     executive_brief: "INFORME EJECUTIVO",
     critical_priority: "Prioridad crítica",
     priority_to_review: "Prioridad de revisión",
     opportunity_detected: "Oportunidad detectada",
     profit_monitor_signal: "Señal del monitor de ganancias",
-    priority_determined_by_profit_monitor: "Prioridad determinada por Profit Monitor",
+    priority_determined_by_profit_monitor:
+      "Prioridad determinada por Profit Monitor",
     estimated_net_profit: "Beneficio neto estimado",
     not_configured: "No configurado",
     estimated_net_profit_2: "Beneficio neto estimado",
-    estimated_profit_remaining_after_applying_the: "Beneficio estimado restante después de aplicar los costos operativos configurados en Business Model Studio al beneficio del producto.",
-    this_is_a_management_estimate_based: "Se trata de una estimación de gestión basada en el modelo configurado, no del beneficio contable final de la tienda.",
+    estimated_profit_remaining_after_applying_the:
+      "Beneficio estimado restante después de aplicar los costos operativos configurados en Business Model Studio al beneficio del producto.",
+    this_is_a_management_estimate_based:
+      "Se trata de una estimación de gestión basada en el modelo configurado, no del beneficio contable final de la tienda.",
     profit_gap_to_target: "Brecha de ganancias respecto del objetivo",
     profit_gap_to_target_2: "Brecha de beneficios respecto al objetivo",
-    estimated_additional_profit_required_to_bring: "Beneficio adicional estimado necesario para llevar los productos por debajo del objetivo hasta el margen objetivo.",
-    this_is_a_modeled_estimate_not: "Esta es una estimación modelada, no una ganancia garantizada ni una ganancia ya disponible para recuperar.",
+    estimated_additional_profit_required_to_bring:
+      "Beneficio adicional estimado necesario para llevar los productos por debajo del objetivo hasta el margen objetivo.",
+    this_is_a_modeled_estimate_not:
+      "Esta es una estimación modelada, no una ganancia garantizada ni una ganancia ya disponible para recuperar.",
     active_risks: "Riesgos activos",
     weekly_mission: "Misión Semanal",
     open_action_plan: "Abrir Plan de Acción →",
@@ -1421,72 +1780,224 @@ export const es = {
     open_forecast: "Abrir Profit Forecast",
     store_health_2: "Salud de la tienda",
     store_health_3: "Salud de la tienda",
-    a_0_100_score_summarizing_the: "Una puntuación de 0 a 100 que resume la rentabilidad general de la tienda.",
-    it_considers_loss_making_products_missing: "Considera los productos deficitarios, los costos faltantes y los márgenes débiles. Cuanto más alto es mejor.",
-    updated_from_current_store_data: "Actualizado a partir de los datos actuales de la tienda.",
-    summarizes_the_overall_health_of_the: "Resume el estado general de la rentabilidad de la tienda.",
-    considers_losses_missing_costs_and_weak: "Considera pérdidas, costos faltantes y márgenes débiles. Cuanto más alto es mejor.",
+    a_0_100_score_summarizing_the:
+      "Una puntuación de 0 a 100 que resume la rentabilidad general de la tienda.",
+    it_considers_loss_making_products_missing:
+      "Considera los productos deficitarios, los costos faltantes y los márgenes débiles. Cuanto más alto es mejor.",
+    updated_from_current_store_data:
+      "Actualizado a partir de los datos actuales de la tienda.",
+    summarizes_the_overall_health_of_the:
+      "Resume el estado general de la rentabilidad de la tienda.",
+    considers_losses_missing_costs_and_weak:
+      "Considera pérdidas, costos faltantes y márgenes débiles. Cuanto más alto es mejor.",
     profit_quality_2: "Calidad de beneficio",
-    measures_how_healthy_the_margins_are: "Mide qué tan saludables son los márgenes entre los productos analizados.",
-    a_higher_score_indicates_more_products: "Una puntuación más alta indica más productos con márgenes saludables.",
+    measures_how_healthy_the_margins_are:
+      "Mide qué tan saludables son los márgenes entre los productos analizados.",
+    a_higher_score_indicates_more_products:
+      "Una puntuación más alta indica más productos con márgenes saludables.",
     pricing_efficiency_2: "Eficiencia de precios",
-    shows_how_effectively_current_prices_support: "Muestra con qué eficacia los precios actuales respaldan los márgenes deseados.",
-    a_lower_score_indicates_a_larger: "Una puntuación más baja indica una brecha mayor con respecto a los niveles de precios necesarios para alcanzar los objetivos.",
+    shows_how_effectively_current_prices_support:
+      "Muestra con qué eficacia los precios actuales respaldan los márgenes deseados.",
+    a_lower_score_indicates_a_larger:
+      "Una puntuación más baja indica una brecha mayor con respecto a los niveles de precios necesarios para alcanzar los objetivos.",
     data_quality_2: "Calidad de datos",
-    measures_how_complete_the_available_data: "Mide qué tan completos están los datos disponibles para un análisis confiable.",
-    product_cost_coverage_is_one_of: "La cobertura de costos del producto es uno de los factores principales.",
+    measures_how_complete_the_available_data:
+      "Mide qué tan completos están los datos disponibles para un análisis confiable.",
+    product_cost_coverage_is_one_of:
+      "La cobertura de costos del producto es uno de los factores principales.",
     execution_readiness_2: "Preparación para la ejecución",
-    shows_how_much_actionable_evidence_marginlab: "Muestra cuánta evidencia procesable tiene MarginLab disponible para recomendar acciones.",
-    higher_scores_indicate_more_opportunities_to: "Las puntuaciones más altas indican más oportunidades para convertir el análisis en acciones concretas.",
+    shows_how_much_actionable_evidence_marginlab:
+      "Muestra cuánta evidencia procesable tiene MarginLab disponible para recomendar acciones.",
+    higher_scores_indicate_more_opportunities_to:
+      "Las puntuaciones más altas indican más oportunidades para convertir el análisis en acciones concretas.",
     weekly_mission_2: "MISIÓN SEMANAL",
     actions: "Acciones",
     estimated_time: "Tiempo estimado",
     potential: "Potencial",
     mission_potential: "Potencial de misión",
-    estimated_profit_opportunity_associated_with_the: "Oportunidad de ganancias estimada asociada a los productos incluidos en la misión semanal.",
-    this_is_modeled_potential_based_on: "Este es un potencial modelado basado en los datos disponibles, no una ganancia garantizada.",
+    estimated_profit_opportunity_associated_with_the:
+      "Oportunidad de ganancias estimada asociada a los productos incluidos en la misión semanal.",
+    this_is_modeled_potential_based_on:
+      "Este es un potencial modelado basado en los datos disponibles, no una ganancia garantizada.",
     decision_feed: "ALIMENTACIÓN DE DECISIONES",
     signals_that_need_attention: "Señales que necesitan atención",
     no_new_critical_signals: "No hay nuevas señales críticas.",
     deep_analysis: "ANÁLISIS PROFUNDO",
     generate_the_full_advisor_report: "Generar el informe completo del asesor",
-    ai_will_use_all_real_store: "AI utilizará todos los datos reales de la tienda ya cargados en esta página.",
-    analyzes_the_highest_priority_business_risk: "Analiza el riesgo empresarial de mayor prioridad",
-    identifies_the_first_products_to_fix: "Identifica los primeros productos a reparar.",
-    estimates_profit_gaps_and_recommended_actions: "Estima las brechas de ganancias y las acciones recomendadas.",
+    ai_will_use_all_real_store:
+      "AI utilizará todos los datos reales de la tienda ya cargados en esta página.",
+    analyzes_the_highest_priority_business_risk:
+      "Analiza el riesgo empresarial de mayor prioridad",
+    identifies_the_first_products_to_fix:
+      "Identifica los primeros productos a reparar.",
+    estimates_profit_gaps_and_recommended_actions:
+      "Estima las brechas de ganancias y las acciones recomendadas.",
     analyzing: "Analizando...",
     generate_ai_analysis: "Generar análisis de IA →",
     download_pdf_report: "Descargar informe PDF ↓",
     ask_the_copilot: "PREGUNTA AL COPILOTO",
     explore_a_specific_decision: "Explorar una decisión específica",
-    questions_adapt_to_the_risks_and: "Las preguntas se adaptan a los riesgos y oportunidades detectados en tu tienda.",
+    questions_adapt_to_the_risks_and:
+      "Las preguntas se adaptan a los riesgos y oportunidades detectados en tu tienda.",
     ask_a_profitability_question: "Haga una pregunta sobre rentabilidad...",
     thinking: "Pensando...",
     ask_ai: "Pregúntale a la IA →",
-    profit_copilot_uses_the_tax_aware: "Profit Copilot utiliza la base económica basada en impuestos derivada de los datos de Shopify, los supuestos administrativos guardados en Business Model Studio y las señales de Profit Monitor. La reserva de impuestos comerciales permanece separada del tratamiento VAT/GST/Impuesto sobre las ventas. Las recomendaciones respaldan las decisiones y no cambian automáticamente los productos, los precios o las campañas.",
+    profit_copilot_uses_the_tax_aware:
+      "Profit Copilot utiliza la base económica basada en impuestos derivada de los datos de Shopify, los supuestos administrativos guardados en Business Model Studio y las señales de Profit Monitor. La reserva de impuestos comerciales permanece separada del tratamiento VAT/GST/Impuesto sobre las ventas. Las recomendaciones respaldan las decisiones y no cambian automáticamente los productos, los precios o las campañas.",
   },
   profitImpactPage: {
-    eyebrow: "PROFIT IMPACT TRACKER", description: "Mide qué cambia tras las acciones registradas con estimaciones prudentes.", growthRequired: "Profit Impact Tracker requiere Growth.", upgrade: "Ver el plan Growth", previewExplanation: "Growth muestra acciones y mediciones reales.", actionType: "Tipo de acción", priceChange: "Cambio de precio", cogsChange: "Cambio de COGS", productAction: "Acción de producto", product: "Producto", title: "Título", descriptionLabel: "Descripción", previousValue: "Valor anterior", appliedValue: "Valor aplicado", targetValue: "Valor objetivo", notes: "Notas", trackAction: "Seguir una acción", confirmAction: "Confirmar acción", status: "Estado", markApplied: "Marcar como aplicada", cancel: "Cancelar", close: "Cerrar", ACCEPTED: "Aceptada", AWAITING_APPLICATION: "Lista para aplicar", MEASURING: "En medición", COMPLETED: "Completada", CANCELLED: "Cancelada", INVALIDATED: "Medición invalidada", INSUFFICIENT_DATA: "Datos insuficientes", PRICE_CHANGE: "Cambio de precio", COGS_CHANGE: "Cambio de COGS", DISCOUNT_CHANGE: "Cambio de descuento", PRODUCT_ACTION: "Acción de producto", OTHER: "Otra acción", PROFIT_ACTION_CENTER: "Profit Action Center", ALERT_CENTER: "Centro de alertas", RECOVERY_SIMULATOR: "Simulador de recuperación", PROFIT_MONITOR: "Profit Monitor", PRODUCTS: "Productos", MANUAL: "Manual", active: "Activas", completed: "Completadas", needsAttention: "Requieren atención", noActions: "Haz seguimiento de una recomendación para medir qué cambia después de actuar.", noCompleted: "Tienes mediciones activas, pero aún no hay resultados completados.", noAttention: "Ninguna acción seguida requiere atención.", noActive: "No hay acciones activas.", actionsMeasuring: "Acciones en medición", actionsCompleted: "Acciones completadas", measuredProfitChange: "Cambio de beneficio medido", estimatedAttributableProfit: "Beneficio atribuible estimado", averageMarginLift: "Aumento medio del margen", baseline: "Baseline", postAction: "Después de la acción", units: "unidades", daysObserved: "días observados", measuredMarginChange: "Cambio de margen medido", estimatedAttributableImpact: "Impacto atribuible estimado", dataConfidence: "Confianza de los datos", attributionConfidence: "Confianza de la atribución", measuredChange: "Cambio medido", appliedDate: "Aplicada", viewMeasurement: "Ver progreso", viewMeasuredImpact: "Ver impacto medido", openTrackedAction: "Abrir acción", lowConfidenceWarning: "Interprétalo con cautela: confianza baja.", lowConfidenceIncluded: "resultados tienen confianza baja.", actionDetail: "Detalle de la acción", source: "Fuente", timeline: "Cronología", storeAction: "Acción de tienda", methodologyStatement: "Impacto estimado coherente con esta acción.", attributionMethod: "Método de atribución", notEstimated: "No estimado", confidenceReasons: "Motivos de confianza", completenessReasons: "Motivos de integridad", trustTitle: "Cómo leer los resultados", measuredChangeDefinition: "Lo que cambió después de la acción.", attributableDefinition: "La parte de la mejora observada coherente con la acción registrada.", dataConfidenceDefinition: "Calidad e integridad de los datos de la tienda.", attributionConfidenceDefinition: "Con qué confianza MarginLab asocia el cambio a la acción.",
-    alertResolvedMeasuring: "Esta alerta ya no está activa. La acción vinculada sigue midiéndose.",
-    reminderAwaiting: "Lista para aplicar:", reminderMeasurementDue: "La ventana de medición terminó; revisa el procesamiento de:", reminderCompleted: "Tu acción seguida ha completado la medición:",
+    eyebrow: "PROFIT IMPACT TRACKER",
+    description:
+      "Mide qué cambia tras las acciones registradas con estimaciones prudentes.",
+    growthRequired: "Profit Impact Tracker requiere Growth.",
+    upgrade: "Ver el plan Growth",
+    previewExplanation: "Growth muestra acciones y mediciones reales.",
+    actionType: "Tipo de acción",
+    priceChange: "Cambio de precio",
+    cogsChange: "Cambio de COGS",
+    productAction: "Acción de producto",
+    product: "Producto",
+    title: "Título",
+    descriptionLabel: "Descripción",
+    previousValue: "Valor anterior",
+    appliedValue: "Valor aplicado",
+    targetValue: "Valor objetivo",
+    notes: "Notas",
+    trackAction: "Seguir una acción",
+    confirmAction: "Confirmar acción",
+    status: "Estado",
+    markApplied: "Marcar como aplicada",
+    cancel: "Cancelar",
+    close: "Cerrar",
+    ACCEPTED: "Aceptada",
+    AWAITING_APPLICATION: "Lista para aplicar",
+    MEASURING: "En medición",
+    COMPLETED: "Completada",
+    CANCELLED: "Cancelada",
+    INVALIDATED: "Medición invalidada",
+    INSUFFICIENT_DATA: "Datos insuficientes",
+    PRICE_CHANGE: "Cambio de precio",
+    COGS_CHANGE: "Cambio de COGS",
+    DISCOUNT_CHANGE: "Cambio de descuento",
+    PRODUCT_ACTION: "Acción de producto",
+    OTHER: "Otra acción",
+    PROFIT_ACTION_CENTER: "Profit Action Center",
+    ALERT_CENTER: "Centro de alertas",
+    RECOVERY_SIMULATOR: "Simulador de recuperación",
+    PROFIT_MONITOR: "Profit Monitor",
+    PRODUCTS: "Productos",
+    MANUAL: "Manual",
+    active: "Activas",
+    completed: "Completadas",
+    needsAttention: "Requieren atención",
+    noActions:
+      "Haz seguimiento de una recomendación para medir qué cambia después de actuar.",
+    noCompleted:
+      "Tienes mediciones activas, pero aún no hay resultados completados.",
+    noAttention: "Ninguna acción seguida requiere atención.",
+    noActive: "No hay acciones activas.",
+    actionsMeasuring: "Acciones en medición",
+    actionsCompleted: "Acciones completadas",
+    measuredProfitChange: "Cambio de beneficio medido",
+    estimatedAttributableProfit: "Beneficio atribuible estimado",
+    averageMarginLift: "Aumento medio del margen",
+    baseline: "Baseline",
+    postAction: "Después de la acción",
+    units: "unidades",
+    daysObserved: "días observados",
+    measuredMarginChange: "Cambio de margen medido",
+    estimatedAttributableImpact: "Impacto atribuible estimado",
+    dataConfidence: "Confianza de los datos",
+    attributionConfidence: "Confianza de la atribución",
+    measuredChange: "Cambio medido",
+    appliedDate: "Aplicada",
+    viewMeasurement: "Ver progreso",
+    viewMeasuredImpact: "Ver impacto medido",
+    openTrackedAction: "Abrir acción",
+    lowConfidenceWarning: "Interprétalo con cautela: confianza baja.",
+    lowConfidenceIncluded: "resultados tienen confianza baja.",
+    actionDetail: "Detalle de la acción",
+    source: "Fuente",
+    timeline: "Cronología",
+    storeAction: "Acción de tienda",
+    methodologyStatement: "Impacto estimado coherente con esta acción.",
+    attributionMethod: "Método de atribución",
+    notEstimated: "No estimado",
+    confidenceReasons: "Motivos de confianza",
+    completenessReasons: "Motivos de integridad",
+    trustTitle: "Cómo leer los resultados",
+    measuredChangeDefinition: "Lo que cambió después de la acción.",
+    attributableDefinition:
+      "La parte de la mejora observada coherente con la acción registrada.",
+    dataConfidenceDefinition: "Calidad e integridad de los datos de la tienda.",
+    attributionConfidenceDefinition:
+      "Con qué confianza MarginLab asocia el cambio a la acción.",
+    alertResolvedMeasuring:
+      "Esta alerta ya no está activa. La acción vinculada sigue midiéndose.",
+    reminderAwaiting: "Lista para aplicar:",
+    reminderMeasurementDue:
+      "La ventana de medición terminó; revisa el procesamiento de:",
+    reminderCompleted: "Tu acción seguida ha completado la medición:",
+    dayZero: "Día 0",
+    daySeven: "Día 7",
+    dayFourteen: "Día 14",
+    howItWorksTitle: "Cómo funciona Profit Impact",
+    howItWorksIntro:
+      "Sigue una acción desde su referencia previa hasta la medición final.",
+    baselineStageDescription:
+      "Registra la economía del producto durante los 14 días completos anteriores a la aplicación.",
+    appliedStageDescription:
+      "Registra cuándo se aplica realmente la acción seleccionada e inicia la medición.",
+    measuringStageDescription:
+      "Compara el rendimiento posterior tras 7 días mientras permanece abierta la ventana final.",
+    completedStageDescription:
+      "Completa la comparación tras 14 días y calcula el cambio medido, la atribución y la confianza.",
+    whatMeasuresTitle: "Qué mide MarginLab",
+    whatMeasuresIntro:
+      "Profit Impact compara la referencia económica con el periodo observado después de la acción.",
+    marginMeasureDescription:
+      "Muestra cómo cambió el margen económico entre periodos comparables.",
+    journeyTitle: "De la recomendación al impacto medido",
+    journeyIntro:
+      "MarginLab no se limita a recomendar una acción. La sigue durante la medición para mostrar si la rentabilidad mejoró realmente.",
+    signalDetected: "Señal detectada",
+    signalDetectedDescription:
+      "Profit Monitor u otro módulo de MarginLab identifica una señal económica.",
+    actionSelectedDescription:
+      "El comerciante selecciona y registra la acción que desea seguir.",
+    baselineCapturedDescription:
+      "MarginLab captura el periodo económico de referencia anterior a la acción.",
+    measurementJourneyDescription:
+      "La economía posterior se observa frente a la referencia.",
+    resultDescription:
+      "El tracker muestra el cambio medido, la atribución y la confianza cuando están disponibles.",
   },
   taxProfilePage: {
     tax: "impuesto",
-    test_environment_shopify_reports: "Entorno de prueba · Shopify informa {{country}}",
-    marginlab_already_uses_shopify_tax_data: "MarginLab ya utiliza datos reales de Shopify {{taxSystem}}.",
+    test_environment_shopify_reports:
+      "Entorno de prueba · Shopify informa {{country}}",
+    marginlab_already_uses_shopify_tax_data:
+      "MarginLab ya utiliza datos reales de Shopify {{taxSystem}}.",
     tax_configuration_step: "2 · CONFIGURACIÓN {{taxSystem}}",
     default_tax_rate: "Tasa {{taxSystem}} predeterminada",
-    shopify_prices_include_tax_system: "Los precios de Shopify incluyen {{taxSystem}}",
+    shopify_prices_include_tax_system:
+      "Los precios de Shopify incluyen {{taxSystem}}",
     shopify_cogs_include_tax_system: "Shopify COGS incluye {{taxSystem}}",
-    input_tax_fully_included: "El impuesto soportado sigue estando totalmente incluido en el coste económico.",
-    input_tax_fully_recoverable: "El impuesto soportado se considera totalmente recuperable.",
-    input_tax_partially_recoverable: "MarginLab trata el {{value}} % del impuesto soportado como recuperable.",
-    nonstandard_profile_notice: "Para este perfil, la salida alternativa {{taxSystem}} se establece en 0 % y no se aplica ninguna recuperación del impuesto soportado. Los datos fiscales reales de Shopify siguen teniendo prioridad cuando están disponibles.",
+    input_tax_fully_included:
+      "El impuesto soportado sigue estando totalmente incluido en el coste económico.",
+    input_tax_fully_recoverable:
+      "El impuesto soportado se considera totalmente recuperable.",
+    input_tax_partially_recoverable:
+      "MarginLab trata el {{value}} % del impuesto soportado como recuperable.",
+    nonstandard_profile_notice:
+      "Para este perfil, la salida alternativa {{taxSystem}} se establece en 0 % y no se aplica ninguna recuperación del impuesto soportado. Los datos fiscales reales de Shopify siguen teniendo prioridad cuando están disponibles.",
     shipping_includes_tax_system: "El costo de envío incluye {{taxSystem}}",
     back_to_dashboard: "Volver al tablero",
     advanced_tax_profile: "PERFIL FISCAL AVANZADO",
-    configure_how_marginlab_interprets_taxes_prices_and: "Configure cómo MarginLab interpreta impuestos, precios y costos.",
-    a_store_level_configuration_that_complements_real: "Una configuración a nivel de tienda que complementa los datos fiscales reales de Shopify y mejora la base económica utilizada por MarginLab.",
+    configure_how_marginlab_interprets_taxes_prices_and:
+      "Configure cómo MarginLab interpreta impuestos, precios y costos.",
+    a_store_level_configuration_that_complements_real:
+      "Una configuración a nivel de tienda que complementa los datos fiscales reales de Shopify y mejora la base económica utilizada por MarginLab.",
     jurisdiction: "JURISDICCIÓN",
     detected_from_shopify: "Detectado desde Shopify",
     system: "Sistema",
@@ -1495,52 +2006,110 @@ export const es = {
     incomplete: "Incompleto",
     not_available: "No disponible",
     global_engine_active: "MOTOR GLOBAL ACTIVO",
-    an_advanced_country_specific_tax_profile_is: "Aún no está disponible un perfil fiscal avanzado específico de cada país para esta jurisdicción. MarginLab no elabora tasas impositivas ni supuestos de recuperabilidad: utiliza datos de transacciones Shopify y aplica un tratamiento conservador cuando la evidencia es insuficiente.",
+    an_advanced_country_specific_tax_profile_is:
+      "Aún no está disponible un perfil fiscal avanzado específico de cada país para esta jurisdicción. MarginLab no elabora tasas impositivas ni supuestos de recuperabilidad: utiliza datos de transacciones Shopify y aplica un tratamiento conservador cuando la evidencia es insuficiente.",
     text_1_tax_regime: "1 · RÉGIMEN TRIBUTARIO",
-    how_does_the_store_operate_for_tax: "¿Cómo funciona la tienda a efectos fiscales?",
-    shopify_can_detect_the_country_and_taxes: "Shopify puede detectar el país y los impuestos aplicados a los pedidos, pero no el régimen fiscal del comerciante ni la recuperabilidad del impuesto soportado. El comerciante debe confirmar estas configuraciones.",
-    define_the_economic_basis_of_prices_and: "Definir la base económica de precios y costos.",
-    fallback_rate_used_by_marginlab_only_when: "Tasa de reserva utilizada por MarginLab solo cuando Shopify no proporciona una línea impositiva más específica y el perfil permite una estimación. No reemplaza ni modifica automáticamente los impuestos reales registrados en los pedidos de Shopify.",
-    fallback_used_only_when_the_engine_lacks: "El respaldo se usa solo cuando el motor carece de una tasa Shopify más específica y el perfil avanzado permite una estimación.",
-    analyzed_selling_prices_already_include_tax: "Los precios de venta analizados ya incluyen impuestos.",
-    unit_costs_stored_in_shopify_already_include: "Los costos unitarios almacenados en Shopify ya incluyen el impuesto soportado.",
+    how_does_the_store_operate_for_tax:
+      "¿Cómo funciona la tienda a efectos fiscales?",
+    shopify_can_detect_the_country_and_taxes:
+      "Shopify puede detectar el país y los impuestos aplicados a los pedidos, pero no el régimen fiscal del comerciante ni la recuperabilidad del impuesto soportado. El comerciante debe confirmar estas configuraciones.",
+    define_the_economic_basis_of_prices_and:
+      "Definir la base económica de precios y costos.",
+    fallback_rate_used_by_marginlab_only_when:
+      "Tasa de reserva utilizada por MarginLab solo cuando Shopify no proporciona una línea impositiva más específica y el perfil permite una estimación. No reemplaza ni modifica automáticamente los impuestos reales registrados en los pedidos de Shopify.",
+    fallback_used_only_when_the_engine_lacks:
+      "El respaldo se usa solo cuando el motor carece de una tasa Shopify más específica y el perfil avanzado permite una estimación.",
+    analyzed_selling_prices_already_include_tax:
+      "Los precios de venta analizados ya incluyen impuestos.",
+    unit_costs_stored_in_shopify_already_include:
+      "Los costos unitarios almacenados en Shopify ya incluyen el impuesto soportado.",
     input_tax_recovery: "Recuperación del impuesto soportado",
-    indicates_what_percentage_of_tax_included_in: "Indica qué porcentaje del impuesto incluido en los costos MarginLab debe tratar como recuperable y por lo tanto no forma parte del costo económico final. Esta configuración se utiliza para el análisis de márgenes y no determina el derecho legal real del comerciante a recuperar el impuesto soportado.",
-    define_how_much_tax_embedded_in_costs: "Definir cuánto impuesto incluido en los costos se puede recuperar económicamente.",
+    indicates_what_percentage_of_tax_included_in:
+      "Indica qué porcentaje del impuesto incluido en los costos MarginLab debe tratar como recuperable y por lo tanto no forma parte del costo económico final. Esta configuración se utiliza para el análisis de márgenes y no determina el derecho legal real del comerciante a recuperar el impuesto soportado.",
+    define_how_much_tax_embedded_in_costs:
+      "Definir cuánto impuesto incluido en los costos se puede recuperar económicamente.",
     none: "Ninguno",
     full: "completo",
     partial: "Parcial",
     recoverable_percentage: "Porcentaje recuperable",
-    enter_the_percentage_that_is_actually_recoverable: "Ingrese el porcentaje que realmente es recuperable.",
+    enter_the_percentage_that_is_actually_recoverable:
+      "Ingrese el porcentaje que realmente es recuperable.",
     shopify_costs_include_tax: "Los costos de Shopify incluyen impuestos.",
-    this_remains_useful_for_describing_the_cost: "Esto sigue siendo útil para describir correctamente la base de costos, incluso cuando el perfil no permite la recuperación del impuesto soportado.",
+    this_remains_useful_for_describing_the_cost:
+      "Esto sigue siendo útil para describir correctamente la base de costos, incluso cuando el perfil no permite la recuperación del impuesto soportado.",
     text_3_shipping: "3 · ENVÍO",
-    tax_treatment_of_shipping_revenue: "Tratamiento fiscal de los ingresos por transporte",
-    the_customer_paid_shipping_charge_already_includes: "El cargo de envío pagado por el cliente ya incluye impuestos.",
+    tax_treatment_of_shipping_revenue:
+      "Tratamiento fiscal de los ingresos por transporte",
+    the_customer_paid_shipping_charge_already_includes:
+      "El cargo de envío pagado por el cliente ya incluye impuestos.",
     shipping_tax_rate: "Tasa de impuesto de envío",
-    in_the_selected_profile_marginlab_does_not: "En el perfil seleccionado, MarginLab no estima impuestos sobre el envío. Las líneas de impuestos Shopify reales permanecen disponibles para el motor global.",
+    in_the_selected_profile_marginlab_does_not:
+      "En el perfil seleccionado, MarginLab no estima impuestos sobre el envío. Las líneas de impuestos Shopify reales permanecen disponibles para el motor global.",
     marginlab_calculation_basis: "BASE DE CÁLCULO DE MARGINLAB",
-    how_the_profile_complements_the_global_tax: "Cómo el perfil complementa el motor fiscal global",
+    how_the_profile_complements_the_global_tax:
+      "Cómo el perfil complementa el motor fiscal global",
     shopify_sales: "Ventas de Shopify",
     actual_tax_lines: "Líneas impositivas reales",
     cost_profile: "Perfil de costos",
     economic_cogs: "Económico COGS",
     economic_profit: "Beneficio económico",
-    tax_profile_saved_successfully_marginlab_will_use: "Perfil fiscal guardado correctamente. MarginLab utilizará esta configuración junto con los datos fiscales reales de Shopify.",
+    tax_profile_saved_successfully_marginlab_will_use:
+      "Perfil fiscal guardado correctamente. MarginLab utilizará esta configuración junto con los datos fiscales reales de Shopify.",
     save_tax_profile: "Guardar perfil fiscal",
-    store_level_configuration_available_on_both_starter: "Configuración a nivel de tienda disponible tanto en Starter como en Growth.",
+    store_level_configuration_available_on_both_starter:
+      "Configuración a nivel de tienda disponible tanto en Starter como en Growth.",
     saving: "Guardando...",
     save_configuration: "Guardar configuración",
-    tax_profile_improves_the_economic_basis_used: "Tax Profile mejora la base económica utilizada por MarginLab. No reemplaza la contabilidad, las declaraciones de impuestos ni el asesoramiento fiscal profesional y no determina automáticamente las obligaciones fiscales del comerciante.",
+    tax_profile_improves_the_economic_basis_used:
+      "Tax Profile mejora la base económica utilizada por MarginLab. No reemplaza la contabilidad, las declaraciones de impuestos ni el asesoramiento fiscal profesional y no determina automáticamente las obligaciones fiscales del comerciante.",
   },
   reportsNotificationsPage: {
-    eyebrow: "INFORMES Y NOTIFICACIONES", title: "Elige qué recibir y dónde", description: "Configure el Informe de ganancias semanal y las alertas por correo electrónico de ventas de productos. Estas preferencias son utilizadas directamente por el sistema de notificación de la tienda.",
-    recipientEyebrow: "DESTINATARIO", recipient: "Correo electrónico del destinatario", recipientNote: "Dirección donde MarginLab enviará informes semanales y alertas de ventas de productos.",
-    weeklyEyebrow: "INFORME SEMANAL", weeklyTitle: "Informe de ganancias semanal", weeklyDescription: "Recibe un resumen semanal de los últimos 7 días con rentabilidad, riesgos y próximas acciones.", weeklyEnabled: "Habilitar informe de ganancias semanal", weeklyEnabledDesc: "Envía automáticamente el informe semanal a la dirección de correo electrónico configurada.",
-    language: "Idioma del correo electrónico", day: "Día de entrega", hour: "tiempo de entrega", timezone: "Zona horaria", timezoneNote: "Se utiliza para interpretar el día y la hora de entrega del informe.",
-    days: ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"],
-    alertsEyebrow: "ALERTAS DE VENTAS DE PRODUCTOS", alertsTitle: "Riesgos de ventas de productos por correo electrónico", alertsDescription: "Reciba correos sobre riesgos aptos detectados cuando se vende un producto. Las demás señales de Profit Monitor siguen disponibles en el Alert Center de la aplicación.", alertsEnabled: "Activar alertas de ventas de productos", alertsEnabledDesc: "Permite que MarginLab envíe un correo cuando a un producto vendido le falta el coste, genera pérdidas o tiene un margen débil.",
-    critical: "Alertas críticas", criticalDesc: "Ventas de productos detectadas como deficitarias.", warnings: "Advertencias", warningsDesc: "Ventas de productos con coste faltante o margen débil.", opportunities: "Oportunidades", opportunitiesDesc: "Las oportunidades de Profit Monitor siguen disponibles en la aplicación; los correos inmediatos de ventas cubren actualmente los riesgos de producto.",
-    save: "Guardar preferencias", saving: "Guardando...", note: "MarginLab no envía informes semanales ni alertas de ventas de productos sin una dirección de correo electrónico configurada.",
+    eyebrow: "INFORMES Y NOTIFICACIONES",
+    title: "Elige qué recibir y dónde",
+    description:
+      "Configure el Informe de ganancias semanal y las alertas por correo electrónico de ventas de productos. Estas preferencias son utilizadas directamente por el sistema de notificación de la tienda.",
+    recipientEyebrow: "DESTINATARIO",
+    recipient: "Correo electrónico del destinatario",
+    recipientNote:
+      "Dirección donde MarginLab enviará informes semanales y alertas de ventas de productos.",
+    weeklyEyebrow: "INFORME SEMANAL",
+    weeklyTitle: "Informe de ganancias semanal",
+    weeklyDescription:
+      "Recibe un resumen semanal de los últimos 7 días con rentabilidad, riesgos y próximas acciones.",
+    weeklyEnabled: "Habilitar informe de ganancias semanal",
+    weeklyEnabledDesc:
+      "Envía automáticamente el informe semanal a la dirección de correo electrónico configurada.",
+    language: "Idioma del correo electrónico",
+    day: "Día de entrega",
+    hour: "tiempo de entrega",
+    timezone: "Zona horaria",
+    timezoneNote:
+      "Se utiliza para interpretar el día y la hora de entrega del informe.",
+    days: [
+      "domingo",
+      "lunes",
+      "martes",
+      "miércoles",
+      "jueves",
+      "viernes",
+      "sábado",
+    ],
+    alertsEyebrow: "ALERTAS DE VENTAS DE PRODUCTOS",
+    alertsTitle: "Riesgos de ventas de productos por correo electrónico",
+    alertsDescription:
+      "Reciba correos sobre riesgos aptos detectados cuando se vende un producto. Las demás señales de Profit Monitor siguen disponibles en el Alert Center de la aplicación.",
+    alertsEnabled: "Activar alertas de ventas de productos",
+    alertsEnabledDesc:
+      "Permite que MarginLab envíe un correo cuando a un producto vendido le falta el coste, genera pérdidas o tiene un margen débil.",
+    critical: "Alertas críticas",
+    criticalDesc: "Ventas de productos detectadas como deficitarias.",
+    warnings: "Advertencias",
+    warningsDesc: "Ventas de productos con coste faltante o margen débil.",
+    opportunities: "Oportunidades",
+    opportunitiesDesc:
+      "Las oportunidades de Profit Monitor siguen disponibles en la aplicación; los correos inmediatos de ventas cubren actualmente los riesgos de producto.",
+    save: "Guardar preferencias",
+    saving: "Guardando...",
+    note: "MarginLab no envía informes semanales ni alertas de ventas de productos sin una dirección de correo electrónico configurada.",
   },
 };
