@@ -16,6 +16,7 @@ import {
   PremiumPanel,
   SignalRing,
   StatusChip,
+  TaxAwareBadge,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
 import { getLanguageLocale } from "~/utils/i18n";
@@ -267,7 +268,7 @@ export default function ProductsPage() {
           description={copy.description}
           actions={
             <div className="dashboard-v2-hero-actions">
-              <StatusChip tone="green">{copy.taxAwareBasis}</StatusChip>
+              <TaxAwareBadge>{copy.taxAwareBasis}</TaxAwareBadge>
             </div>
           }
           visual={

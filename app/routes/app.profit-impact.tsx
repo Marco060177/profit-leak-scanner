@@ -21,6 +21,7 @@ import {
   ResponsiveGrid,
   SegmentedTabs,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
   VisualInput,
   VisualTextarea,
@@ -543,14 +544,19 @@ export default function ProfitImpactPage() {
           title="Profit Impact Tracker"
           description={copy.description}
           actions={
-            <VisualButton
-              size="large"
-              className="impact-hero-cta"
-              leading="＋"
-              onClick={() => navigate("/app/recommendations")}
-            >
-              {copy.trackAction}
-            </VisualButton>
+            <>
+              <VisualButton
+                size="large"
+                className="impact-hero-cta"
+                leading="＋"
+                onClick={() => navigate("/app/recommendations")}
+              >
+                {copy.trackAction}
+              </VisualButton>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
+            </>
           }
           visual={
             <aside className="impact-hero-guide" aria-label={copy.trustTitle}>

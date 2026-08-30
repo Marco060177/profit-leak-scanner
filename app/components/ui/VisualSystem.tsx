@@ -185,6 +185,10 @@ export function GrowthHeroEyebrow({
   );
 }
 
+export function TaxAwareBadge({ children }: { children: ReactNode }) {
+  return <StatusChip tone="green">{children}</StatusChip>;
+}
+
 export type SegmentedTab = {
   id: string;
   label: ReactNode;

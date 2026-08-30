@@ -14,6 +14,7 @@ import {
   PremiumPanel,
   SignalRing,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
@@ -977,11 +978,18 @@ export default function RecommendationsPage() {
           actions={
             !growthAccess ? (
               <div className="dashboard-v2-hero-actions">
+                <TaxAwareBadge>
+                  {messages.productsPage.taxAwareBasis}
+                </TaxAwareBadge>
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.r019}
                 </VisualButton>
               </div>
-            ) : undefined
+            ) : (
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
+            )
           }
           visual={
             <div className="dashboard-v2-health-signal">

@@ -17,6 +17,7 @@ import {
   ResponsiveGrid,
   SegmentedTabs,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
@@ -1387,9 +1388,9 @@ export default function AlertCenterPage() {
           description={copy.marginlab_monitors_margins_costs_refunds_and}
           actions={
             <div className="dashboard-v2-hero-actions">
-              <StatusChip tone="green">
-                {copy.tax_aware_economic_basis}
-              </StatusChip>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
               {growthAccess ? (
                 <VisualButton
                   variant="secondary"

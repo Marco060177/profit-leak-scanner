@@ -17,6 +17,7 @@ import {
   SignalRing,
   SplitLayout,
   StatusChip,
+  TaxAwareBadge,
   VisualInput,
   VisualButton,
 } from "~/components/ui/VisualSystem";
@@ -1481,9 +1482,9 @@ Rules:
           }
           actions={
             <div className="dashboard-v2-hero-actions">
-              <StatusChip tone="green">
-                {copy.tax_aware_economic_basis}
-              </StatusChip>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
               {!growthAccess && (
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.unlock_growth}

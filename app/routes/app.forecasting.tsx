@@ -25,6 +25,7 @@ import {
   PremiumPanel,
   SegmentedTabs,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
 } from "~/components/ui/VisualSystem";
 
@@ -1280,7 +1281,9 @@ export default function ForecastingPage() {
           description={copy.auto.f005}
           actions={
             <>
-              <StatusChip tone="blue">{copy.auto.f006}</StatusChip>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
               {!growthAccess ? (
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.f007}

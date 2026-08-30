@@ -14,6 +14,7 @@ import {
   PremiumHero,
   PremiumPanel,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
   VisualInput,
 } from "~/components/ui/VisualSystem";
@@ -1469,7 +1470,9 @@ export default function RecoverySimulatorPage() {
           description={copy.auto.s005}
           actions={
             <div className="dashboard-v2-hero-actions">
-              <StatusChip tone="green">{copy.auto.s006}</StatusChip>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
               {!growthAccess ? (
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.s007}

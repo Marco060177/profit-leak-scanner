@@ -4,6 +4,7 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import {
   PremiumHero,
   SegmentedTabs,
+  TaxAwareBadge,
   VisualButton,
 } from "~/components/ui/VisualSystem";
 
@@ -87,6 +88,7 @@ export default function DashboardHero({
             >
               {analysisLoading ? analysisText : copy.runAnalysis}
             </VisualButton>
+            <TaxAwareBadge>{messages.productsPage.taxAwareBasis}</TaxAwareBadge>
           </div>
         }
       />

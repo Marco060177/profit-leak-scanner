@@ -22,6 +22,7 @@ import {
   PremiumHero,
   PremiumPanel,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
 } from "~/components/ui/VisualSystem";
 
@@ -1218,7 +1219,9 @@ export default function ProfitAssumptionsPage() {
               >
                 {displayHealthLabel}
               </StatusChip>
-              <StatusChip tone="blue">{copy.auto.a006}</StatusChip>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
               {!growthAccess ? (
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.a007}

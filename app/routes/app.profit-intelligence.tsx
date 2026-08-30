@@ -22,6 +22,7 @@ import {
   ResponsiveGrid,
   SignalRing,
   StatusChip,
+  TaxAwareBadge,
   VisualButton,
   type VisualTone,
 } from "~/components/ui/VisualSystem";
@@ -595,6 +596,9 @@ export default function ProfitIntelligencePage() {
               >
                 {copy.auto.p004}
               </VisualButton>
+              <TaxAwareBadge>
+                {messages.productsPage.taxAwareBasis}
+              </TaxAwareBadge>
             </div>
           }
           visual={
