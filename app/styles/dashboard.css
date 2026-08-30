@@ -3194,23 +3194,23 @@ table {
   background:
     radial-gradient(
       circle at 80% 50%,
-      rgb(var(--ml-v2-accent) / 0.16),
+      rgb(var(--ml-v2-blue) / 0.1),
       transparent 31%
     ),
     radial-gradient(
       circle at 47% 4%,
-      rgb(var(--ml-v2-blue) / 0.075),
+      rgb(var(--ml-v2-blue) / 0.055),
       transparent 39%
     ),
     linear-gradient(
       122deg,
-      rgb(13 21 34 / 0.98),
-      rgb(5 10 18 / 0.99) 58%,
-      rgb(3 7 14)
+      rgb(7 15 27 / 0.99),
+      rgb(4 9 17 / 0.995) 58%,
+      rgb(2 6 12)
     );
   box-shadow:
     inset 0 1px rgb(255 255 255 / 0.065),
-    inset 0 -1px rgb(var(--ml-v2-accent) / 0.055),
+    inset 0 -1px rgb(var(--ml-v2-blue) / 0.055),
     0 32px 80px rgb(0 0 0 / 0.32);
 }
 .dashboard-v2-hero::before {
@@ -3246,10 +3246,10 @@ table {
   background: linear-gradient(
     90deg,
     transparent,
-    rgb(var(--ml-v2-accent) / 0.52),
+    rgb(var(--ml-v2-accent) / 0.28),
     transparent
   );
-  box-shadow: 0 -8px 28px rgb(var(--ml-v2-accent) / 0.15);
+  box-shadow: 0 -8px 28px rgb(var(--ml-v2-blue) / 0.09);
   content: "";
   pointer-events: none;
 }
@@ -3348,7 +3348,7 @@ table {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgb(var(--ml-v2-accent) / 0.2),
+    rgb(var(--ml-v2-blue) / 0.13),
     transparent 68%
   );
   filter: blur(4px);
@@ -3378,11 +3378,11 @@ table {
   width: 74%;
   height: 26px;
   z-index: -1;
-  border-top: 1px solid rgb(var(--ml-v2-accent) / 0.24);
+  border-top: 1px solid rgb(var(--ml-v2-accent) / 0.16);
   border-radius: 50%;
   background: radial-gradient(
     ellipse,
-    rgb(var(--ml-v2-accent) / 0.11),
+    rgb(var(--ml-v2-blue) / 0.075),
     transparent 68%
   );
   filter: blur(1px);
