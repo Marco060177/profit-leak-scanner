@@ -1461,7 +1461,7 @@ Rules:
         <DashboardNav active="ai-advisor" navigate={navigate} />
 
         <PremiumHero
-          className="advisor-v2-hero"
+          className="dashboard-v2-hero advisor-v2-hero"
           tone="orange"
           mobileVisualPosition="after-copy"
           eyebrow={copy.profit_copilot}
@@ -1470,7 +1470,7 @@ Rules:
             copy.marginlab_automatically_analyzes_profitability_risk_opportunities
           }
           actions={
-            <>
+            <div className="dashboard-v2-hero-actions">
               <StatusChip
                 tone={growthAccess ? "green" : "orange"}
                 pulse={growthAccess}
@@ -1485,36 +1485,59 @@ Rules:
                   {copy.unlock_growth}
                 </VisualButton>
               )}
-            </>
+            </div>
           }
           visual={
-            <div className="advisor-v2-health-visual">
-              <SignalRing
-                value={healthScore}
-                variant="hero"
-                motion="ambient"
-                tone={
-                  healthScore < 40
-                    ? "red"
-                    : healthScore < 70
-                      ? "amber"
-                      : "green"
-                }
-                score={healthScore}
-                suffix="/100"
-                label={copy.store_health_2}
-                status={healthLabel}
-                detail={copy.updated_from_current_store_data}
-                ariaLabel={`${copy.store_health_2}: ${healthScore}/100, ${healthLabel}`}
-                info={
-                  <MetricTooltip
-                    content={{
-                      title: copy.store_health_3,
-                      description: copy.a_0_100_score_summarizing_the,
-                      note: copy.it_considers_loss_making_products_missing,
-                    }}
-                  />
-                }
+            <div className="dashboard-v2-health-signal">
+              <div
+                className="dashboard-v2-instrument-halo"
+                aria-hidden="true"
+              />
+              <div className="dashboard-v2-instrument-arc" aria-hidden="true" />
+              <div className="dashboard-v2-signal-core">
+                <SignalRing
+                  value={healthScore}
+                  variant="hero"
+                  size="large"
+                  motion="ambient"
+                  tone={
+                    healthScore < 40
+                      ? "red"
+                      : healthScore < 70
+                        ? "amber"
+                        : "green"
+                  }
+                  score={healthScore}
+                  suffix="/100"
+                  label={copy.store_health_2}
+                  status={healthLabel}
+                  detail={copy.updated_from_current_store_data}
+                  ariaLabel={`${copy.store_health_2}: ${healthScore}/100, ${healthLabel}`}
+                  info={
+                    <MetricTooltip
+                      content={{
+                        title: copy.store_health_3,
+                        description: copy.a_0_100_score_summarizing_the,
+                        note: copy.it_considers_loss_making_products_missing,
+                      }}
+                    />
+                  }
+                  nodes={[
+                    ...(losingProducts.length > 0
+                      ? [{ id: "loss", angle: 35, tone: "red" as const }]
+                      : []),
+                    ...(missingCostProducts.length > 0
+                      ? [{ id: "data", angle: 150, tone: "amber" as const }]
+                      : []),
+                    ...(lowMarginProducts.length > 0
+                      ? [{ id: "margin", angle: 265, tone: "green" as const }]
+                      : []),
+                  ]}
+                />
+              </div>
+              <div
+                className="dashboard-v2-instrument-base"
+                aria-hidden="true"
               />
             </div>
           }

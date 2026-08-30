@@ -1,27 +1,6 @@
 .advisor-v2-hero {
   margin-bottom: var(--ml-v2-space-6);
 }
-.advisor-v2-health-visual {
-  display: grid;
-  width: min(100%, 360px);
-  min-height: 286px;
-  place-items: center;
-  margin-inline: auto;
-  padding: var(--ml-v2-space-5);
-  border: 1px solid var(--ml-v2-border-neutral);
-  border-radius: var(--ml-v2-radius-panel);
-  background:
-    radial-gradient(
-      circle at 50% 48%,
-      rgba(var(--ml-v2-accent), 0.1),
-      transparent 48%
-    ),
-    rgba(5, 10, 18, 0.42);
-}
-.advisor-v2-health-visual .ml-signal-ring {
-  max-width: min(240px, 72vw);
-}
-
 .advisor-v2-executive {
   margin: 0;
   padding: var(--ml-v2-space-8);
@@ -189,14 +168,6 @@
   }
 }
 @media (max-width: 560px) {
-  .advisor-v2-hero {
-    padding: var(--ml-v2-space-5) !important;
-  }
-  .advisor-v2-health-visual {
-    width: 100%;
-    min-height: 250px;
-    padding: var(--ml-v2-space-4);
-  }
   .advisor-v2-executive,
   .advisor-v2-priorities,
   .advisor-v2-mission,
@@ -223,9 +194,6 @@
   }
 }
 @media (max-width: 390px) {
-  .advisor-v2-health-visual {
-    min-height: 230px;
-  }
   .advisor-v2-priorities,
   .advisor-v2-analysis,
   .advisor-v2-ask {
