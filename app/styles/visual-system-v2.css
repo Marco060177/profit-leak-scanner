@@ -62,19 +62,19 @@
   background: radial-gradient(
     circle at top left,
     rgba(255, 115, 60, 0.16),
-    transparent 30%
+    transparent 15%
   );
 }
 
 .ml-app-ambient::before {
   position: absolute;
-  top: -180px;
-  left: -160px;
-  width: 420px;
-  height: 420px;
+  top: -90px;
+  left: -80px;
+  width: 210px;
+  height: 210px;
   border-radius: 50%;
   background: rgba(255, 115, 60, 0.1);
-  filter: blur(70px);
+  filter: blur(35px);
   content: "";
 }
 
