@@ -67,21 +67,9 @@
   padding: 28px;
 }
 
-.recommendations-v2-action-score {
-  align-self: stretch;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  min-height: 260px;
-}
-
-.recommendations-v2-action-score .ml-v2-metric-value {
-  font-size: clamp(38px, 5vw, 58px);
-}
-
-.recommendations-v2-action-score .ml-v2-metric-detail {
-  display: grid;
-  gap: 12px;
+.recommendations-v2-summary-layout {
+  display: block;
+  width: 100%;
 }
 
 .recommendations-v2-top-priority {
@@ -136,10 +124,6 @@
   .recommendations-v2-workspace > div[style*="1.35fr"],
   .recommendations-v2-workspace > div[style*="0.78fr"] {
     grid-template-columns: 1fr !important;
-  }
-
-  .recommendations-v2-action-score {
-    min-height: 220px;
   }
 
   .recommendations-v2-roadmap > div:last-child {

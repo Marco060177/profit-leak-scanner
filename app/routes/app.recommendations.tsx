@@ -11,6 +11,7 @@ import {
   PremiumEmptyState,
   PremiumHero,
   PremiumPanel,
+  SignalRing,
   StatusChip,
   VisualButton,
   type VisualTone,
@@ -614,6 +615,14 @@ export default function RecommendationsPage() {
 
   const businessStatusLabel = businessStatusCopy.label;
   const businessStatusDescription = businessStatusCopy.description;
+  const actionScoreTone: VisualTone =
+    businessStatus.key === "action"
+      ? "red"
+      : businessStatus.key === "review"
+        ? "amber"
+        : businessStatus.key === "optimize"
+          ? "green"
+          : "cyan";
 
   const storageKey = `marginlab:recommendations:${shopHandle || "store"}`;
   const [completedIds, setCompletedIds] = React.useState<string[]>([]);
@@ -953,7 +962,7 @@ export default function RecommendationsPage() {
         <DashboardNav active="recommendations" navigate={navigate} />
 
         <PremiumHero
-          className="recommendations-v2-hero"
+          className="dashboard-v2-hero recommendations-v2-hero"
           eyebrow={
             <span className="recommendations-v2-hero-eyebrow">
               <StatusChip tone={growthAccess ? "green" : "orange"}>
@@ -966,11 +975,50 @@ export default function RecommendationsPage() {
           description={copy.auto.r018}
           actions={
             !growthAccess ? (
-              <VisualButton onClick={() => navigate("/app/billing")}>
-                {copy.auto.r019}
-              </VisualButton>
+              <div className="dashboard-v2-hero-actions">
+                <VisualButton onClick={() => navigate("/app/billing")}>
+                  {copy.auto.r019}
+                </VisualButton>
+              </div>
             ) : undefined
           }
+          visual={
+            <div className="dashboard-v2-health-signal">
+              <div
+                className="dashboard-v2-instrument-halo"
+                aria-hidden="true"
+              />
+              <div className="dashboard-v2-instrument-arc" aria-hidden="true" />
+              <div className="dashboard-v2-signal-core">
+                <SignalRing
+                  value={actionCenterScore}
+                  variant="hero"
+                  size="large"
+                  motion="ambient"
+                  tone={actionScoreTone}
+                  score={actionCenterScore}
+                  suffix="/100"
+                  label={copy.auto.r040}
+                  status={businessStatusLabel}
+                  detail={businessStatusDescription}
+                  info={
+                    <MetricTooltip
+                      content={{
+                        title: copy.auto.r041,
+                        description: copy.auto.r042,
+                      }}
+                    />
+                  }
+                  ariaLabel={`${copy.auto.r040}: ${actionCenterScore}/100, ${businessStatusLabel}`}
+                />
+              </div>
+              <div
+                className="dashboard-v2-instrument-base"
+                aria-hidden="true"
+              />
+            </div>
+          }
+          mobileVisualPosition="after-copy"
         />
 
         <div
@@ -999,25 +1047,8 @@ export default function RecommendationsPage() {
             <PremiumPanel
               tone="green"
               className="recommendations-v2-economic-summary"
-              style={{
-                borderRadius: 30,
-                padding: 28,
-                marginBottom: 26,
-                background:
-                  "radial-gradient(circle at 14% 16%, rgba(34,197,94,0.15), transparent 30%), radial-gradient(circle at 88% 12%, rgba(255,115,80,0.12), transparent 30%), linear-gradient(135deg, rgba(15,23,36,0.99), rgba(6,11,20,0.99))",
-                border: "1px solid rgba(34,197,94,0.23)",
-                boxShadow:
-                  "0 28px 90px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.03)",
-              }}
             >
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1.2fr 0.8fr",
-                  gap: 26,
-                  alignItems: "stretch",
-                }}
-              >
+              <div className="recommendations-v2-summary-layout">
                 <div>
                   <div
                     style={{
@@ -1164,49 +1195,6 @@ export default function RecommendationsPage() {
                     />
                   </div>
                 </div>
-
-                <MetricCard
-                  className="recommendations-v2-action-score"
-                  tone={
-                    businessStatus.key === "action"
-                      ? "red"
-                      : businessStatus.key === "review"
-                        ? "amber"
-                        : businessStatus.key === "optimize"
-                          ? "green"
-                          : "cyan"
-                  }
-                  label={
-                    <span className="recommendations-v2-metric-label">
-                      <span>{copy.auto.r040}</span>
-                      <MetricTooltip
-                        content={{
-                          title: copy.auto.r041,
-                          description: copy.auto.r042,
-                        }}
-                      />
-                    </span>
-                  }
-                  value={`${actionCenterScore}/100`}
-                  detail={
-                    <>
-                      <StatusChip
-                        tone={
-                          businessStatus.key === "action"
-                            ? "red"
-                            : businessStatus.key === "review"
-                              ? "amber"
-                              : businessStatus.key === "optimize"
-                                ? "green"
-                                : "cyan"
-                        }
-                      >
-                        {businessStatusLabel}
-                      </StatusChip>
-                      <span>{businessStatusDescription}</span>
-                    </>
-                  }
-                />
               </div>
             </PremiumPanel>
 
