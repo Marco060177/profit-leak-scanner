@@ -71,26 +71,7 @@
   fill: #ff733c;
   stroke: #ffd0bd;
   stroke-width: 0.8;
-}
-
-.tax-map-marker-glow,
-.tax-map-marker-halo {
-  fill: #ff733c;
-}
-
-.tax-map-marker-glow {
-  opacity: 0.45;
-}
-
-.tax-map-marker-halo {
-  opacity: 0.16;
-  animation: tax-map-breathe 3.8s ease-in-out infinite;
-}
-
-.tax-map-marker-core {
-  fill: #ff9a70;
-  stroke: #fff4ed;
-  stroke-width: 1;
+  filter: drop-shadow(0 0 1.6px rgba(255, 115, 60, 0.58));
 }
 
 .tax-profile-map-card__identity {
@@ -192,18 +173,6 @@
   white-space: nowrap;
 }
 
-@keyframes tax-map-breathe {
-  0%,
-  100% {
-    transform: scale(0.86);
-    opacity: 0.12;
-  }
-  50% {
-    transform: scale(1.18);
-    opacity: 0.22;
-  }
-}
-
 @media (max-width: 980px) {
   .tax-profile-hero {
     grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr) !important;
@@ -253,11 +222,5 @@
   }
   .tax-profile-map-card__meta {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tax-map-marker-halo {
-    animation: none;
   }
 }

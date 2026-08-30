@@ -8,14 +8,10 @@ export function TaxJurisdictionMap({
   countryName: string;
 }) {
   const normalizedCode = countryCode?.toUpperCase() ?? "";
-  const currentCountry = NATURAL_EARTH_COUNTRIES.find(
-    (country) => country.id === normalizedCode,
-  );
-
   return (
-    <div className="tax-map" data-has-marker={Boolean(currentCountry)}>
+    <div className="tax-map">
       <svg
-        viewBox="0 0 360 180"
+        viewBox="0 4 360 148"
         role="img"
         aria-label={countryName}
         preserveAspectRatio="xMidYMid meet"
@@ -29,55 +25,33 @@ export function TaxJurisdictionMap({
             <stop stopColor="#38bdf8" stopOpacity="0.1" />
             <stop offset="1" stopColor="#38bdf8" stopOpacity="0" />
           </radialGradient>
-          <filter
-            id="tax-map-marker-glow"
-            x="-200%"
-            y="-200%"
-            width="500%"
-            height="500%"
-          >
-            <feGaussianBlur stdDeviation="3" />
-          </filter>
         </defs>
 
         <rect
           className="tax-map-atmosphere"
           x="0"
-          y="0"
+          y="4"
           width="360"
-          height="180"
+          height="148"
           rx="18"
         />
         <g className="tax-map-grid" aria-hidden="true">
           <path d="M10 45H350M10 90H350M10 135H350M90 8V172M180 8V172M270 8V172" />
         </g>
         <g className="tax-map-land" aria-hidden="true">
-          {NATURAL_EARTH_COUNTRIES.map((country, index) => (
-            <path
-              key={`${country.id}-${index}`}
-              className={
-                country.id === normalizedCode ? "is-current" : undefined
-              }
-              d={country.d}
-              fillRule="evenodd"
-            />
-          ))}
+          {NATURAL_EARTH_COUNTRIES.filter((country) => country.id !== "AQ").map(
+            (country, index) => (
+              <path
+                key={`${country.id}-${index}`}
+                className={
+                  country.id === normalizedCode ? "is-current" : undefined
+                }
+                d={country.d}
+                fillRule="evenodd"
+              />
+            ),
+          )}
         </g>
-
-        {currentCountry ? (
-          <g
-            className="tax-map-marker"
-            transform={`translate(${currentCountry.labelX} ${currentCountry.labelY})`}
-          >
-            <circle
-              className="tax-map-marker-glow"
-              r="9"
-              filter="url(#tax-map-marker-glow)"
-            />
-            <circle className="tax-map-marker-halo" r="6" />
-            <circle className="tax-map-marker-core" r="2.2" />
-          </g>
-        ) : null}
       </svg>
     </div>
   );
