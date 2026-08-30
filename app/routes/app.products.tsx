@@ -261,53 +261,63 @@ export default function ProductsPage() {
         <DashboardNav active="products" navigate={navigate} />
 
         <PremiumHero
-          className="products-v2-hero"
-          tone={productTone}
+          className="dashboard-v2-hero products-v2-hero"
           eyebrow={copy.eyebrow}
           title={copy.title}
           description={copy.description}
-          actions={<StatusChip tone="green">{copy.taxAwareBasis}</StatusChip>}
-          visual={
-            <div className="products-v2-health-signal">
-              <span
-                className="products-v2-health-node node-1"
-                aria-hidden="true"
-              />
-              <span
-                className="products-v2-health-node node-2"
-                aria-hidden="true"
-              />
-              <span
-                className="products-v2-health-node node-3"
-                aria-hidden="true"
-              />
-              <SignalRing
-                value={productScore}
-                tone={productTone}
-                size="large"
-                motion="ambient"
-                marker
-                label={
-                  <span className="products-v2-health-value">
-                    {productScore}
-                    <small>/100</small>
-                  </span>
-                }
-                detail={productScoreLabel}
-              />
-              <div
-                className="products-v2-health-distribution"
-                aria-hidden="true"
-              >
-                <i
-                  className="is-critical"
-                  style={{ width: `${criticalPct}%` }}
-                />
-                <i className="is-high" style={{ width: `${highPct}%` }} />
-                <i className="is-healthy" style={{ width: `${healthyPct}%` }} />
-              </div>
+          actions={
+            <div className="dashboard-v2-hero-actions">
+              <StatusChip tone="green">{copy.taxAwareBasis}</StatusChip>
             </div>
           }
+          visual={
+            <div className="dashboard-v2-health-signal">
+              <div
+                className="dashboard-v2-instrument-halo"
+                aria-hidden="true"
+              />
+              <div className="dashboard-v2-instrument-arc" aria-hidden="true" />
+              <div className="dashboard-v2-signal-core">
+                <SignalRing
+                  value={productScore}
+                  variant="hero"
+                  tone={productTone}
+                  size="large"
+                  motion="ambient"
+                  score={productScore}
+                  suffix="/100"
+                  label={copy.score.eyebrow}
+                  status={productScoreLabel}
+                  info={
+                    <MetricTooltip
+                      content={{
+                        title: copy.score.tooltipTitle,
+                        description: copy.score.tooltipDescription,
+                        note: copy.score.tooltipNote,
+                      }}
+                    />
+                  }
+                  nodes={[
+                    ...(criticalProducts > 0
+                      ? [{ id: "critical", angle: 35, tone: "red" as const }]
+                      : []),
+                    ...(highProducts > 0
+                      ? [{ id: "risk", angle: 150, tone: "amber" as const }]
+                      : []),
+                    ...(healthyProducts > 0
+                      ? [{ id: "healthy", angle: 265, tone: "green" as const }]
+                      : []),
+                  ]}
+                  ariaLabel={`${copy.score.eyebrow}: ${productScore}/100, ${productScoreLabel}`}
+                />
+              </div>
+              <div
+                className="dashboard-v2-instrument-base"
+                aria-hidden="true"
+              />
+            </div>
+          }
+          mobileVisualPosition="after-copy"
         />
 
         <PremiumPanel className="products-v2-score" tone={productTone}>

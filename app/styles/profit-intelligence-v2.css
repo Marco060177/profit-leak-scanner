@@ -29,16 +29,6 @@
   gap: 7px;
 }
 
-.profit-intelligence-v2-hero .ml-v2-hero-visual {
-  min-width: 320px;
-}
-
-.profit-intelligence-v2-hero-signal {
-  display: grid;
-  min-height: 320px;
-  place-items: center;
-}
-
 .profit-intelligence-v2-economic-metrics,
 .profit-intelligence-v2-breakdown-grid,
 .profit-intelligence-v2-timeline-grid,
@@ -106,10 +96,6 @@
     grid-template-columns: 1fr;
   }
 
-  .profit-intelligence-v2-hero-signal {
-    min-height: 270px;
-  }
-
   .profit-intelligence-v2-score,
   .profit-intelligence-v2-economic-summary,
   .profit-intelligence-v2-business-impact,
@@ -125,10 +111,6 @@
 }
 
 @media (max-width: 390px) {
-  .profit-intelligence-v2-hero-signal {
-    min-height: 245px;
-  }
-
   .profit-intelligence-v2-operational-grid {
     gap: 16px;
   }

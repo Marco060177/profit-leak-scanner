@@ -583,40 +583,53 @@ export default function ProfitIntelligencePage() {
         <DashboardNav active="profit" navigate={navigate} />
 
         <PremiumHero
-          className="profit-intelligence-v2-hero"
+          className="dashboard-v2-hero profit-intelligence-v2-hero"
           eyebrow={copy.auto.p001}
           title={copy.auto.p002}
           description={copy.auto.p003}
           actions={
-            <VisualButton
-              variant="secondary"
-              onClick={exportProfitIntelligenceCsv}
-            >
-              {copy.auto.p004}
-            </VisualButton>
+            <div className="dashboard-v2-hero-actions">
+              <VisualButton
+                variant="secondary"
+                onClick={exportProfitIntelligenceCsv}
+              >
+                {copy.auto.p004}
+              </VisualButton>
+            </div>
           }
           visual={
-            <div className="profit-intelligence-v2-hero-signal">
-              <SignalRing
-                value={intelligenceScore}
-                variant="hero"
-                size="large"
-                motion="ambient"
-                tone={intelligenceTone}
-                score={intelligenceScore}
-                suffix="/100"
-                label={copy.auto.p005}
-                status={dependencyRiskLabel}
-                info={
-                  <MetricTooltip
-                    content={{
-                      title: copy.auto.p006,
-                      description: copy.auto.p007,
-                      note: copy.auto.p008,
-                    }}
-                  />
-                }
-                ariaLabel={`${copy.auto.p005}: ${intelligenceScore}/100, ${dependencyRiskLabel}`}
+            <div className="dashboard-v2-health-signal profit-intelligence-v2-hero-signal">
+              <div
+                className="dashboard-v2-instrument-halo"
+                aria-hidden="true"
+              />
+              <div className="dashboard-v2-instrument-arc" aria-hidden="true" />
+              <div className="dashboard-v2-signal-core">
+                <SignalRing
+                  value={intelligenceScore}
+                  variant="hero"
+                  size="large"
+                  motion="ambient"
+                  tone={intelligenceTone}
+                  score={intelligenceScore}
+                  suffix="/100"
+                  label={copy.auto.p005}
+                  status={dependencyRiskLabel}
+                  info={
+                    <MetricTooltip
+                      content={{
+                        title: copy.auto.p006,
+                        description: copy.auto.p007,
+                        note: copy.auto.p008,
+                      }}
+                    />
+                  }
+                  ariaLabel={`${copy.auto.p005}: ${intelligenceScore}/100, ${dependencyRiskLabel}`}
+                />
+              </div>
+              <div
+                className="dashboard-v2-instrument-base"
+                aria-hidden="true"
               />
             </div>
           }
