@@ -41,7 +41,7 @@ export default function DashboardHero({
       <DashboardNav active="overview" navigate={navigate} />
 
       <PremiumHero
-        className="dashboard-v2-hero"
+        className="dashboard-v2-hero signal-hero signal-hero--warm"
         eyebrow={copy.eyebrow}
         title={copy.title}
         description={copy.description}

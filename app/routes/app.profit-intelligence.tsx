@@ -583,7 +583,7 @@ export default function ProfitIntelligencePage() {
         <DashboardNav active="profit" navigate={navigate} />
 
         <PremiumHero
-          className="dashboard-v2-hero profit-intelligence-v2-hero"
+          className="dashboard-v2-hero signal-hero signal-hero--coral profit-intelligence-v2-hero"
           eyebrow={copy.auto.p001}
           title={copy.auto.p002}
           description={copy.auto.p003}

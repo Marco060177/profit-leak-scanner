@@ -261,7 +261,7 @@ export default function ProductsPage() {
         <DashboardNav active="products" navigate={navigate} />
 
         <PremiumHero
-          className="dashboard-v2-hero products-v2-hero"
+          className="dashboard-v2-hero signal-hero signal-hero--warm products-v2-hero"
           eyebrow={copy.eyebrow}
           title={copy.title}
           description={copy.description}

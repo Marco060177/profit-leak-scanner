@@ -3368,6 +3368,27 @@ table {
 }
 
 /* Dashboard canonical flagship — scoped C4 presentation */
+.signal-hero {
+  --signal-hero-tone: var(--ml-v2-orange);
+  --signal-hero-tone-opacity: 0.06;
+  background:
+    radial-gradient(
+      circle at 8% 0%,
+      rgb(var(--ml-v2-orange) / 0.075),
+      transparent 31%
+    ),
+    radial-gradient(
+      circle at 86% 50%,
+      rgb(var(--signal-hero-tone) / var(--signal-hero-tone-opacity)),
+      transparent 29%
+    ),
+    linear-gradient(145deg, var(--ml-v2-surface-raised), var(--ml-v2-surface));
+}
+
+.signal-hero--coral {
+  --signal-hero-tone: var(--ml-v2-red);
+}
+
 .dashboard-v2-hero {
   position: relative;
   grid-template-columns: minmax(0, 1.12fr) minmax(350px, 0.88fr);
@@ -3676,6 +3697,21 @@ table {
   }
 }
 @media (max-width: 560px) {
+  .signal-hero {
+    --signal-hero-tone-opacity: 0.045;
+    background:
+      radial-gradient(
+        circle at 8% 0%,
+        rgb(var(--ml-v2-orange) / 0.06),
+        transparent 27%
+      ),
+      radial-gradient(
+        circle at 74% 68%,
+        rgb(var(--signal-hero-tone) / var(--signal-hero-tone-opacity)),
+        transparent 27%
+      ),
+      linear-gradient(145deg, var(--ml-v2-surface-raised), var(--ml-v2-surface));
+  }
   .dashboard-v2-hero {
     padding: 24px 20px;
   }
