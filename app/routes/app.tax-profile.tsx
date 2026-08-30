@@ -935,7 +935,6 @@ export default function TaxProfilePage() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.glowOne} />
       <div style={styles.glowTwo} />
 
       <div style={styles.container}>
@@ -1564,22 +1563,12 @@ const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top left, rgba(255,115,60,0.16), transparent 30%), radial-gradient(circle at bottom right, rgba(56,189,248,0.07), transparent 30%), linear-gradient(180deg, #03050a 0%, #070b12 100%)",
+      "radial-gradient(circle at bottom right, rgba(56,189,248,0.07), transparent 30%), linear-gradient(180deg, #03050a 0%, #070b12 100%)",
     color: "#f3f4f6",
     fontFamily: "Inter, system-ui, sans-serif",
     padding: 32,
     position: "relative",
     overflow: "hidden",
-  },
-  glowOne: {
-    position: "absolute",
-    top: -180,
-    left: -160,
-    width: 420,
-    height: 420,
-    borderRadius: "50%",
-    background: "rgba(255,115,60,0.10)",
-    filter: "blur(70px)",
   },
   glowTwo: {
     position: "absolute",

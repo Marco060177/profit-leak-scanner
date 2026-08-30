@@ -47,6 +47,37 @@
   --ml-v2-text-meta: 11px;
 }
 
+.ml-app-shell {
+  position: relative;
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+.ml-app-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 115, 60, 0.16),
+    transparent 30%
+  );
+}
+
+.ml-app-ambient::before {
+  position: absolute;
+  top: -180px;
+  left: -160px;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: rgba(255, 115, 60, 0.1);
+  filter: blur(70px);
+  content: "";
+}
+
 .ml-v2-tone-neutral {
   --ml-v2-accent: var(--ml-v2-neutral);
 }

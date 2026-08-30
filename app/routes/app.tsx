@@ -26,7 +26,10 @@ export default function App() {
   return (
     <AppProvider embedded apiKey={apiKey}>
       <I18nProvider initialLanguage={language}>
-        <Outlet />
+        <div className="ml-app-shell">
+          <div className="ml-app-ambient" aria-hidden="true" />
+          <Outlet />
+        </div>
       </I18nProvider>
     </AppProvider>
   );
