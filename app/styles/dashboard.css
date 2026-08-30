@@ -3193,9 +3193,9 @@ table {
   border-color: rgb(255 255 255 / 0.1);
   background:
     radial-gradient(
-      circle at 12% 42%,
-      rgb(var(--ml-v2-orange) / 0.045),
-      transparent 44%
+      circle at 0% 0%,
+      rgb(var(--ml-v2-orange) / 0.065),
+      transparent 30%
     ),
     linear-gradient(
       145deg,
