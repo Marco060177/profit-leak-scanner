@@ -1,0 +1,229 @@
+.tax-profile-hero {
+  align-items: center;
+  min-height: 300px;
+}
+
+.tax-profile-map-card {
+  width: min(100%, 430px);
+  justify-self: end;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.045),
+    rgba(4, 8, 15, 0.38)
+  );
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.035),
+    0 22px 55px rgba(0, 0, 0, 0.2);
+}
+
+.tax-profile-map-card__kicker {
+  color: #ff9a70;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.tax-map {
+  margin-top: 8px;
+}
+
+.tax-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 154px;
+}
+
+.tax-map-atmosphere {
+  fill: url(#tax-map-atmosphere);
+}
+
+.tax-map-grid path {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.075);
+  stroke-width: 0.7;
+  stroke-dasharray: 2 5;
+}
+
+.tax-map-land path {
+  fill: url(#tax-map-land);
+  stroke: rgba(148, 163, 184, 0.3);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+}
+
+.tax-map-marker-glow,
+.tax-map-marker-halo {
+  fill: #ff733c;
+}
+
+.tax-map-marker-glow {
+  opacity: 0.45;
+}
+
+.tax-map-marker-halo {
+  opacity: 0.16;
+  animation: tax-map-breathe 3.8s ease-in-out infinite;
+}
+
+.tax-map-marker-core {
+  fill: #ff9a70;
+  stroke: #fff4ed;
+  stroke-width: 1;
+}
+
+.tax-profile-map-card__identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  margin-top: 4px;
+}
+
+.tax-profile-map-card__code {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 115, 60, 0.26);
+  border-radius: 13px;
+  background: rgba(255, 115, 60, 0.11);
+  color: #ff9a70;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.tax-profile-map-card__country strong,
+.tax-profile-map-card__country small {
+  display: block;
+}
+
+.tax-profile-map-card__country strong {
+  font-size: 15px;
+}
+
+.tax-profile-map-card__country small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.tax-profile-map-card__status {
+  display: block;
+  margin-top: 3px;
+  color: #4ade80;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.tax-profile-map-card__profile {
+  text-align: right;
+}
+
+.tax-profile-map-card__profile small {
+  display: block;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 8px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tax-profile-map-card__status.is-incomplete {
+  color: #f59e0b;
+}
+
+.tax-profile-map-card__status.is-unavailable {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.tax-profile-map-card__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tax-profile-map-card__meta div {
+  padding: 9px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.tax-profile-map-card__meta span,
+.tax-profile-map-card__meta strong {
+  display: block;
+}
+
+.tax-profile-map-card__meta span {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 8px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.tax-profile-map-card__meta strong {
+  margin-top: 4px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes tax-map-breathe {
+  0%,
+  100% {
+    transform: scale(0.86);
+    opacity: 0.12;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.22;
+  }
+}
+
+@media (max-width: 980px) {
+  .tax-profile-hero {
+    grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .tax-profile-hero {
+    grid-template-columns: 1fr !important;
+  }
+  .tax-profile-map-card {
+    width: 100%;
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 560px) {
+  .tax-profile-hero {
+    min-height: 0;
+    padding: 22px !important;
+    border-radius: 24px !important;
+  }
+  .tax-profile-map-card {
+    padding: 14px;
+    border-radius: 19px;
+  }
+  .tax-map svg {
+    max-height: 136px;
+  }
+  .tax-profile-map-card__meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tax-map-marker-halo {
+    animation: none;
+  }
+}

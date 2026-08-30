@@ -6,12 +6,14 @@ import { useI18n } from "~/components/i18n/I18nProvider";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import type { Language } from "~/utils/i18n";
 import MetricTooltip from "~/components/ui/MetricTooltip";
+import { TaxJurisdictionMap } from "~/components/tax-profile/TaxJurisdictionMap";
 import {
   getStoreTaxContext,
   saveStoreTaxProfile,
 } from "~/utils/tax-profile.server";
 
 import "~/styles/dashboard.css";
+import "~/styles/tax-profile-map.css";
 
 type SupportedRegime =
   | "ITALY_STANDARD"
@@ -939,7 +941,7 @@ export default function TaxProfilePage() {
       <div style={styles.container}>
         <DashboardNav active="tax-profile" navigate={navigate} />
 
-        <section style={styles.hero}>
+        <section className="tax-profile-hero" style={styles.hero}>
           <div>
             <div style={styles.badge}>
               <span style={styles.badgeDot} />
@@ -955,54 +957,52 @@ export default function TaxProfilePage() {
             </p>
           </div>
 
-          <div style={styles.statusCard}>
-            <div style={styles.kicker}>{copy.jurisdiction}</div>
-
-            <div style={styles.countryRow}>
-              <div style={styles.countryBadge}>{countryCode || "—"}</div>
-
-              <div>
-                <div style={styles.countryTitle}>
-                  {getCountryName(countryCode, language)}
-                </div>
-
-                <div style={styles.countryText}>
+          <div className="tax-profile-map-card">
+            <div className="tax-profile-map-card__kicker">
+              {copy.jurisdiction}
+            </div>
+            <TaxJurisdictionMap
+              countryCode={countryCode}
+              countryName={getCountryName(countryCode, language)}
+            />
+            <div className="tax-profile-map-card__identity">
+              <div className="tax-profile-map-card__code">
+                {countryCode || "—"}
+              </div>
+              <div className="tax-profile-map-card__country">
+                <strong>{getCountryName(countryCode, language)}</strong>
+                <small>
                   {taxContext.shopCountryCode !==
                   taxContext.effectiveCountryCode
                     ? t("taxProfilePage.test_environment_shopify_reports", {
                         country: taxContext.shopCountryCode || "—",
                       })
                     : copy.detected_from_shopify}
-                </div>
+                </small>
               </div>
-            </div>
-
-            <div style={styles.statusGrid}>
-              <div style={styles.miniCard}>
-                <div style={styles.miniLabel}>{copy.system}</div>
-
-                <div style={styles.miniValue}>{taxSystemLabel || "—"}</div>
-              </div>
-
-              <div style={styles.miniCard}>
-                <div style={styles.miniLabel}>{copy.advanced_profile}</div>
-
-                <div
-                  style={{
-                    ...styles.miniValue,
-                    color: supported
-                      ? taxContext.configured
-                        ? "#4ade80"
-                        : "#f59e0b"
-                      : "rgba(255,255,255,0.52)",
-                  }}
+              <div className="tax-profile-map-card__profile">
+                <small>{copy.advanced_profile}</small>
+                <strong
+                  className={`tax-profile-map-card__status ${
+                    !supported
+                      ? "is-unavailable"
+                      : taxContext.configured
+                        ? ""
+                        : "is-incomplete"
+                  }`}
                 >
                   {supported
                     ? taxContext.configured
                       ? copy.configured
                       : copy.incomplete
                     : copy.not_available}
-                </div>
+                </strong>
+              </div>
+            </div>
+            <div className="tax-profile-map-card__meta">
+              <div>
+                <span>{copy.system}</span>
+                <strong>{taxSystemLabel || "—"}</strong>
               </div>
             </div>
           </div>
