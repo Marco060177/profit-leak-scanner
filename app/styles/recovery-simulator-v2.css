@@ -12,6 +12,86 @@
   gap: 7px;
 }
 
+.recovery-v2-transformation {
+  width: min(100%, 460px);
+  padding: 22px 22px 17px;
+  border: 1px solid rgb(255 255 255 / 0.085);
+  border-radius: var(--ml-v2-radius-panel);
+  background:
+    radial-gradient(
+      circle at 80% 32%,
+      rgb(var(--ml-v2-green) / 0.09),
+      transparent 34%
+    ),
+    linear-gradient(145deg, rgb(255 255 255 / 0.05), rgb(3 8 15 / 0.38));
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 0.035),
+    0 24px 58px rgb(0 0 0 / 0.22);
+}
+
+.recovery-v2-transformation .ml-flow-path {
+  aspect-ratio: 2.4 / 1;
+}
+
+.recovery-v2-transformation-values {
+  display: grid;
+  grid-template-columns: 0.9fr 1.15fr 0.95fr;
+  gap: 9px;
+  margin-top: -5px;
+}
+
+.recovery-v2-transformation-values span {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.recovery-v2-transformation-values span:nth-child(2) {
+  text-align: center;
+}
+
+.recovery-v2-transformation-values span:last-child {
+  text-align: right;
+}
+
+.recovery-v2-transformation-values small {
+  overflow: hidden;
+  color: var(--ml-v2-text-subtle);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.recovery-v2-transformation-values strong {
+  overflow-wrap: anywhere;
+  color: var(--ml-v2-text);
+  font-size: 13px;
+}
+
+.recovery-v2-transformation-values .is-levers strong {
+  color: rgb(var(--ml-v2-orange));
+  font-size: 10px;
+}
+
+.recovery-v2-transformation-values .is-positive strong,
+.recovery-v2-transformation-values .is-positive em {
+  color: rgb(var(--ml-v2-green));
+}
+
+.recovery-v2-transformation-values .is-negative strong,
+.recovery-v2-transformation-values .is-negative em {
+  color: rgb(var(--ml-v2-red));
+}
+
+.recovery-v2-transformation-values em {
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 850;
+}
+
 .recovery-v2-content {
   position: relative;
 }
@@ -220,6 +300,20 @@
 }
 
 @media (max-width: 560px) {
+  .recovery-v2-transformation {
+    width: 100%;
+    padding: 15px 10px 13px;
+  }
+
+  .recovery-v2-transformation-values small {
+    font-size: 7px;
+    letter-spacing: 0;
+  }
+
+  .recovery-v2-transformation-values strong {
+    font-size: 11px;
+  }
+
   .recovery-v2-hero-eyebrow {
     align-items: flex-start;
     flex-direction: column;

@@ -8,6 +8,7 @@ import { createGrowthPreviewData } from "~/utils/growth-preview.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import {
+  FlowPath,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -1370,8 +1371,7 @@ export default function AlertCenterPage() {
         <DashboardNav active="alert-center" navigate={navigate} />
 
         <PremiumHero
-          className="alert-center-v2-hero"
-          tone={criticalCount > 0 ? "red" : warningCount > 0 ? "amber" : "cyan"}
+          className="dashboard-v2-hero alert-center-v2-hero"
           eyebrow={
             <span className="alert-center-v2-hero-eyebrow">
               <StatusChip tone={growthAccess ? "green" : "orange"}>
@@ -1383,7 +1383,7 @@ export default function AlertCenterPage() {
           title={copy.the_signals_that_deserve_your_attention}
           description={copy.marginlab_monitors_margins_costs_refunds_and}
           actions={
-            <>
+            <div className="dashboard-v2-hero-actions">
               <StatusChip tone="green">
                 {copy.tax_aware_economic_basis}
               </StatusChip>
@@ -1400,8 +1400,62 @@ export default function AlertCenterPage() {
                   {copy.unlock_growth}
                 </VisualButton>
               )}
-            </>
+            </div>
           }
+          visual={
+            <div className="alert-center-v2-lifecycle">
+              <FlowPath
+                tone="cyan"
+                trajectory="rising"
+                motion="ambient"
+                label={copy.the_signals_that_deserve_your_attention}
+                nodes={[
+                  {
+                    id: "new",
+                    progress: 0.04,
+                    tone: "orange",
+                    label: getAlertStatusStyle("new", language).label,
+                  },
+                  {
+                    id: "active",
+                    progress: 0.36,
+                    tone: "cyan",
+                    emphasis: "strong",
+                    label: getAlertStatusStyle("active", language).label,
+                  },
+                  {
+                    id: "acknowledged",
+                    progress: 0.68,
+                    tone: "violet",
+                    label: getAlertStatusStyle("acknowledged", language).label,
+                  },
+                  {
+                    id: "resolved",
+                    progress: 0.96,
+                    tone: "green",
+                    emphasis: "strong",
+                    label: getAlertStatusStyle("resolved", language).label,
+                  },
+                ]}
+              />
+              <div className="alert-center-v2-lifecycle-values">
+                {(
+                  [
+                    ["new", lifecycleCounts.new],
+                    ["active", lifecycleCounts.active],
+                    ["acknowledged", lifecycleCounts.acknowledged],
+                    ["resolved", lifecycleCounts.resolved],
+                  ] as const
+                ).map(([status, count]) => (
+                  <span key={status} className={`is-${status}`}>
+                    <small>{getAlertStatusStyle(status, language).label}</small>
+                    <strong>{count}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+          }
+          mobileVisualPosition="after-copy"
         />
 
         <div

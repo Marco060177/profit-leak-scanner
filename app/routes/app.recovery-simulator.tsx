@@ -7,6 +7,7 @@ import {
   ChoiceCard,
   ControlField,
   FeedbackState,
+  FlowPath,
   MetricCard,
   PremiumEmptyState,
   PremiumHero,
@@ -1454,7 +1455,7 @@ export default function RecoverySimulatorPage() {
         <DashboardNav active="recovery-simulator" navigate={navigate} />
 
         <PremiumHero
-          className="recovery-v2-hero"
+          className="dashboard-v2-hero recovery-v2-hero"
           eyebrow={
             <span className="recovery-v2-hero-eyebrow">
               <StatusChip tone={growthAccess ? "green" : "orange"}>
@@ -1466,15 +1467,87 @@ export default function RecoverySimulatorPage() {
           title={copy.auto.s004}
           description={copy.auto.s005}
           actions={
-            <>
+            <div className="dashboard-v2-hero-actions">
               <StatusChip tone="green">{copy.auto.s006}</StatusChip>
               {!growthAccess ? (
                 <VisualButton onClick={() => navigate("/app/billing")}>
                   {copy.auto.s007}
                 </VisualButton>
               ) : null}
-            </>
+            </div>
           }
+          visual={
+            <div className="recovery-v2-transformation">
+              <FlowPath
+                tone={recoveredMonthlyProfit >= 0 ? "green" : "red"}
+                trajectory={recoveredMonthlyProfit >= 0 ? "rising" : "falling"}
+                motion="ambient"
+                label={copy.auto.s005}
+                nodes={[
+                  {
+                    id: "current",
+                    progress: 0.04,
+                    tone: "cyan",
+                    label: copy.auto.s016,
+                  },
+                  {
+                    id: "levers",
+                    progress: 0.5,
+                    tone: "orange",
+                    emphasis: "strong",
+                    label:
+                      scenario === "custom"
+                        ? copy.auto.s029
+                        : scenario === "conservative"
+                          ? copy.auto.s030
+                          : scenario === "balanced"
+                            ? copy.auto.s031
+                            : copy.auto.s032,
+                  },
+                  {
+                    id: "simulated",
+                    progress: 0.96,
+                    tone: recoveredMonthlyProfit >= 0 ? "green" : "red",
+                    emphasis: "strong",
+                    label: copy.auto.s047,
+                  },
+                ]}
+              />
+              <div className="recovery-v2-transformation-values">
+                <span>
+                  <small>{copy.auto.s016}</small>
+                  <strong>{money(currentMonthlyProfit, 0)}</strong>
+                </span>
+                <span className="is-levers">
+                  <small>
+                    {scenario === "custom"
+                      ? copy.auto.s029
+                      : scenario === "conservative"
+                        ? copy.auto.s030
+                        : scenario === "balanced"
+                          ? copy.auto.s031
+                          : copy.auto.s032}
+                  </small>
+                  <strong>
+                    {formatSignedPct(priceChangePct, 1)}
+                    {" · "}-{pct(costReductionPct, 1)}
+                    {" · "}
+                    {formatSignedPct(salesChangePct, 1)}
+                  </strong>
+                </span>
+                <span
+                  className={
+                    recoveredMonthlyProfit >= 0 ? "is-positive" : "is-negative"
+                  }
+                >
+                  <small>{copy.auto.s047}</small>
+                  <strong>{money(simulatedMonthlyProfit, 0)}</strong>
+                  <em>{formatSignedMoney(recoveredMonthlyProfit, 0)}</em>
+                </span>
+              </div>
+            </div>
+          }
+          mobileVisualPosition="after-copy"
         />
 
         <div
