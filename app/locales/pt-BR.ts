@@ -114,6 +114,10 @@ export const ptBR = {
     viewPlansOnShopify: "Veja os planos em Shopify →",
     starterFeatures: [
       [
+        "Interface em 6 idiomas",
+        "Use a MarginLab em inglês, italiano, francês, alemão, espanhol ou português do Brasil.",
+      ],
+      [
         "Painel de vazamento de lucro",
         "Veja onde o lucro está enfraquecendo e quais áreas merecem atenção primeiro.",
       ],
@@ -148,6 +152,14 @@ export const ptBR = {
     ],
     growthFeatures: [
       [
+        "Interface em 6 idiomas",
+        "Use a MarginLab em inglês, italiano, francês, alemão, espanhol ou português do Brasil.",
+      ],
+      [
+        "Profit Impact Tracker",
+        "Meça o que mudou após uma ação de lucratividade e estime seu impacto com cautela.",
+      ],
+      [
         "Profit Action Center",
         "Transforme sinais de lucratividade em um plano classificado por impacto, urgência e prioridade.",
       ],
@@ -181,6 +193,7 @@ export const ptBR = {
       ],
     ],
     compareRows: [
+      ["Profit Impact Tracker", false, true],
       ["Entenda onde o lucro está enfraquecendo", true, true],
       ["Analise produtos, margens e riscos", true, true],
       ["Lucro para outras receitas com consciência fiscal - COGS", true, true],

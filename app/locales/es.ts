@@ -119,6 +119,10 @@ export const es = {
     viewPlansOnShopify: "Ver planes en Shopify →",
     starterFeatures: [
       [
+        "Interfaz en 6 idiomas",
+        "Usa MarginLab en inglés, italiano, francés, alemán, español o portugués de Brasil.",
+      ],
+      [
         "Panel de fuga de ganancias",
         "Vea dónde se están debilitando las ganancias y qué áreas merecen atención primero.",
       ],
@@ -153,6 +157,14 @@ export const es = {
     ],
     growthFeatures: [
       [
+        "Interfaz en 6 idiomas",
+        "Usa MarginLab en inglés, italiano, francés, alemán, español o portugués de Brasil.",
+      ],
+      [
+        "Profit Impact Tracker",
+        "Mide qué cambió tras una acción de rentabilidad y estima su impacto con prudencia.",
+      ],
+      [
         "Profit Action Center",
         "Convierta las señales de rentabilidad en un plan clasificado por impacto, urgencia y prioridad.",
       ],
@@ -186,6 +198,7 @@ export const es = {
       ],
     ],
     compareRows: [
+      ["Profit Impact Tracker", false, true],
       ["Comprender dónde se están debilitando las ganancias", true, true],
       ["Analizar productos, márgenes y riesgos.", true, true],
       [
