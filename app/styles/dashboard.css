@@ -3373,11 +3373,6 @@ table {
   --signal-hero-tone-opacity: 0.06;
   background:
     radial-gradient(
-      ellipse 3% 2.5% at 8% 0%,
-      rgb(var(--ml-v2-orange) / 0.0375),
-      transparent 100%
-    ),
-    radial-gradient(
       circle at 86% 50%,
       rgb(var(--signal-hero-tone) / var(--signal-hero-tone-opacity)),
       transparent 29%
@@ -3700,11 +3695,6 @@ table {
   .signal-hero {
     --signal-hero-tone-opacity: 0.045;
     background:
-      radial-gradient(
-        ellipse 3% 2.5% at 8% 0%,
-        rgb(var(--ml-v2-orange) / 0.03),
-        transparent 100%
-      ),
       radial-gradient(
         circle at 74% 68%,
         rgb(var(--signal-hero-tone) / var(--signal-hero-tone-opacity)),
