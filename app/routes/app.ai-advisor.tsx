@@ -1,4 +1,5 @@
 import * as React from "react";
+import type { ProfitAssumptions } from "@prisma/client";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import prisma from "~/db.server";
@@ -159,12 +160,13 @@ function buildServerStoreSummary({
   period,
   language,
 }: {
-  dashboardData: any;
-  assumptions: any;
+  dashboardData: LoaderData;
+  assumptions: ProfitAssumptions | null;
   period: string;
   language: Language;
 }) {
-  const { summary, rows, economicSnapshot } = dashboardData;
+  const { summary, rows } = dashboardData;
+  const economicSnapshot = dashboardData.economicSnapshot!;
 
   const economicRevenue = summary.economicRevenue ?? summary.revenue;
   const economicCogs = summary.economicCogs ?? summary.cogs;
@@ -205,16 +207,16 @@ function buildServerStoreSummary({
   });
 
   const products = [...rows]
-    .map((row: any) => ({
+    .map((row) => ({
       ...row,
       economicRevenue: row.economicRevenue ?? row.revenue,
       economicProfit: row.economicProfit ?? row.profit,
       economicMarginPct: row.economicMarginPct ?? row.marginPct,
     }))
-    .sort((a: any, b: any) => a.economicProfit - b.economicProfit)
+    .sort((a, b) => a.economicProfit - b.economicProfit)
     .slice(0, 8)
     .map(
-      (row: any) =>
+      (row) =>
         `${row.productTitle} | economic revenue ${row.economicRevenue} | economic profit ${row.economicProfit} | economic margin ${row.economicMarginPct}% | quantity ${row.qty} | missing cost ${row.missingCost ? "yes" : "no"}`,
     )
     .join("\n");
@@ -277,7 +279,7 @@ PROFIT MONITOR EVENTS
 ${
   profitAlerts
     .map(
-      (alert: any, index: number) =>
+      (alert, index) =>
         `${index + 1}. ${alert.severity} | economic kind: ${alert.economicKind} | ${alert.title} | action: ${alert.actionLabel} | destination: ${alert.route}`,
     )
     .join("\n") || "No active events."

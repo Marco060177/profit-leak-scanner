@@ -1,3 +1,5 @@
+import type { Session } from "@shopify/shopify-api";
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import prisma from "~/db.server";
 import {
   claimProfitImpactMeasurement,
@@ -12,6 +14,7 @@ import {
   zonedParts,
 } from "~/services/profit-impact-baseline.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import type { BillingStatus } from "~/utils/margin";
 import { getLanguageLocale } from "~/utils/i18n";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 
@@ -270,9 +273,9 @@ async function capturePostSnapshot({
   appliedAt,
   observedDays,
 }: {
-  admin: any;
-  session: any;
-  billing: any;
+  admin: AdminApiContext;
+  session: Session;
+  billing: BillingStatus;
   productId: string;
   appliedAt: Date;
   observedDays: 7 | 14;
@@ -281,7 +284,9 @@ async function capturePostSnapshot({
     #graphql
     query ProfitImpactMeasurementShopContext { shop { ianaTimezone } }
   `);
-  const shopJson = await shopResponse.json();
+  const shopJson: Awaited<ReturnType<typeof shopResponse.json>> & {
+    errors?: unknown[];
+  } = await shopResponse.json();
   if (shopJson?.errors?.length) throw new Error("Unable to load store timezone.");
   const timeZone = safeTimeZone(shopJson?.data?.shop?.ianaTimezone);
   const startDate = localDateOnly(appliedAt, timeZone);
@@ -365,9 +370,9 @@ export async function processProfitImpactMeasurement({
   measurementType,
   now = new Date(),
 }: {
-  admin: any;
-  session: any;
-  billing: any;
+  admin: AdminApiContext;
+  session: Session;
+  billing: BillingStatus;
   actionId: string;
   measurementType: "PROVISIONAL_7D" | "FINAL_14D";
   now?: Date;

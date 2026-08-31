@@ -1,3 +1,9 @@
+import type { Session } from "@shopify/shopify-api";
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
+import type {
+  MarginLabAppDataQuery,
+  MarginLabOrdersQuery,
+} from "~/types/admin.generated";
 import type { BillingStatus, LoaderData, Row, TrendPoint } from "~/utils/margin";
 
 import { extractNumericId, toYYYYMMDD } from "~/utils/margin";
@@ -9,7 +15,26 @@ import { getStoreTaxContext } from "~/utils/tax-profile.server";
 import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
 import { calculateTaxAwareEconomics } from "~/utils/tax-economics-engine";
 
-type OrderEdge = { node?: any };
+type OrderEdge = MarginLabOrdersQuery["orders"]["edges"][number];
+type OrderNode = OrderEdge["node"];
+type OrderLineItem = OrderNode["lineItems"]["edges"][number]["node"];
+type OrderProduct =
+  | NonNullable<OrderLineItem["variant"]>["product"]
+  | Extract<OrderLineItem["variant"], null | undefined>;
+type OrderRefund = OrderNode["refunds"][number];
+type ShippingTaxLine = OrderNode["shippingLines"]["edges"][number]["node"]["taxLines"][number];
+type ProductTaxLine = OrderLineItem["taxLines"][number];
+type DiscountAllocation = OrderLineItem["discountAllocations"][number];
+type GraphqlError = { message?: string };
+type AppDataGraphqlResponse = {
+  errors?: GraphqlError[];
+  data?: MarginLabAppDataQuery;
+};
+
+const graphqlErrorDetails = (error: unknown) =>
+  typeof error === "object" && error !== null && "graphQLErrors" in error
+    ? (error.graphQLErrors ?? error)
+    : error;
 
 type ProductAggregate = {
   productId: string;
@@ -257,7 +282,7 @@ function amount(value: unknown) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function productKey(product: any, lineItemId: string) {
+function productKey(product: OrderProduct, lineItemId: string) {
   if (product?.id) return `product:${product.id}`;
   return `line:${lineItemId || "unknown"}`;
 }
@@ -265,7 +290,7 @@ function productKey(product: any, lineItemId: string) {
 function getOrCreateProduct(
   byProduct: Record<string, ProductAggregate>,
   key: string,
-  product: any,
+  product: OrderProduct,
 ) {
   if (!byProduct[key]) {
     byProduct[key] = {
@@ -301,7 +326,7 @@ function getOrCreateProduct(
   return byProduct[key];
 }
 
-async function fetchAllOrders(admin: any, query: string) {
+async function fetchAllOrders(admin: AdminApiContext, query: string) {
   const edges: OrderEdge[] = [];
   let after: string | null = null;
 
@@ -312,10 +337,10 @@ async function fetchAllOrders(admin: any, query: string) {
       response = await admin.graphql(ORDERS_QUERY, {
         variables: { q: query, after },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(
         "[SHOPIFY GRAPHQL ERROR]",
-        JSON.stringify(error?.graphQLErrors ?? error, null, 2),
+        JSON.stringify(graphqlErrorDetails(error), null, 2),
       );
 
       throw error;
@@ -326,7 +351,9 @@ async function fetchAllOrders(admin: any, query: string) {
     if (json?.errors?.length) {
       throw new Error(
         `Unable to load Shopify orders: ${json.errors
-          .map((error: any) => error?.message ?? "Unknown GraphQL error")
+          .map((error: GraphqlError) =>
+            error?.message ?? "Unknown GraphQL error"
+          )
           .join("; ")
         } `,
       );
@@ -388,7 +415,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
     }
     if (
       (order?.refunds ?? []).some(
-        (refund: any) =>
+        (refund: OrderRefund) =>
           refund?.refundLineItems?.pageInfo?.hasNextPage === true,
       )
     ) {
@@ -441,7 +468,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       const shippingLine = shippingEdge?.node;
 
       const shippingLineTax = (shippingLine?.taxLines ?? []).reduce(
-        (sum: number, taxLine: any) =>
+        (sum: number, taxLine: ShippingTaxLine) =>
           sum + amount(taxLine?.priceSet?.shopMoney?.amount),
         0,
       );
@@ -472,7 +499,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
       }
 
       const lineTaxAmount = (line?.taxLines ?? []).reduce(
-        (sum: number, taxLine: any) =>
+        (sum: number, taxLine: ProductTaxLine) =>
           sum + amount(taxLine?.priceSet?.shopMoney?.amount),
         0,
       );
@@ -507,7 +534,7 @@ function aggregatePeriod(orderEdges: OrderEdge[]): PeriodAggregate {
         line?.discountedTotalSet?.shopMoney?.amount,
       );
       const allocatedDiscount = (line?.discountAllocations ?? []).reduce(
-        (sum: number, allocation: any) =>
+        (sum: number, allocation: DiscountAllocation) =>
           sum +
           amount(
             allocation?.allocatedAmountSet?.shopMoney?.amount,
@@ -644,8 +671,8 @@ export async function loadMarginDashboardData({
   billingStatus,
   analysisEndDate,
 }: {
-  admin: any;
-  session: any;
+  admin: AdminApiContext;
+  session: Session;
   period: string;
   locale?: string;
   billingStatus?: BillingStatus;
@@ -701,12 +728,14 @@ export async function loadMarginDashboardData({
     billingStatus ?? getBillingStatus(admin),
   ]);
 
-  const appDataJson = await appDataResponse.json();
+  const appDataJson: AppDataGraphqlResponse = await appDataResponse.json();
 
   if (appDataJson?.errors?.length) {
     throw new Error(
       `Unable to load Shopify app data: ${appDataJson.errors
-        .map((error: any) => error?.message ?? "Unknown GraphQL error")
+        .map((error: GraphqlError) =>
+          error?.message ?? "Unknown GraphQL error"
+        )
         .join("; ")
       } `,
     );

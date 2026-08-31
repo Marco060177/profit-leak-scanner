@@ -96,12 +96,17 @@ assert.equal(classifyProfitImpactAction("COMPLETED"), "completed");
 assert.equal(classifyProfitImpactAction("INVALIDATED"), "attention");
 
 const phase5Now = new Date("2026-08-25T12:00:00.000Z");
-const contextFixture = (overrides: Record<string, unknown> = {}) => ({
+type ProfitImpactContextAction = Parameters<
+  typeof buildWeeklyProfitImpactSummary
+>[0][number];
+const contextFixture = (
+  overrides: Partial<ProfitImpactContextAction> = {},
+) => ({
   id: String(overrides.id ?? Math.random()), shop, actionType: "PRICE_CHANGE", status: "COMPLETED", productTitle: "Test product",
   appliedAt: new Date("2026-08-10T00:00:00.000Z"), completedAt: new Date("2026-08-24T00:00:00.000Z"), updatedAt: new Date("2026-08-24T00:00:00.000Z"), measurementEnd: new Date("2026-08-24T00:00:00.000Z"),
   measurements: [{ measurementType: "FINAL_14D", measuredProfitChange: 10, measuredMarginChange: 2, estimatedAttributableImpact: null, dataConfidenceScore: 80, attributionConfidenceScore: 60, confidenceLevel: "LOW", confidenceReasonsJson: "[]" }],
   events: [], ...overrides,
-}) as any;
+}) as ProfitImpactContextAction;
 const weeklyImpact = buildWeeklyProfitImpactSummary([contextFixture()], phase5Now);
 assert.equal(weeklyImpact.completedThisWeek, 1);
 assert.equal(weeklyImpact.estimatedAttributableImpact, null, "weekly reports must omit null attribution");

@@ -5,6 +5,7 @@ import { authenticate } from "~/shopify.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import type { Language } from "~/utils/i18n";
+import type { MarginLabTaxProfileShopQuery } from "~/types/admin.generated";
 import MetricTooltip from "~/components/ui/MetricTooltip";
 import { TaxJurisdictionMap } from "~/components/tax-profile/TaxJurisdictionMap";
 import {
@@ -52,6 +53,15 @@ type RegimeOption = {
   title: string;
   subtitle: string;
   detail: string;
+};
+
+type GraphqlError = {
+  message?: string;
+};
+
+type TaxProfileShopResponse = {
+  data?: MarginLabTaxProfileShopQuery;
+  errors?: GraphqlError[];
 };
 
 type CountryUiConfig = {
@@ -616,12 +626,12 @@ export async function loader({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const response = await admin.graphql(SHOP_QUERY);
-  const json = (await response.json()) as any;
+  const json: TaxProfileShopResponse = await response.json();
 
   if (json?.errors?.length) {
     throw new Error(
       `Unable to load Shopify tax profile data: ${json.errors
-        .map((error: any) => error?.message ?? "Unknown GraphQL error")
+        .map((error: GraphqlError) => error?.message ?? "Unknown GraphQL error")
         .join("; ")}`,
     );
   }
@@ -643,7 +653,7 @@ export async function action({ request }: { request: Request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const response = await admin.graphql(SHOP_QUERY);
-  const json = (await response.json()) as any;
+  const json: TaxProfileShopResponse = await response.json();
 
   if (json?.errors?.length) {
     return Response.json(

@@ -1,7 +1,21 @@
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type {
   BillingPlan,
   BillingStatus,
 } from "~/utils/margin";
+
+type GraphqlError = {
+  message?: string;
+};
+
+type PartnersSubscriptionResponse = {
+  data?: {
+    activeSubscription?: {
+      items?: Array<{ handle?: string | null } | null> | null;
+    } | null;
+  };
+  errors?: GraphqlError[];
+};
 
 const STARTER_HANDLES = new Set([
   "starter",
@@ -64,7 +78,7 @@ export function hasGrowthAccess(
 }
 
 async function getBillingIdentity(
-  admin: any,
+  admin: AdminApiContext,
 ): Promise<BillingIdentity> {
   const response = await admin.graphql(`
     #graphql
@@ -87,13 +101,15 @@ async function getBillingIdentity(
     }
   `);
 
-  const json = await response.json();
+  const json: Awaited<ReturnType<typeof response.json>> & {
+    errors?: GraphqlError[];
+  } = await response.json();
 
   if (json?.errors?.length) {
     throw new Error(
       json.errors
         .map(
-          (error: any) =>
+          (error: GraphqlError) =>
             error?.message ??
             "Unknown Shopify billing error",
         )
@@ -238,13 +254,13 @@ async function getShopifyAppPricingStatus({
     );
   }
 
-  const json = await response.json();
+  const json: PartnersSubscriptionResponse = await response.json();
 
   if (json?.errors?.length) {
     throw new Error(
       json.errors
         .map(
-          (error: any) =>
+          (error: GraphqlError) =>
             error?.message ??
             "Unknown Partner API error",
         )
@@ -265,7 +281,7 @@ async function getShopifyAppPricingStatus({
 
   const handles: string[] =
     subscription?.items
-      ?.map((item: any) =>
+      ?.map((item) =>
         normalizeHandle(item?.handle),
       )
       .filter(Boolean) ?? [];
@@ -312,7 +328,7 @@ async function getShopifyAppPricingStatus({
 }
 
 export async function getBillingStatus(
-  admin: any,
+  admin: AdminApiContext,
 ): Promise<BillingStatus> {
   const identity =
     await getBillingIdentity(admin);

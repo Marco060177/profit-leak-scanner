@@ -35,7 +35,6 @@ import {
 } from "~/utils/margin-decision-engine";
 
 import {
-  type LoaderData,
   type Row,
   uiMoney as formatStoreMoney,
   pct as formatStorePercent,
@@ -368,7 +367,6 @@ export default function DashboardV2() {
     trend,
     period,
     currencyCode,
-    timeZone,
     analysisContext,
     taxContext,
 
@@ -399,8 +397,6 @@ export default function DashboardV2() {
 
   const economicRevenue = summary.economicRevenue ?? summary.revenue;
 
-  const economicCogs = summary.economicCogs ?? summary.cogs;
-
   const economicProfit = summary.economicProfit ?? summary.profit;
 
   const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
@@ -419,8 +415,6 @@ export default function DashboardV2() {
   const shouldShowAdvancedTaxSetup = Boolean(
     taxContext?.advancedProfileAvailable && !taxContext?.configured,
   );
-
-  const shouldShowTaxBasis = Boolean(taxContext && taxAwareEconomics);
 
   const shouldShowInputTaxRecovery = Boolean(
     taxContext?.supportsRecoverableInputTaxModel &&

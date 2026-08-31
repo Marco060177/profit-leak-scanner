@@ -1,4 +1,7 @@
+import type { Session } from "@shopify/shopify-api";
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import type { LoaderData } from "~/utils/margin";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
 import {
   createWeeklyReportDelivery,
@@ -64,19 +67,19 @@ function reportPeriodLabel(language: NotificationLanguage) {
   }[language];
 }
 
-function normalizeEconomicSnapshot(data: any) {
+function normalizeEconomicSnapshot(data: LoaderData) {
   const snapshot = data?.economicSnapshot;
 
   const lossAmount = snapshot?.amounts?.find(
-    (amount: any) => amount?.id === "product-losses",
+    (amount) => amount?.id === "product-losses",
   );
 
   const exposureAmount = snapshot?.amounts?.find(
-    (amount: any) => amount?.id === "missing-cogs-revenue",
+    (amount) => amount?.id === "missing-cogs-revenue",
   );
 
   const opportunityAmount = snapshot?.amounts?.find(
-    (amount: any) => amount?.id === "pricing-recovery",
+    (amount) => amount?.id === "pricing-recovery",
   );
 
   return {
@@ -119,8 +122,8 @@ export async function prepareWeeklyProfitReport({
   now = new Date(),
   deliveryMode = "scheduled",
 }: {
-  admin: any;
-  session: any;
+  admin: AdminApiContext;
+  session: Session;
   now?: Date;
   deliveryMode?: "scheduled" | "test";
 }) {

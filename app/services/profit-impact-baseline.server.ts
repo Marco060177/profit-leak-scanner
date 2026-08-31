@@ -1,4 +1,7 @@
+import type { Session } from "@shopify/shopify-api";
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import type { BillingStatus } from "~/utils/margin";
 
 type DateParts = {
   year: number;
@@ -105,11 +108,11 @@ export async function captureProductProfitImpactBaseline({
   billingStatus,
   now = new Date(),
 }: {
-  admin: any;
-  session: any;
+  admin: AdminApiContext;
+  session: Session;
   productId: string;
   locale: string;
-  billingStatus: any;
+  billingStatus: BillingStatus;
   now?: Date;
 }) {
   const shopResponse = await admin.graphql(`
@@ -118,7 +121,9 @@ export async function captureProductProfitImpactBaseline({
       shop { ianaTimezone }
     }
   `);
-  const shopJson = await shopResponse.json();
+  const shopJson: Awaited<ReturnType<typeof shopResponse.json>> & {
+    errors?: unknown[];
+  } = await shopResponse.json();
   if (shopJson?.errors?.length) {
     throw new Response("Unable to load store timezone.", { status: 502 });
   }

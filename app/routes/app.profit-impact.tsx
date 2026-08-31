@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import * as React from "react";
+import type { Session } from "@shopify/shopify-api";
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import {
   Form,
   redirect,
@@ -41,6 +43,7 @@ import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { uiMoney } from "~/utils/margin";
+import type { BillingStatus } from "~/utils/margin";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
 import {
@@ -48,8 +51,48 @@ import {
   classifyProfitImpactAction,
   resultMeasurement,
 } from "~/utils/profit-impact-summary";
+import type {
+  ProfitImpactActionType,
+  ProfitImpactSourceModule,
+  ProfitImpactStatus,
+} from "~/utils/profit-impact";
 import { getProfitImpactReminders } from "~/services/profit-impact-context.server";
 import "~/styles/dashboard.css";
+
+type ProfitImpactPrefill = {
+  sourceModule: ProfitImpactSourceModule;
+  sourceAlertKey: string;
+  productId: string;
+  productTitle: string;
+  actionType: ProfitImpactActionType;
+  title: string;
+  changeDescription: string;
+  previousValue: string | number | null;
+  appliedValue: string | number | null;
+  targetValue: string | number | null;
+  sourcePeriod: string;
+};
+
+type ProfitImpactActionData = {
+  ok: false;
+  error: string;
+};
+
+type TrackedProfitImpactAction = Awaited<
+  ReturnType<typeof listProfitImpactActionsForShop>
+>[number];
+type ProfitImpactCopy = ReturnType<
+  typeof useI18n
+>["messages"]["profitImpactPage"];
+type ResultsProps = {
+  action: TrackedProfitImpactAction;
+  copy: ProfitImpactCopy;
+  locale: string;
+  detail?: boolean;
+};
+type CardProps = Omit<ResultsProps, "detail"> & {
+  open: (id: string) => void;
+};
 
 const txt = (d: FormData, n: string) => String(d.get(n) ?? "").trim();
 const num = (d: FormData, n: string) => {
@@ -69,9 +112,9 @@ const json = (value?: string | null) => {
   }
 };
 const context = (
-  admin: any,
-  session: any,
-  billing: any,
+  admin: AdminApiContext,
+  session: Session,
+  billing: BillingStatus,
   locale: string,
   period: string,
 ) =>
@@ -88,7 +131,7 @@ export async function loader({ request }: { request: Request }) {
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing))
     return {
-      growthAccess: false,
+      growthAccess: false as const,
       actions: [],
       selectedAction: null,
       prefill: null,
@@ -105,7 +148,7 @@ export async function loader({ request }: { request: Request }) {
   const sourceModule = url.searchParams.get("sourceModule");
   const productId = url.searchParams.get("productId");
   const period = url.searchParams.get("period") || "30";
-  let prefill: Record<string, string | number | null> | null = null;
+  let prefill: ProfitImpactPrefill | null = null;
   if (sourceModule && productId) {
     const language = getRequestLanguage(request);
     const data = await context(
@@ -132,7 +175,9 @@ export async function loader({ request }: { request: Request }) {
         });
       const pricing = alert.id.startsWith("pricing-opportunity-");
       prefill = {
-        sourceModule,
+        sourceModule: sourceModule as
+          | "PROFIT_ACTION_CENTER"
+          | "ALERT_CENTER",
         sourceAlertKey,
         productId,
         productTitle: row.productTitle,
@@ -181,7 +226,7 @@ export async function loader({ request }: { request: Request }) {
     }
   }
   return {
-    growthAccess: true,
+    growthAccess: true as const,
     actions,
     selectedAction,
     prefill,
@@ -317,9 +362,9 @@ export async function action({ request }: { request: Request }) {
   }
 }
 
-function Results({ action, copy, locale, detail = false }: any) {
+function Results({ action, copy, locale, detail = false }: ResultsProps) {
   const baseline = action.measurements.find(
-    (m: any) => m.measurementType === "BASELINE",
+    (measurement) => measurement.measurementType === "BASELINE",
   );
   const result = resultMeasurement(action);
   const money = (v: number | null) =>
@@ -406,7 +451,7 @@ function statusTone(status: string): VisualTone {
   return "orange";
 }
 
-function Card({ action, copy, locale, open }: any) {
+function Card({ action, copy, locale, open }: CardProps) {
   const result = resultMeasurement(action);
   const progress = Math.min(
     100,
@@ -426,8 +471,10 @@ function Card({ action, copy, locale, open }: any) {
           </div>
           <h3>{action.title}</h3>
           <div className="impact-card-meta">
-            <span>{copy[action.actionType]}</span>
-            <small>{copy[action.sourceModule]}</small>
+            <span>{copy[action.actionType as ProfitImpactActionType]}</span>
+            <small>
+              {copy[action.sourceModule as ProfitImpactSourceModule]}
+            </small>
           </div>
         </div>
         <StatusChip
@@ -435,7 +482,7 @@ function Card({ action, copy, locale, open }: any) {
           pulse={action.status === "MEASURING"}
           className={`impact-status status-${action.status.toLowerCase()}`}
         >
-          {copy[action.status]}
+          {copy[action.status as ProfitImpactStatus]}
         </StatusChip>
       </div>
       {action.appliedAt ? (
@@ -509,14 +556,14 @@ function Card({ action, copy, locale, open }: any) {
 }
 
 export default function ProfitImpactPage() {
-  const data = useLoaderData() as any;
-  const actionData = useActionData() as any;
+  const data = useLoaderData<typeof loader>();
+  const actionData = useActionData<ProfitImpactActionData>();
   const navigate = useNavigate();
-  const { messages, locale, language } = useI18n() as any;
+  const { messages, locale, language } = useI18n();
   const copy = messages.profitImpactPage;
   const [tab, setTab] = React.useState("active");
   const visible = data.actions.filter(
-    (a: any) => classifyProfitImpactAction(a.status) === tab,
+    (a) => classifyProfitImpactAction(a.status) === tab,
   );
   const open = (id: string) =>
     navigate(
@@ -625,9 +672,9 @@ export default function ProfitImpactPage() {
             </section>
             {data.reminders?.length ? (
               <section className="impact-list" style={{ marginBottom: 16 }}>
-                {data.reminders.map((reminder: any) => {
+                {data.reminders.map((reminder) => {
                   const tracked = data.actions.find(
-                    (item: any) => item.id === reminder.actionId,
+                    (item) => item.id === reminder.actionId,
                   );
                   return (
                     <button
@@ -713,18 +760,20 @@ export default function ProfitImpactPage() {
                   name="idempotencyKey"
                   value={data.idempotencyKey}
                 />
-                {[
-                  "sourceModule",
-                  "sourceAlertKey",
-                  "productId",
-                  "sourcePeriod",
-                  "actionType",
-                ].map((n) => (
+                {(
+                  [
+                    "sourceModule",
+                    "sourceAlertKey",
+                    "productId",
+                    "sourcePeriod",
+                    "actionType",
+                  ] as const
+                ).map((n) => (
                   <input
                     key={n}
                     type="hidden"
                     name={n === "sourcePeriod" ? "period" : n}
-                    value={data.prefill[n] ?? ""}
+                    value={data.prefill![n] ?? ""}
                   />
                 ))}
                 <h2>{copy.confirmAction}</h2>
@@ -796,11 +845,25 @@ export default function ProfitImpactPage() {
                 <div className="impact-detail-grid">
                   <span>
                     {copy.source}
-                    <strong>{copy[data.selectedAction.sourceModule]}</strong>
+                    <strong>
+                      {
+                        copy[
+                          data.selectedAction
+                            .sourceModule as ProfitImpactSourceModule
+                        ]
+                      }
+                    </strong>
                   </span>
                   <span>
                     {copy.actionType}
-                    <strong>{copy[data.selectedAction.actionType]}</strong>
+                    <strong>
+                      {
+                        copy[
+                          data.selectedAction
+                            .actionType as ProfitImpactActionType
+                        ]
+                      }
+                    </strong>
                   </span>
                   <span>
                     {copy.previousValue}
@@ -819,9 +882,11 @@ export default function ProfitImpactPage() {
                 />
                 <h3>{copy.timeline}</h3>
                 <ol className="impact-timeline">
-                  {data.selectedAction.events.map((e: any) => (
+                  {data.selectedAction.events.map((e) => (
                     <li key={e.id}>
-                      <strong>{copy[e.toStatus]}</strong>
+                      <strong>
+                        {copy[e.toStatus as ProfitImpactStatus]}
+                      </strong>
                       <span>
                         {new Intl.DateTimeFormat(locale, {
                           dateStyle: "medium",
@@ -847,12 +912,12 @@ export default function ProfitImpactPage() {
               ].map((item) => ({
                 ...item,
                 count: data.actions.filter(
-                  (a: any) => classifyProfitImpactAction(a.status) === item.id,
+                  (a) => classifyProfitImpactAction(a.status) === item.id,
                 ).length,
               }))}
             />
             <section className="impact-list">
-              {visible.map((a: any) => (
+              {visible.map((a) => (
                 <Card
                   key={a.id}
                   action={a}

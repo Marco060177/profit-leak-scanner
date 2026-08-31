@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { uiMoney as formatStoreMoney } from "~/utils/margin";
 

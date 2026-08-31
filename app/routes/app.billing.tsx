@@ -4,6 +4,10 @@ import { useFetcher, useNavigate } from "react-router";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import { authenticate } from "~/shopify.server";
 
+type BillingActionData =
+  | { ok: true; redirectUrl: string }
+  | { ok: false; error: string };
+
 export async function action({ request }: { request: Request }) {
   const { session } = await authenticate.admin(request);
 
@@ -42,20 +46,20 @@ export async function action({ request }: { request: Request }) {
 }
 
 export default function Billing() {
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<BillingActionData>();
   const navigate = useNavigate();
   const { messages } = useI18n();
   const billing = messages.billing;
 
   React.useEffect(() => {
-    const data = fetcher.data as any;
+    const data = fetcher.data;
 
     if (data?.ok && data?.redirectUrl) {
       (window.top ?? window).location.href = data.redirectUrl;
     }
   }, [fetcher.data]);
 
-  const data = fetcher.data as any;
+  const data = fetcher.data;
   const error = data && data.ok === false ? data.error : null;
   const isLoading = fetcher.state !== "idle";
 

@@ -70,7 +70,7 @@ export const loader = async ({
 };
 
 export default function ProductsPage() {
-  const { summary, rows, period, shopHandle, currencyCode } =
+  const { rows, period, shopHandle, currencyCode } =
     useLoaderData() as LoaderData;
 
   const navigate = useNavigate();

@@ -24,7 +24,6 @@ import {
   PremiumHero,
   PremiumPanel,
   SegmentedTabs,
-  StatusChip,
   TaxAwareBadge,
   VisualButton,
 } from "~/components/ui/VisualSystem";

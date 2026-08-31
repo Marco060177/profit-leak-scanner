@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useI18n } from "~/components/i18n/I18nProvider";
 
 type Props = {

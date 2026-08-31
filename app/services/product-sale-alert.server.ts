@@ -1,3 +1,4 @@
+import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { ProfitAlert } from "~/utils/profit-monitor";
 import {
     createAlertNotificationDelivery,
@@ -33,6 +34,10 @@ type VariantCostNode = {
     inventoryItem?: {
         unitCost?: { amount: string; currencyCode: string } | null;
     } | null;
+};
+
+type GraphqlError = {
+    message?: string;
 };
 
 type ProductSaleGroup = {
@@ -189,7 +194,7 @@ export async function queueProductSaleAlertsFromOrder({
     shop,
     payload,
 }: {
-    admin: any;
+    admin: AdminApiContext;
     shop: string;
     payload: OrderCreatePayload;
 }) {
@@ -232,12 +237,14 @@ export async function queueProductSaleAlertsFromOrder({
         { variables: { ids: variantIds } },
     );
 
-    const json = await response.json();
+    const json: Awaited<ReturnType<typeof response.json>> & {
+        errors?: GraphqlError[];
+    } = await response.json();
 
     if (json?.errors?.length) {
         throw new Error(
             `Unable to load Shopify product costs: ${json.errors
-                .map((error: any) => error?.message ?? "Unknown GraphQL error")
+                .map((error: GraphqlError) => error?.message ?? "Unknown GraphQL error")
                 .join("; ")}`,
         );
     }
