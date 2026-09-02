@@ -9,7 +9,7 @@ import {
   hasGrowthAccess,
 } from "~/utils/billing.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
-import { translations } from "~/utils/i18n";
+import { loadLocaleMessages } from "~/utils/i18n-catalogs.server";
 import { getRequestLanguage } from "~/utils/i18n.server";
 
 import "~/styles/dashboard.css";
@@ -57,7 +57,8 @@ export async function action({ request }: { request: Request }) {
   const formData = await request.formData();
 
   const language = getRequestLanguage(request);
-  const errors = translations[language].supportPage.errors;
+  const messages = await loadLocaleMessages(language);
+  const errors = messages.supportPage.errors;
 
   const email = String(formData.get("email") ?? "").trim();
   const topic = String(formData.get("topic") ?? "").trim();

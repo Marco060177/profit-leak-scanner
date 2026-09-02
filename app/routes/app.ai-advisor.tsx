@@ -31,7 +31,6 @@ import { authenticate } from "~/shopify.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
-import { jsPDF } from "jspdf";
 import {
   generateAiMarginAnalysis,
   generateAiAnswer,
@@ -46,7 +45,8 @@ import { loadProfitImpactContext } from "~/services/profit-impact-context.server
 import "~/styles/dashboard.css";
 import "~/styles/ai-advisor-v2.css";
 
-function downloadAiReportPdf(reportText: string, language: Language) {
+async function downloadAiReportPdf(reportText: string, language: Language) {
+  const { jsPDF } = await import("jspdf");
   const pdf = new jsPDF({
     orientation: "portrait",
     unit: "mm",

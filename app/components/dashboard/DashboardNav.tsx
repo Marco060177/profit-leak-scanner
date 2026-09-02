@@ -34,7 +34,7 @@ export default function DashboardNav({
   active,
   navigate,
 }: Props) {
-  const { language, messages: t, setLanguage } = useI18n();
+  const { language, messages: t } = useI18n();
   const location = useLocation();
 
   const [growthOpen, setGrowthOpen] =
@@ -207,7 +207,6 @@ export default function DashboardNav({
     nextLanguage: Language,
   ) => {
     setLanguageOpen(false);
-    setLanguage(nextLanguage);
 
     const params = new URLSearchParams(
       window.location.search,

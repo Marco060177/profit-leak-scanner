@@ -18,7 +18,7 @@ import {
 } from "~/services/profit-impact-measurement.server";
 import { deleteShopData } from "~/services/shop-data-redaction.server";
 import { hasGrowthAccess } from "~/utils/billing.server";
-import { translations } from "~/utils/i18n";
+import { loadLocaleMessages } from "~/utils/i18n-catalogs.server";
 import {
   aggregateProfitImpact,
   classifyProfitImpactAction,
@@ -440,13 +440,14 @@ assert.equal(insufficient.status, "INSUFFICIENT_DATA");
 assert.equal(insufficient.measuringProductKey, null);
 
 for (const language of ["en", "it", "fr", "de", "es", "pt-BR"] as const) {
-  assert.ok(translations[language].profitImpactPage.estimatedAttributableImpact);
-  assert.ok(translations[language].profitImpactPage.attributionConfidence);
+  const messages = await loadLocaleMessages(language);
+  assert.ok(messages.profitImpactPage.estimatedAttributableImpact);
+  assert.ok(messages.profitImpactPage.attributionConfidence);
   for (const key of ["active", "completed", "needsAttention", "noActions", "measuredProfitChange", "estimatedAttributableProfit", "averageMarginLift", "measuredChangeDefinition", "attributableDefinition", "dataConfidenceDefinition", "attributionConfidenceDefinition", "reminderAwaiting", "reminderMeasurementDue", "reminderCompleted"] as const) {
-    assert.ok(translations[language].profitImpactPage[key], `${language}.${key} is required`);
+    assert.ok(messages.profitImpactPage[key], `${language}.${key} is required`);
   }
   for (const status of ["ACCEPTED", "AWAITING_APPLICATION", "MEASURING", "COMPLETED", "INSUFFICIENT_DATA", "INVALIDATED", "CANCELLED"] as const) {
-    assert.ok(translations[language].profitImpactPage[status]);
+    assert.ok(messages.profitImpactPage[status]);
   }
 }
 

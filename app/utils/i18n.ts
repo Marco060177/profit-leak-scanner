@@ -1,11 +1,5 @@
-import { en } from "~/locales/en";
-import { it } from "~/locales/it";
-import { fr } from "~/locales/fr";
-import { de } from "~/locales/de";
-import { es } from "~/locales/es";
-import { ptBR } from "~/locales/pt-BR";
-
 export type Language = "en" | "it" | "fr" | "de" | "es" | "pt-BR";
+export type Messages = typeof import("~/locales/en").en;
 
 export const DEFAULT_LANGUAGE: Language = "en";
 export const LANGUAGE_STORAGE_KEY = "marginlab-language";
@@ -28,15 +22,6 @@ export function getLanguageLocale(language: Language) {
   if (language === "pt-BR") return "pt-BR";
   return "en-US";
 }
-
-export const translations = {
-  en,
-  it,
-  fr,
-  de,
-  es,
-  "pt-BR": ptBR,
-};
 
 export function getStoredLanguage(): Language {
   return getStoredLanguageOrNull() ?? DEFAULT_LANGUAGE;

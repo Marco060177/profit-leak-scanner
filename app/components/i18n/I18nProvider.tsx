@@ -2,10 +2,9 @@ import * as React from "react";
 
 import {
   getLanguageLocale,
-  getStoredLanguageOrNull,
   setStoredLanguage,
-  translations,
   type Language,
+  type Messages,
 } from "~/utils/i18n";
 
 type TranslationVariables = Record<string, string | number>;
@@ -13,15 +12,14 @@ type TranslationVariables = Record<string, string | number>;
 type I18nContextValue = {
   language: Language;
   locale: string;
-  messages: (typeof translations)[Language];
-  setLanguage: (language: Language) => void;
+  messages: Messages;
   t: (key: string, variables?: TranslationVariables) => string;
 };
 
 const I18nContext = React.createContext<I18nContextValue | null>(null);
 
 function getNestedTranslation(
-  messages: (typeof translations)[Language],
+  messages: Messages,
   key: string,
 ) {
   let current: unknown = messages;
@@ -46,31 +44,19 @@ function interpolate(value: string, variables?: TranslationVariables) {
 
 export function I18nProvider({
   initialLanguage,
+  initialMessages,
   children,
 }: {
   initialLanguage: Language;
+  initialMessages: Messages;
   children: React.ReactNode;
 }) {
-  const [language, setLanguageState] =
-    React.useState<Language>(initialLanguage);
-
   React.useEffect(() => {
-    const storedLanguage = getStoredLanguageOrNull();
-
-    if (storedLanguage) {
-      setLanguageState(storedLanguage);
-      setStoredLanguage(storedLanguage);
-    } else {
-      setStoredLanguage(initialLanguage);
-    }
+    setStoredLanguage(initialLanguage);
   }, [initialLanguage]);
 
-  const setLanguage = React.useCallback((nextLanguage: Language) => {
-    setLanguageState(nextLanguage);
-    setStoredLanguage(nextLanguage);
-  }, []);
-
-  const messages = translations[language];
+  const language = initialLanguage;
+  const messages = initialMessages;
 
   const t = React.useCallback(
     (key: string, variables?: TranslationVariables) => {
@@ -85,10 +71,9 @@ export function I18nProvider({
       language,
       locale: getLanguageLocale(language),
       messages,
-      setLanguage,
       t,
     }),
-    [language, messages, setLanguage, t],
+    [language, messages, t],
   );
 
   return (

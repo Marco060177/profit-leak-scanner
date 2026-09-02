@@ -3,7 +3,8 @@ import { useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { useI18n } from "~/components/i18n/I18nProvider";
-import { translations } from "~/utils/i18n";
+import { en } from "~/locales/en";
+import { it } from "~/locales/it";
 
 import "~/styles/dashboard.css";
 
@@ -380,11 +381,11 @@ export default function GlossaryPage() {
     string,
     { short: string; detail: string }
   >;
-  const englishTerms = translations.en.glossary.terms as Record<
+  const englishTerms = en.glossary.terms as Record<
     string,
     { short: string; detail: string }
   >;
-  const italianTerms = translations.it.glossary.terms as Record<
+  const italianTerms = it.glossary.terms as Record<
     string,
     { short: string; detail: string }
   >;
