@@ -12,7 +12,6 @@ type Props = {
   period: string;
   setPeriod: (next: "7" | "30" | "90") => void;
   navigate: (path: string) => void;
-  scrollToSection: (id: string) => void;
   visual: ReactNode;
 
   analysisLoading: boolean;
@@ -27,7 +26,6 @@ export default function DashboardHero({
   period,
   setPeriod,
   navigate,
-  scrollToSection,
   visual,
   analysisLoading,
   analysisText,

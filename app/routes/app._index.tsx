@@ -21,21 +21,16 @@ import {
   VisualButton,
 } from "~/components/ui/VisualSystem";
 import { loadMarginDashboardData } from "~/utils/margin.server";
-import { generateProfitAlerts, type ProfitAlert } from "~/utils/profit-monitor";
+import { generateProfitAlerts } from "~/utils/profit-monitor";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { syncProfitMonitor } from "~/services/profit-monitor.server";
 import { listProfitImpactActionsForShop } from "~/services/profit-impact.server";
 import { aggregateProfitImpact } from "~/utils/profit-impact-summary";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
-import {
-  buildMarginAssessment,
-  type DecisionSignal,
-  type MarginAssessment,
-} from "~/utils/margin-decision-engine";
+import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 
 import {
-  type Row,
   uiMoney as formatStoreMoney,
   pct as formatStorePercent,
 } from "~/utils/margin";
@@ -46,266 +41,6 @@ export const links = () => [
     href: dashboardStylesUrl,
   },
 ];
-
-function metricValue(signal: DecisionSignal, key: string) {
-  return signal.metrics.find((metric) => metric.key === key)?.value ?? 0;
-}
-
-function decisionSignalToAlert({
-  signal,
-  assessment,
-  language,
-  period,
-  money,
-  pct,
-}: {
-  signal: DecisionSignal;
-  assessment: MarginAssessment;
-  language: "it" | "en";
-  period: string;
-  money: (value: number) => string;
-  pct: (value: number) => string;
-}): ProfitAlert {
-  const periodDays = Math.max(1, Number(period) || 30);
-  const monthlyImpact =
-    signal.code === "MISSING_COSTS" || signal.impactAmount === null
-      ? 0
-      : signal.impactAmount * (30 / periodDays);
-  const affectedProducts = metricValue(signal, "products");
-
-  const common = {
-    id: signal.id,
-    severity:
-      signal.kind === "opportunity"
-        ? ("opportunity" as const)
-        : signal.severity,
-    monthlyImpact,
-    priority: signal.priority,
-  };
-
-  switch (signal.code) {
-    case "REAL_LOSSES": {
-      const loss = metricValue(signal, "loss");
-      const lossShare = metricValue(signal, "lossShare");
-      return {
-        ...common,
-        category: "margin",
-        economicKind: "opportunity",
-        title:
-          language === "it" ? "Perdite reali rilevate" : "Real losses detected",
-        description:
-          language === "it"
-            ? `${affectedProducts} prodotti hanno generato ${money(loss)} di perdita, pari al ${pct(lossShare)} dei ricavi analizzati.`
-            : `${affectedProducts} products generated ${money(loss)} in losses, equal to ${pct(lossShare)} of analyzed revenue.`,
-        actionLabel:
-          language === "it" ? "Controlla i prodotti" : "Review products",
-        route: "/app/products",
-        businessAction: "action",
-        effort: "medium",
-        estimatedMinutes: 15,
-        recommendedModule: "Products",
-        metadata: { affectedProducts, periodImpact: loss },
-      };
-    }
-
-    case "MISSING_COSTS": {
-      const exposedRevenue = metricValue(signal, "revenue");
-      const revenueShare = metricValue(signal, "revenueShare");
-      return {
-        ...common,
-        category: "data-quality",
-        economicKind: "exposure",
-        title:
-          language === "it"
-            ? "Costi prodotto mancanti"
-            : "Missing product costs",
-        description:
-          language === "it"
-            ? `${affectedProducts} prodotti, pari a ${money(exposedRevenue)} di ricavi (${pct(revenueShare)}), non hanno una copertura COGS completa. Non si tratta di una perdita accertata.`
-            : `${affectedProducts} products representing ${money(exposedRevenue)} in revenue (${pct(revenueShare)}) do not have complete COGS coverage. This is not a confirmed loss.`,
-        actionLabel: language === "it" ? "Completa i costi" : "Complete costs",
-        route: "/app/products",
-        businessAction: "review",
-        effort: affectedProducts <= 5 ? "easy" : "medium",
-        estimatedMinutes: Math.min(30, Math.max(5, affectedProducts * 2)),
-        recommendedModule: "Products",
-        metadata: { affectedProducts, revenue: exposedRevenue },
-      };
-    }
-
-    case "WEAK_MARGIN": {
-      const margin = metricValue(signal, "margin");
-      const target = metricValue(signal, "target");
-      return {
-        ...common,
-        category: "margin",
-        economicKind: "exposure",
-        title:
-          language === "it"
-            ? "Margine sotto il livello obiettivo"
-            : "Margin below target level",
-        description:
-          language === "it"
-            ? `Il margine osservato è ${pct(margin)}, rispetto al riferimento operativo del ${pct(target)}. Con i dati attuali è un segnale del periodo, non ancora un giudizio generale sullo store.`
-            : `Observed margin is ${pct(margin)}, compared with the ${pct(target)} operating reference. With the current evidence this is a period signal, not yet a store-wide assessment.`,
-        actionLabel:
-          language === "it" ? "Analizza il margine" : "Analyze margin",
-        route: "/app/profit-intelligence",
-        businessAction: "review",
-        effort: "medium",
-        estimatedMinutes: 15,
-        recommendedModule: "Profit Intelligence",
-        metadata: { currentMargin: margin, affectedProducts },
-      };
-    }
-
-    case "MARGIN_DETERIORATION": {
-      const marginChange = metricValue(signal, "marginDelta");
-      return {
-        ...common,
-        category: "margin",
-        economicKind: "exposure",
-        title:
-          language === "it"
-            ? "Margine in deterioramento"
-            : "Margin deterioration detected",
-        description:
-          language === "it"
-            ? `Il margine è diminuito di ${pct(Math.abs(marginChange))} rispetto a un periodo precedente considerato comparabile.`
-            : `Margin declined by ${pct(Math.abs(marginChange))} versus a previous period considered comparable.`,
-        actionLabel:
-          language === "it" ? "Esamina il confronto" : "Review comparison",
-        route: "/app/profit-intelligence",
-        businessAction: "review",
-        effort: "medium",
-        estimatedMinutes: 15,
-        recommendedModule: "Profit Intelligence",
-        metadata: { marginChange },
-      };
-    }
-
-    case "HIGH_DISCOUNT_RATE": {
-      const discountRate = metricValue(signal, "discountRate");
-      const discounts = metricValue(signal, "discounts");
-      return {
-        ...common,
-        category: "discounts",
-        economicKind: "loss",
-        title:
-          language === "it"
-            ? "Pressione elevata degli sconti"
-            : "High discount pressure",
-        description:
-          language === "it"
-            ? `Gli sconti ammontano a ${money(discounts)} e incidono per il ${pct(discountRate)} sui ricavi prima degli sconti.`
-            : `Discounts total ${money(discounts)} and represent ${pct(discountRate)} of revenue before discounts.`,
-        actionLabel:
-          language === "it" ? "Analizza gli sconti" : "Analyze discounts",
-        route: "/app/profit-intelligence",
-        businessAction: "optimize",
-        effort: "medium",
-        estimatedMinutes: 20,
-        recommendedModule: "Profit Intelligence",
-        metadata: { periodImpact: discounts },
-      };
-    }
-
-    case "HIGH_REFUND_RATE": {
-      const refundRate = metricValue(signal, "refundRate");
-      const refunds = metricValue(signal, "refunds");
-      return {
-        ...common,
-        category: "refunds",
-        economicKind: "loss",
-        title:
-          language === "it"
-            ? "Incidenza elevata dei rimborsi"
-            : "High refund rate",
-        description:
-          language === "it"
-            ? `I rimborsi ammontano a ${money(refunds)} e incidono per il ${pct(refundRate)} sui ricavi analizzati.`
-            : `Refunds total ${money(refunds)} and represent ${pct(refundRate)} of analyzed revenue.`,
-        actionLabel:
-          language === "it" ? "Analizza i rimborsi" : "Analyze refunds",
-        route: "/app/profit-intelligence",
-        businessAction: "review",
-        effort: "advanced",
-        estimatedMinutes: 30,
-        recommendedModule: "Profit Intelligence",
-        metadata: { periodImpact: refunds },
-      };
-    }
-
-    case "RISK_CONCENTRATION": {
-      const revenueShare = metricValue(signal, "revenueShare");
-      return {
-        ...common,
-        category: "margin",
-        economicKind: "exposure",
-        title:
-          language === "it"
-            ? "Rischio concentrato su pochi prodotti"
-            : "Risk concentrated in few products",
-        description:
-          language === "it"
-            ? `Un prodotto a margine debole o negativo concentra il ${pct(revenueShare)} dei ricavi analizzati.`
-            : `A weak- or negative-margin product represents ${pct(revenueShare)} of analyzed revenue.`,
-        actionLabel:
-          language === "it" ? "Controlla i prodotti" : "Review products",
-        route: "/app/products",
-        businessAction: "review",
-        effort: "medium",
-        estimatedMinutes: 15,
-        recommendedModule: "Products",
-        metadata: { revenue: assessment.facts.revenue },
-      };
-    }
-
-    case "PRICE_RECOVERY": {
-      const recovery = metricValue(signal, "theoreticalRecovery");
-      return {
-        ...common,
-        category: "pricing",
-        economicKind: "opportunity",
-        title:
-          language === "it"
-            ? "Opportunità di recupero del margine"
-            : "Margin recovery opportunity",
-        description:
-          language === "it"
-            ? `${affectedProducts} prodotti mostrano un potenziale teorico di recupero pari a ${money(recovery)} nel periodo selezionato.`
-            : `${affectedProducts} products show theoretical recovery potential of ${money(recovery)} in the selected period.`,
-        actionLabel:
-          language === "it" ? "Simula il recupero" : "Simulate recovery",
-        route: "/app/recovery-simulator",
-        businessAction: "optimize",
-        effort: "easy",
-        estimatedMinutes: 10,
-        recommendedModule: "Recovery Simulator",
-        metadata: { affectedProducts, periodImpact: recovery },
-      };
-    }
-
-    default:
-      return {
-        ...common,
-        category: "margin",
-        economicKind: "exposure",
-        title:
-          language === "it" ? "Segnale di redditività" : "Profitability signal",
-        description:
-          language === "it"
-            ? "MarginLab ha rilevato un segnale da verificare nel periodo selezionato."
-            : "MarginLab detected a signal to review in the selected period.",
-        actionLabel: language === "it" ? "Apri l'analisi" : "Open analysis",
-        route: "/app/profit-intelligence",
-        businessAction: "monitor",
-        effort: "medium",
-        estimatedMinutes: 15,
-        recommendedModule: "Profit Intelligence",
-      };
-  }
-}
 
 export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
@@ -377,7 +112,6 @@ export default function DashboardV2() {
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
-  const [onlyLosing, setOnlyLosing] = React.useState(false);
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
 
   const { language, locale, messages, t } = useI18n();
@@ -461,7 +195,6 @@ export default function DashboardV2() {
   const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
 
   const dashboardLoading = false;
-  const marginDelta = summary.marginDelta;
 
   const productsAtRisk = rows.filter(
     (row) => row.losing || row.lowMargin || row.missingCost,
@@ -484,15 +217,6 @@ export default function DashboardV2() {
   const visualMarginPct =
     visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
 
-  const profitPercentage =
-    visualRevenue > 0 ? (visualProfit / visualRevenue) * 100 : 0;
-
-  const cogsPercentage =
-    visualRevenue > 0 ? (visualCogs / visualRevenue) * 100 : 0;
-
-  const leakPercentage =
-    visualRevenue > 0 ? (visualLeak / visualRevenue) * 100 : 0;
-
   const visualMissingCostCount = sourceRows.filter(
     (row) => row.missingCost,
   ).length;
@@ -500,90 +224,6 @@ export default function DashboardV2() {
   const visualProductsAtRisk = sourceRows.filter(
     (row) => row.losing || row.lowMargin || row.missingCost,
   ).length;
-
-  const criticalCount = sourceRows.filter((row) => row.losing).length;
-
-  const warningCount = sourceRows.filter(
-    (row) => row.lowMargin && !row.losing,
-  ).length;
-
-  const missingCount = sourceRows.filter((row) => row.missingCost).length;
-
-  const healthyCount = sourceRows.filter(
-    (row) => !row.losing && !row.lowMargin && !row.missingCost,
-  ).length;
-
-  const riskTotal = Math.max(sourceRows.length, 1);
-
-  const filteredRows = onlyLosing
-    ? sourceRows.filter((row) => row.losing)
-    : sourceRows;
-
-  const totalRevenue = Math.max(
-    sourceRows.reduce((acc, row) => acc + row.revenue, 0),
-    1,
-  );
-
-  const productRiskScore = (row: Row) => {
-    const revenueShare =
-      totalRevenue > 0 ? (row.revenue / totalRevenue) * 100 : 0;
-
-    let score = 0;
-
-    if (row.losing) score += 40;
-    if (row.missingCost) score += 25;
-    if (row.lowMargin) score += 20;
-
-    score += Math.min(15, revenueShare);
-
-    if (row.marginPct < 5) score += 10;
-    if (row.targetDelta > 0) score += Math.min(10, row.targetDelta / 10);
-
-    return Math.min(100, Math.round(score));
-  };
-
-  const getRiskLevel = (score: number) => {
-    if (score >= 75) {
-      return {
-        label: "Critical",
-        color: "#ff6b4a",
-        background: "rgba(255,107,74,0.14)",
-      };
-    }
-
-    if (score >= 50) {
-      return {
-        label: "High",
-        color: "#ffb347",
-        background: "rgba(255,179,71,0.14)",
-      };
-    }
-
-    return {
-      label: "Moderate",
-      color: "#4ade80",
-      background: "rgba(74,222,128,0.14)",
-    };
-  };
-
-  const sortedRiskRows = filteredRows
-    .slice()
-    .sort((a, b) => productRiskScore(b) - productRiskScore(a))
-    .slice(0, 12);
-
-  const weakBestSeller = [...sourceRows]
-    .filter((p) => p.revenue > 0)
-    .sort((a, b) => b.revenue - a.revenue)[0];
-
-  const weakBestSellerMargin =
-    weakBestSeller && weakBestSeller.revenue > 0
-      ? (weakBestSeller.profit / weakBestSeller.revenue) * 100
-      : 0;
-
-  const hasWeakBestSeller =
-    weakBestSeller &&
-    weakBestSeller.revenue > 1000 &&
-    weakBestSellerMargin < 30;
 
   const topLeaks = [
     sourceRows.filter((row) => row.losing).length > 0
@@ -630,86 +270,6 @@ export default function DashboardV2() {
     loss: string;
   }[];
 
-  const riskyRows = sourceRows.filter(
-    (row) => row.losing || row.lowMargin || row.missingCost,
-  );
-
-  const riskyRevenue = riskyRows.reduce((acc, row) => acc + row.revenue, 0);
-
-  const riskyRevenueShare = (riskyRevenue / totalRevenue) * 100;
-
-  const topRevenueProducts = [...sourceRows]
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 3);
-
-  const topRevenueTotal = topRevenueProducts.reduce(
-    (acc, row) => acc + row.revenue,
-    0,
-  );
-
-  const topRevenueShare = (topRevenueTotal / totalRevenue) * 100;
-
-  const weakTopProducts = topRevenueProducts.filter(
-    (row) => row.marginPct < 15 || row.lowMargin || row.losing,
-  );
-
-  const contributionInsights = [
-    riskyRevenueShare > 25
-      ? {
-          title:
-            "High-risk products are driving a significant share of revenue",
-          value: `${pct(riskyRevenueShare)} of revenue`,
-          description:
-            "A meaningful portion of store revenue is coming from products with margin risk, missing costs or weak profitability.",
-          severity: "Critical",
-          confidence: "High confidence",
-        }
-      : null,
-
-    topRevenueShare > 50
-      ? {
-          title: "Revenue is concentrated in a small group of products",
-          value: `${pct(topRevenueShare)} from top 3 products`,
-          description:
-            "Your store depends heavily on a few products. If these products weaken, total profitability may be exposed.",
-          severity: "High",
-          confidence: "High confidence",
-        }
-      : null,
-
-    weakTopProducts.length > 0
-      ? {
-          title: "Top-selling products show weak contribution quality",
-          value: `${weakTopProducts.length} top products at risk`,
-          description:
-            "Some of your highest-revenue products may not be contributing enough profit relative to their sales volume.",
-          severity: "Medium",
-          confidence: "Moderate confidence",
-        }
-      : null,
-  ].filter(Boolean) as {
-    title: string;
-    value: string;
-    description: string;
-    severity: string;
-    confidence: string;
-  }[];
-
-  const prioritizedInsights = [...contributionInsights]
-    .sort((a, b) => {
-      const severityWeight = {
-        Critical: 3,
-        High: 2,
-        Medium: 1,
-      };
-
-      return (
-        severityWeight[b.severity as keyof typeof severityWeight] -
-        severityWeight[a.severity as keyof typeof severityWeight]
-      );
-    })
-    .slice(0, 3);
-
   const worstProduct =
     sourceRows.length > 0
       ? ([...sourceRows]
@@ -717,136 +277,7 @@ export default function DashboardV2() {
           .sort((a, b) => a.profit - b.profit)[0] ?? null)
       : null;
 
-  const bestProduct =
-    sourceRows.length > 0
-      ? ([...sourceRows]
-          .filter((row) => !row.missingCost)
-          .sort((a, b) => b.marginPct - a.marginPct)[0] ?? null)
-      : null;
-
   const profitGapToTarget = economicSnapshot?.totals.monthlyOpportunity ?? 0;
-
-  const recoveryProducts = sourceRows.filter(
-    (row) => row.targetDelta > 0 && row.qty > 0,
-  );
-
-  const hasRecoveryOpportunity =
-    recoveryProducts.length > 0 && profitGapToTarget > 0;
-
-  const recommendations = [
-    sourceRows.filter((row) => row.losing).length > 0
-      ? {
-          title: `Fix ${
-            sourceRows.filter((row) => row.losing).length
-          } underpriced products selling below cost`,
-          impact: `${money(visualLeak)} estimated loss`,
-          confidence: "High confidence",
-          actionLabel: "Review pricing",
-          actionLink: "#products-section",
-        }
-      : null,
-    summary.missingCostCount > 0
-      ? {
-          title: "Update missing product costs in Shopify",
-          impact: `${summary.missingCostCount} products affected`,
-          confidence: "Critical issue",
-          actionLabel: "Update costs",
-          actionLink: "#products-section",
-        }
-      : null,
-    lowMarginCount > 0
-      ? {
-          title: "Review low-margin products below 10%",
-          impact: `${lowMarginCount} products need attention`,
-          confidence: "Medium confidence",
-          actionLabel: "Analyze products",
-          actionLink: "#products-section",
-        }
-      : null,
-    rows.length > 0
-      ? {
-          title: "Review target prices for worst-performing products",
-          impact: "20% margin target available",
-          confidence: "Rule-based insight",
-          actionLabel: "Review",
-          actionLink: "#products-section",
-        }
-      : null,
-  ].filter(Boolean) as {
-    title: string;
-    impact: string;
-    confidence: string;
-    actionLabel: string;
-    actionLink: string;
-  }[];
-
-  const insights = [
-    hasWeakBestSeller
-      ? {
-          eyebrow: copy.auto.d009,
-          title: copy.auto.d010,
-          badge: copy.auto.d011,
-          description: (
-            <>
-              <strong>{weakBestSeller.productTitle}</strong> {copy.auto.d012}{" "}
-              <strong>{money(weakBestSeller.revenue)}</strong> {copy.auto.d013}{" "}
-              <strong>{pct(weakBestSellerMargin)}</strong> {copy.auto.d014}
-            </>
-          ),
-        }
-      : null,
-
-    marginDelta < -3
-      ? {
-          eyebrow: copy.auto.d015,
-          title: copy.auto.d016,
-          badge: pct(marginDelta),
-          description: (
-            <>
-              {copy.auto.d017} <strong>{pct(summary.previousMarginPct)}</strong>{" "}
-              {copy.auto.d018} <strong>{pct(summary.marginPct)}</strong>{" "}
-              {copy.auto.d019}
-            </>
-          ),
-        }
-      : null,
-
-    hasRecoveryOpportunity
-      ? {
-          eyebrow: copy.auto.d020,
-          title: copy.auto.d021,
-          badge: money(profitGapToTarget),
-          description: (
-            <>
-              {copy.auto.d022}{" "}
-              <strong>
-                {recoveryProducts.length} {copy.auto.d023}
-              </strong>{" "}
-              {copy.auto.d024} <strong>{money(profitGapToTarget)}</strong>{" "}
-              {copy.auto.d025}
-            </>
-          ),
-        }
-      : null,
-
-    summary.revenueDeltaPct > 10 && summary.marginDelta < 0
-      ? {
-          eyebrow: copy.auto.d026,
-          title: copy.auto.d027,
-          badge: t("dashboardPage.revenueBadge", {
-            value: pct(summary.revenueDeltaPct),
-          }),
-          description: (
-            <>
-              {copy.auto.d028} <strong>{pct(summary.revenueDeltaPct)}</strong>
-              {copy.auto.d029}{" "}
-              <strong>{pct(Math.abs(summary.marginDelta))}</strong>
-              {copy.auto.d030}
-            </>
-          ),
-        }
-      : null,
-  ].filter(Boolean);
 
   function setPeriod(next: "7" | "30" | "90") {
     const params = new URLSearchParams(window.location.search);
@@ -856,31 +287,6 @@ export default function DashboardV2() {
 
     navigate(`/app?${params.toString()}`);
   }
-
-  function scrollToSection(id: string) {
-    const section = document.getElementById(id);
-
-    if (section) {
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }
-
-  const riskColor = (row: Row) => {
-    if (row.losing) return "#ef4444";
-    if (row.missingCost) return "#f59e0b";
-    if (row.lowMargin) return "#ff6b4a";
-    return "#22c55e";
-  };
-
-  const riskBackground = (row: Row) => {
-    if (row.losing) return "rgba(239,68,68,0.16)";
-    if (row.missingCost) return "rgba(245,158,11,0.14)";
-    if (row.lowMargin) return "rgba(255,90,54,0.14)";
-    return "rgba(34,197,94,0.12)";
-  };
 
   const chartData = trend;
 
@@ -910,13 +316,6 @@ export default function DashboardV2() {
       return `${x},${y}`;
     })
     .join(" ");
-
-  const riskLabel = (row: Row) => {
-    if (row.losing) return "Critical";
-    if (row.missingCost) return "Missing cost";
-    if (row.lowMargin) return "High";
-    return "Healthy";
-  };
 
   const severityColor = (severity: string) => {
     if (severity === "High") return "#ff6b4a";
@@ -962,7 +361,6 @@ export default function DashboardV2() {
           period={period}
           setPeriod={setPeriod}
           navigate={navigate}
-          scrollToSection={scrollToSection}
           analysisLoading={analysisLoading}
           analysisText={analysisText}
           analysisSteps={analysisSteps}

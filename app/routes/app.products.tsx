@@ -189,20 +189,6 @@ export default function ProductsPage() {
     return "Healthy";
   };
 
-  const riskColor = (row: Row) => {
-    if (row.losing) return "#ef4444";
-    if (row.missingCost) return "#f59e0b";
-    if (row.lowMargin) return "#ff6b4a";
-    return "#22c55e";
-  };
-
-  const riskBackground = (row: Row) => {
-    if (row.losing) return "rgba(239,68,68,0.16)";
-    if (row.missingCost) return "rgba(245,158,11,0.14)";
-    if (row.lowMargin) return "rgba(255,90,54,0.14)";
-    return "rgba(34,197,94,0.12)";
-  };
-
   const criticalProducts = economicRows.filter((row) => row.losing).length;
 
   const highProducts = economicRows.filter(
@@ -761,8 +747,6 @@ export default function ProductsPage() {
           setOnlyLosing={setOnlyLosing}
           period={period}
           riskLabel={riskLabel}
-          riskColor={riskColor}
-          riskBackground={riskBackground}
           shopHandle={shopHandle}
           currencyCode={currencyCode}
         />

@@ -18,8 +18,6 @@ type Props = {
   setOnlyLosing: React.Dispatch<React.SetStateAction<boolean>>;
   period: string;
   riskLabel: (row: Row) => string;
-  riskColor: (row: Row) => string;
-  riskBackground: (row: Row) => string;
   shopHandle: string;
   currencyCode: string;
 };
@@ -79,8 +77,6 @@ export default function ProductRiskTable({
   setOnlyLosing,
   period,
   riskLabel,
-  riskColor,
-  riskBackground,
   shopHandle,
   currencyCode,
 }: Props) {

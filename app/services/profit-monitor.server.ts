@@ -145,39 +145,6 @@ function toStoredState(row: {
   };
 }
 
-function alertEmailSubject(
-  alert: ProfitAlert,
-  language: "it" | "en",
-  reopening: boolean,
-  materialChange: boolean,
-) {
-  if (language === "it") {
-    if (reopening) return `MarginLab: un problema è tornato attivo — ${alert.title}`;
-    if (materialChange) {
-      return `MarginLab: cambiamento importante rilevato — ${alert.title}`;
-    }
-    if (alert.severity === "critical") {
-      return `MarginLab: rilevato un problema critico — ${alert.title}`;
-    }
-    if (alert.severity === "warning") {
-      return `MarginLab: nuovo avviso — ${alert.title}`;
-    }
-    return `MarginLab: nuova opportunità — ${alert.title}`;
-  }
-
-  if (reopening) return `MarginLab: an issue is active again — ${alert.title}`;
-  if (materialChange) {
-    return `MarginLab: important change detected — ${alert.title}`;
-  }
-  if (alert.severity === "critical") {
-    return `MarginLab: critical profit issue detected — ${alert.title}`;
-  }
-  if (alert.severity === "warning") {
-    return `MarginLab: new warning — ${alert.title}`;
-  }
-  return `MarginLab: new opportunity — ${alert.title}`;
-}
-
 export async function syncProfitMonitor({
   shop,
   period,

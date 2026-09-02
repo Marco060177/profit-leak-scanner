@@ -41,7 +41,6 @@ import type { LoaderData } from "~/utils/margin";
 
 import { getLanguageLocale, isLanguage, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
-import { getAiLanguageName } from "~/utils/ai-i18n";
 import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
 
 import "~/styles/dashboard.css";
@@ -568,9 +567,7 @@ export default function AiAdvisorPage() {
   }, [aiFetcher.data]);
 
   const economicRevenue = summary.economicRevenue ?? summary.revenue;
-  const economicCogs = summary.economicCogs ?? summary.cogs;
   const economicProfit = summary.economicProfit ?? summary.profit;
-  const economicMarginPct = summary.economicMarginPct ?? summary.marginPct;
 
   const economicRows = React.useMemo(
     () =>
@@ -654,11 +651,6 @@ export default function AiAdvisorPage() {
   const missingCostProducts = rows.filter((row) => row.missingCost);
 
   const lowMarginProducts = economicRows.filter((row) => row.lowMargin);
-
-  const topProfitLeak =
-    economicRows.length > 0
-      ? [...economicRows].sort((a, b) => a.profit - b.profit)[0]
-      : undefined;
 
   const recoverableProfit = economicRows.reduce((sum, row) => {
     if (row.revenue <= 0 || row.marginPct >= 20) {
@@ -767,18 +759,6 @@ export default function AiAdvisorPage() {
     })
     .sort((a, b) => b.priorityScore - a.priorityScore)
     .slice(0, 5);
-
-  const topPriorityProducts = prioritizedProducts.slice(0, 3);
-
-  const priorityImpact = topPriorityProducts.reduce(
-    (sum, product) => sum + product.recoverableOpportunity,
-    0,
-  );
-
-  const priorityConcentration =
-    recoverableProfit > 0
-      ? Math.min(100, (priorityImpact / recoverableProfit) * 100)
-      : 0;
 
   /*
   |--------------------------------------------------------------------------
@@ -973,304 +953,6 @@ export default function AiAdvisorPage() {
             : "#22c55e",
     },
   ];
-
-  /*
-  |--------------------------------------------------------------------------
-  | PROFIT MONITOR CONTEXT FOR AI
-  |--------------------------------------------------------------------------
-  */
-
-  const profitMonitorContext =
-    profitAlerts.length > 0
-      ? profitAlerts
-          .map(
-            (alert, index) => `
-EVENT ${index + 1}
-
-Severity: ${alert.severity}
-Title: ${alert.title}
-Description: ${alert.description}
-Recommended action: ${alert.actionLabel}
-Destination module: ${alert.route}
-`,
-          )
-          .join("\n")
-      : "No active Profit Monitor events detected.";
-
-  /*
-  |--------------------------------------------------------------------------
-  | AI PROMPT
-  |--------------------------------------------------------------------------
-  |
-  | OpenAI explains and contextualizes deterministic MarginLab events.
-  | It must not independently redefine their priority or severity.
-  |
-  */
-
-  const aiPrompt = `
-You are MarginLab AI Advisor.
-
-Respond in ${getAiLanguageName(language)}.
-
-Analyze this Shopify store profitability data.
-
-Use only the supplied data.
-
-Do not invent numbers.
-
-Do not invent products.
-
-Never translate product names.
-
-PROFIT GAP LANGUAGE RULES
-
-Never describe profit gaps, target gaps, pricing gaps or modeled recovery amounts as:
-- profit opportunity
-- recoverable profit
-- guaranteed profit
-- profit already available to recover
-
-Use wording such as:
-- estimated profit gap to target
-- estimated pricing gap to target
-- modeled scenario impact
-
-Always make clear that these values are estimates based on current data and assumptions, not guaranteed recovered profit.
-
-PROFIT MONITOR INSTRUCTIONS
-
-Profit Monitor is MarginLab's deterministic intelligence engine.
-
-Use the supplied Profit Monitor events as the primary source for:
-
-- active business risks
-- business priorities
-- recommended actions
-- recovery opportunities
-- destination modules
-
-Do not contradict:
-
-- event severity
-- event ranking
-- recommended action
-- destination module
-
-Do not declare the store healthy when Profit Monitor reports a critical event.
-
-Do not promote a lower-ranked issue above the primary Profit Monitor event
-unless the supplied data clearly demonstrates a larger financial impact.
-
-Your job is to explain, contextualize and prioritize the supplied events.
-
-Your job is not to recreate the alert engine.
-
-PROFIT MONITOR EVENTS
-
-${profitMonitorContext}
-
-STORE SUMMARY
-
-Analysis period: ${period} days
-
-Economic Revenue: ${economicRevenue}
-Economic COGS: ${economicCogs}
-Economic Profit: ${economicProfit}
-Economic Margin: ${economicMarginPct}%
-
-Previous Gross Margin: ${summary.previousMarginPct}
-Margin Change: ${summary.marginDelta}%
-
-Revenue Change: ${summary.revenueDeltaPct}%
-
-Discounts: ${summary.discounts}
-Refunds: ${summary.refunds}
-
-Profit gap to 20% target: ${recoverableProfit}
-
-ACTIVE PROFIT MONITOR COUNTS
-
-Critical events: ${criticalAlerts.length}
-Warning events: ${
-    activeRiskAlerts.filter((alert) => alert.severity === "warning").length
-  }
-Opportunity events: ${opportunityAlerts.length}
-Total active risks: ${activeRiskAlerts.length}
-
-ESTIMATED NET PROFIT
-
-Business Model Studio status: ${modelConfigured ? "configured" : "not configured"}
-Fixed-cost period factor: ${fixedCostFactor}
-Monthly advertising spend: ${monthlyAds}
-Monthly shipping costs: ${monthlyShipping}
-Monthly operating costs: ${monthlyOperating}
-
-Payment processing fee percentage: ${paymentFeePct}%
-Transaction fee percentage: ${transactionFeePct}%
-Business tax reserve percentage: ${taxReservePct}%
-
-Estimated payment fees: ${estimatedPaymentFees}
-Estimated transaction fees: ${estimatedTransactionFees}
-Estimated business tax reserve: ${estimatedTaxReserve}
-
-Total estimated costs outside product costs: ${totalEstimatedCosts}
-
-${
-  modelConfigured
-    ? `Estimated net profit: ${estimatedNetProfit}
-Estimated net margin: ${estimatedNetMargin}%`
-    : `Estimated net profit: unavailable
-Estimated net margin: unavailable
-Do not interpret missing assumptions as zero costs.`
-}
-
-PRODUCT RISKS
-
-Products selling below cost: ${losingProducts.length}
-Products with missing costs: ${missingCostProducts.length}
-Low-margin products: ${lowMarginProducts.length}
-
-Top profitability risk:
-${topProfitLeak ? topProfitLeak.productTitle : "None"}
-
-Top risk profit impact:
-${topProfitLeak ? topProfitLeak.profit : "N/A"}
-
-Top risk margin:
-${topProfitLeak ? `${topProfitLeak.marginPct}%` : "N/A"}
-
-TOP LOSING PRODUCTS
-
-${
-  [...losingProducts]
-    .slice(0, 3)
-    .map(
-      (product) =>
-        `${product.productTitle} | Revenue ${money(
-          product.revenue,
-        )} | Profit ${money(
-          product.profit,
-        )} | Margin ${pct(product.marginPct)}`,
-    )
-    .join("\n") || "None"
-}
-
-TOP LOW-MARGIN PRODUCTS
-
-${
-  [...lowMarginProducts]
-    .slice(0, 3)
-    .map(
-      (product) =>
-        `${product.productTitle} | Revenue ${money(
-          product.revenue,
-        )} | Profit ${money(
-          product.profit,
-        )} | Margin ${pct(product.marginPct)}`,
-    )
-    .join("\n") || "None"
-}
-
-TOP RECOVERY OPPORTUNITIES
-
-${
-  [...prioritizedProducts]
-    .filter((row) => row.recoverableOpportunity > 0)
-    .slice(0, 3)
-    .map(
-      (product) =>
-        `${product.productTitle} | Economic Revenue ${money(
-          product.revenue,
-        )} | Economic Margin ${pct(
-          product.marginPct,
-        )} | Profit Gap to Target ${money(product.recoverableOpportunity)}`,
-    )
-    .join("\n") || "None"
-}
-
-PRIORITIZED PRODUCTS
-
-${
-  prioritizedProducts.length > 0
-    ? prioritizedProducts
-        .map(
-          (product, index) => `
-PRIORITY ${index + 1}
-
-Product: ${product.productTitle}
-Economic revenue: ${product.revenue}
-Quantity sold: ${product.qty}
-Economic profit: ${product.profit}
-Economic margin: ${product.marginPct}%
-Average price: ${product.avgPrice}
-Average cost: ${product.avgCost}
-Target price: ${product.targetPrice}
-Price adjustment needed: ${product.targetDelta}
-Profit gap to 20% target: ${product.recoverableOpportunity}
-Selling below cost: ${product.losing ? "Yes" : "No"}
-Missing cost: ${product.missingCost ? "Yes" : "No"}
-Low margin: ${product.lowMargin ? "Yes" : "No"}
-`,
-        )
-        .join("\n")
-    : "No product data available."
-}
-
-TASK
-
-Act like a profitability consultant reviewing a Shopify business.
-
-Start from the primary Profit Monitor event.
-
-Your objective is not to repeat metrics.
-
-Your objective is to explain:
-
-- why the primary Profit Monitor event matters
-- whether the store is profitable after estimated operating assumptions
-- what is creating profitability pressure
-- what should be reviewed first
-- where the biggest estimated profit gap to target exists
-- which MarginLab module should be opened next
-
-When recommending a destination:
-
-- Products is used for missing cost data and individual product review.
-- Profit Intelligence is used for margin trends, deterioration, discounts and refunds.
-- Recovery Simulator is used to test pricing and recovery scenarios.
-- Profit Action Center is used to execute prioritized actions.
-- Business Model Studio is used to review operating assumptions.
-- Profit Forecast is used to evaluate future profitability scenarios.
-
-When the merchant asks which products should be reviewed first:
-
-- Use the prioritized product list.
-- Rank products by business impact.
-- Explain why each product is a priority.
-- Mention economic revenue, economic margin and profit gap when available.
-- Recommend one clear action for each product.
-- Give greater priority to high-revenue products with weak margins.
-- Give greater priority to products selling below cost.
-- Clearly identify missing product costs.
-- Do not recommend a large price increase without also suggesting a cost review.
-
-Rules:
-
-- Do not invent numbers.
-- Do not invent products.
-- Use only supplied data.
-- Be concise.
-- Use short bullet points.
-- Prioritize actions by business impact.
-- Mention estimated net profit when assumptions are provided.
-- Mention estimated net margin when assumptions are provided.
-- Mention the primary Profit Monitor event first.
-- Mention the most important product risks.
-- Mention profit gaps and pricing scenarios without presenting them as guaranteed recovered profit.
-- Never use "profit opportunity" or "recoverable profit" for a modeled target gap.
-- Prefer "estimated profit gap to target" and "modeled scenario impact".
-- Do not contradict Profit Monitor.
-`;
 
   /*
   |--------------------------------------------------------------------------
