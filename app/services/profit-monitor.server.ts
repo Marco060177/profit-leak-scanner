@@ -195,7 +195,7 @@ export async function syncProfitMonitor({
   const now = new Date();
   const activeKeys = new Set(alerts.map((alert) => alert.id));
 
-  const notificationEvents = await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx) => {
     const createdNotificationEvents: MonitorNotificationEvent[] = [];
 
     await tx.profitMonitorSnapshot.upsert({

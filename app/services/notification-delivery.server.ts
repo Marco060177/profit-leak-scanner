@@ -456,7 +456,15 @@ function buildProfitAlertEmail({
         </div>
       </div>
     `
-    : "";
+    : safeEconomic
+      ? `
+      <div style="margin-top:18px;padding:16px 18px;border-radius:14px;background:#0b1220;border:1px solid rgba(255,255,255,.08);">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">
+          ${safeEconomic}
+        </div>
+      </div>
+    `
+      : "";
 
   const cta = appUrl
     ? `

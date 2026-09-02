@@ -366,17 +366,9 @@ export default function RecoverySimulatorPage() {
   const currentPeriodEconomicRevenue = safeNumber(
     selectedProduct.economicRevenue ?? selectedProduct.revenue,
   );
-  const currentPeriodEconomicCogs = safeNumber(
-    selectedProduct.economicCogs ?? selectedProduct.cogs,
-  );
   const currentPeriodEconomicProfit = safeNumber(
     selectedProduct.economicProfit ?? selectedProduct.profit,
   );
-
-  const currentUnitProfit =
-    currentPeriodQty > 0
-      ? currentPeriodEconomicProfit / currentPeriodQty
-      : currentPrice - currentCost;
 
   const currentMarginPct = safeNumber(
     selectedProduct.economicMarginPct ?? selectedProduct.marginPct,
@@ -412,7 +404,6 @@ export default function RecoverySimulatorPage() {
   const simulatedMonthlyProfit =
     simulatedMonthlyProfitBeforeFees - simulatedMonthlyFees;
   const recoveredMonthlyProfit = simulatedMonthlyProfit - currentMonthlyProfit;
-  const recoveredAnnualProfit = recoveredMonthlyProfit * 12;
   const taxReserveRate = clamp(
     safeNumber(loaderData.assumptions.taxReservePct) / 100,
     0,

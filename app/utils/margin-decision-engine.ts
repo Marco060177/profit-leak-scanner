@@ -276,16 +276,6 @@ export function buildMarginAssessment({
     (total, row) => total + Math.abs(Math.min(0, finite(row.grossProfit, row.profit))),
     0,
   );
-  const losingRevenue = Math.max(
-    0,
-    finite(
-      summary.losingProductRevenue,
-      losingRows.reduce(
-        (total, row) => total + Math.max(0, finite(row.netProductRevenue, row.revenue)),
-        0,
-      ),
-    ),
-  );
   const missingCostRevenue = Math.max(
     0,
     finite(
@@ -296,7 +286,6 @@ export function buildMarginAssessment({
       ),
     ),
   );
-  const losingRevenueSharePct = ratioPct(losingRevenue, revenue);
   const missingCostRevenueSharePct = ratioPct(missingCostRevenue, revenue);
   const lossSharePct = ratioPct(lossAmount, revenue);
 
