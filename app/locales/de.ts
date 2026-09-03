@@ -141,7 +141,7 @@ export const de = {
         "Berechnen Sie Gewinn und Margen mit VAT-, GST- und Umsatzsteuereffekten, einschließlich Brutto-/Nettowerten und ggf. erstattungsfähiger Vorsteuer.",
       ],
       [
-        "CSV + PDF-Export",
+        "CSV-Export",
         "Exportieren Sie Analysen und teilen Sie Berichte zur Überprüfung, Archivierung und für betriebliche Entscheidungen.",
       ],
       [

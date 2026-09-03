@@ -139,7 +139,7 @@ export const es = {
         "Calcule las ganancias y los márgenes con VAT, GST y los efectos del impuesto sobre las ventas, incluidos los valores brutos/netos y el impuesto soportado recuperable cuando corresponda.",
       ],
       [
-        "Exportación CSV + PDF",
+        "Exportación CSV",
         "Exporte análisis e informes listos para compartir para su revisión, archivo y decisiones operativas.",
       ],
       [

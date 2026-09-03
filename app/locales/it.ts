@@ -138,7 +138,7 @@ export const it = {
         "Calcola profitto e margini considerando IVA, GST e Sales Tax, con valori lordi/netti e imposte recuperabili quando applicabile.",
       ],
       [
-        "CSV + PDF export",
+        "Esportazione CSV",
         "Esporta analisi e report pronti da condividere, archiviare o usare nelle tue decisioni operative.",
       ],
       [

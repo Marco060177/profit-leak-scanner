@@ -139,7 +139,7 @@ export const en = {
         "Calculate profit and margins with VAT, GST and Sales Tax effects, including gross/net values and recoverable input tax where applicable.",
       ],
       [
-        "CSV + PDF export",
+        "CSV export",
         "Export analysis and share-ready reports for review, archiving and operational decisions.",
       ],
       [
@@ -201,7 +201,7 @@ export const en = {
       ["Profit Impact Tracker", false, true],
       ["Understand where profit is weakening", true, true],
       ["Analyze products, margins and risks", true, true],
-      ["Profitto tax-aware oltre Revenue − COGS", true, true],
+      ["Tax-aware profit beyond Revenue − COGS", true, true],
       ["Continuous monitoring, reports, alerts and exports", true, true],
       ["Simulate impact before changing prices or costs", false, true],
       ["Forecast where profit can go", false, true],

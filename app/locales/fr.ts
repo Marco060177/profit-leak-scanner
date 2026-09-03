@@ -136,7 +136,7 @@ export const fr = {
         "Calculez les bénéfices et les marges avec les effets TVA, GST et Sales Tax, y compris les valeurs brutes/nettes et la taxe en amont récupérable le cas échéant.",
       ],
       [
-        "Exportation CSV + PDF",
+        "Export CSV",
         "Exportez des analyses et des rapports prêts à être partagés pour examen, archivage et décisions opérationnelles.",
       ],
       [

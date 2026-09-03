@@ -134,7 +134,7 @@ export const ptBR = {
         "Calcule o lucro e as margens com os efeitos VAT, GST e Sales Tax, incluindo valores brutos/líquidos e imposto a montante recuperável, quando aplicável.",
       ],
       [
-        "Exportação CSV + PDF",
+        "Exportação CSV",
         "Exporte análises e relatórios prontos para compartilhamento para revisão, arquivamento e decisões operacionais.",
       ],
       [
