@@ -10,7 +10,7 @@ const billing = { active: true, plan: "GROWTH" as const, subscriptionName: "Grow
 const session = { shop: "characterization.myshopify.com" } as never;
 const closeTo = (actual: number, expected: number, message?: string) => assert.ok(Math.abs(actual - expected) < 1e-9, `${message ?? "value"}: expected ${expected}, received ${actual}`);
 
-const { admin, queries } = createAdmin(comprehensiveScenario);
+const { admin, documents, queries } = createAdmin(comprehensiveScenario);
 const data = await loadMarginDashboardData({
   admin: admin as never,
   session,
@@ -119,6 +119,13 @@ assert.deepEqual(
   "current/previous period boundaries changed",
 );
 assert.ok(queries.some((entry) => entry.after === "current-1"), "outer Shopify order pagination must continue");
+assert.ok(documents.some((query) => query.includes("query MarginLabAppData")));
+const ordersDocument = documents.find((query) => query.includes("query MarginLabOrders"));
+assert.ok(ordersDocument);
+assert.match(ordersDocument, /orders\(\s*first:\s*50/);
+assert.match(ordersDocument, /lineItems\(first:\s*150\)/);
+assert.match(ordersDocument, /refundLineItems\(first:\s*100\)/);
+assert.match(ordersDocument, /shippingLines\(first:\s*10\)/);
 
 const fallback = createAdmin(fallbackTaxScenario);
 const fallbackData = await loadMarginDashboardData({

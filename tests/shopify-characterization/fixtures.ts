@@ -142,12 +142,15 @@ export type ShopifyScenario = typeof comprehensiveScenario;
 
 export function createAdmin(scenario: { appData: unknown; currentPages: unknown[][]; previousPages: unknown[][] }) {
   const queries: Array<{ q?: string; after?: string | null }> = [];
+  const documents: string[] = [];
   const pageIndexes = new Map<string, number>();
 
   return {
     queries,
+    documents,
     admin: {
-      async graphql(_query: string, options?: { variables?: { q?: string; after?: string | null } }) {
+      async graphql(query: string, options?: { variables?: { q?: string; after?: string | null } }) {
+        documents.push(query);
         if (!options?.variables?.q) {
           return new Response(JSON.stringify({ data: scenario.appData }));
         }
