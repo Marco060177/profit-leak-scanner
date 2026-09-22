@@ -21,6 +21,10 @@ for (const name of routeFiles) {
     const tenantCalls = [...source.matchAll(/authenticateShopifyTenant\s*\(request\)/g)].length;
     assert.ok(tenantCalls >= handlers, `Admin handler without tenant boundary in ${name}`);
   }
+  if (name.startsWith("webhooks.") && name !== "webhooks.tsx") {
+    assert.doesNotMatch(source, /resolveShopifyTenantContext|authenticateShopifyTenant/, `Creating tenant resolver in ${name}`);
+    assert.match(source, /authenticate\.webhook\(request\)|authenticateShopifyWebhookTenant\(request\)/, `Unverified webhook in ${name}`);
+  }
 }
 const setup = new DatabaseSync(databasePath);
 setup.exec("PRAGMA foreign_keys = ON");
@@ -31,7 +35,7 @@ setup.close();
 process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 
 try {
-  const [{ resolveShopifyTenantContext }, { default: prisma }] = await Promise.all([
+  const [{ findShopifyTenantContext, resolveShopifyTenantContext }, { default: prisma }] = await Promise.all([
     import("~/connectors/shopify/shopify-tenant-resolver.server"),
     import("~/db.server"),
   ]);
@@ -78,6 +82,32 @@ try {
       /Invalid verified Shopify shop domain/,
     );
 
+    assert.deepEqual(await findShopifyTenantContext(" ALPHA-STORE.MyShopify.Com "), first);
+    const countsBeforeMissingLookup = [
+      await prisma.account.count(),
+      await prisma.channelConnection.count(),
+      await prisma.legacyShopMapping.count(),
+    ];
+    assert.equal(await findShopifyTenantContext("unknown.myshopify.com"), null);
+    assert.equal(await findShopifyTenantContext("UNKNOWN.myshopify.com"), null);
+    assert.deepEqual([
+      await prisma.account.count(),
+      await prisma.channelConnection.count(),
+      await prisma.legacyShopMapping.count(),
+    ], countsBeforeMissingLookup);
+    await assert.rejects(findShopifyTenantContext("invalid.example.com"), /Invalid verified Shopify shop domain/);
+
+    await prisma.channelConnection.update({
+      where: { id: first.channelConnectionId },
+      data: { channel: "AMAZON" },
+    });
+    await assert.rejects(findShopifyTenantContext("alpha-store.myshopify.com"), /Inconsistent Shopify tenant mapping/);
+    await assert.rejects(resolveShopifyTenantContext({ shop: "alpha-store.myshopify.com" }), /Inconsistent Shopify tenant mapping/);
+    await prisma.channelConnection.update({
+      where: { id: first.channelConnectionId },
+      data: { channel: "SHOPIFY" },
+    });
+
     const [{ authenticateShopifyTenant }, stub] = await Promise.all([
       import("~/services/authenticated-shopify-context.server"),
       import("./authenticate.stub"),
@@ -114,7 +144,31 @@ try {
     await assert.rejects(authenticateShopifyTenant(unverifiedRequest), /Shopify authentication rejected/);
     assert.deepEqual(stub.authenticationEvents, ["authenticate.admin"]);
     assert.equal(await prisma.account.count(), 3);
-    console.log("Tenancy T1/T2 integration and route coverage checks passed.");
+
+    const { authenticateShopifyWebhookTenant } = await import("~/services/authenticated-shopify-webhook-context.server");
+    const webhookRequest = new Request(
+      "https://marginlab.example/webhooks/orders/create?accountId=browser-account&channelConnectionId=browser-connection&shop=another-store.myshopify.com",
+      { method: "POST", body: new URLSearchParams({ shop: "another-store.myshopify.com", accountId: "browser-account" }) },
+    );
+    const verifiedWebhook = stub.registerVerifiedWebhook(webhookRequest, "alpha-store.myshopify.com");
+    stub.authenticationEvents.length = 0;
+    const webhookContext = await authenticateShopifyWebhookTenant(webhookRequest);
+    assert.deepEqual(stub.authenticationEvents, ["authenticate.webhook", "findShopifyTenantContext"]);
+    assert.equal(webhookContext.shop, verifiedWebhook.shop);
+    assert.deepEqual(webhookContext.tenant, first);
+
+    const missingWebhookRequest = new Request("https://marginlab.example/webhooks/shop/redact?shop=alpha-store.myshopify.com");
+    stub.registerVerifiedWebhook(missingWebhookRequest, "unknown.myshopify.com", "SHOP_REDACT");
+    assert.equal((await authenticateShopifyWebhookTenant(missingWebhookRequest)).tenant, null);
+    assert.equal(await prisma.account.count(), 3);
+    assert.equal(await prisma.channelConnection.count(), 3);
+    assert.equal(await prisma.legacyShopMapping.count(), 3);
+
+    const unverifiedWebhookRequest = new Request("https://marginlab.example/webhooks/orders/create?shop=alpha-store.myshopify.com");
+    stub.authenticationEvents.length = 0;
+    await assert.rejects(authenticateShopifyWebhookTenant(unverifiedWebhookRequest), /Shopify webhook authentication rejected/);
+    assert.deepEqual(stub.authenticationEvents, ["authenticate.webhook"]);
+    console.log("Tenancy T1/T2/T3 integration and route safety checks passed.");
   } finally {
     await prisma.$disconnect();
   }

@@ -32,6 +32,13 @@ async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTena
   };
 }
 
+/** Lookup only. The shop must come from Shopify authentication or trusted persisted server data. */
+export async function findShopifyTenantContext(
+  shop: string,
+): Promise<AuthenticatedTenantContext | null> {
+  return findShopifyMapping(normalizeVerifiedShopDomain(shop));
+}
+
 function isRetryableBootstrapConflict(error: unknown): boolean {
   return error instanceof Prisma.PrismaClientKnownRequestError &&
     ["P2002", "P2034", "P1008"].includes(error.code);
