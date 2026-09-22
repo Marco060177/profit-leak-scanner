@@ -4,7 +4,7 @@ import { useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
@@ -74,7 +74,7 @@ const SCENARIO_INPUTS: Record<
 };
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const url = new URL(request.url);
   const locale = getLanguageLocale(getRequestLanguage(request));

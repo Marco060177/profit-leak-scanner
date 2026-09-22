@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
@@ -65,7 +65,7 @@ export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   try {
     await admin.graphql(`query { shop { id } }`);
@@ -124,7 +124,7 @@ export const loader = async ({ request }: { request: Request }) => {
 };
 
 export const action = async ({ request }: { request: Request }) => {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const billing = await getBillingStatus(admin);
 

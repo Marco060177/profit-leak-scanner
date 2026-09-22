@@ -27,7 +27,7 @@ import {
   pct as formatStorePercent,
 } from "~/utils/margin";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
@@ -291,7 +291,7 @@ ${products || "No product data available."}
 }
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
@@ -345,7 +345,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing)) {

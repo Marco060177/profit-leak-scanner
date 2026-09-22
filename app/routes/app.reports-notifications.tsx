@@ -7,7 +7,7 @@ import {
   redirect,
 } from "react-router";
 
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import {
   getOrCreateNotificationPreferences,
@@ -46,7 +46,7 @@ function parseNumber(value: FormDataEntryValue | null, fallback: number) {
 const dayOptions = [0, 1, 2, 3, 4, 5, 6];
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
 
   if (!hasStarterAccess(billing)) {
@@ -64,7 +64,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
 
   if (!hasStarterAccess(billing)) {

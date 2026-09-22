@@ -19,7 +19,7 @@ import {
   VisualInput,
 } from "~/components/ui/VisualSystem";
 import prisma from "~/db.server";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import {
@@ -36,7 +36,7 @@ import "~/styles/dashboard.css";
 import "~/styles/recovery-simulator-v2.css";
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";

@@ -38,7 +38,7 @@ import {
   startProfitImpactMeasurement,
   transitionProfitImpactAction,
 } from "~/services/profit-impact.server";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { getLanguageLocale } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
@@ -127,7 +127,7 @@ const context = (
   });
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing))
     return {
@@ -237,7 +237,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing))
     return Response.json(

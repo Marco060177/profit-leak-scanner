@@ -6,13 +6,13 @@ import { AppProvider } from "@shopify/shopify-app-react-router/react";
 import { I18nProvider } from "~/components/i18n/I18nProvider";
 import { loadLocaleMessages } from "~/utils/i18n-catalogs.server";
 import { getRequestLanguage } from "~/utils/i18n.server";
-import { authenticate } from "../shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import visualSystemStylesUrl from "~/styles/visual-system-v2.css?url";
 
 export const links = () => [{ rel: "stylesheet", href: visualSystemStylesUrl }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  await authenticateShopifyTenant(request);
   const language = getRequestLanguage(request);
   const messages = await loadLocaleMessages(language);
 

@@ -7,6 +7,21 @@ import { DatabaseSync } from "node:sqlite";
 const temporaryDirectory = mkdtempSync(path.join(os.tmpdir(), "marginlab-tenancy-t1-"));
 const databasePath = path.join(temporaryDirectory, "tenancy.sqlite");
 const migrationsDirectory = path.join(process.cwd(), "prisma/migrations");
+const routeFiles = readdirSync(path.join(process.cwd(), "app/routes"), { recursive: true })
+  .map(String)
+  .filter((name) => /\.[jt]sx?$/.test(name));
+const directAdminExceptions = new Set(["app.billing.tsx", "auth.$.tsx"]);
+for (const name of routeFiles) {
+  const source = readFileSync(path.join(process.cwd(), "app/routes", name), "utf8");
+  if (/authenticate\.admin\s*\(/.test(source)) {
+    assert.ok(directAdminExceptions.has(name), `Direct Admin authentication bypass in ${name}`);
+  }
+  if (/^app(?:\.|\.tsx$)/.test(name) && !directAdminExceptions.has(name)) {
+    const handlers = [...source.matchAll(/export (?:const|async function) (?:loader|action)\b/g)].length;
+    const tenantCalls = [...source.matchAll(/authenticateShopifyTenant\s*\(request\)/g)].length;
+    assert.ok(tenantCalls >= handlers, `Admin handler without tenant boundary in ${name}`);
+  }
+}
 const setup = new DatabaseSync(databasePath);
 setup.exec("PRAGMA foreign_keys = ON");
 for (const name of readdirSync(migrationsDirectory).filter((entry) => /^\d{14}_/.test(entry)).sort()) {
@@ -62,7 +77,44 @@ try {
       resolveShopifyTenantContext({ shop: "not-a-shop.example.com" }),
       /Invalid verified Shopify shop domain/,
     );
-    console.log("Tenancy T1 integration checks passed.");
+
+    const [{ authenticateShopifyTenant }, stub] = await Promise.all([
+      import("~/services/authenticated-shopify-context.server"),
+      import("./authenticate.stub"),
+    ]);
+    const browserControlledRequest = new Request(
+      "https://marginlab.example/app?accountId=browser-account&channelConnectionId=browser-connection&shop=another-store.myshopify.com",
+      {
+        method: "POST",
+        body: new URLSearchParams({
+          accountId: "browser-account",
+          channelConnectionId: "browser-connection",
+          shop: "another-store.myshopify.com",
+        }),
+      },
+    );
+    const verifiedSession = stub.registerVerifiedSession(browserControlledRequest, "alpha-store.myshopify.com");
+    stub.authenticationEvents.length = 0;
+    const authenticated = await authenticateShopifyTenant(browserControlledRequest);
+    assert.deepEqual(stub.authenticationEvents, ["authenticate.admin", "resolveShopifyTenantContext"]);
+    assert.equal(authenticated.admin, stub.adminClient);
+    assert.equal(authenticated.session, verifiedSession);
+    assert.deepEqual(authenticated.tenant, first);
+
+    const repeatedRequest = new Request("https://marginlab.example/app?tenantId=ignored");
+    stub.registerVerifiedSession(repeatedRequest, "alpha-store.myshopify.com");
+    assert.deepEqual((await authenticateShopifyTenant(repeatedRequest)).tenant, first);
+
+    const otherRequest = new Request("https://marginlab.example/app?shop=alpha-store.myshopify.com");
+    stub.registerVerifiedSession(otherRequest, "another-store.myshopify.com");
+    assert.deepEqual((await authenticateShopifyTenant(otherRequest)).tenant, another);
+
+    const unverifiedRequest = new Request("https://marginlab.example/app?shop=unknown.myshopify.com");
+    stub.authenticationEvents.length = 0;
+    await assert.rejects(authenticateShopifyTenant(unverifiedRequest), /Shopify authentication rejected/);
+    assert.deepEqual(stub.authenticationEvents, ["authenticate.admin"]);
+    assert.equal(await prisma.account.count(), 3);
+    console.log("Tenancy T1/T2 integration and route coverage checks passed.");
   } finally {
     await prisma.$disconnect();
   }

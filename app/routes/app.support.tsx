@@ -3,7 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import { sendEmail } from "~/services/email.server";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import {
   getBillingStatus,
   hasGrowthAccess,
@@ -34,7 +34,7 @@ function isValidEmail(value: string) {
 }
 
 export async function loader({ request }: { request: Request }) {
-  const { admin } = await authenticate.admin(request);
+  const { admin } = await authenticateShopifyTenant(request);
 
   const billing = await getBillingStatus(admin);
   const growthAccess = hasGrowthAccess(billing);
@@ -53,7 +53,7 @@ export async function loader({ request }: { request: Request }) {
 
 
 export async function action({ request }: { request: Request }) {
-  const { session } = await authenticate.admin(request);
+  const { session } = await authenticateShopifyTenant(request);
   const formData = await request.formData();
 
   const language = getRequestLanguage(request);

@@ -3,7 +3,7 @@ import { useFetcher, useLoaderData, useNavigate } from "react-router";
 import prisma from "~/db.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import MetricTooltip from "~/components/ui/MetricTooltip";
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { createGrowthPreviewData } from "~/utils/growth-preview.server";
@@ -30,7 +30,7 @@ import "~/styles/dashboard.css";
 import "~/styles/business-model-v2.css";
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const url = new URL(request.url);
   const locale = getLanguageLocale(getRequestLanguage(request));
@@ -80,7 +80,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing)) {

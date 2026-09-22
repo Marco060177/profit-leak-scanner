@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import DashboardNav from "~/components/dashboard/DashboardNav";
@@ -58,7 +58,7 @@ export const loader = async ({ request }: { request: Request }) => {
   const language = getRequestLanguage(request);
   const locale = getLanguageLocale(language);
 
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   try {
     await admin.graphql(`query { shop { id } }`);

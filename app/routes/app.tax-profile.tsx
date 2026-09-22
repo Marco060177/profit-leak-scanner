@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useFetcher, useLoaderData, useNavigate } from "react-router";
 
-import { authenticate } from "~/shopify.server";
+import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import DashboardNav from "~/components/dashboard/DashboardNav";
 import type { Language } from "~/utils/i18n";
@@ -623,7 +623,7 @@ function getRegimeOptions({
 }
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const response = await admin.graphql(SHOP_QUERY);
   const json: TaxProfileShopResponse = await response.json();
@@ -650,7 +650,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticate.admin(request);
+  const { admin, session } = await authenticateShopifyTenant(request);
 
   const response = await admin.graphql(SHOP_QUERY);
   const json: TaxProfileShopResponse = await response.json();
