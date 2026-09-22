@@ -10,7 +10,7 @@ import {
   projectLegacyMarginV1,
 } from "~/core/legacy-margin-projection";
 import { mapShopifyOrdersToNormalizedPeriod } from "~/connectors/shopify/shopify-margin-mapper";
-import { calculateProductEconomics, calculateProfitEngine } from "~/core/profit-engine";
+import { calculateProfitEngine } from "~/core/profit-engine";
 import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
@@ -102,12 +102,8 @@ assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), data);
 assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), projectLegacyMarginV1(canonical, sidecar));
 
 const directTaxContext = await getStoreTaxContext({ shop: "engine-test.myshopify.com", shopCountryCode: "US" });
-const directProductRows = Object.entries(normalizedDataset.current.byProduct).map(([key, product]) =>
-  calculateProductEconomics({ product, previousProduct: normalizedDataset.previous.byProduct[key], taxContext: directTaxContext }),
-);
 const directEngineResult = calculateProfitEngine({
   dataset: normalizedDataset,
-  productRows: directProductRows,
   taxContext: directTaxContext,
   currencyCode: "EUR",
   requestedDays: 30,
@@ -119,6 +115,14 @@ assert.deepEqual(directEngineResult.components, canonical.components);
 assert.deepEqual(directEngineResult.totals, canonical.totals);
 assert.deepEqual(directEngineResult.tax, canonical.tax);
 assert.deepEqual(directEngineResult.trend, data.trend);
+assert.equal(directEngineResult.productEconomics.length, Object.keys(normalizedDataset.current.byProduct).length);
+for (const { key, ...economics } of directEngineResult.productEconomics) {
+  const row = data.rows.find((candidate) => candidate.productId === normalizedDataset.current.byProduct[key].productId);
+  assert.ok(row);
+  for (const [field, value] of Object.entries(economics)) {
+    assert.deepEqual(row[field as keyof typeof row], value, `product ${key}: ${field}`);
+  }
+}
 assert.equal(directEngineResult.taxTreatment.source, "shopify_actual_tax");
 assert.equal(directEngineResult.legacyMetrics.previousRevenue, 100);
 assert.equal(directEngineResult.quality, "DEGRADED");
@@ -131,10 +135,8 @@ const simpleDataset = {
   ] as never),
   previous: mapShopifyOrdersToNormalizedPeriod([]),
 };
-const simpleProduct = Object.values(simpleDataset.current.byProduct)[0];
 const simpleEngine = calculateProfitEngine({
   dataset: simpleDataset,
-  productRows: [calculateProductEconomics({ product: simpleProduct, taxContext: directTaxContext })],
   taxContext: directTaxContext,
   currencyCode: "USD",
   requestedDays: 30,
@@ -151,6 +153,10 @@ assert.deepEqual(simpleEngine.components, {
 });
 assert.equal(simpleEngine.totals.netSales, 100);
 assert.equal(simpleEngine.totals.grossProfit, 80);
+assert.equal(simpleEngine.productEconomics.length, 1);
+assert.equal(simpleEngine.productEconomics[0].revenue, 100);
+assert.equal(simpleEngine.productEconomics[0].cogs, 20);
+assert.equal(simpleEngine.productEconomics[0].profit, 80);
 assert.equal(simpleEngine.taxTreatment.source, "shopify_zero_tax");
 assert.equal(simpleEngine.legacyMetrics.previousRevenue, 0);
 assert.equal(simpleEngine.legacyMetrics.revenueDeltaPct, 0);

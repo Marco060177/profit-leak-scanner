@@ -6,17 +6,6 @@ import { buildCanonicalProfitResult } from "~/core/canonical-profit-result";
 import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
 import { calculateTaxAwareEconomics } from "~/utils/tax-economics-engine";
 
-export type ProfitEngineProductMetrics = {
-  profit: number;
-  losing: boolean;
-  missingCost: boolean;
-  qty: number;
-  orderedQuantity?: number;
-  refundedQuantity?: number;
-  revenue: number;
-  lowMargin: boolean;
-};
-
 export function calculateProductEconomics({
   product,
   previousProduct,
@@ -123,9 +112,12 @@ export function calculateProductEconomics({
   };
 }
 
+export type ProfitEngineProductResult = ReturnType<typeof calculateProductEconomics> & {
+  key: string;
+};
+
 export function calculateProfitEngine({
   dataset,
-  productRows,
   taxContext,
   currencyCode,
   requestedDays,
@@ -134,7 +126,6 @@ export function calculateProfitEngine({
   previousPeriodStart,
 }: {
   dataset: NormalizedCommerceDataset;
-  productRows: ProfitEngineProductMetrics[];
   taxContext: Parameters<typeof calculateTaxAwareEconomics>[0]["taxContext"];
   currencyCode: string;
   requestedDays: number;
@@ -143,6 +134,15 @@ export function calculateProfitEngine({
   previousPeriodStart: string;
 }) {
   const { current, previous } = dataset;
+  const productEconomics: ProfitEngineProductResult[] = Object.entries(current.byProduct)
+    .map(([key, product]) => ({
+      key,
+      ...calculateProductEconomics({
+        product,
+        previousProduct: previous.byProduct[key],
+        taxContext,
+      }),
+    }));
   const taxAwarePeriod = {
     totalShopifyTax: current.taxes,
 
@@ -227,30 +227,30 @@ export function calculateProfitEngine({
       : 0;
 
   const totalLeak = Math.abs(
-    productRows.reduce((sum, row) => sum + (row.profit < 0 ? row.profit : 0), 0),
+    productEconomics.reduce((sum, row) => sum + (row.profit < 0 ? row.profit : 0), 0),
   );
-  const losingCount = productRows.filter((row) => row.losing).length;
-  const missingCostCount = productRows.filter((row) => row.missingCost).length;
+  const losingCount = productEconomics.filter((row) => row.losing).length;
+  const missingCostCount = productEconomics.filter((row) => row.missingCost).length;
 
-  const orderedQuantity = productRows.reduce(
+  const orderedQuantity = productEconomics.reduce(
     (sum, row) => sum + (row.orderedQuantity ?? row.qty),
     0,
   );
-  const refundedQuantity = productRows.reduce(
+  const refundedQuantity = productEconomics.reduce(
     (sum, row) => sum + (row.refundedQuantity ?? 0),
     0,
   );
-  const netQuantity = productRows.reduce((sum, row) => sum + row.qty, 0);
+  const netQuantity = productEconomics.reduce((sum, row) => sum + row.qty, 0);
 
-  const losingProductRevenue = productRows.reduce(
+  const losingProductRevenue = productEconomics.reduce(
     (sum, row) => sum + (row.losing ? row.revenue : 0),
     0,
   );
-  const lowMarginProductRevenue = productRows.reduce(
+  const lowMarginProductRevenue = productEconomics.reduce(
     (sum, row) => sum + (row.lowMargin ? row.revenue : 0),
     0,
   );
-  const missingCostRevenue = productRows.reduce(
+  const missingCostRevenue = productEconomics.reduce(
     (sum, row) => sum + (row.missingCost ? row.revenue : 0),
     0,
   );
@@ -305,6 +305,7 @@ export function calculateProfitEngine({
   });
   return {
     ...canonicalResult,
+    productEconomics,
     taxAwarePeriod,
     taxTreatment,
     taxAwareEconomics,

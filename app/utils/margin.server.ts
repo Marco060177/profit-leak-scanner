@@ -3,7 +3,7 @@ import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { NormalizedCommerceDataset } from "~/core/normalized-commerce";
 import type { BillingStatus, LoaderData, Row } from "~/utils/margin";
 import { projectLegacyMarginV1 } from "~/core/legacy-margin-projection";
-import { calculateProductEconomics, calculateProfitEngine } from "~/core/profit-engine";
+import { calculateProfitEngine } from "~/core/profit-engine";
 
 import {
   fetchShopifyMarginAppData,
@@ -94,13 +94,19 @@ export async function loadMarginDashboardData({
   };
   const { current, previous } = normalizedDataset;
 
-  const rows: Row[] = Object.entries(current.byProduct)
-    .map(([key, product]) => {
-      const economics = calculateProductEconomics({
-        product,
-        previousProduct: previous.byProduct[key],
-        taxContext,
-      });
+  const canonicalResult = calculateProfitEngine({
+    dataset: normalizedDataset,
+    taxContext,
+    currencyCode,
+    requestedDays: safeDays,
+    currentPeriodStart: fromYYYYMMDD,
+    currentPeriodEndExclusive: explicitEndDate,
+    previousPeriodStart: previousFromYYYYMMDD,
+  });
+
+  const rows: Row[] = canonicalResult.productEconomics
+    .map(({ key, ...economics }) => {
+      const product = current.byProduct[key];
       const { profit, avgPrice, targetPrice, targetDelta } = economics;
       const aggressiveIncrease =
         avgPrice > 0 && targetDelta / avgPrice > 0.3;
@@ -133,16 +139,6 @@ export async function loadMarginDashboardData({
     .sort((a, b) => a.productMarginDelta - b.productMarginDelta)
     .slice(0, 5);
 
-  const canonicalResult = calculateProfitEngine({
-    dataset: normalizedDataset,
-    productRows: rows,
-    taxContext,
-    currencyCode,
-    requestedDays: safeDays,
-    currentPeriodStart: fromYYYYMMDD,
-    currentPeriodEndExclusive: explicitEndDate,
-    previousPeriodStart: previousFromYYYYMMDD,
-  });
   const { taxAwarePeriod, taxTreatment, taxAwareEconomics } = canonicalResult;
   const {
     totalRevenue,
