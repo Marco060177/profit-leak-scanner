@@ -1,0 +1,42 @@
+export const comprehensiveGolden = {
+  summary: {
+    revenue: 125,
+    cogs: 45,
+    profit: 80,
+    discounts: 20,
+    shipping: 15,
+    taxes: 22.27,
+    refunds: 150,
+    contributionProfit: 95,
+    missingCostCount: 3,
+    previousRevenue: 100,
+  },
+  rowOrder: ["2", "", "5", "4", "1"],
+  alpha: {
+    qty: 2,
+    revenue: 95,
+    cogs: 45,
+    profit: 50,
+    discounts: 20,
+    refunds: 45,
+    previousMarginPct: 80,
+  },
+  trend: [
+    { date: "2026-08-10", revenue: 45, profit: 25, shippingRevenue: 5, productCogs: 20 },
+    { date: "2026-08-20", revenue: 50, profit: 25, shippingRevenue: 10, productCogs: 25 },
+    { date: "2026-08-25", revenue: 30, profit: 30, shippingRevenue: 0, productCogs: 0 },
+  ],
+  completeness: {
+    currentPeriodComplete: false,
+    previousPeriodComplete: false,
+    truncatedConnections: ["current:lineItems", "current:shippingLines", "current:refundLineItems", "previous:shippingLines"],
+  },
+  tax: {
+    source: "shopify_actual_tax",
+    netCollectedTax: 10.09,
+    includedProductTaxAmount: 16.36,
+    excludedProductTaxAmount: 4,
+  refundedTaxAmount: 12.18,
+    shippingTaxAmount: 1.91,
+  },
+};
