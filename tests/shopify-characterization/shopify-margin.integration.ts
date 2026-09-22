@@ -1,5 +1,15 @@
 import assert from "node:assert/strict";
 
+import {
+  buildCanonicalProfitResult,
+  CANONICAL_PROFIT_RESULT_VERSION,
+  PROFIT_FORMULA_VERSION,
+} from "~/core/canonical-profit-result";
+import {
+  LEGACY_MARGIN_PROJECTION_VERSION,
+  projectLegacyMarginV1,
+} from "~/core/legacy-margin-projection";
+import { mapShopifyOrdersToNormalizedPeriod } from "~/connectors/shopify/shopify-margin-mapper";
 import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
@@ -19,6 +29,81 @@ const data = await loadMarginDashboardData({
   billingStatus: billing,
   analysisEndDate: "2026-08-31",
 });
+
+// The test loader counts only calls made by the live margin.server facade.
+const boundaryCalls = globalThis as typeof globalThis & {
+  __canonicalBuildCalls?: number;
+  __legacyProjectionCalls?: number;
+};
+assert.equal(boundaryCalls.__canonicalBuildCalls, 1);
+assert.equal(boundaryCalls.__legacyProjectionCalls, 1);
+
+const normalizedDataset = {
+  current: mapShopifyOrdersToNormalizedPeriod(comprehensiveScenario.currentPages.flat() as never),
+  previous: mapShopifyOrdersToNormalizedPeriod(comprehensiveScenario.previousPages.flat() as never),
+};
+const canonical = buildCanonicalProfitResult({
+  dataset: normalizedDataset,
+  currencyCode: data.currencyCode,
+  requestedDays: 30,
+  currentPeriodStart: "2026-08-01",
+  currentPeriodEndExclusive: "2026-08-31",
+  previousPeriodStart: "2026-07-02",
+  grossProfit: data.summary.profit,
+  grossMarginPct: data.summary.marginPct,
+  legacyShippingContribution: data.summary.contributionProfit,
+  legacyShippingContributionMarginPct: data.summary.contributionMarginPct,
+  revenueCoveragePct: data.summary.revenueCoveragePct ?? 0,
+  tax: {
+    source: data.taxTreatment?.source ?? "insufficient_data",
+    reportedTax: data.summary.taxes,
+    netCollectedTax: data.taxAwarePeriod?.netCollectedTax ?? 0,
+    economicRevenue: data.summary.economicRevenue ?? 0,
+    economicCogs: data.summary.economicCogs ?? 0,
+    economicProfit: data.summary.economicProfit ?? 0,
+    economicMarginPct: data.summary.economicMarginPct ?? 0,
+  },
+});
+assert.equal(canonical.version, CANONICAL_PROFIT_RESULT_VERSION);
+assert.equal(canonical.formulaVersion, PROFIT_FORMULA_VERSION);
+assert.deepEqual(
+  { source: canonical.scope.sourceCurrencyCode, reporting: canonical.scope.reportingCurrencyCode },
+  { source: "EUR", reporting: "EUR" },
+);
+assert.equal(LEGACY_MARGIN_PROJECTION_VERSION, 1);
+assert.deepEqual(canonical.components, {
+  grossProductSales: 295,
+  discounts: -20,
+  productRefunds: -150,
+  productCogs: -45,
+  shippingRevenue: 15,
+});
+assert.equal(
+  canonical.components.grossProductSales +
+    canonical.components.discounts +
+    canonical.components.productRefunds,
+  canonical.totals.netSales,
+);
+assert.equal(canonical.totals.marketplaceContribution, null);
+assert.equal(canonical.totals.fulfillmentContribution, null);
+assert.equal(canonical.totals.acquisitionContribution, null);
+assert.equal(canonical.totals.fullyLoadedResult, null);
+assert.equal(canonical.unknownAmount, null);
+assert.equal(canonical.roundingResidual, null);
+assert.equal(canonical.quality, "DEGRADED");
+assert.equal(canonical.reconciliation, "NOT_ATTEMPTED");
+const sidecar = { ...data };
+delete sidecar.economicSnapshot;
+assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), data);
+assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), projectLegacyMarginV1(canonical, sidecar));
+assert.equal(
+  projectLegacyMarginV1(
+    { ...canonical, totals: { ...canonical.totals, netSales: 999 } },
+    sidecar,
+  ).summary.revenue,
+  999,
+  "the legacy projection must obtain economic revenue from the canonical result",
+);
 
 assert.deepEqual(
   Object.fromEntries(Object.keys(comprehensiveGolden.summary).map((key) => [key, data.summary[key as keyof typeof data.summary]])),

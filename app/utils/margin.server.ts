@@ -2,6 +2,8 @@ import type { Session } from "@shopify/shopify-api";
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
 import type { NormalizedCommerceDataset } from "~/core/normalized-commerce";
 import type { BillingStatus, LoaderData, Row, TrendPoint } from "~/utils/margin";
+import { buildCanonicalProfitResult } from "~/core/canonical-profit-result";
+import { projectLegacyMarginV1 } from "~/core/legacy-margin-projection";
 
 import {
   fetchShopifyMarginAppData,
@@ -10,7 +12,6 @@ import {
 import { mapShopifyOrdersToNormalizedPeriod } from "~/connectors/shopify/shopify-margin-mapper";
 import { toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
-import { buildEconomicSnapshot } from "~/utils/economic-snapshot";
 import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
 import { resolveTaxTreatment } from "~/utils/tax-aware-engine";
@@ -437,6 +438,29 @@ export async function loadMarginDashboardData({
     }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
+  const canonicalResult = buildCanonicalProfitResult({
+    dataset: normalizedDataset,
+    currencyCode,
+    requestedDays: safeDays,
+    currentPeriodStart: fromYYYYMMDD,
+    currentPeriodEndExclusive: explicitEndDate,
+    previousPeriodStart: previousFromYYYYMMDD,
+    grossProfit: totalProfit,
+    grossMarginPct: marginPct,
+    legacyShippingContribution: contributionProfit,
+    legacyShippingContributionMarginPct: contributionMarginPct,
+    revenueCoveragePct,
+    tax: {
+      source: taxTreatment.source,
+      reportedTax: current.taxes,
+      netCollectedTax: taxAwarePeriod.netCollectedTax,
+      economicRevenue,
+      economicCogs,
+      economicProfit,
+      economicMarginPct,
+    },
+  });
+
   const loaderData: LoaderData = {
     summary: {
       // Compatibility aliases used by the current UI:
@@ -545,19 +569,11 @@ export async function loadMarginDashboardData({
     },
   };
 
-  return {
+  return projectLegacyMarginV1(canonicalResult, {
     ...loaderData,
     taxContext,
     taxAwarePeriod,
     taxTreatment,
     taxAwareEconomics,
-
-    economicSnapshot: buildEconomicSnapshot({
-      summary: loaderData.summary,
-      rows: loaderData.rows,
-      period: loaderData.period,
-      currencyCode: loaderData.currencyCode,
-      analysisContext: loaderData.analysisContext,
-    }),
-  };
+  });
 }
