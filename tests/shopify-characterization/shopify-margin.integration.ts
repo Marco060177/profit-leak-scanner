@@ -10,11 +10,13 @@ import {
   projectLegacyMarginV1,
 } from "~/core/legacy-margin-projection";
 import { mapShopifyOrdersToNormalizedPeriod } from "~/connectors/shopify/shopify-margin-mapper";
+import { calculateProductEconomics, calculateProfitEngine } from "~/core/profit-engine";
 import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 import { loadMarginDashboardData } from "~/utils/margin.server";
 import { generateProfitAlerts } from "~/utils/profit-monitor";
-import { comprehensiveScenario, createAdmin, fallbackTaxScenario } from "./fixtures";
+import { comprehensiveScenario, createAdmin, fallbackTaxScenario, lineItem, order } from "./fixtures";
 import { comprehensiveGolden } from "./golden";
+import { getStoreTaxContext } from "./tax-profile.stub";
 
 const billing = { active: true, plan: "GROWTH" as const, subscriptionName: "Growth" };
 const session = { shop: "characterization.myshopify.com" } as never;
@@ -32,9 +34,11 @@ const data = await loadMarginDashboardData({
 
 // The test loader counts only calls made by the live margin.server facade.
 const boundaryCalls = globalThis as typeof globalThis & {
+  __profitEngineCalls?: number;
   __canonicalBuildCalls?: number;
   __legacyProjectionCalls?: number;
 };
+assert.equal(boundaryCalls.__profitEngineCalls, 1);
 assert.equal(boundaryCalls.__canonicalBuildCalls, 1);
 assert.equal(boundaryCalls.__legacyProjectionCalls, 1);
 
@@ -96,6 +100,63 @@ const sidecar = { ...data };
 delete sidecar.economicSnapshot;
 assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), data);
 assert.deepEqual(projectLegacyMarginV1(canonical, sidecar), projectLegacyMarginV1(canonical, sidecar));
+
+const directTaxContext = await getStoreTaxContext({ shop: "engine-test.myshopify.com", shopCountryCode: "US" });
+const directProductRows = Object.entries(normalizedDataset.current.byProduct).map(([key, product]) =>
+  calculateProductEconomics({ product, previousProduct: normalizedDataset.previous.byProduct[key], taxContext: directTaxContext }),
+);
+const directEngineResult = calculateProfitEngine({
+  dataset: normalizedDataset,
+  productRows: directProductRows,
+  taxContext: directTaxContext,
+  currencyCode: "EUR",
+  requestedDays: 30,
+  currentPeriodStart: "2026-08-01",
+  currentPeriodEndExclusive: "2026-08-31",
+  previousPeriodStart: "2026-07-02",
+});
+assert.deepEqual(directEngineResult.components, canonical.components);
+assert.deepEqual(directEngineResult.totals, canonical.totals);
+assert.deepEqual(directEngineResult.tax, canonical.tax);
+assert.deepEqual(directEngineResult.trend, data.trend);
+assert.equal(directEngineResult.taxTreatment.source, "shopify_actual_tax");
+assert.equal(directEngineResult.legacyMetrics.previousRevenue, 100);
+assert.equal(directEngineResult.quality, "DEGRADED");
+assert.equal(directEngineResult.reconciliation, "NOT_ATTEMPTED");
+
+const simpleProductLine = lineItem({ id: "engine-1", productId: "engine-product", original: 100, cost: 20 });
+const simpleDataset = {
+  current: mapShopifyOrdersToNormalizedPeriod([
+    order({ id: "engine-order", processedAt: "2026-08-12T10:00:00Z", lines: [simpleProductLine] }),
+  ] as never),
+  previous: mapShopifyOrdersToNormalizedPeriod([]),
+};
+const simpleProduct = Object.values(simpleDataset.current.byProduct)[0];
+const simpleEngine = calculateProfitEngine({
+  dataset: simpleDataset,
+  productRows: [calculateProductEconomics({ product: simpleProduct, taxContext: directTaxContext })],
+  taxContext: directTaxContext,
+  currencyCode: "USD",
+  requestedDays: 30,
+  currentPeriodStart: "2026-08-01",
+  currentPeriodEndExclusive: "2026-08-31",
+  previousPeriodStart: "2026-07-02",
+});
+assert.deepEqual(simpleEngine.components, {
+  grossProductSales: 100,
+  discounts: -0,
+  productRefunds: -0,
+  productCogs: -20,
+  shippingRevenue: 0,
+});
+assert.equal(simpleEngine.totals.netSales, 100);
+assert.equal(simpleEngine.totals.grossProfit, 80);
+assert.equal(simpleEngine.taxTreatment.source, "shopify_zero_tax");
+assert.equal(simpleEngine.legacyMetrics.previousRevenue, 0);
+assert.equal(simpleEngine.legacyMetrics.revenueDeltaPct, 0);
+assert.equal(simpleEngine.quality, "PROVISIONAL");
+assert.equal(simpleEngine.totals.marketplaceContribution, null);
+assert.equal(simpleEngine.mappingVersions, null);
 assert.equal(
   projectLegacyMarginV1(
     { ...canonical, totals: { ...canonical.totals, netSales: 999 } },

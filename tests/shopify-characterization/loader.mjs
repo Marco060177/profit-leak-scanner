@@ -4,6 +4,12 @@ import { pathToFileURL } from "node:url";
 
 export async function resolve(specifier, context, nextResolve) {
   if (context.parentURL?.endsWith("/app/utils/margin.server.ts")) {
+    if (specifier === "~/core/profit-engine") {
+      return {
+        shortCircuit: true,
+        url: pathToFileURL(path.join(process.cwd(), "tests/shopify-characterization/profit-engine.spy.ts")).href,
+      };
+    }
     if (specifier === "~/core/canonical-profit-result") {
       return {
         shortCircuit: true,
@@ -16,6 +22,15 @@ export async function resolve(specifier, context, nextResolve) {
         url: pathToFileURL(path.join(process.cwd(), "tests/shopify-characterization/legacy-projection.spy.ts")).href,
       };
     }
+  }
+  if (
+    context.parentURL?.endsWith("/app/core/profit-engine.ts") &&
+    specifier === "~/core/canonical-profit-result"
+  ) {
+    return {
+      shortCircuit: true,
+      url: pathToFileURL(path.join(process.cwd(), "tests/shopify-characterization/canonical-boundary.spy.ts")).href,
+    };
   }
   if (specifier === "~/utils/tax-profile.server") {
     return {

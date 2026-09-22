@@ -1,5 +1,15 @@
 # Canonical profit result v1
 
+`calculateProfitEngine` is the live, source-neutral calculation boundary. It
+accepts a `NormalizedCommerceDataset`, product-level economic metrics, tax
+context, currency and period metadata, and returns `CanonicalProfitResult`
+with a temporary compatibility sidecar. `margin.server.ts` still owns Shopify
+acquisition, route presentation and `LoaderData` assembly; it calls the engine
+before `LegacyMarginProjection v1`. The sidecar supplies legacy comparison,
+trend and tax fields without recalculating their economic values in the route.
+Product-level row economics are computed by `calculateProductEconomics`; row
+copy, ordering and display shares remain presentation concerns in the facade.
+
 The current Shopify path now builds `CanonicalProfitResult` after the existing
 economic and tax calculations, then uses `LegacyMarginProjection v1` to return
 the unchanged `LoaderData`. The projection carries legacy product and display
