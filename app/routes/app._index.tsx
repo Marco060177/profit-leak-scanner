@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useLoaderData, useNavigate } from "react-router";
 import { authenticate } from "~/shopify.server";
+import { resolveShopifyTenantContext } from "~/connectors/shopify/shopify-tenant-resolver.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
 
@@ -60,6 +61,8 @@ export const loader = async ({ request }: { request: Request }) => {
       status: 401,
     });
   }
+
+  await resolveShopifyTenantContext(session);
 
   const data = await loadMarginDashboardData({
     admin,

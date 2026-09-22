@@ -10,6 +10,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ChannelPlatform {
+  SHOPIFY
+  AMAZON
+}
+
+model Account {
+  id                 String              @id @default(cuid())
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  channelConnections ChannelConnection[]
+  legacyShopMappings LegacyShopMapping[]
+}
+
+model ChannelConnection {
+  id                 String             @id @default(cuid())
+  accountId          String
+  channel            ChannelPlatform
+  externalAccountId  String
+  status             String             @default("ACTIVE")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  account            Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  legacyShopMapping  LegacyShopMapping?
+
+  @@unique([channel, externalAccountId])
+  @@unique([id, accountId])
+  @@index([accountId])
+}
+
+model LegacyShopMapping {
+  shopDomain          String            @id
+  accountId           String
+  channelConnectionId String            @unique
+  createdAt           DateTime          @default(now())
+  account             Account           @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  channelConnection   ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Cascade)
+
+  @@unique([channelConnectionId, accountId])
+  @@index([accountId])
+}
+
 model Session {
   id                  String    @id
   shop                String
