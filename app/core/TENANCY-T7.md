@@ -1,0 +1,9 @@
+# T7 — ProfitAssumptions shadow owner
+
+Only `ProfitAssumptions` receives nullable `channelConnectionId` referencing `ChannelConnection` with `ON DELETE RESTRICT`. Account ownership is derived through the connection. The existing required, unique `shop` remains authoritative for every production read, upsert, calculation and shop-based redaction. No read switch or second write authority is introduced.
+
+The six existing values keep their Shopify shop/channel meaning: `monthlyAds`, `monthlyShipping`, `monthlyOperating`, `paymentFeePct`, `transactionFeePct` and `taxReservePct`. `taxReservePct` remains the management reserve assumption, not the Tax Engine. None becomes Account-wide shared overhead; that requires a distinct future model. The migration adds only metadata and performs no backfill. SQLite reconstructs only `ProfitAssumptions`, copying all existing fields and preserving their defaults and `shop` uniqueness.
+
+Run `npm run tenancy:t7:profit-assumptions-backfill` for a read-only dry-run. `npm run tenancy:t7:profit-assumptions-backfill -- --apply` is an explicit operational write and must be used only after target-database profiling, approval and backup. The tool uses the shared canonical Shopify domain rule and persisted `LegacyShopMapping → ChannelConnection`; it never creates a tenant. It reports reason counts without printing shops, secrets or economic values. Any unsafe row quarantines the entire apply batch: zero shadow updates. Writes are conditional and transactional; a second apply is idempotent. New legacy writes can still have null shadow until a later write gate.
+
+Rollback before any future read switch: stop running the operational tool; production behavior continues using `shop`. Do not remove the column or undo a production migration without a separate reviewed backup plan. T7 leaves lifecycle/relink policy, Account overhead, other business models, Data Core and Amazon deferred. Full TENANCY is **not** passed.

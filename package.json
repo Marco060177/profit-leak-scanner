@@ -22,7 +22,9 @@
     "test:shopify-characterization": "node --experimental-strip-types --loader ./tests/shopify-characterization/loader.mjs tests/shopify-characterization/shopify-margin.integration.ts",
     "test:tenancy": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/tenancy.integration.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",
-    "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts"
+    "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts",
+    "test:tenancy-t7": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t7-profit-assumptions.integration.ts",
+    "tenancy:t7:profit-assumptions-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t7-profit-assumptions-backfill.ts"
   },
   "type": "module",
   "engines": {

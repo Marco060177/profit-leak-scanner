@@ -34,6 +34,7 @@ model ChannelConnection {
   account            Account            @relation(fields: [accountId], references: [id], onDelete: Cascade)
   legacyShopMapping  LegacyShopMapping?
   storeTaxProfiles   StoreTaxProfile[]
+  profitAssumptions  ProfitAssumptions[]
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
@@ -75,6 +76,8 @@ model Session {
 model ProfitAssumptions {
   id                String   @id @default(cuid())
   shop              String   @unique
+  channelConnectionId String?
+  channelConnection   ChannelConnection? @relation(fields: [channelConnectionId], references: [id], onDelete: Restrict)
   monthlyAds        Float    @default(0)
   monthlyShipping   Float    @default(0)
   monthlyOperating  Float    @default(0)
@@ -83,6 +86,8 @@ model ProfitAssumptions {
   taxReservePct     Float    @default(0)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([channelConnectionId])
 }
 
 model AiUsage {
