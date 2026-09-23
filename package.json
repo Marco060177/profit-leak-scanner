@@ -26,7 +26,9 @@
     "test:tenancy-t7": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t7-profit-assumptions.integration.ts",
     "tenancy:t7:profit-assumptions-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t7-profit-assumptions-backfill.ts",
     "test:tenancy-t8a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t8a-profit-monitor.integration.ts",
-    "tenancy:t8a:profit-monitor-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8a-profit-monitor-backfill.ts"
+    "tenancy:t8a:profit-monitor-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8a-profit-monitor-backfill.ts",
+    "test:tenancy-t8b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t8b-profit-impact.integration.ts",
+    "tenancy:t8b:profit-impact-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8b-profit-impact-backfill.ts"
   },
   "type": "module",
   "engines": {

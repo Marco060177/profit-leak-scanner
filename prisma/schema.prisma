@@ -37,6 +37,7 @@ model ChannelConnection {
   profitAssumptions  ProfitAssumptions[]
   profitMonitorSnapshots ProfitMonitorSnapshot[]
   profitMonitorAlerts   ProfitMonitorAlert[]
+  profitImpactActions   ProfitImpactAction[]
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
@@ -252,6 +253,8 @@ model NotificationDelivery {
 model ProfitImpactAction {
   id                     String                    @id @default(cuid())
   shop                   String
+  channelConnectionId    String?
+  channelConnection      ChannelConnection? @relation(fields: [channelConnectionId], references: [id], onDelete: Restrict)
   idempotencyKey         String
   measuringProductKey    String?
   measurementClaimType   String?
@@ -285,6 +288,7 @@ model ProfitImpactAction {
   @@index([shop, status, createdAt])
   @@index([shop, productId, status])
   @@index([shop, sourceAlertKey])
+  @@index([channelConnectionId])
   @@unique([shop, idempotencyKey])
   @@unique([shop, measuringProductKey])
 }
