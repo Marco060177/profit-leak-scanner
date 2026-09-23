@@ -21,6 +21,19 @@ model Account {
   updatedAt          DateTime            @updatedAt
   channelConnections ChannelConnection[]
   legacyShopMappings LegacyShopMapping[]
+  aiUsage            AccountAiUsage[]
+}
+
+model AccountAiUsage {
+  id        String   @id @default(cuid())
+  accountId String
+  periodKey String
+  requests  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@unique([accountId, periodKey])
 }
 
 model ChannelConnection {
