@@ -1,0 +1,7 @@
+# T9D — read-only AI usage reconciliation
+
+T9D scans **all** `AiUsage` and **all** `AccountAiUsage` rows in one SQLite/Prisma transaction snapshot. It reuses T9B's safe Shopify attribution and requires exactly one Shopify shop mapping per usage-bearing Account. An Amazon connection does not count as another Shopify shop. Multiple Shopify mappings are blocked; counts are never aggregated. Every comparable `shop + UTC YYYY-MM → accountId + periodKey` pair must have exactly equal request counts. Two present zero rows match; a present zero row and an absent row do not. Unsafe source rows cannot match a target row by period alone. Account-only rows, including possible post-redaction leftovers, are detected.
+
+`npm run tenancy:t9d:ai-usage-reconcile` is read-only, accepts no arguments or apply mode, emits identifier-free aggregate JSON and exits nonzero on `BLOCKED`. It neither repairs data nor changes AI Advisor, billing, quota or the 100-request limit. Legacy `AiUsage` remains authoritative. `READY_FOR_T9E` is evidence about **one observation snapshot only**, not authorization to perform T9E. Re-run close to any future cutover.
+
+`SHOP_REDACT` currently deletes legacy usage but leaves account usage. T9D detects this divergence; it does not change redaction. An approved account-usage lifecycle/redaction policy is a separate prerequisite before T9E. T9F remains retirement/lifecycle work.
