@@ -35,6 +35,8 @@ model ChannelConnection {
   legacyShopMapping  LegacyShopMapping?
   storeTaxProfiles   StoreTaxProfile[]
   profitAssumptions  ProfitAssumptions[]
+  profitMonitorSnapshots ProfitMonitorSnapshot[]
+  profitMonitorAlerts   ProfitMonitorAlert[]
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
@@ -104,6 +106,8 @@ model AiUsage {
 model ProfitMonitorSnapshot {
   id          String   @id @default(cuid())
   shop        String
+  channelConnectionId String?
+  channelConnection   ChannelConnection? @relation(fields: [channelConnectionId], references: [id], onDelete: Restrict)
   periodDays  Int
   fingerprint String
   payloadJson String
@@ -111,11 +115,14 @@ model ProfitMonitorSnapshot {
 
   @@unique([shop, periodDays, fingerprint])
   @@index([shop, periodDays, capturedAt])
+  @@index([channelConnectionId])
 }
 
 model ProfitMonitorAlert {
   id                String                    @id @default(cuid())
   shop              String
+  channelConnectionId String?
+  channelConnection   ChannelConnection? @relation(fields: [channelConnectionId], references: [id], onDelete: Restrict)
   periodDays        Int
   alertKey          String
   alertType         String
@@ -147,6 +154,7 @@ model ProfitMonitorAlert {
 
   @@unique([shop, periodDays, alertKey])
   @@index([shop, periodDays, status])
+  @@index([channelConnectionId])
 }
 
 model ProfitMonitorAlertEvent {
