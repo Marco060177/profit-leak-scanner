@@ -1,5 +1,5 @@
 import { pathToFileURL } from "node:url";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { normalizeVerifiedShopDomain } from "../app/connectors/shopify/shop-domain";
 
 export type Classification =
@@ -58,7 +58,7 @@ function validMonth(value: string): boolean {
 }
 
 /** Read-only profiling. Internal rows contain identifiers for tests/review; log only summary. */
-export async function profileLegacyAiUsage(db: PrismaClient): Promise<Profile> {
+export async function profileLegacyAiUsage(db: PrismaClient | Prisma.TransactionClient): Promise<Profile> {
   const usage = await db.aiUsage.findMany({
     select: { id: true, shop: true, month: true, requests: true },
     orderBy: { id: "asc" },
