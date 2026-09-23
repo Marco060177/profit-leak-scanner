@@ -75,8 +75,11 @@ try {
   const aiAdvisor = readFileSync(path.join(process.cwd(), "app/routes/app.ai-advisor.tsx"), "utf8");
   assert.doesNotMatch(aiAdvisor, /AccountAiUsage|accountAiUsage/);
   assert.match(aiAdvisor, /prisma\.aiUsage\.findUnique/);
-  assert.match(aiAdvisor, /tx\.aiUsage\.upsert/);
-  assert.match(aiAdvisor, /prisma\.aiUsage\.updateMany/);
+  assert.match(aiAdvisor, /reserveAiUsage\(\{/);
+  assert.match(aiAdvisor, /compensateAiUsage\(\{/);
+  const shadowService = readFileSync(path.join(process.cwd(), "app/services/ai-usage-shadow.server.ts"), "utf8");
+  assert.match(shadowService, /tx\.aiUsage\.upsert/);
+  assert.match(shadowService, /tx\.aiUsage\.update/);
   console.log("T9A additive migration, legacy preservation, Account FK/uniqueness and unchanged AI Advisor authority passed.");
 } finally {
   db.close();

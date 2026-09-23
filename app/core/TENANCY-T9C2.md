@@ -1,0 +1,9 @@
+# T9C2 — runtime AI usage shadow write
+
+AI Advisor still uses legacy `AiUsage(shop, month)` for the displayed count, the 100-request admission limit and Growth/Shopify billing. `AccountAiUsage(accountId, periodKey)` is an observational shadow, not an entitlement or quota authority. The period remains UTC calendar month `YYYY-MM`, not a billing cycle.
+
+The authenticated Shopify boundary supplies the tenant. Reservation verifies its persisted ACTIVE Shopify mapping and refuses Accounts with multiple Shopify shop mappings; Amazon connections do not create another quota. Matching legacy/shadow counts increment together in one Prisma transaction. At a new month when both rows are absent, both start at one atomically. Missing or mismatched rows fail closed without automatic seeding, summing or repair. At the legacy limit, admission is still denied by the legacy count; a shadow anomaly is logged for reconciliation.
+
+If AI generation throws after reservation, one second transaction verifies ownership and equal positive counters before decrementing both. Unsafe compensation never decrements only one side. Diagnostics contain reason code and UTC period only, never shop, Account, connection, prompt or token. A crash after reservation leaves both increments counted, as an uncompensated attempt was counted previously. A normal fallback response from the OpenAI helper remains counted.
+
+This is not a request-idempotency or strict concurrent quota redesign. Retries/double submits can still count twice; concurrent transactions can contend or fail, but a committed reservation/compensation cannot update just one counter. Any mismatch, missing shadow or ambiguous Account requires operational review. T9D reconciliation is mandatory before T9E Account-authoritative quota/read switch; T9F covers retirement/lifecycle. T9C2 alone authorizes neither switch.

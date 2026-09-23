@@ -41,6 +41,7 @@ import type { LoaderData } from "~/utils/margin";
 import { getLanguageLocale, isLanguage, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
+import { AiUsageSafetyError, compensateAiUsage, reserveAiUsage } from "~/services/ai-usage-shadow.server";
 
 import "~/styles/dashboard.css";
 import "~/styles/ai-advisor-v2.css";
@@ -345,7 +346,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing)) {
@@ -390,43 +391,11 @@ export async function action({ request }: { request: Request }) {
   const storeSummary = `${baseStoreSummary}\n\n${profitImpact.aiContext}`;
 
   const month = getUsageMonth();
-  const quotaResult = await prisma.$transaction(async (tx) => {
-    const current = await tx.aiUsage.findUnique({
-      where: {
-        shop_month: {
-          shop: session.shop,
-          month,
-        },
-      },
-    });
-
-    if ((current?.requests ?? 0) >= MONTHLY_AI_LIMIT) {
-      return false;
-    }
-
-    await tx.aiUsage.upsert({
-      where: {
-        shop_month: {
-          shop: session.shop,
-          month,
-        },
-      },
-      create: {
-        shop: session.shop,
-        month,
-        requests: 1,
-      },
-      update: {
-        requests: {
-          increment: 1,
-        },
-      },
-    });
-
-    return true;
+  const quotaResult = await reserveAiUsage({
+    db: prisma, shop: session.shop, tenant, month, limit: MONTHLY_AI_LIMIT,
   });
 
-  if (!quotaResult) {
+  if (quotaResult === "QUOTA_EXCEEDED") {
     return {
       text: {
         en: "You have reached the limit of 100 AI requests for this month. Your allowance will reset automatically next month.",
@@ -495,16 +464,14 @@ Do not generate a complete business analysis.
       },
     });
   } catch (error) {
-    await prisma.aiUsage.updateMany({
-      where: {
-        shop: session.shop,
-        month,
-        requests: { gt: 0 },
-      },
-      data: {
-        requests: { decrement: 1 },
-      },
-    });
+    try {
+      await compensateAiUsage({ db: prisma, shop: session.shop, tenant, month });
+    } catch (compensationError) {
+      if (!(compensationError instanceof AiUsageSafetyError)) {
+        console.error("[AI_USAGE_SHADOW]", { reason: "COMPENSATION_TRANSACTION_FAILED", periodKey: month });
+      }
+      // Preserve the original AI error; neither counter was decremented alone.
+    }
 
     throw error;
   }
