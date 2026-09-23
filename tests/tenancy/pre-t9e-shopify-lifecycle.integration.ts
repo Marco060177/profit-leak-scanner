@@ -68,6 +68,33 @@ try {
     assert.deepEqual(concurrent, [original, original]);
     await unchanged();
 
+    // Regression: an ACTIVE mapping is a read and must not consume an interactive
+    // Prisma transaction (whose default 5s timeout caused production GET failures).
+    const originalTransaction = db.$transaction;
+    Object.defineProperty(db, "$transaction", {
+      configurable: true,
+      value: () => { throw new Error("unexpected interactive transaction on ACTIVE lookup"); },
+    });
+    try {
+      const activeRequests = await Promise.all(Array.from({ length: 12 }, () => resolveShopifyTenantContext({ shop })));
+      assert.ok(activeRequests.every((item) => item.accountId === original.accountId));
+    } finally {
+      Object.defineProperty(db, "$transaction", { configurable: true, value: originalTransaction });
+    }
+    const competingWriter = new DatabaseSync(databasePath);
+    competingWriter.exec("BEGIN IMMEDIATE");
+    try {
+      const activeLookups = Promise.all(Array.from({ length: 4 }, () => resolveShopifyTenantContext({ shop })));
+      const observed = await Promise.race([
+        activeLookups,
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("ACTIVE lookup stalled behind SQLite writer")), 2000)),
+      ]);
+      assert.ok(observed.every((item) => item.accountId === original.accountId));
+    } finally {
+      competingWriter.exec("ROLLBACK");
+      competingWriter.close();
+    }
+
     await db.session.create({ data: { id: "missing-session", shop: "missing.myshopify.com", state: "state", accessToken: "test-token" } });
     assert.equal((await event("missing.myshopify.com")).status, 200);
     assert.equal(await db.session.count({ where: { shop: "missing.myshopify.com" } }), 0);

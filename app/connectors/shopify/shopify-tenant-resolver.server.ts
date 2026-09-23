@@ -27,8 +27,10 @@ async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTena
 
 /** Authenticated reinstall only: reactivate the existing owner without creating or resetting usage. */
 async function activateExistingShopifyMapping(shopDomain: string): Promise<AuthenticatedTenantContext | null> {
-  return prisma.$transaction(async (tx) => {
-    const mapping = await tx.legacyShopMapping.findUnique({
+  // Normal authenticated requests must not open an interactive SQLite transaction.
+  // Only a genuinely disconnected connection needs a conditional state change.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const mapping = await prisma.legacyShopMapping.findUnique({
       where: { shopDomain }, include: { channelConnection: true },
     });
     if (!mapping) return null;
@@ -39,16 +41,18 @@ async function activateExistingShopifyMapping(shopDomain: string): Promise<Authe
       !["ACTIVE", "DISCONNECTED"].includes(connection.status)
     ) throw new Error("Inconsistent Shopify tenant mapping or unsafe status");
     if (connection.status === "DISCONNECTED") {
-      await tx.channelConnection.updateMany({
+      const changed = await prisma.channelConnection.updateMany({
         where: { id: connection.id, accountId: mapping.accountId, status: "DISCONNECTED" },
         data: { status: "ACTIVE" },
       });
+      if (changed.count === 0) continue; // A concurrent reinstall/uninstall changed the state; re-read it.
     }
     return {
       accountId: mapping.accountId, channelConnectionId: mapping.channelConnectionId,
       channel: "SHOPIFY" as const, legacyShopDomain: shopDomain,
     };
-  });
+  }
+  throw new Error("Shopify tenant activation could not be resolved safely");
 }
 
 /** Lookup only. The shop must come from Shopify authentication or trusted persisted server data. */
