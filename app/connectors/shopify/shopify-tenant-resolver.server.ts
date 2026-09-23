@@ -25,6 +25,32 @@ async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTena
   };
 }
 
+/** Authenticated reinstall only: reactivate the existing owner without creating or resetting usage. */
+async function activateExistingShopifyMapping(shopDomain: string): Promise<AuthenticatedTenantContext | null> {
+  return prisma.$transaction(async (tx) => {
+    const mapping = await tx.legacyShopMapping.findUnique({
+      where: { shopDomain }, include: { channelConnection: true },
+    });
+    if (!mapping) return null;
+    const connection = mapping.channelConnection;
+    if (
+      connection.accountId !== mapping.accountId || connection.channel !== "SHOPIFY" ||
+      connection.externalAccountId !== shopDomain ||
+      !["ACTIVE", "DISCONNECTED"].includes(connection.status)
+    ) throw new Error("Inconsistent Shopify tenant mapping or unsafe status");
+    if (connection.status === "DISCONNECTED") {
+      await tx.channelConnection.updateMany({
+        where: { id: connection.id, accountId: mapping.accountId, status: "DISCONNECTED" },
+        data: { status: "ACTIVE" },
+      });
+    }
+    return {
+      accountId: mapping.accountId, channelConnectionId: mapping.channelConnectionId,
+      channel: "SHOPIFY" as const, legacyShopDomain: shopDomain,
+    };
+  });
+}
+
 /** Lookup only. The shop must come from Shopify authentication or trusted persisted server data. */
 export async function findShopifyTenantContext(
   shop: string,
@@ -44,7 +70,7 @@ export async function resolveShopifyTenantContext(
   const shopDomain = normalizeVerifiedShopDomain(session.shop);
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
-    const existing = await findShopifyMapping(shopDomain);
+    const existing = await activateExistingShopifyMapping(shopDomain);
     if (existing) return existing;
 
     try {
@@ -65,7 +91,7 @@ export async function resolveShopifyTenantContext(
           },
         });
       });
-      const created = await findShopifyMapping(shopDomain);
+      const created = await activateExistingShopifyMapping(shopDomain);
       if (!created) throw new Error("Shopify tenant mapping was not persisted");
       return created;
     } catch (error) {
