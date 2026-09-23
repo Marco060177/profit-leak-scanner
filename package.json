@@ -34,6 +34,7 @@
     "test:tenancy-t9c1": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t9c1-ai-usage-backfill.integration.ts",
     "test:tenancy-t9c2": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t9c2-ai-usage-shadow.integration.ts",
     "test:tenancy-t9d": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t9d-ai-usage-reconcile.integration.ts",
+    "test:tenancy-t9e": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t9e-account-ai-usage.integration.ts",
     "tenancy:t9d:ai-usage-reconcile": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t9d-ai-usage-reconcile.ts",
     "tenancy:t9c1:ai-usage-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t9c1-ai-usage-backfill.ts",
     "tenancy:t8b:profit-impact-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8b-profit-impact-backfill.ts"

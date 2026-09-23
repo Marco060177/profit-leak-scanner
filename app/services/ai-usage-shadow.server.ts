@@ -34,7 +34,7 @@ function verifiedPeriodKey(month: string): string {
   return month;
 }
 
-async function verifySingleShopifyOwner(
+export async function verifySingleShopifyOwner(
   tx: Db,
   shop: string,
   tenant: AuthenticatedTenantContext,

@@ -73,14 +73,14 @@ try {
   assert.throws(() => db.exec(`INSERT INTO "AiUsage" ("id", "shop", "month", "updatedAt") VALUES ('duplicate-legacy', 'one.myshopify.com', '2026-09', CURRENT_TIMESTAMP)`), /UNIQUE/);
 
   const aiAdvisor = readFileSync(path.join(process.cwd(), "app/routes/app.ai-advisor.tsx"), "utf8");
-  assert.doesNotMatch(aiAdvisor, /AccountAiUsage|accountAiUsage/);
-  assert.match(aiAdvisor, /prisma\.aiUsage\.findUnique/);
-  assert.match(aiAdvisor, /reserveAiUsage\(\{/);
-  assert.match(aiAdvisor, /compensateAiUsage\(\{/);
+  assert.match(aiAdvisor, /prisma\.accountAiUsage\.findUnique/);
+  assert.match(aiAdvisor, /reserveAccountAiUsage\(\{/);
+  assert.match(aiAdvisor, /compensateAccountAiUsage\(\{/);
+  assert.doesNotMatch(aiAdvisor, /prisma\.aiUsage\.findUnique/);
   const shadowService = readFileSync(path.join(process.cwd(), "app/services/ai-usage-shadow.server.ts"), "utf8");
   assert.match(shadowService, /tx\.aiUsage\.upsert/);
   assert.match(shadowService, /tx\.aiUsage\.update/);
-  console.log("T9A additive migration, legacy preservation, Account FK/uniqueness and unchanged AI Advisor authority passed.");
+  console.log("T9A additive migration, legacy preservation and Account FK/uniqueness passed; route authority now follows T9E.");
 } finally {
   db.close();
   rmSync(directory, { recursive: true, force: true });

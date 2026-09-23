@@ -123,18 +123,18 @@ try {
     await db.$executeRawUnsafe(`DROP TRIGGER reject_shadow_update`);
 
     const route = readFileSync(path.join(process.cwd(), "app/routes/app.ai-advisor.tsx"), "utf8");
-    assert.match(route, /const usage = growthAccess\s*\? await prisma\.aiUsage\.findUnique/);
+    assert.match(route, /const usage = growthAccess\s*\? await prisma\.accountAiUsage\.findUnique/);
     assert.match(route, /if \(!hasGrowthAccess\(billing\)\)/);
     assert.match(route, /const MONTHLY_AI_LIMIT = 100/);
     assert.match(route, /getUTCFullYear\(\)/);
-    assert.match(route, /reserveAiUsage\(\{/);
-    assert.match(route, /compensateAiUsage\(\{/);
-    assert.doesNotMatch(route, /accountAiUsage/);
+    assert.match(route, /reserveAccountAiUsage\(\{/);
+    assert.match(route, /compensateAccountAiUsage\(\{/);
+    assert.doesNotMatch(route, /prisma\.aiUsage\.findUnique/);
     assert.doesNotMatch(route, /tx\.aiUsage\.upsert|prisma\.aiUsage\.updateMany/);
     const openai = readFileSync(path.join(process.cwd(), "app/utils/openai.server.ts"), "utf8");
     assert.doesNotMatch(openai, /aiUsage|accountAiUsage/);
     assert.equal((await db.channelConnection.count({ where: { channel: "AMAZON" } })), 1);
-    console.log("T9C2 paired reservation/compensation, safety states, legacy authority and concurrency characterization passed.");
+    console.log("T9C2 legacy service characterization, safety states and concurrency passed; route now uses T9E Account authority.");
   } finally {
     await db.$disconnect();
   }

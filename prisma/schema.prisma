@@ -22,6 +22,7 @@ model Account {
   channelConnections ChannelConnection[]
   legacyShopMappings LegacyShopMapping[]
   aiUsage            AccountAiUsage[]
+  aiUsageReservations AccountAiUsageReservation[]
 }
 
 model AccountAiUsage {
@@ -34,6 +35,19 @@ model AccountAiUsage {
   account   Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
 
   @@unique([accountId, periodKey])
+}
+
+model AccountAiUsageReservation {
+  id                  String   @id @default(cuid())
+  accountId           String
+  periodKey           String
+  status              String   @default("RESERVED")
+  legacyShadowApplied Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  account             Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([accountId, periodKey])
 }
 
 model ChannelConnection {

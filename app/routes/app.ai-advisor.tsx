@@ -41,7 +41,8 @@ import type { LoaderData } from "~/utils/margin";
 import { getLanguageLocale, isLanguage, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
-import { AiUsageSafetyError, compensateAiUsage, reserveAiUsage } from "~/services/ai-usage-shadow.server";
+import { AiUsageSafetyError } from "~/services/ai-usage-shadow.server";
+import { reserveAccountAiUsage, completeAccountAiUsage, compensateAccountAiUsage } from "~/services/account-ai-usage.server";
 
 import "~/styles/dashboard.css";
 import "~/styles/ai-advisor-v2.css";
@@ -292,7 +293,7 @@ ${products || "No product data available."}
 }
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
   const url = new URL(request.url);
   const period = url.searchParams.get("period") ?? "30";
@@ -323,11 +324,11 @@ export async function loader({ request }: { request: Request }) {
 
   const month = getUsageMonth();
   const usage = growthAccess
-    ? await prisma.aiUsage.findUnique({
+    ? await prisma.accountAiUsage.findUnique({
         where: {
-          shop_month: {
-            shop: session.shop,
-            month,
+          accountId_periodKey: {
+            accountId: tenant.accountId,
+            periodKey: month,
           },
         },
       })
@@ -391,11 +392,11 @@ export async function action({ request }: { request: Request }) {
   const storeSummary = `${baseStoreSummary}\n\n${profitImpact.aiContext}`;
 
   const month = getUsageMonth();
-  const quotaResult = await reserveAiUsage({
+  const quotaResult = await reserveAccountAiUsage({
     db: prisma, shop: session.shop, tenant, month, limit: MONTHLY_AI_LIMIT,
   });
 
-  if (quotaResult === "QUOTA_EXCEEDED") {
+  if (quotaResult.status === "QUOTA_EXCEEDED") {
     return {
       text: {
         en: "You have reached the limit of 100 AI requests for this month. Your allowance will reset automatically next month.",
@@ -439,11 +440,13 @@ State that these amounts are estimates, not guaranteed recovered profit.
 Do not generate a complete business analysis.
 `;
 
-      return await generateAiAnswer({
+      const answer = await generateAiAnswer({
         question,
         context,
         language,
       });
+      await completeAccountAiUsage({ db: prisma, shop: session.shop, tenant, month, reservationId: quotaResult.reservationId });
+      return answer;
     }
 
     const economicSnapshot = dashboardData.economicSnapshot;
@@ -452,7 +455,7 @@ Do not generate a complete business analysis.
       throw new Error("Economic Snapshot is not available.");
     }
 
-    return await generateAiMarginAnalysis({
+    const analysis = await generateAiMarginAnalysis({
       storeSummary,
       language,
       economicSnapshot: {
@@ -463,14 +466,16 @@ Do not generate a complete business analysis.
         cogsCoveragePct: economicSnapshot.confidence.cogsCoveragePct,
       },
     });
+    await completeAccountAiUsage({ db: prisma, shop: session.shop, tenant, month, reservationId: quotaResult.reservationId });
+    return analysis;
   } catch (error) {
     try {
-      await compensateAiUsage({ db: prisma, shop: session.shop, tenant, month });
+      await compensateAccountAiUsage({ db: prisma, shop: session.shop, tenant, month, reservationId: quotaResult.reservationId });
     } catch (compensationError) {
       if (!(compensationError instanceof AiUsageSafetyError)) {
-        console.error("[AI_USAGE_SHADOW]", { reason: "COMPENSATION_TRANSACTION_FAILED", periodKey: month });
+        console.error("[ACCOUNT_AI_USAGE]", { reason: "COMPENSATION_TRANSACTION_FAILED", periodKey: month });
       }
-      // Preserve the original AI error; neither counter was decremented alone.
+      // Preserve the original AI error; Account compensation is reservation-specific.
     }
 
     throw error;
