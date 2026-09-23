@@ -2,14 +2,7 @@ import type { Session } from "@shopify/shopify-api";
 import { Prisma } from "@prisma/client";
 import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
 import prisma from "~/db.server";
-
-function normalizeVerifiedShopDomain(shop: string): string {
-  const domain = shop.trim().toLowerCase();
-  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain)) {
-    throw new Error("Invalid verified Shopify shop domain");
-  }
-  return domain;
-}
+import { normalizeVerifiedShopDomain } from "./shop-domain";
 
 async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTenantContext | null> {
   const mapping = await prisma.legacyShopMapping.findUnique({
