@@ -1,4 +1,6 @@
 import prisma from "~/db.server";
+import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
+import { requireShopifyRecordOwner, assertExistingShopifyRecordOwner } from "~/services/shopify-record-ownership.server";
 
 export type TaxSystem =
   | "VAT"
@@ -509,9 +511,11 @@ function buildUnconfiguredAdvancedContext({
 export async function getStoreTaxContext({
   shop,
   shopCountryCode,
+  tenant,
 }: {
   shop: string;
   shopCountryCode: string;
+  tenant?: AuthenticatedTenantContext;
 }): Promise<TaxContext> {
   const normalizedShopCountryCode =
     normalizeCountryCode(shopCountryCode);
@@ -536,6 +540,10 @@ export async function getStoreTaxContext({
     await prisma.storeTaxProfile.findUnique({
       where: { shop },
     });
+  if (savedProfile && tenant) {
+    const ownerId = await requireShopifyRecordOwner(shop, tenant);
+    assertExistingShopifyRecordOwner(savedProfile.channelConnectionId, ownerId);
+  }
 
   if (!savedProfile) {
     return buildUnconfiguredAdvancedContext({
@@ -608,6 +616,7 @@ export async function getStoreTaxContext({
 
 export async function saveStoreTaxProfile({
   shop,
+  tenant,
   countryCode,
   regime,
   defaultVatRatePct,
@@ -619,6 +628,7 @@ export async function saveStoreTaxProfile({
   shippingVatRatePct,
 }: {
   shop: string;
+  tenant?: AuthenticatedTenantContext;
   countryCode: string;
   regime: Exclude<
     TaxProfile,
@@ -665,11 +675,17 @@ export async function saveStoreTaxProfile({
   const normalizedRecoverInputVat =
     normalizedRecoveryPct > 0;
 
+  const ownerId = tenant ? await requireShopifyRecordOwner(shop, tenant) : null;
+  if (ownerId) {
+    const existing = await prisma.storeTaxProfile.findUnique({ where: { shop } });
+    assertExistingShopifyRecordOwner(existing?.channelConnectionId ?? null, ownerId);
+  }
   return prisma.storeTaxProfile.upsert({
     where: { shop },
 
     create: {
       shop,
+      ...(ownerId ? { channelConnectionId: ownerId } : {}),
       countryCode: normalizedCountryCode,
       regime,
 
@@ -692,6 +708,7 @@ export async function saveStoreTaxProfile({
     },
 
     update: {
+      ...(ownerId ? { channelConnectionId: ownerId } : {}),
       countryCode: normalizedCountryCode,
       regime,
 

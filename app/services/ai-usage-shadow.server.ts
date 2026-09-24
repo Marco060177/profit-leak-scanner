@@ -1,3 +1,4 @@
+/** HISTORICAL T9C2 characterization only. Never import in runtime; AccountAiUsage is authoritative. */
 import type { PrismaClient } from "@prisma/client";
 import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
 import { AiUsageSafetyError, verifySingleShopifyOwner, type AiUsageSafetyReason } from "~/services/ai-usage-ownership.server";

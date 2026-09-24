@@ -125,7 +125,7 @@ try {
       assert.ok(service.includes(name), `${name} missing`);
     }
     assert.ok(/where:\s*\{ id: actionId, shop \}/.test(service));
-    assert.ok(!service.includes("channelConnectionId"));
+    assert.ok(service.includes("channelConnectionId")); // Authenticated creation now maintains the shadow owner.
     const worker = readFileSync(path.join(process.cwd(), "app/services/profit-impact-measurement.server.ts"), "utf8");
     assert.ok(/where:\s*\{ status: "MEASURING", appliedAt: \{ not: null \} \}/.test(worker));
     assert.ok(/unauthenticated\.admin\(action\.shop\)/.test(worker));

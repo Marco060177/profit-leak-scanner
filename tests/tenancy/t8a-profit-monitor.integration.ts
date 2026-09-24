@@ -133,7 +133,7 @@ try {
     assert.ok(/shop_periodDays_fingerprint:\s*\{ shop, periodDays, fingerprint \}/.test(production));
     assert.ok(/shop_periodDays_alertKey:\s*\{ shop, periodDays, alertKey: alert\.id \}/.test(production));
     assert.ok(/where:\s*\{ shop, periodDays \}/.test(production));
-    assert.ok(!production.includes("channelConnectionId"));
+    assert.ok(production.includes("channelConnectionId")); // Runtime now maintains the shadow owner.
     const redaction = readFileSync(path.join(process.cwd(), "app/services/shop-data-redaction.server.ts"), "utf8");
     assert.ok(/profitMonitorAlert\.deleteMany\(\{ where: \{ shop \} \}/.test(redaction));
     assert.ok(/profitMonitorSnapshot\.deleteMany\(\{ where: \{ shop \} \}/.test(redaction));

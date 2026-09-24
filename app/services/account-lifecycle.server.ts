@@ -26,3 +26,45 @@ export async function requestAccountDeletion(accountId: string) {
     return { status: "PENDING_DELETION" as const, changed: true };
   });
 }
+
+/** Internal, read-only gate for a separately authorized irreversible purge.
+ * No retention duration or deletion authority has been approved yet.
+ */
+export async function assessAccountPurge(accountId: string) {
+  if (!accountId.trim()) throw new Error("Account identity is required.");
+  const account = await prisma.account.findUnique({ where: { id: accountId } });
+  if (!account) throw new Error("Account not found.");
+  const shops = await prisma.legacyShopMapping.findMany({
+    where: { accountId }, select: { shopDomain: true },
+  });
+  const shopDomains = shops.map(({ shopDomain }) => shopDomain);
+  const [channels, usage, reservations, preferences, deliveries, taxProfiles, assumptions, snapshots, alerts, alertEvents,
+    actions, impactMeasurements, impactEvents, legacyAiUsage, sessions] = await Promise.all([
+    prisma.channelConnection.count({ where: { accountId } }),
+    prisma.accountAiUsage.count({ where: { accountId } }),
+    prisma.accountAiUsageReservation.count({ where: { accountId } }),
+    prisma.notificationPreferences.count({ where: { accountId } }),
+    prisma.notificationDelivery.count({ where: { accountId } }),
+    prisma.storeTaxProfile.count({ where: { shop: { in: shopDomains } } }),
+    prisma.profitAssumptions.count({ where: { shop: { in: shopDomains } } }),
+    prisma.profitMonitorSnapshot.count({ where: { shop: { in: shopDomains } } }),
+    prisma.profitMonitorAlert.count({ where: { shop: { in: shopDomains } } }),
+    prisma.profitMonitorAlertEvent.count({ where: { alert: { shop: { in: shopDomains } } } }),
+    prisma.profitImpactAction.count({ where: { shop: { in: shopDomains } } }),
+    prisma.profitImpactMeasurement.count({ where: { action: { shop: { in: shopDomains } } } }),
+    prisma.profitImpactEvent.count({ where: { action: { shop: { in: shopDomains } } } }),
+    prisma.aiUsage.count({ where: { shop: { in: shopDomains } } }),
+    prisma.session.count({ where: { shop: { in: shopDomains } } }),
+  ]);
+  return {
+    eligible: false as const,
+    accountStatus: account.status,
+    retained: { channels, mappings: shops.length, usage, reservations, preferences, deliveries,
+      taxProfiles, assumptions, snapshots, alerts, alertEvents, actions, impactMeasurements,
+      impactEvents, legacyAiUsage, sessions },
+    unresolved: [
+      "Approved retention period and purge authorization are not defined.",
+      "Channel provenance, Account quota, notification history and Shopify operational data need an approved deletion policy.",
+    ],
+  };
+}

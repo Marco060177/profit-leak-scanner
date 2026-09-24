@@ -237,7 +237,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
   if (!hasGrowthAccess(billing))
     return Response.json(
@@ -287,6 +287,7 @@ export async function action({ request }: { request: Request }) {
         throw new Response("Unsupported source module.", { status: 400 });
       const created = await createProfitImpactAction({
         shop: session.shop,
+        tenant,
         idempotencyKey: txt(form, "idempotencyKey"),
         actionType,
         sourceModule,

@@ -68,8 +68,12 @@ export async function reserveAccountAiUsage({ db, shop, tenant, month, limit = 1
 export async function completeAccountAiUsage({ db, shop, tenant, month, reservationId }: ReservationInput): Promise<void> {
   const periodKey = period(month);
   const verifiedShop = normalizeVerifiedShopDomain(shop);
+  if (tenant.channel !== "SHOPIFY" || tenant.legacyShopDomain !== verifiedShop) {
+    return safety("COMPLETION_OWNER_INVALID", periodKey);
+  }
   await db.$transaction(async (tx) => {
-    await verifySingleShopifyOwner(tx, verifiedShop, tenant, periodKey);
+    // Finalize a previously authorized reservation by its immutable Account owner;
+    // uninstall must not strand an already charged request.
     const changed = await tx.accountAiUsageReservation.updateMany({
       where: { id: reservationId, accountId: tenant.accountId, periodKey, status: "RESERVED" },
       data: { status: "COMPLETED" },
@@ -84,8 +88,10 @@ export async function completeAccountAiUsage({ db, shop, tenant, month, reservat
 export async function compensateAccountAiUsage({ db, shop, tenant, month, reservationId }: ReservationInput): Promise<void> {
   const periodKey = period(month);
   const verifiedShop = normalizeVerifiedShopDomain(shop);
+  if (tenant.channel !== "SHOPIFY" || tenant.legacyShopDomain !== verifiedShop) {
+    return safety("COMPENSATION_OWNER_INVALID", periodKey);
+  }
   await db.$transaction(async (tx) => {
-    await verifySingleShopifyOwner(tx, verifiedShop, tenant, periodKey);
     const reservation = await tx.accountAiUsageReservation.findUnique({ where: { id: reservationId } });
     if (!reservation || reservation.accountId !== tenant.accountId || reservation.periodKey !== periodKey) {
       return safety("RESERVATION_OWNERSHIP_INVALID", periodKey);

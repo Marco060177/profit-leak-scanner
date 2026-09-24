@@ -14,9 +14,10 @@ try {
   }
   sqlite.close();
   process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
-  const [{ PrismaClient }, backfill, service, ownership, { deleteShopData }, appDb] = await Promise.all([
+  const [{ PrismaClient }, backfill, service, ownership, dispatch, { deleteShopData }, appDb] = await Promise.all([
     import("@prisma/client"), import("../../scripts/tenancy-t10-notification-backfill"),
     import("../../app/services/notification.server"), import("../../app/services/notification-ownership.server"),
+    import("../../app/services/notification-dispatch-owner.server"),
     import("../../app/services/shop-data-redaction.server"), import("../../app/db.server"),
   ]);
   const db = new PrismaClient();
@@ -35,7 +36,7 @@ try {
   const connection = await connect(shop, account.id);
   const second = await connect(secondShop, account.id);
   await connect(otherShop, otherAccount.id);
-  await db.channelConnection.create({ data: { accountId: account.id, channel: "AMAZON", externalAccountId: "t10-amazon" } });
+  const amazon = await db.channelConnection.create({ data: { accountId: account.id, channel: "AMAZON", externalAccountId: "t10-amazon" } });
   const tenant = { accountId: account.id, channelConnectionId: connection.id,
     channel: "SHOPIFY" as const, legacyShopDomain: shop };
   try {
@@ -73,6 +74,20 @@ try {
     assert.equal(created.created, true);
     assert.equal(created.delivery.accountId, account.id);
     assert.equal(created.delivery.channelConnectionId, connection.id);
+    assert.equal((await dispatch.classifyNotificationDispatchOwner(created.delivery)).kind, "SHOPIFY");
+    const accountWide = await db.notificationDelivery.create({ data: {
+      accountId: account.id, notificationType: "weekly_profit_report", recipient: "owner@example.com",
+      deduplicationKey: "t10:account-wide",
+    } });
+    const accountDispatch = await dispatch.classifyNotificationDispatchOwner(accountWide);
+    assert.equal(accountDispatch.kind, "UNSUPPORTED"); // Owned, but content/entitlement adapter is not yet configured.
+    assert.equal(await service.claimPendingNotificationDelivery(accountWide.id), true);
+    await service.markNotificationDeliveryFailed({ id: accountWide.id, errorMessage: "Account-wide notification adapter is not configured." });
+    const amazonDelivery = await db.notificationDelivery.create({ data: {
+      accountId: account.id, channelConnectionId: amazon.id, notificationType: "profit_alert",
+      recipient: "owner@example.com", deduplicationKey: "t10:amazon",
+    } });
+    assert.equal((await dispatch.classifyNotificationDispatchOwner(amazonDelivery)).kind, "UNSUPPORTED");
     assert.equal((await service.createWeeklyReportDelivery({ shop, recipient: "owner@example.com", weekKey: "2026-w40" })).created, false);
     const alertDelivery = await service.createAlertNotificationDelivery({
       shop, alert: { id: "t10-alert" } as Parameters<typeof service.createAlertNotificationDelivery>[0]["alert"],
@@ -81,6 +96,7 @@ try {
     assert.equal(alertDelivery.delivery.accountId, account.id);
     assert.equal(alertDelivery.delivery.channelConnectionId, connection.id);
     await db.channelConnection.update({ where: { id: connection.id }, data: { status: "DISCONNECTED" } });
+    assert.equal((await dispatch.classifyNotificationDispatchOwner(created.delivery)).kind, "INACTIVE");
     assert.equal((await db.notificationDelivery.findUniqueOrThrow({ where: { id: originalDelivery.id } })).channelConnectionId, connection.id);
     await assert.rejects(ownership.resolveNotificationShopOwner(shop));
     assert.deepEqual((await ownership.listActiveNotificationShopMappings(account.id)).map((mapping) => mapping.shopDomain), [secondShop]);
@@ -107,6 +123,8 @@ try {
     assert.equal(blocked.verdict, "BLOCKED");
     assert.ok(blocked.counts.MISSING_MAPPING > 0);
     assert.equal(blocked.updated, 0);
+    await db.account.update({ where: { id: account.id }, data: { status: "PENDING_DELETION" } });
+    assert.equal((await dispatch.classifyNotificationDispatchOwner(accountWide)).kind, "INACTIVE");
     console.log("T10 migration, conflict, idempotence, Account isolation, channel history and redaction passed.");
   } finally {
     await db.$disconnect();

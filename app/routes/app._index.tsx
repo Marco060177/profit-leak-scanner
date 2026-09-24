@@ -50,7 +50,7 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const locale = getLanguageLocale(language);
 
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
 
   try {
@@ -76,6 +76,7 @@ export const loader = async ({ request }: { request: Request }) => {
   });
   const alertStates = await syncProfitMonitor({
     shop: session.shop,
+    tenant,
     period,
     alerts,
     snapshot: {

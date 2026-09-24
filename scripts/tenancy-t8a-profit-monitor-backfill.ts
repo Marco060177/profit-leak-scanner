@@ -1,3 +1,4 @@
+/** Manual migration/reconciliation only. Dry-run by default; never run at app startup. */
 import { pathToFileURL } from "node:url";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { normalizeVerifiedShopDomain } from "../app/connectors/shopify/shop-domain";

@@ -106,6 +106,11 @@ try {
     await db.notificationDelivery.update({ where: { deduplicationKey: "t11:weekly:inflight" }, data: { status: "failed" } });
     const deletion = await lifecycle.requestAccountDeletion(tenant.accountId);
     assert.deepEqual(deletion, { status: "PENDING_DELETION", changed: true });
+    const purge = await lifecycle.assessAccountPurge(tenant.accountId);
+    assert.equal(purge.eligible, false);
+    assert.equal(purge.accountStatus, "PENDING_DELETION");
+    assert.equal(purge.retained.channels, 2);
+    assert.ok(purge.unresolved.length > 0);
     assert.deepEqual(await lifecycle.requestAccountDeletion(tenant.accountId), { status: "PENDING_DELETION", changed: false });
     assert.equal((await db.account.findUniqueOrThrow({ where: { id: tenant.accountId } })).status, "PENDING_DELETION");
     assert.equal((await db.channelConnection.findUniqueOrThrow({ where: { id: tenant.channelConnectionId } })).status, "PENDING_DELETION");

@@ -1,6 +1,8 @@
 import { Prisma } from "@prisma/client";
 
 import prisma from "~/db.server";
+import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
+import { requireShopifyRecordOwner, assertExistingShopifyRecordOwner } from "~/services/shopify-record-ownership.server";
 import {
   actionTypeRequiresProduct,
   assertProfitImpactTransition,
@@ -126,6 +128,7 @@ function normalizeDate(value: unknown, field: string) {
 
 export type CreateProfitImpactActionInput = {
   shop: string;
+  tenant?: AuthenticatedTenantContext;
   idempotencyKey: string;
   actionType: ProfitImpactActionType | string;
   sourceModule: ProfitImpactSourceModule | string;
@@ -149,6 +152,7 @@ export async function createProfitImpactAction(
   input: CreateProfitImpactActionInput,
 ) {
   const shop = requiredText(input.shop, "shop", 255).toLowerCase();
+  const ownerId = input.tenant ? await requireShopifyRecordOwner(shop, input.tenant) : null;
   if (!isProfitImpactActionType(input.actionType)) {
     throw domainError("Unsupported Profit Impact action type.");
   }
@@ -187,6 +191,7 @@ export async function createProfitImpactAction(
 
   const data = {
     shop,
+    ...(ownerId ? { channelConnectionId: ownerId } : {}),
     idempotencyKey: normalizeIdempotencyKey(input.idempotencyKey),
     actionType: input.actionType,
     status: "ACCEPTED" as const,
@@ -227,7 +232,18 @@ export async function createProfitImpactAction(
       where: { shop, sourceAlertKey: data.sourceAlertKey, status: { not: "CANCELLED" } },
       orderBy: { createdAt: "desc" },
     });
-    if (existingSourceAction) return existingSourceAction;
+    if (existingSourceAction) {
+      if (!ownerId) return existingSourceAction;
+      assertExistingShopifyRecordOwner(existingSourceAction.channelConnectionId, ownerId);
+      if (existingSourceAction.channelConnectionId) return existingSourceAction;
+      await prisma.profitImpactAction.updateMany({
+        where: { id: existingSourceAction.id, shop, channelConnectionId: null },
+        data: { channelConnectionId: ownerId },
+      });
+      const attributed = await prisma.profitImpactAction.findUniqueOrThrow({ where: { id: existingSourceAction.id } });
+      assertExistingShopifyRecordOwner(attributed.channelConnectionId, ownerId);
+      return attributed;
+    }
   }
 
   try {
@@ -256,7 +272,18 @@ export async function createProfitImpactAction(
           },
         },
       });
-      if (existingAction) return existingAction;
+      if (existingAction) {
+        if (!ownerId) return existingAction;
+        assertExistingShopifyRecordOwner(existingAction.channelConnectionId, ownerId);
+        if (existingAction.channelConnectionId) return existingAction;
+        await prisma.profitImpactAction.updateMany({
+          where: { id: existingAction.id, shop, channelConnectionId: null },
+          data: { channelConnectionId: ownerId },
+        });
+        const attributed = await prisma.profitImpactAction.findUniqueOrThrow({ where: { id: existingAction.id } });
+        assertExistingShopifyRecordOwner(attributed.channelConnectionId, ownerId);
+        return attributed;
+      }
     }
     throw error;
   }
@@ -615,6 +642,7 @@ export type CreateProfitImpactMeasurementInput = {
   finalStatus?: "COMPLETED" | "INSUFFICIENT_DATA";
   eventSource?: string;
   eventNote?: string | null;
+  requireActiveShopifyOwner?: boolean;
 };
 
 export async function createImmutableProfitImpactMeasurement(
@@ -643,9 +671,22 @@ export async function createImmutableProfitImpactMeasurement(
     return await prisma.$transaction(async (tx) => {
       const action = await tx.profitImpactAction.findFirst({
         where: { id: actionId, shop },
-        select: { id: true, status: true },
+        select: { id: true, status: true, channelConnectionId: true },
       });
       if (!action) throw domainError("Profit Impact action not found.", 404);
+      if (input.requireActiveShopifyOwner) {
+        const mapping = await tx.legacyShopMapping.findUnique({
+          where: { shopDomain: shop }, include: { account: true, channelConnection: true },
+        });
+        if (!mapping || mapping.account.status !== "ACTIVE" ||
+          mapping.channelConnection.status !== "ACTIVE" ||
+          mapping.channelConnection.channel !== "SHOPIFY" ||
+          mapping.channelConnection.accountId !== mapping.accountId ||
+          mapping.channelConnection.externalAccountId !== shop ||
+          (action.channelConnectionId && action.channelConnectionId !== mapping.channelConnectionId)) {
+          throw domainError("Profit Impact channel is no longer active.", 409);
+        }
+      }
       if (!isProfitImpactStatus(action.status)) {
         throw domainError("Profit Impact action has an invalid stored status.", 409);
       }

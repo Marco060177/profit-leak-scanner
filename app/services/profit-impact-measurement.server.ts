@@ -436,6 +436,7 @@ export async function processProfitImpactMeasurement({
     const measurement = await createImmutableProfitImpactMeasurement({
       shop,
       actionId,
+      requireActiveShopifyOwner: true,
       measurementType,
       windowStart: captured.windowStart,
       windowEnd: captured.windowEnd,
@@ -503,6 +504,12 @@ export async function processDueProfitImpactMeasurements({
       if (!owner || (action.channelConnectionId && action.channelConnectionId !== owner.channelConnectionId)) {
         skipped += 1;
         continue;
+      }
+      if (!action.channelConnectionId) {
+        await prisma.profitImpactAction.updateMany({
+          where: { id: action.id, shop: action.shop, channelConnectionId: null },
+          data: { channelConnectionId: owner.channelConnectionId },
+        });
       }
       const { admin, session } = await unauthenticated.admin(action.shop);
       const billing = await getBillingStatus(admin);

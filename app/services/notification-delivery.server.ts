@@ -12,7 +12,7 @@ import { unauthenticated } from "~/shopify.server";
 import { getBillingStatus, hasStarterAccess } from "~/utils/billing.server";
 import { formatUiMoney } from "~/utils/formatting";
 import { getLanguageLocale } from "~/utils/i18n";
-import { resolveNotificationShopOwner } from "~/services/notification-ownership.server";
+import { classifyNotificationDispatchOwner } from "~/services/notification-dispatch-owner.server";
 
 type ProfitAlertPayload = {
   source?: string;
@@ -903,18 +903,17 @@ export async function processPendingNotificationDeliveries({
   };
 
   for (const delivery of deliveries) {
-    // Unattributed legacy rows wait for the controlled backfill; never infer an owner at send time.
-    if (!delivery.shop || !delivery.accountId || !delivery.channelConnectionId) {
-      skipped += 1;
+    const dispatch = await classifyNotificationDispatchOwner(delivery);
+    if (dispatch.kind === "UNSUPPORTED") {
+      if (await claimPendingNotificationDelivery(delivery.id)) {
+        await markNotificationDeliveryFailed({ id: delivery.id, errorMessage: dispatch.reason });
+        failed += 1;
+        errors.push({ shop: delivery.shop ?? "", stage: "delivery", message: dispatch.reason });
+      } else skipped += 1;
       continue;
     }
-    try {
-      const owner = await resolveNotificationShopOwner(delivery.shop);
-      if (owner.accountId !== delivery.accountId || owner.channelConnectionId !== delivery.channelConnectionId) {
-        skipped += 1;
-        continue;
-      }
-    } catch {
+    // Unattributed legacy and inactive owners never dispatch.
+    if (dispatch.kind !== "SHOPIFY" || !delivery.shop) {
       skipped += 1;
       continue;
     }
@@ -995,6 +994,10 @@ export async function processPendingNotificationDeliveries({
               });
             })();
 
+      // Billing and rendering may take time; a channel can disconnect meanwhile.
+      if ((await classifyNotificationDispatchOwner(delivery)).kind !== "SHOPIFY") {
+        throw new Error("Notification channel disconnected before dispatch.");
+      }
       const result = await sendEmail({
         to: delivery.recipient,
         subject: delivery.subject || email.subject,

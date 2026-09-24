@@ -65,7 +65,7 @@ export const loader = async ({ request }: { request: Request }) => {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
   try {
     await admin.graphql(`query { shop { id } }`);
@@ -98,6 +98,7 @@ export const loader = async ({ request }: { request: Request }) => {
   const alertStates = growthAccess
     ? await syncProfitMonitor({
         shop: session.shop,
+        tenant,
         period,
         alerts,
         snapshot: {

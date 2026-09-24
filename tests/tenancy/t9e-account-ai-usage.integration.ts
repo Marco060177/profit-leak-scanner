@@ -56,8 +56,25 @@ try {
     const other = await reserve();
     if (other.status !== "RESERVED") throw new Error("Unexpected quota response");
     assert.equal(await count(), 3);
+    const disconnectCompletion = await reserve();
+    const disconnectCompensation = await reserve();
+    if (disconnectCompletion.status !== "RESERVED" || disconnectCompensation.status !== "RESERVED") {
+      throw new Error("Unexpected quota response");
+    }
+    await db.channelConnection.update({ where: { id: connection.id }, data: { status: "DISCONNECTED" } });
+    await assert.rejects(reserve(), /AI usage is temporarily unavailable/);
+    await assert.rejects(service.completeAccountAiUsage({ ...input,
+      tenant: { ...tenant, accountId: "wrong-account" }, reservationId: disconnectCompletion.reservationId,
+    }), /AI usage is temporarily unavailable/);
+    await completed(disconnectCompletion.reservationId);
+    await completed(disconnectCompletion.reservationId);
+    await compensated(disconnectCompensation.reservationId);
+    await compensated(disconnectCompensation.reservationId);
+    assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: disconnectCompletion.reservationId } })).status, "COMPLETED");
+    assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: disconnectCompensation.reservationId } })).status, "COMPENSATED");
+    await db.channelConnection.update({ where: { id: connection.id }, data: { status: "ACTIVE" } });
     await Promise.all([compensated(failure.reservationId), compensated(failure.reservationId)]);
-    assert.equal(await count(), 2);
+    assert.equal(await count(), 3);
     assert.equal(await legacyCount(), 3);
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: failure.reservationId } })).status, "COMPENSATED");
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: other.reservationId } })).status, "RESERVED");
@@ -78,7 +95,7 @@ try {
     removeTrigger.exec('DROP TRIGGER reject_legacy_shadow');
     removeTrigger.close();
     await assert.rejects(service.compensateAccountAiUsage({ ...input, tenant: { ...tenant, accountId: "wrong-account" }, reservationId: other.reservationId }), /AI usage is temporarily unavailable/);
-    assert.equal(await count(), 2);
+    assert.equal(await count(), 3);
     // Crash simulation: an uncompleted reservation stays charged.
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: other.reservationId } })).status, "RESERVED");
 

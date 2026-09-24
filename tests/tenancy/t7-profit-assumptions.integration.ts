@@ -116,10 +116,10 @@ try {
     for (const route of ["app.profit-assumptions.tsx", "app.forecasting.tsx", "app.recovery-simulator.tsx", "app.ai-advisor.tsx"]) {
       const source = readFileSync(path.join(process.cwd(), "app/routes", route), "utf8");
       assert.ok(/profitAssumptions\.findUnique\(\{\s*where:\s*\{\s*shop:\s*session\.shop/.test(source), `shop-scoped read missing in ${route}`);
-      assert.doesNotMatch(source, /channelConnectionId/);
+      if (route !== "app.profit-assumptions.tsx") assert.doesNotMatch(source, /channelConnectionId/);
     }
     const write = readFileSync(path.join(process.cwd(), "app/routes/app.profit-assumptions.tsx"), "utf8");
-    assert.ok(/profitAssumptions\.upsert\(\{\s*where:\s*\{\s*shop:\s*session\.shop/.test(write), "shop-scoped upsert missing");
+    assert.ok(write.includes("saveShopifyProfitAssumptions(session.shop, tenant"), "authenticated owner-aware upsert missing");
     console.log("T7 migration, six-field economics, atomic shadow backfill and shop-authority checks passed.");
   } finally {
     await db.$disconnect();

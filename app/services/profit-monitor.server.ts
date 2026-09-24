@@ -1,4 +1,6 @@
 import prisma from "~/db.server";
+import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
+import { requireShopifyRecordOwner, assertExistingShopifyRecordOwner } from "~/services/shopify-record-ownership.server";
 import { createHash } from "node:crypto";
 import type { ProfitAlert } from "~/utils/profit-monitor";
 import type {
@@ -147,11 +149,13 @@ function toStoredState(row: {
 
 export async function syncProfitMonitor({
   shop,
+  tenant,
   period,
   alerts,
   snapshot,
 }: {
   shop: string;
+  tenant?: AuthenticatedTenantContext;
   period: string | number;
   alerts: ProfitAlert[];
   snapshot: unknown;
@@ -161,19 +165,27 @@ export async function syncProfitMonitor({
   const fingerprint = createHash("sha256").update(payloadJson).digest("hex");
   const now = new Date();
   const activeKeys = new Set(alerts.map((alert) => alert.id));
+  const ownerId = tenant ? await requireShopifyRecordOwner(shop, tenant) : null;
+  if (ownerId) {
+    const priorSnapshot = await prisma.profitMonitorSnapshot.findUnique({
+      where: { shop_periodDays_fingerprint: { shop, periodDays, fingerprint } },
+    });
+    assertExistingShopifyRecordOwner(priorSnapshot?.channelConnectionId ?? null, ownerId);
+  }
 
   await prisma.$transaction(async (tx) => {
     const createdNotificationEvents: MonitorNotificationEvent[] = [];
 
     await tx.profitMonitorSnapshot.upsert({
       where: { shop_periodDays_fingerprint: { shop, periodDays, fingerprint } },
-      create: { shop, periodDays, fingerprint, payloadJson },
-      update: { capturedAt: now, payloadJson },
+      create: { shop, periodDays, fingerprint, payloadJson, ...(ownerId ? { channelConnectionId: ownerId } : {}) },
+      update: { capturedAt: now, payloadJson, ...(ownerId ? { channelConnectionId: ownerId } : {}) },
     });
 
     const existing = await tx.profitMonitorAlert.findMany({
       where: { shop, periodDays },
     });
+    if (ownerId) existing.forEach((row) => assertExistingShopifyRecordOwner(row.channelConnectionId, ownerId));
 
     const byKey = new Map(existing.map((row) => [row.alertKey, row]));
 
@@ -186,6 +198,7 @@ export async function syncProfitMonitor({
         hasMaterialAlertChange(previous!, alert);
 
       const data = {
+        ...(ownerId ? { channelConnectionId: ownerId } : {}),
         alertType: alertType(alert),
         productId: alert.productId ?? null,
         severity: alert.severity,

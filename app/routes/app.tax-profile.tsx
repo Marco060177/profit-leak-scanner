@@ -623,7 +623,7 @@ function getRegimeOptions({
 }
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
   const response = await admin.graphql(SHOP_QUERY);
   const json: TaxProfileShopResponse = await response.json();
@@ -641,6 +641,7 @@ export async function loader({ request }: { request: Request }) {
   const taxContext = await getStoreTaxContext({
     shop: session.shop,
     shopCountryCode,
+    tenant,
   });
 
   return {
@@ -650,7 +651,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
   const response = await admin.graphql(SHOP_QUERY);
   const json: TaxProfileShopResponse = await response.json();
@@ -669,6 +670,7 @@ export async function action({ request }: { request: Request }) {
 
   const context = await getStoreTaxContext({
     shop: session.shop,
+    tenant,
     shopCountryCode,
   });
 
@@ -746,6 +748,7 @@ export async function action({ request }: { request: Request }) {
 
   await saveStoreTaxProfile({
     shop: session.shop,
+    tenant,
     countryCode: context.effectiveCountryCode,
     regime,
     defaultVatRatePct,

@@ -4,6 +4,10 @@ import { readFileSync } from "node:fs";
 import { stripTypeScriptTypes } from "node:module";
 
 export async function resolve(specifier, context, nextResolve) {
+  if (context.parentURL?.endsWith("/app/services/notification-delivery.server.ts") &&
+    ["~/shopify.server", "~/services/email.server", "~/utils/billing.server"].includes(specifier)) {
+    return { shortCircuit: true, url: pathToFileURL(path.join(process.cwd(), "tests/tenancy/notification-dispatch.stub.ts")).href };
+  }
   if ((context.parentURL?.endsWith("/app/routes/webhooks.app.uninstalled.tsx") ||
     context.parentURL?.endsWith("/app/routes/webhooks.shop.redact.ts")) && specifier === "~/shopify.server") {
     return { shortCircuit: true, url: pathToFileURL(path.join(process.cwd(), "tests/tenancy/authenticate.stub.ts")).href };
