@@ -39,28 +39,26 @@ try {
   const compensated = (reservationId: string) => service.compensateAccountAiUsage({ ...input, reservationId });
   try {
     await db.aiUsage.create({ data: { shop, month, requests: 3 } });
-    await assert.rejects(reserve(), /AI usage is temporarily unavailable/);
-    assert.equal(await count(), null); // Legacy-only state never creates fresh Account quota.
-    await db.accountAiUsage.create({ data: { accountId: account.id, periodKey: month, requests: 3 } });
+    // Historical legacy-only state cannot block the authoritative Account quota.
     const first = await reserve();
     assert.equal(first.status, "RESERVED");
     if (first.status !== "RESERVED") throw new Error("Unexpected quota response");
-    assert.equal(await count(), 4);
-    assert.equal(await legacyCount(), 4);
+    assert.equal(await count(), 1);
+    assert.equal(await legacyCount(), 3);
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: first.reservationId } })).status, "RESERVED");
     await completed(first.reservationId);
     await completed(first.reservationId); // Successful AI and fallback are both charged; completion is idempotent.
-    assert.equal(await count(), 4);
+    assert.equal(await count(), 1);
     await assert.rejects(compensated(first.reservationId), /AI usage is temporarily unavailable/);
 
     const failure = await reserve();
     if (failure.status !== "RESERVED") throw new Error("Unexpected quota response");
     const other = await reserve();
     if (other.status !== "RESERVED") throw new Error("Unexpected quota response");
-    assert.equal(await count(), 6);
+    assert.equal(await count(), 3);
     await Promise.all([compensated(failure.reservationId), compensated(failure.reservationId)]);
-    assert.equal(await count(), 5);
-    assert.equal(await legacyCount(), 5);
+    assert.equal(await count(), 2);
+    assert.equal(await legacyCount(), 3);
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: failure.reservationId } })).status, "COMPENSATED");
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: other.reservationId } })).status, "RESERVED");
 
@@ -68,23 +66,23 @@ try {
     triggerDb.exec('CREATE TRIGGER reject_legacy_shadow BEFORE UPDATE ON "AiUsage" BEGIN SELECT RAISE(ABORT, \'test legacy shadow failure\'); END');
     triggerDb.close();
     const beforeShadowFailure = await count();
-    const shadowFailure = await reserve();
-    assert.equal(shadowFailure.status, "RESERVED");
-    if (shadowFailure.status !== "RESERVED") throw new Error("Unexpected quota response");
+    const legacyWriteBlocked = await reserve();
+    assert.equal(legacyWriteBlocked.status, "RESERVED");
+    if (legacyWriteBlocked.status !== "RESERVED") throw new Error("Unexpected quota response");
     assert.equal(await count(), beforeShadowFailure! + 1);
-    assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: shadowFailure.reservationId } })).legacyShadowApplied, false);
+    assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: legacyWriteBlocked.reservationId } })).legacyShadowApplied, false);
+    await compensated(legacyWriteBlocked.reservationId); // The legacy UPDATE trigger remains active.
+    assert.equal(await count(), beforeShadowFailure);
+    assert.equal(await legacyCount(), 3);
     const removeTrigger = new DatabaseSync(databasePath);
     removeTrigger.exec('DROP TRIGGER reject_legacy_shadow');
     removeTrigger.close();
-    await compensated(shadowFailure.reservationId);
-    assert.equal(await count(), beforeShadowFailure);
     await assert.rejects(service.compensateAccountAiUsage({ ...input, tenant: { ...tenant, accountId: "wrong-account" }, reservationId: other.reservationId }), /AI usage is temporarily unavailable/);
-    assert.equal(await count(), 5);
+    assert.equal(await count(), 2);
     // Crash simulation: an uncompleted reservation stays charged.
     assert.equal((await db.accountAiUsageReservation.findUniqueOrThrow({ where: { id: other.reservationId } })).status, "RESERVED");
 
     await db.accountAiUsage.update({ where: { accountId_periodKey: { accountId: account.id, periodKey: month } }, data: { requests: 99 } });
-    await db.aiUsage.update({ where: { shop_month: { shop, month } }, data: { requests: 99 } });
     const last = await reserve();
     assert.equal(last.status, "RESERVED");
     assert.equal(await count(), 100);
@@ -125,7 +123,7 @@ try {
     assert.match(route, /compensateAccountAiUsage/);
     assert.doesNotMatch(route, /prisma\.aiUsage\.findUnique|reserveAiUsage\(/);
     assert.match(route, /hasGrowthAccess\(billing\)/);
-    console.log("T9E account authority, atomic cap, reservation lifecycle, shadow and tenant safety passed.");
+    console.log("T9E/T9F account authority, atomic cap, reservation lifecycle, legacy independence and tenant safety passed.");
   } finally {
     await db.$disconnect();
   }

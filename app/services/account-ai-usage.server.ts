@@ -1,6 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
-import { AiUsageSafetyError, verifySingleShopifyOwner } from "~/services/ai-usage-shadow.server";
+import { AiUsageSafetyError, verifySingleShopifyOwner } from "~/services/ai-usage-ownership.server";
 import { normalizeVerifiedShopDomain } from "~/connectors/shopify/shop-domain";
 
 type Input = {
@@ -27,7 +27,7 @@ function retryable(error: unknown) {
     ["P2002", "P2034", "P1008"].includes(error.code);
 }
 
-/** Account quota is reserved before the optional, non-authoritative legacy shadow update. */
+/** Account quota and durable reservation are updated atomically. */
 export async function reserveAccountAiUsage({ db, shop, tenant, month, limit = 100 }: Input & { limit?: number }): Promise<AccountReservationResult> {
   const periodKey = period(month);
   const verifiedShop = normalizeVerifiedShopDomain(shop);
@@ -48,9 +48,6 @@ export async function reserveAccountAiUsage({ db, shop, tenant, month, limit = 1
             if (existing.requests === limit) return { status: "QUOTA_EXCEEDED" as const };
             return safety("INVALID_ACCOUNT_COUNT", periodKey);
           }
-          // A legacy-only row is a migration anomaly, not a fresh quota period.
-          const legacy = await tx.aiUsage.findUnique({ where: { shop_month: { shop: verifiedShop, month } } });
-          if (legacy) return safety("ACCOUNT_MISSING_WITH_LEGACY", periodKey);
           await tx.accountAiUsage.create({ data: { accountId: tenant.accountId, periodKey, requests: 1 } });
         }
         const reservation = await tx.accountAiUsageReservation.create({
@@ -58,24 +55,6 @@ export async function reserveAccountAiUsage({ db, shop, tenant, month, limit = 1
         });
         return { status: "RESERVED" as const, reservationId: reservation.id };
       });
-      if (result.status === "QUOTA_EXCEEDED") return result;
-      // Existing legacy rows remain a best-effort shadow. Never recreate a redacted row.
-      try {
-        await db.$transaction(async (tx) => {
-          const changed = await tx.aiUsage.updateMany({
-            where: { shop: verifiedShop, month }, data: { requests: { increment: 1 } },
-          });
-          if (changed.count === 1) {
-            await tx.accountAiUsageReservation.update({
-              where: { id: result.reservationId }, data: { legacyShadowApplied: true },
-            });
-          } else {
-            console.info("[ACCOUNT_AI_USAGE]", { reason: "LEGACY_SHADOW_ABSENT", periodKey });
-          }
-        });
-      } catch {
-        console.error("[ACCOUNT_AI_USAGE]", { reason: "LEGACY_SHADOW_UPDATE_FAILED", periodKey });
-      }
       return result;
     } catch (error) {
       if (!retryable(error)) throw error;
@@ -105,13 +84,13 @@ export async function completeAccountAiUsage({ db, shop, tenant, month, reservat
 export async function compensateAccountAiUsage({ db, shop, tenant, month, reservationId }: ReservationInput): Promise<void> {
   const periodKey = period(month);
   const verifiedShop = normalizeVerifiedShopDomain(shop);
-  const shouldCompensateLegacy = await db.$transaction(async (tx) => {
+  await db.$transaction(async (tx) => {
     await verifySingleShopifyOwner(tx, verifiedShop, tenant, periodKey);
     const reservation = await tx.accountAiUsageReservation.findUnique({ where: { id: reservationId } });
     if (!reservation || reservation.accountId !== tenant.accountId || reservation.periodKey !== periodKey) {
       return safety("RESERVATION_OWNERSHIP_INVALID", periodKey);
     }
-    if (reservation.status === "COMPENSATED") return false;
+    if (reservation.status === "COMPENSATED") return;
     if (reservation.status !== "RESERVED") return safety("COMPENSATION_BLOCKED", periodKey);
     const changed = await tx.accountAiUsageReservation.updateMany({
       where: { id: reservationId, accountId: tenant.accountId, periodKey, status: "RESERVED" },
@@ -123,15 +102,6 @@ export async function compensateAccountAiUsage({ db, shop, tenant, month, reserv
       data: { requests: { decrement: 1 } },
     });
     if (usage.count !== 1) return safety("ACCOUNT_DECREMENT_BLOCKED", periodKey);
-    return reservation.legacyShadowApplied;
+    return;
   });
-  if (!shouldCompensateLegacy) return;
-  try {
-    const changed = await db.aiUsage.updateMany({
-      where: { shop: verifiedShop, month, requests: { gt: 0 } }, data: { requests: { decrement: 1 } },
-    });
-    if (changed.count !== 1) console.error("[ACCOUNT_AI_USAGE]", { reason: "LEGACY_SHADOW_COMPENSATION_SKIPPED", periodKey });
-  } catch {
-    console.error("[ACCOUNT_AI_USAGE]", { reason: "LEGACY_SHADOW_COMPENSATION_FAILED", periodKey });
-  }
 }

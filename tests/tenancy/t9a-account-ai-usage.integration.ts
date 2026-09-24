@@ -77,10 +77,10 @@ try {
   assert.match(aiAdvisor, /reserveAccountAiUsage\(\{/);
   assert.match(aiAdvisor, /compensateAccountAiUsage\(\{/);
   assert.doesNotMatch(aiAdvisor, /prisma\.aiUsage\.findUnique/);
-  const shadowService = readFileSync(path.join(process.cwd(), "app/services/ai-usage-shadow.server.ts"), "utf8");
-  assert.match(shadowService, /tx\.aiUsage\.upsert/);
-  assert.match(shadowService, /tx\.aiUsage\.update/);
-  console.log("T9A additive migration, legacy preservation and Account FK/uniqueness passed; route authority now follows T9E.");
+  const runtimeService = readFileSync(path.join(process.cwd(), "app/services/account-ai-usage.server.ts"), "utf8");
+  assert.doesNotMatch(runtimeService, /(?:tx|db)\.aiUsage\.|legacyShadowApplied|ai-usage-shadow/);
+  assert.doesNotMatch(aiAdvisor, /ai-usage-shadow/);
+  console.log("T9A additive migration, legacy preservation and Account FK/uniqueness passed; runtime authority follows T9F.");
 } finally {
   db.close();
   rmSync(directory, { recursive: true, force: true });

@@ -41,7 +41,7 @@ import type { LoaderData } from "~/utils/margin";
 import { getLanguageLocale, isLanguage, type Language } from "~/utils/i18n";
 import { getRequestLanguage } from "~/utils/i18n.server";
 import { loadProfitImpactContext } from "~/services/profit-impact-context.server";
-import { AiUsageSafetyError } from "~/services/ai-usage-shadow.server";
+import { AiUsageSafetyError } from "~/services/ai-usage-ownership.server";
 import { reserveAccountAiUsage, completeAccountAiUsage, compensateAccountAiUsage } from "~/services/account-ai-usage.server";
 
 import "~/styles/dashboard.css";
