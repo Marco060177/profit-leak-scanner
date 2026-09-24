@@ -12,6 +12,7 @@ import { unauthenticated } from "~/shopify.server";
 import { getBillingStatus, hasStarterAccess } from "~/utils/billing.server";
 import { formatUiMoney } from "~/utils/formatting";
 import { getLanguageLocale } from "~/utils/i18n";
+import { resolveNotificationShopOwner } from "~/services/notification-ownership.server";
 
 type ProfitAlertPayload = {
   source?: string;
@@ -902,6 +903,21 @@ export async function processPendingNotificationDeliveries({
   };
 
   for (const delivery of deliveries) {
+    // Unattributed legacy rows wait for the controlled backfill; never infer an owner at send time.
+    if (!delivery.shop || !delivery.accountId || !delivery.channelConnectionId) {
+      skipped += 1;
+      continue;
+    }
+    try {
+      const owner = await resolveNotificationShopOwner(delivery.shop);
+      if (owner.accountId !== delivery.accountId || owner.channelConnectionId !== delivery.channelConnectionId) {
+        skipped += 1;
+        continue;
+      }
+    } catch {
+      skipped += 1;
+      continue;
+    }
     if (delivery.channel !== "email") {
       skipped += 1;
       continue;

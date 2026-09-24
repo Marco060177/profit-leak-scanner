@@ -1,6 +1,8 @@
 import prisma from "~/db.server";
 import type { ProfitAlert } from "~/utils/profit-monitor";
 import { isLanguage, type Language } from "~/utils/i18n";
+import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
+import { resolveNotificationShopOwner, sameNotificationPreferences } from "~/services/notification-ownership.server";
 
 export type NotificationLanguage = Language;
 
@@ -56,10 +58,24 @@ function sanitizeKeyPart(value: string) {
     .replace(/^-|-$/g, "");
 }
 
-export async function getNotificationPreferences(shop: string) {
-  return prisma.notificationPreferences.findUnique({
-    where: { shop },
+export async function getNotificationPreferences(shop: string, tenant?: AuthenticatedTenantContext) {
+  const owner = await resolveNotificationShopOwner(shop, tenant);
+  const accountPreference = await prisma.notificationPreferences.findUnique({ where: { accountId: owner.accountId } });
+  if (accountPreference) return accountPreference;
+  const mappings = await prisma.legacyShopMapping.findMany({ where: { accountId: owner.accountId }, select: { shopDomain: true } });
+  const legacy = await prisma.notificationPreferences.findMany({
+    where: { shop: { in: mappings.map((mapping) => mapping.shopDomain) } },
+    orderBy: { shop: "asc" },
   });
+  if (!legacy.length) return null;
+  if (!legacy.every((row) => sameNotificationPreferences(row, legacy[0]))) {
+    throw new Error("Conflicting notification preferences require manual resolution.");
+  }
+  const attached = await prisma.notificationPreferences.updateMany({
+    where: { id: legacy[0].id, accountId: null }, data: { accountId: owner.accountId },
+  });
+  if (attached.count === 1) return prisma.notificationPreferences.findUnique({ where: { accountId: owner.accountId } });
+  return prisma.notificationPreferences.findUnique({ where: { accountId: owner.accountId } });
 }
 
 export async function getOrCreateNotificationPreferences({
@@ -67,16 +83,22 @@ export async function getOrCreateNotificationPreferences({
   recipientEmail,
   timezone,
   language,
+  tenant,
 }: {
   shop: string;
   recipientEmail?: string | null;
   timezone?: string | null;
   language?: NotificationLanguage | string | null;
+  tenant?: AuthenticatedTenantContext;
 }) {
+  const owner = await resolveNotificationShopOwner(shop, tenant);
+  const existing = await getNotificationPreferences(shop, tenant);
+  if (existing) return existing;
   return prisma.notificationPreferences.upsert({
-    where: { shop },
+    where: { accountId: owner.accountId },
     create: {
-      shop,
+      shop: owner.shop,
+      accountId: owner.accountId,
       recipientEmail: normalizeEmail(recipientEmail),
       timezone: normalizeTimezone(timezone),
       language: normalizeNotificationLanguage(language),
@@ -88,19 +110,23 @@ export async function getOrCreateNotificationPreferences({
 export async function updateNotificationPreferences({
   shop,
   input,
+  tenant,
 }: {
   shop: string;
   input: NotificationPreferencesInput;
+  tenant?: AuthenticatedTenantContext;
 }) {
+  const owner = await resolveNotificationShopOwner(shop, tenant);
   const current = await getOrCreateNotificationPreferences({
     shop,
+    tenant,
     recipientEmail: input.recipientEmail,
     timezone: input.timezone,
     language: input.language,
   });
 
   return prisma.notificationPreferences.update({
-    where: { shop },
+    where: { accountId: owner.accountId },
     data: {
       recipientEmail:
         input.recipientEmail !== undefined
@@ -214,6 +240,7 @@ export async function createAlertNotificationDelivery({
   subject?: string;
   payload?: unknown;
 }) {
+  const owner = await resolveNotificationShopOwner(shop);
   const deduplicationKey = buildAlertDeduplicationKey({
     shop,
     periodDays,
@@ -225,6 +252,9 @@ export async function createAlertNotificationDelivery({
     await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
   if (existing) {
+    if (existing.accountId !== owner.accountId || existing.channelConnectionId !== owner.channelConnectionId) {
+      throw new Error("Notification delivery ownership mismatch.");
+    }
     return { created: false as const, delivery: existing };
   }
 
@@ -234,6 +264,8 @@ export async function createAlertNotificationDelivery({
     delivery = await prisma.notificationDelivery.create({
       data: {
         shop,
+        accountId: owner.accountId,
+        channelConnectionId: owner.channelConnectionId,
         channel: "email",
         notificationType: "profit_alert",
         recipient: normalizeEmail(recipient) ?? recipient.trim(),
@@ -252,6 +284,9 @@ export async function createAlertNotificationDelivery({
       await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
     if (concurrentDelivery) {
+      if (concurrentDelivery.accountId !== owner.accountId || concurrentDelivery.channelConnectionId !== owner.channelConnectionId) {
+        throw new Error("Notification delivery ownership mismatch.");
+      }
       return { created: false as const, delivery: concurrentDelivery };
     }
 
@@ -278,6 +313,7 @@ export async function createWeeklyReportDelivery({
   scheduledFor?: Date;
   deduplicationNamespace?: "weekly" | "weekly-test";
 }) {
+  const owner = await resolveNotificationShopOwner(shop);
   const deduplicationKey = buildWeeklyReportDeduplicationKey({
     shop,
     weekKey,
@@ -286,6 +322,9 @@ export async function createWeeklyReportDelivery({
 
   const existing =
     await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
+  if (existing && (existing.accountId !== owner.accountId || existing.channelConnectionId !== owner.channelConnectionId)) {
+    throw new Error("Notification delivery ownership mismatch.");
+  }
 
   if (
     existing?.status === "failed" &&
@@ -326,6 +365,8 @@ export async function createWeeklyReportDelivery({
     delivery = await prisma.notificationDelivery.create({
       data: {
         shop,
+        accountId: owner.accountId,
+        channelConnectionId: owner.channelConnectionId,
         channel: "email",
         notificationType: "weekly_profit_report",
         recipient: normalizeEmail(recipient) ?? recipient.trim(),
@@ -341,6 +382,9 @@ export async function createWeeklyReportDelivery({
       await getNotificationDeliveryByDeduplicationKey(deduplicationKey);
 
     if (concurrentDelivery) {
+      if (concurrentDelivery.accountId !== owner.accountId || concurrentDelivery.channelConnectionId !== owner.channelConnectionId) {
+        throw new Error("Notification delivery ownership mismatch.");
+      }
       return { created: false as const, delivery: concurrentDelivery };
     }
 

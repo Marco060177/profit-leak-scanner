@@ -3,9 +3,9 @@ import { unauthenticated } from "~/shopify.server";
 import { prepareWeeklyProfitReport } from "~/services/weekly-profit-report.server";
 import { processPendingNotificationDeliveries } from "~/services/notification-delivery.server";
 import { processDueProfitImpactMeasurements } from "~/services/profit-impact-measurement.server";
+import { listActiveNotificationShopMappings } from "~/services/notification-ownership.server";
 
 type NotificationPreferenceForScheduler = {
-  shop: string;
   recipientEmail: string | null;
   weeklyReportEnabled: boolean;
   weeklyReportDay: number;
@@ -125,13 +125,14 @@ export async function runNotificationScheduler({
   const preferences =
     await prisma.notificationPreferences.findMany({
       where: {
+        accountId: { not: null },
         weeklyReportEnabled: true,
         recipientEmail: {
           not: null,
         },
       },
       select: {
-        shop: true,
+        accountId: true,
         recipientEmail: true,
         weeklyReportEnabled: true,
         weeklyReportDay: true,
@@ -141,6 +142,7 @@ export async function runNotificationScheduler({
     });
 
   let dueShops = 0;
+  let eligibleShops = 0;
   let preparedReports = 0;
   let alreadyPreparedReports = 0;
   let skippedReports = 0;
@@ -153,6 +155,8 @@ export async function runNotificationScheduler({
   }> = [];
 
   for (const preference of preferences) {
+    const eligibleMappings = await listActiveNotificationShopMappings(preference.accountId!);
+    eligibleShops += eligibleMappings.length;
     if (
       !isWeeklyReportDue({
         preference,
@@ -162,36 +166,37 @@ export async function runNotificationScheduler({
       continue;
     }
 
-    dueShops += 1;
+    for (const mapping of eligibleMappings) {
+      dueShops += 1;
+      try {
+        const { admin, session } =
+          await unauthenticated.admin(mapping.shopDomain);
 
-    try {
-      const { admin, session } =
-        await unauthenticated.admin(preference.shop);
+        const result = await prepareWeeklyProfitReport({
+          admin,
+          session,
+          now,
+        });
 
-      const result = await prepareWeeklyProfitReport({
-        admin,
-        session,
-        now,
-      });
+        if (result.prepared) {
+          preparedReports += 1;
+        } else if (result.reason === "already_prepared") {
+          alreadyPreparedReports += 1;
+        } else {
+          skippedReports += 1;
+        }
+      } catch (error) {
+        failedReports += 1;
 
-      if (result.prepared) {
-        preparedReports += 1;
-      } else if (result.reason === "already_prepared") {
-        alreadyPreparedReports += 1;
-      } else {
-        skippedReports += 1;
+        errors.push({
+          shop: mapping.shopDomain,
+          stage: "prepare",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unknown weekly report preparation error.",
+        });
       }
-    } catch (error) {
-      failedReports += 1;
-
-      errors.push({
-        shop: preference.shop,
-        stage: "prepare",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Unknown weekly report preparation error.",
-      });
     }
   }
 
@@ -205,7 +210,7 @@ export async function runNotificationScheduler({
 
   return {
     runAt: now.toISOString(),
-    eligibleShops: preferences.length,
+    eligibleShops,
     dueShops,
     preparedReports,
     alreadyPreparedReports,

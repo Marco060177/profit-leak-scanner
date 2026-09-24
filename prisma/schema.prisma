@@ -23,6 +23,8 @@ model Account {
   legacyShopMappings LegacyShopMapping[]
   aiUsage            AccountAiUsage[]
   aiUsageReservations AccountAiUsageReservation[]
+  notificationPreferences NotificationPreferences?
+  notificationDeliveries NotificationDelivery[]
 }
 
 model AccountAiUsage {
@@ -65,6 +67,7 @@ model ChannelConnection {
   profitMonitorSnapshots ProfitMonitorSnapshot[]
   profitMonitorAlerts   ProfitMonitorAlert[]
   profitImpactActions   ProfitImpactAction[]
+  notificationDeliveries NotificationDelivery[]
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
@@ -223,7 +226,9 @@ model StoreTaxProfile {
 
 model NotificationPreferences {
   id                     String   @id @default(cuid())
-  shop                   String   @unique
+  shop                   String?  @unique
+  accountId              String?  @unique
+  account                Account? @relation(fields: [accountId], references: [id], onDelete: Restrict)
 
   recipientEmail         String?
 
@@ -246,7 +251,11 @@ model NotificationPreferences {
 
 model NotificationDelivery {
   id                 String   @id @default(cuid())
-  shop               String
+  shop               String?
+  accountId          String?
+  channelConnectionId String?
+  account            Account? @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection  ChannelConnection? @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
 
   channel            String   @default("email")
   notificationType   String
@@ -275,6 +284,8 @@ model NotificationDelivery {
   @@index([shop, notificationType, createdAt])
   @@index([shop, status])
   @@index([scheduledFor, status])
+  @@index([accountId, notificationType, createdAt])
+  @@index([channelConnectionId])
 }
 
 model ProfitImpactAction {

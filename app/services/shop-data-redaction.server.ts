@@ -2,6 +2,17 @@ import prisma from "~/db.server";
 
 export async function deleteShopData(shop: string) {
   return prisma.$transaction(async (tx) => {
+    const mapping = await tx.legacyShopMapping.findUnique({
+      where: { shopDomain: shop }, include: { channelConnection: true },
+    });
+    if (mapping && mapping.channelConnection.accountId === mapping.accountId &&
+      mapping.channelConnection.channel === "SHOPIFY" &&
+      mapping.channelConnection.externalAccountId === shop) {
+      await tx.channelConnection.updateMany({
+        where: { id: mapping.channelConnectionId, accountId: mapping.accountId, status: "ACTIVE" },
+        data: { status: "DISCONNECTED" },
+      });
+    }
     const profitImpactEvents = await tx.profitImpactEvent.deleteMany({
       where: { action: { shop } },
     });
@@ -18,7 +29,11 @@ export async function deleteShopData(shop: string) {
     const snapshots = await tx.profitMonitorSnapshot.deleteMany({ where: { shop } });
     const deliveries = await tx.notificationDelivery.deleteMany({ where: { shop } });
     const notificationPreferences = await tx.notificationPreferences.deleteMany({
-      where: { shop },
+      where: { shop, accountId: null },
+    });
+    // Account-owned settings survive redaction; remove only Shopify provenance.
+    await tx.notificationPreferences.updateMany({
+      where: { shop, accountId: { not: null } }, data: { shop: null },
     });
     const taxProfiles = await tx.storeTaxProfile.deleteMany({ where: { shop } });
     const profitAssumptions = await tx.profitAssumptions.deleteMany({ where: { shop } });

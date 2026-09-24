@@ -46,7 +46,7 @@ function parseNumber(value: FormDataEntryValue | null, fallback: number) {
 const dayOptions = [0, 1, 2, 3, 4, 5, 6];
 
 export async function loader({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
 
   if (!hasStarterAccess(billing)) {
@@ -57,6 +57,7 @@ export async function loader({ request }: { request: Request }) {
 
   const preferences = await getOrCreateNotificationPreferences({
     shop: session.shop,
+    tenant,
     language,
   });
 
@@ -64,7 +65,7 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export async function action({ request }: { request: Request }) {
-  const { admin, session } = await authenticateShopifyTenant(request);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request);
   const billing = await getBillingStatus(admin);
 
   if (!hasStarterAccess(billing)) {
@@ -79,6 +80,7 @@ export async function action({ request }: { request: Request }) {
   try {
     await updateNotificationPreferences({
       shop: session.shop,
+      tenant,
       input: {
         recipientEmail: String(formData.get("recipientEmail") || ""),
         weeklyReportEnabled: parseBoolean(formData.get("weeklyReportEnabled")),
