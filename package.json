@@ -39,6 +39,7 @@
     "tenancy:t9c1:ai-usage-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t9c1-ai-usage-backfill.ts",
     "tenancy:t10:notification-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t10-notification-backfill.ts",
     "test:tenancy-t10": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t10-notification-ownership.integration.ts",
+    "test:tenancy-t11": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t11-lifecycle.integration.ts",
     "tenancy:t8b:profit-impact-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8b-profit-impact-backfill.ts"
   },
   "type": "module",

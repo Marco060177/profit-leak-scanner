@@ -24,6 +24,8 @@ try {
   assert.equal(after.channelConnectionId, null);
   assert.throws(() => sqlite.exec(`INSERT INTO "StoreTaxProfile" ("id","shop","countryCode","updatedAt") VALUES ('duplicate','before.myshopify.com','IT','2026-01-02T00:00:00.000Z')`), /UNIQUE/);
   assert.equal((sqlite.prepare(`SELECT "on_delete" FROM pragma_foreign_key_list('StoreTaxProfile')`).get() as { on_delete: string }).on_delete, "RESTRICT");
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "status" TEXT NOT NULL DEFAULT \'ACTIVE\'');
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "deletionRequestedAt" DATETIME');
   sqlite.close();
   process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 

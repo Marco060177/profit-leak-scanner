@@ -7,7 +7,7 @@ import { normalizeVerifiedShopDomain } from "./shop-domain";
 async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTenantContext | null> {
   const mapping = await prisma.legacyShopMapping.findUnique({
     where: { shopDomain },
-    include: { channelConnection: true },
+    include: { channelConnection: true, account: true },
   });
   if (!mapping) return null;
   if (
@@ -17,6 +17,7 @@ async function findShopifyMapping(shopDomain: string): Promise<AuthenticatedTena
   ) {
     throw new Error("Inconsistent Shopify tenant mapping");
   }
+  if (mapping.account.status !== "ACTIVE" || mapping.channelConnection.status !== "ACTIVE") return null;
   return {
     accountId: mapping.accountId,
     channelConnectionId: mapping.channelConnectionId,
@@ -31,18 +32,19 @@ async function activateExistingShopifyMapping(shopDomain: string): Promise<Authe
   // Only a genuinely disconnected connection needs a conditional state change.
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const mapping = await prisma.legacyShopMapping.findUnique({
-      where: { shopDomain }, include: { channelConnection: true },
+      where: { shopDomain }, include: { channelConnection: true, account: true },
     });
     if (!mapping) return null;
     const connection = mapping.channelConnection;
     if (
+      mapping.account.status !== "ACTIVE" ||
       connection.accountId !== mapping.accountId || connection.channel !== "SHOPIFY" ||
       connection.externalAccountId !== shopDomain ||
-      !["ACTIVE", "DISCONNECTED"].includes(connection.status)
+      !["ACTIVE", "DISCONNECTED", "REAUTH_REQUIRED"].includes(connection.status)
     ) throw new Error("Inconsistent Shopify tenant mapping or unsafe status");
-    if (connection.status === "DISCONNECTED") {
+    if (connection.status === "DISCONNECTED" || connection.status === "REAUTH_REQUIRED") {
       const changed = await prisma.channelConnection.updateMany({
-        where: { id: connection.id, accountId: mapping.accountId, status: "DISCONNECTED" },
+        where: { id: connection.id, accountId: mapping.accountId, status: connection.status },
         data: { status: "ACTIVE" },
       });
       if (changed.count === 0) continue; // A concurrent reinstall/uninstall changed the state; re-read it.

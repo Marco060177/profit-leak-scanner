@@ -45,6 +45,8 @@ try {
   assert.equal(defaults.find((item) => item.name === "status")?.dflt_value, "'ACCEPTED'");
   assert.throws(() => sqlite.exec(`INSERT INTO "ProfitImpactAction" ("id","shop","idempotencyKey","actionType","sourceModule","title","changeDescription","currencyCode","updatedAt") VALUES ('duplicate','old.myshopify.com','intent:old','OTHER','ALERT_CENTER','x','x','USD','2026-01-02T00:00:00.000Z')`), /UNIQUE/);
   assert.throws(() => sqlite.exec(`INSERT INTO "ProfitImpactAction" ("id","shop","idempotencyKey","measuringProductKey","actionType","sourceModule","title","changeDescription","currencyCode","updatedAt") VALUES ('duplicate-measuring','old.myshopify.com','intent:other','123','OTHER','ALERT_CENTER','x','x','USD','2026-01-02T00:00:00.000Z')`), /UNIQUE/);
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "status" TEXT NOT NULL DEFAULT \'ACTIVE\'');
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "deletionRequestedAt" DATETIME');
   sqlite.close();
   process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 
@@ -128,10 +130,12 @@ try {
     assert.ok(/where:\s*\{ status: "MEASURING", appliedAt: \{ not: null \} \}/.test(worker));
     assert.ok(/unauthenticated\.admin\(action\.shop\)/.test(worker));
     assert.ok(/const shop = session\.shop/.test(worker));
-    assert.ok(!worker.includes("channelConnectionId"));
+    assert.ok(worker.includes("findShopifyTenantContext(action.shop)"));
+    assert.ok(worker.includes("action.channelConnectionId !== owner.channelConnectionId"));
+    assert.ok(worker.indexOf("findShopifyTenantContext(action.shop)") < worker.indexOf("unauthenticated.admin(action.shop)"));
     const redaction = readFileSync(path.join(process.cwd(), "app/services/shop-data-redaction.server.ts"), "utf8");
     assert.ok(/profitImpactAction\.deleteMany\(\{\s*where:\s*\{ shop \}/.test(redaction));
-    console.log("T8B migration, child preservation, atomic backfill and unchanged Shopify worker authority checks passed.");
+    console.log("T8B migration, child preservation, atomic backfill and T11-guarded Shopify worker checks passed.");
   } finally {
     await db.$disconnect();
   }

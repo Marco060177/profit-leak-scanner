@@ -9,7 +9,7 @@ export async function deleteShopData(shop: string) {
       mapping.channelConnection.channel === "SHOPIFY" &&
       mapping.channelConnection.externalAccountId === shop) {
       await tx.channelConnection.updateMany({
-        where: { id: mapping.channelConnectionId, accountId: mapping.accountId, status: "ACTIVE" },
+        where: { id: mapping.channelConnectionId, accountId: mapping.accountId, status: { in: ["ACTIVE", "REAUTH_REQUIRED"] } },
         data: { status: "DISCONNECTED" },
       });
     }

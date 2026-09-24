@@ -17,6 +17,7 @@ import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import type { BillingStatus } from "~/utils/margin";
 import { getLanguageLocale } from "~/utils/i18n";
 import { loadMarginDashboardData } from "~/utils/margin.server";
+import { findShopifyTenantContext } from "~/connectors/shopify/shopify-tenant-resolver.server";
 
 export type PostMeasurementSnapshot = {
   revenue: number;
@@ -498,6 +499,11 @@ export async function processDueProfitImpactMeasurements({
   const { unauthenticated } = await import("~/shopify.server");
   for (const action of actions) {
     try {
+      const owner = await findShopifyTenantContext(action.shop);
+      if (!owner || (action.channelConnectionId && action.channelConnectionId !== owner.channelConnectionId)) {
+        skipped += 1;
+        continue;
+      }
       const { admin, session } = await unauthenticated.admin(action.shop);
       const billing = await getBillingStatus(admin);
       if (!hasGrowthAccess(billing)) {

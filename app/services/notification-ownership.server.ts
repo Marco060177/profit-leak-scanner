@@ -10,10 +10,10 @@ export async function resolveNotificationShopOwner(
 ) {
   const normalizedShop = normalizeVerifiedShopDomain(shop);
   const mapping = await prisma.legacyShopMapping.findUnique({
-    where: { shopDomain: normalizedShop }, include: { channelConnection: true },
+    where: { shopDomain: normalizedShop }, include: { channelConnection: true, account: true },
   });
   const connection = mapping?.channelConnection;
-  if (!mapping || !connection || connection.accountId !== mapping.accountId ||
+  if (!mapping || !connection || mapping.account.status !== "ACTIVE" || connection.accountId !== mapping.accountId ||
     connection.channel !== "SHOPIFY" || connection.externalAccountId !== normalizedShop ||
     (connection.status !== "ACTIVE" && !(allowDisconnected && connection.status === "DISCONNECTED")) ||
     (tenant && (tenant.accountId !== mapping.accountId ||
@@ -27,7 +27,7 @@ export async function resolveNotificationShopOwner(
 /** Cron selects only persisted, active, internally consistent Shopify channel mappings. */
 export async function listActiveNotificationShopMappings(accountId: string) {
   const mappings = await prisma.legacyShopMapping.findMany({
-    where: { accountId, channelConnection: { channel: "SHOPIFY", status: "ACTIVE" } },
+    where: { accountId, account: { status: "ACTIVE" }, channelConnection: { channel: "SHOPIFY", status: "ACTIVE" } },
     include: { channelConnection: true },
   });
   return mappings.filter((mapping) =>

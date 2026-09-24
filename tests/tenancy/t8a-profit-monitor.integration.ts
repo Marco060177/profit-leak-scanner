@@ -44,6 +44,8 @@ try {
   assert.ok(!eventColumns.includes("channelConnectionId") && !eventColumns.includes("accountId"));
   assert.throws(() => sqlite.exec(`INSERT INTO "ProfitMonitorSnapshot" ("id","shop","periodDays","fingerprint","payloadJson") VALUES ('duplicate','old.myshopify.com',30,'fingerprint','{}')`), /UNIQUE/);
   assert.throws(() => sqlite.exec(`INSERT INTO "ProfitMonitorAlert" ("id","shop","periodDays","alertKey","alertType","severity","category","title","description","economicKind","actionLabel","route","businessAction","effort","recommendedModule","updatedAt") VALUES ('duplicate','old.myshopify.com',30,'pricing-opportunity-123','pricing','warning','pricing','x','x','gross','x','/','review','medium','PRODUCTS','2026-01-02T00:00:00.000Z')`), /UNIQUE/);
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "status" TEXT NOT NULL DEFAULT \'ACTIVE\'');
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "deletionRequestedAt" DATETIME');
   sqlite.close();
   process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 

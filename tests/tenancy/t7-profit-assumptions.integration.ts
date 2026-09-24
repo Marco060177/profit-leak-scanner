@@ -42,6 +42,8 @@ try {
   assert.equal((sqlite.prepare(`SELECT "on_delete" FROM pragma_foreign_key_list('ProfitAssumptions')`).get() as { on_delete: string }).on_delete, "RESTRICT");
   const defaults = sqlite.prepare(`SELECT name,dflt_value FROM pragma_table_info('ProfitAssumptions')`).all() as { name: string; dflt_value: string | null }[];
   for (const key of economicKeys) assert.equal(defaults.find((column) => column.name === key)?.dflt_value, "0");
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "status" TEXT NOT NULL DEFAULT \'ACTIVE\'');
+  sqlite.exec('ALTER TABLE "Account" ADD COLUMN "deletionRequestedAt" DATETIME');
   sqlite.close();
   process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 

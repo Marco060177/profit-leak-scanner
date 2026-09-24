@@ -1,35 +1,8 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
-
-import prisma from "~/db.server";
-import {
-  claimProfitImpactMeasurement,
-  createImmutableProfitImpactMeasurement,
-  createProfitImpactAction,
-  getProfitImpactActionForShop,
-  releaseProfitImpactMeasurementClaim,
-  startProfitImpactMeasurement,
-  transitionProfitImpactAction,
-} from "~/services/profit-impact.server";
-import {
-  calculateAttribution,
-  calculateAttributionConfidence,
-  calculateMeasuredChanges,
-} from "~/services/profit-impact-measurement.server";
-import { deleteShopData } from "~/services/shop-data-redaction.server";
-import { hasGrowthAccess } from "~/utils/billing.server";
-import { loadLocaleMessages } from "~/utils/i18n-catalogs.server";
-import {
-  aggregateProfitImpact,
-  classifyProfitImpactAction,
-} from "~/utils/profit-impact-summary";
-import {
-  buildProfitImpactAiContext,
-  buildWeeklyProfitImpactSummary,
-  completedNotificationEligible,
-  getProfitImpactReminders,
-  historicalInsightEligibility,
-} from "~/services/profit-impact-context.server";
+import os from "node:os";
+import path from "node:path";
+import { DatabaseSync } from "node:sqlite";
 
 const migrationFiles = fs
   .readdirSync("prisma/migrations", { withFileTypes: true })
@@ -37,17 +10,30 @@ const migrationFiles = fs
   .map((entry) => `prisma/migrations/${entry.name}/migration.sql`)
   .filter((file) => fs.existsSync(file))
   .sort();
-for (const file of migrationFiles) {
-  const migration = fs.readFileSync(file, "utf8");
-  for (const statement of migration.split(";").map((part) => part.trim()).filter(Boolean)) {
-    try {
-      await prisma.$executeRawUnsafe(statement);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes("already exists") && !message.includes("duplicate column name")) throw error;
-    }
-  }
-}
+const fixtureDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "marginlab-profit-impact-"));
+const fixturePath = path.join(fixtureDirectory, "integration.sqlite");
+const sqlite = new DatabaseSync(fixturePath);
+sqlite.exec("PRAGMA foreign_keys = ON");
+for (const file of migrationFiles) sqlite.exec(fs.readFileSync(file, "utf8"));
+sqlite.close();
+process.env.DATABASE_URL = `file:${fixturePath.replace(/\\/g, "/")}`;
+const [dbModule, impact, measurement, redaction, billing, catalogs, summary, context] = await Promise.all([
+  import("~/db.server"), import("~/services/profit-impact.server"),
+  import("~/services/profit-impact-measurement.server"), import("~/services/shop-data-redaction.server"),
+  import("~/utils/billing.server"), import("~/utils/i18n-catalogs.server"),
+  import("~/utils/profit-impact-summary"), import("~/services/profit-impact-context.server"),
+]);
+const prisma = dbModule.default;
+const { claimProfitImpactMeasurement, createImmutableProfitImpactMeasurement, createProfitImpactAction,
+  getProfitImpactActionForShop, releaseProfitImpactMeasurementClaim, startProfitImpactMeasurement,
+  transitionProfitImpactAction } = impact;
+const { calculateAttribution, calculateAttributionConfidence, calculateMeasuredChanges } = measurement;
+const { deleteShopData } = redaction;
+const { hasGrowthAccess } = billing;
+const { loadLocaleMessages } = catalogs;
+const { aggregateProfitImpact, classifyProfitImpactAction } = summary;
+const { buildProfitImpactAiContext, buildWeeklyProfitImpactSummary, completedNotificationEligible,
+  getProfitImpactReminders, historicalInsightEligibility } = context;
 
 const shop = "impact-test.myshopify.com";
 const otherShop = "other-impact-test.myshopify.com";
@@ -458,3 +444,4 @@ assert.equal(await prisma.profitImpactEvent.count(), 0);
 
 console.log("Profit Impact integration checks passed.");
 await prisma.$disconnect();
+fs.rmSync(fixtureDirectory, { recursive: true, force: true });

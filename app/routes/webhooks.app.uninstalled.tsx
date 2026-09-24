@@ -20,7 +20,7 @@ export const action = async ({ request }: { request: Request }) => {
     const outcome = await prisma.$transaction(async (tx) => {
       const mapping = await tx.legacyShopMapping.findUnique({
         where: { shopDomain: normalizedShop },
-        include: { channelConnection: true },
+        include: { channelConnection: true, account: true },
       });
       if (!mapping) return "MISSING_MAPPING";
       const connection = mapping.channelConnection;
@@ -28,10 +28,12 @@ export const action = async ({ request }: { request: Request }) => {
         connection.accountId !== mapping.accountId ||
         connection.channel !== "SHOPIFY" ||
         connection.externalAccountId !== normalizedShop ||
-        !["ACTIVE", "DISCONNECTED"].includes(connection.status)
+        !(mapping.account.status === "PENDING_DELETION" && connection.status === "PENDING_DELETION") &&
+        !(mapping.account.status === "ACTIVE" && ["ACTIVE", "DISCONNECTED", "REAUTH_REQUIRED"].includes(connection.status))
       ) return "UNSAFE_MAPPING";
+      if (mapping.account.status === "PENDING_DELETION") return "DISCONNECTED";
       await tx.channelConnection.updateMany({
-        where: { id: connection.id, accountId: mapping.accountId, status: "ACTIVE" },
+        where: { id: connection.id, accountId: mapping.accountId, status: { in: ["ACTIVE", "REAUTH_REQUIRED"] } },
         data: { status: "DISCONNECTED" },
       });
       return "DISCONNECTED";

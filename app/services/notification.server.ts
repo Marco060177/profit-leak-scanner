@@ -420,6 +420,7 @@ export async function claimPendingNotificationDelivery(id: string) {
     where: {
       id,
       status: "pending",
+      account: { is: { status: "ACTIVE" } },
     },
     data: {
       status: "processing",
