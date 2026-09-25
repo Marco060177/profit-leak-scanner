@@ -27,6 +27,14 @@ model Account {
   aiUsageReservations AccountAiUsageReservation[]
   notificationPreferences NotificationPreferences?
   notificationDeliveries NotificationDelivery[]
+  marketplaces Marketplace[]
+  products Product[]
+  skus Sku[]
+  channelListings ChannelListing[]
+  productMappingCandidates ProductMappingCandidate[]
+  productMappingDecisions ProductMappingDecision[]
+  syncRuns SyncRun[]
+  rawSourceRecords RawSourceRecord[]
 
   @@index([status])
 }
@@ -72,9 +80,27 @@ model ChannelConnection {
   profitMonitorAlerts   ProfitMonitorAlert[]
   profitImpactActions   ProfitImpactAction[]
   notificationDeliveries NotificationDelivery[]
+  marketplaces Marketplace[]
+  channelListings ChannelListing[]
+  syncRuns SyncRun[]
+  rawSourceRecords RawSourceRecord[]
+  syncCheckpoints SyncCheckpoint[]
+  dataCoverages DataCoverage[]
+  coreAuthorization CoreChannelAuthorization?
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
+  @@index([accountId])
+}
+
+/** D1 sync authorization epoch; no Shopify runtime path reads this yet. */
+model CoreChannelAuthorization {
+  channelConnectionId String @id
+  accountId String
+  authorizationVersion String
+  updatedAt DateTime @updatedAt
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  @@unique([channelConnectionId, accountId])
   @@index([accountId])
 }
 
@@ -382,4 +408,325 @@ model ProfitImpactEvent {
   action     ProfitImpactAction @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@index([actionId, createdAt])
+}
+
+// D1 persisted Data Core foundation. Shopify runtime does not read these tables.
+model Marketplace {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  externalMarketplaceId String
+  countryCode String?
+  currencyCode String?
+  status String @default("ACTIVE")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  channelListings ChannelListing[]
+  syncSlices SyncSlice[]
+  syncCheckpoints SyncCheckpoint[]
+  dataCoverages DataCoverage[]
+  @@unique([channelConnectionId, externalMarketplaceId])
+  @@unique([id, accountId, channelConnectionId])
+  @@index([accountId])
+}
+
+model Product {
+  id String @id @default(cuid())
+  accountId String
+  title String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  skus Sku[]
+  @@unique([id, accountId])
+  @@index([accountId])
+}
+
+model Sku {
+  id String @id @default(cuid())
+  accountId String
+  productId String?
+  sellerSku String?
+  barcode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  product Product? @relation(fields: [productId, accountId], references: [id, accountId], onDelete: Restrict)
+  listings ChannelListing[]
+  mappingCandidates ProductMappingCandidate[]
+  @@unique([id, accountId])
+  @@index([accountId, sellerSku])
+  @@index([productId])
+}
+
+model ChannelListing {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  sourceEntityType String
+  externalProductId String?
+  externalVariantOrListingId String
+  skuId String?
+  state String @default("ACTIVE")
+  metadataJson String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  sku Sku? @relation(fields: [skuId, accountId], references: [id, accountId], onDelete: Restrict)
+  mappingCandidates ProductMappingCandidate[]
+  @@unique([channelConnectionId, marketplaceScopeKey, sourceEntityType, externalVariantOrListingId])
+  @@unique([id, accountId])
+  @@index([accountId, skuId])
+}
+
+model ProductMappingCandidate {
+  id String @id @default(cuid())
+  accountId String
+  listingId String
+  candidateSkuId String
+  ruleVersion String
+  confidence Int
+  state String @default("PENDING")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  listing ChannelListing @relation(fields: [listingId, accountId], references: [id, accountId], onDelete: Restrict)
+  sku Sku @relation(fields: [candidateSkuId, accountId], references: [id, accountId], onDelete: Restrict)
+  decisions ProductMappingDecision[]
+  @@unique([listingId, candidateSkuId, ruleVersion])
+  @@unique([id, accountId])
+  @@index([accountId, state])
+}
+
+model ProductMappingDecision {
+  id String @id @default(cuid())
+  accountId String
+  candidateId String
+  decision String
+  actorRef String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  candidate ProductMappingCandidate @relation(fields: [candidateId, accountId], references: [id, accountId], onDelete: Restrict)
+  @@index([candidateId, createdAt])
+}
+
+model CurrencyPolicyVersion {
+  id String @id @default(cuid())
+  version String @unique
+  checksum String
+  exponentSourceVersion String
+  roundingMode String
+  toleranceAtoms BigInt
+  toleranceScale Int
+  residualPolicy String
+  activatedAt DateTime?
+  deactivatedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model MappingVersion {
+  id String @id @default(cuid())
+  platform ChannelPlatform
+  sourceContract String
+  sourceVersion String
+  mapperSemanticVersion String
+  formulaCompatibilityVersion String
+  checksum String
+  activatedAt DateTime?
+  deactivatedAt DateTime?
+  createdAt DateTime @default(now())
+  syncRuns SyncRun[]
+  normalizationRuns NormalizationRun[]
+  syncCheckpoints SyncCheckpoint[]
+  @@unique([platform, sourceContract, sourceVersion, mapperSemanticVersion])
+}
+
+model SyncRun {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  stream String
+  authorizationVersion String
+  mappingVersionId String
+  status String @default("PENDING")
+  attempt Int @default(0)
+  createdAt DateTime @default(now())
+  startedAt DateTime?
+  finishedAt DateTime?
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  rawSourceRecords RawSourceRecord[]
+  slices SyncSlice[]
+  @@unique([id, accountId, channelConnectionId])
+  @@index([channelConnectionId, stream, status])
+}
+
+model RawSourceRecord {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  sourceSystem String
+  sourceVersion String
+  sourceEntityType String
+  sourceEntityId String
+  sourceSnapshotVersion String?
+  capturedAt DateTime
+  sourceUpdatedAt DateTime?
+  schemaVersion String
+  payloadChecksum String
+  payloadByteLength Int
+  retentionClass String
+  expiresAt DateTime?
+  ingestionRunId String?
+  payloadStorageMode String @default("DB_CHUNKS")
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  ingestionRun SyncRun? @relation(fields: [ingestionRunId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  chunks RawSourceBlobChunk[]
+  references SourceReference[]
+  normalizationRuns NormalizationRun[]
+  sliceEvidence SyncSliceEvidence[]
+  @@unique([channelConnectionId, sourceSystem, sourceVersion, sourceEntityType, sourceEntityId, payloadChecksum])
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([id, accountId, channelConnectionId, ingestionRunId])
+  @@index([accountId, capturedAt])
+}
+
+model RawSourceBlobChunk {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  rawSourceRecordId String
+  chunkIndex Int
+  encryptedBytes Bytes
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  @@unique([rawSourceRecordId, chunkIndex])
+}
+
+model SourceReference {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  rawSourceRecordId String
+  sourceLeafPath String
+  targetKind String
+  targetKey String
+  createdAt DateTime @default(now())
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  @@unique([rawSourceRecordId, sourceLeafPath, targetKind, targetKey])
+  @@index([accountId, targetKind, targetKey])
+}
+
+model NormalizationRun {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  rawSourceRecordId String
+  mappingVersionId String
+  parserVersion String
+  normalizationRevision Int
+  status String @default("PENDING")
+  safeErrorCode String?
+  createdAt DateTime @default(now())
+  finishedAt DateTime?
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  sliceEvidence SyncSliceEvidence[]
+  @@unique([rawSourceRecordId, mappingVersionId, normalizationRevision])
+  @@unique([id, accountId, channelConnectionId, rawSourceRecordId])
+  @@index([accountId, status])
+}
+
+model SyncSlice {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  runId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  stream String
+  sliceKey String
+  authorizationVersion String
+  status String @default("PENDING")
+  leaseOwner String?
+  leaseExpiresAt DateTime?
+  attempt Int @default(0)
+  nextAttemptAt DateTime?
+  safeErrorCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  run SyncRun @relation(fields: [runId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  checkpoints SyncCheckpoint[]
+  evidence SyncSliceEvidence[]
+  @@unique([channelConnectionId, marketplaceScopeKey, stream, sliceKey])
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([id, accountId, channelConnectionId, runId])
+  @@index([status, nextAttemptAt, leaseExpiresAt])
+}
+
+model SyncSliceEvidence {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  sliceId String
+  runId String
+  rawSourceRecordId String
+  normalizationRunId String
+  createdAt DateTime @default(now())
+  slice SyncSlice @relation(fields: [sliceId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, runId], onDelete: Restrict)
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, ingestionRunId], onDelete: Restrict)
+  normalizationRun NormalizationRun @relation(fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId], references: [id, accountId, channelConnectionId, rawSourceRecordId], onDelete: Restrict)
+  @@unique([sliceId, rawSourceRecordId])
+  @@index([accountId, channelConnectionId])
+}
+
+model SyncCheckpoint {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  stream String
+  cursorValue String?
+  windowWatermark DateTime?
+  authorizationVersion String
+  mappingVersionId String
+  processedSliceId String?
+  updatedAt DateTime @updatedAt
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  processedSlice SyncSlice? @relation(fields: [processedSliceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  @@unique([channelConnectionId, marketplaceScopeKey, stream])
+}
+
+model DataCoverage {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  datasetKey String
+  windowStart DateTime
+  windowEnd DateTime
+  revision Int
+  capabilityStatus String
+  datasetQualityStatus String
+  completenessBps Int?
+  reasonCode String?
+  sourceWatermark DateTime?
+  createdAt DateTime @default(now())
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  @@unique([channelConnectionId, marketplaceScopeKey, datasetKey, windowStart, windowEnd, revision])
+  @@index([accountId, datasetKey, windowStart])
 }
