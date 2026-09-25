@@ -35,6 +35,7 @@ model Account {
   productMappingDecisions ProductMappingDecision[]
   syncRuns SyncRun[]
   rawSourceRecords RawSourceRecord[]
+  normalizedOrders NormalizedOrder[]
 
   @@index([status])
 }
@@ -84,6 +85,7 @@ model ChannelConnection {
   channelListings ChannelListing[]
   syncRuns SyncRun[]
   rawSourceRecords RawSourceRecord[]
+  normalizedOrders NormalizedOrder[]
   syncCheckpoints SyncCheckpoint[]
   dataCoverages DataCoverage[]
   coreAuthorization CoreChannelAuthorization?
@@ -427,6 +429,7 @@ model Marketplace {
   syncSlices SyncSlice[]
   syncCheckpoints SyncCheckpoint[]
   dataCoverages DataCoverage[]
+  normalizedOrders NormalizedOrder[]
   @@unique([channelConnectionId, externalMarketplaceId])
   @@unique([id, accountId, channelConnectionId])
   @@index([accountId])
@@ -456,6 +459,7 @@ model Sku {
   product Product? @relation(fields: [productId, accountId], references: [id, accountId], onDelete: Restrict)
   listings ChannelListing[]
   mappingCandidates ProductMappingCandidate[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([id, accountId])
   @@index([accountId, sellerSku])
   @@index([productId])
@@ -480,8 +484,10 @@ model ChannelListing {
   marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
   sku Sku? @relation(fields: [skuId, accountId], references: [id, accountId], onDelete: Restrict)
   mappingCandidates ProductMappingCandidate[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([channelConnectionId, marketplaceScopeKey, sourceEntityType, externalVariantOrListingId])
   @@unique([id, accountId])
+  @@unique([id, accountId, channelConnectionId, marketplaceScopeKey])
   @@index([accountId, skuId])
 }
 
@@ -513,6 +519,8 @@ model ProductMappingDecision {
   createdAt DateTime @default(now())
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   candidate ProductMappingCandidate @relation(fields: [candidateId, accountId], references: [id, accountId], onDelete: Restrict)
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
+  @@unique([id, accountId])
   @@index([candidateId, createdAt])
 }
 
@@ -543,6 +551,8 @@ model MappingVersion {
   createdAt DateTime @default(now())
   syncRuns SyncRun[]
   normalizationRuns NormalizationRun[]
+  normalizedOrderRevisions NormalizedOrderRevision[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   syncCheckpoints SyncCheckpoint[]
   @@unique([platform, sourceContract, sourceVersion, mapperSemanticVersion])
 }
@@ -594,6 +604,8 @@ model RawSourceRecord {
   references SourceReference[]
   normalizationRuns NormalizationRun[]
   sliceEvidence SyncSliceEvidence[]
+  normalizedOrderRevisions NormalizedOrderRevision[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([channelConnectionId, sourceSystem, sourceVersion, sourceEntityType, sourceEntityId, payloadChecksum])
   @@unique([id, accountId, channelConnectionId])
   @@unique([id, accountId, channelConnectionId, ingestionRunId])
@@ -640,9 +652,112 @@ model NormalizationRun {
   rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
   mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
   sliceEvidence SyncSliceEvidence[]
+  normalizedOrderRevisions NormalizedOrderRevision[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([rawSourceRecordId, mappingVersionId, normalizationRevision])
   @@unique([id, accountId, channelConnectionId, rawSourceRecordId])
+  @@unique([id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision])
   @@index([accountId, status])
+}
+
+model NormalizedOrder {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  sourceSystem String
+  sourceOrderKey String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  revisions NormalizedOrderRevision[]
+  items NormalizedOrderItem[]
+  @@unique([channelConnectionId, marketplaceScopeKey, sourceSystem, sourceOrderKey])
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([id, accountId, channelConnectionId, marketplaceScopeKey])
+  @@index([accountId])
+}
+
+model NormalizedOrderRevision {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  orderId String
+  revision Int
+  operationKey String
+  inputChecksum String
+  normalizedStatus String
+  sourceStatus String?
+  occurredAt DateTime?
+  postedAt DateTime?
+  rawSourceRecordId String
+  normalizationRunId String
+  mappingVersionId String
+  normalizationRevision Int
+  syncSliceEvidenceId String
+  createdAt DateTime @default(now())
+  order NormalizedOrder @relation(fields: [orderId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  normalizationRun NormalizationRun @relation(fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], references: [id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], onDelete: Restrict)
+  mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  syncSliceEvidence SyncSliceEvidence @relation(fields: [syncSliceEvidenceId, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], references: [id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], onDelete: Restrict)
+  @@unique([orderId, revision])
+  @@unique([orderId, operationKey])
+  @@index([accountId, channelConnectionId])
+}
+
+model NormalizedOrderItem {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  orderId String
+  sourceItemKey String
+  createdAt DateTime @default(now())
+  order NormalizedOrder @relation(fields: [orderId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  revisions NormalizedOrderItemRevision[]
+  @@unique([orderId, sourceItemKey])
+  @@unique([id, accountId, channelConnectionId])
+  @@index([accountId, channelConnectionId])
+}
+
+model NormalizedOrderItemRevision {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  itemId String
+  revision Int
+  operationKey String
+  inputChecksum String
+  quantityAtoms BigInt
+  quantityScale Int
+  sourceState String?
+  skuId String?
+  channelListingId String?
+  sourceListingEntityType String?
+  sourceListingKey String?
+  marketplaceScopeKey String
+  occurredAt DateTime?
+  postedAt DateTime?
+  rawSourceRecordId String
+  normalizationRunId String
+  mappingVersionId String
+  normalizationRevision Int
+  syncSliceEvidenceId String
+  mappingDecisionId String?
+  createdAt DateTime @default(now())
+  item NormalizedOrderItem @relation(fields: [itemId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  sku Sku? @relation(fields: [skuId, accountId], references: [id, accountId], onDelete: Restrict)
+  channelListing ChannelListing? @relation(fields: [channelListingId, accountId, channelConnectionId, marketplaceScopeKey], references: [id, accountId, channelConnectionId, marketplaceScopeKey], onDelete: Restrict)
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  normalizationRun NormalizationRun @relation(fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], references: [id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], onDelete: Restrict)
+  mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
+  syncSliceEvidence SyncSliceEvidence @relation(fields: [syncSliceEvidenceId, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], references: [id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], onDelete: Restrict)
+  mappingDecision ProductMappingDecision? @relation(fields: [mappingDecisionId, accountId], references: [id, accountId], onDelete: Restrict)
+  @@unique([itemId, revision])
+  @@unique([itemId, operationKey])
+  @@index([accountId, channelConnectionId])
 }
 
 model SyncSlice {
@@ -685,7 +800,10 @@ model SyncSliceEvidence {
   slice SyncSlice @relation(fields: [sliceId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, runId], onDelete: Restrict)
   rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, ingestionRunId], onDelete: Restrict)
   normalizationRun NormalizationRun @relation(fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId], references: [id, accountId, channelConnectionId, rawSourceRecordId], onDelete: Restrict)
+  normalizedOrderRevisions NormalizedOrderRevision[]
+  normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([sliceId, rawSourceRecordId])
+  @@unique([id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId])
   @@index([accountId, channelConnectionId])
 }
 

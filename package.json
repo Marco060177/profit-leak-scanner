@@ -21,6 +21,7 @@
     "test:profit-impact": "node --experimental-strip-types --loader ./app/services/profit-impact-test-loader.mjs app/services/profit-impact.integration.ts",
     "test:shopify-characterization": "node --experimental-strip-types --loader ./tests/shopify-characterization/loader.mjs tests/shopify-characterization/shopify-margin.integration.ts",
     "test:data-core-d1": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d1.integration.ts",
+    "test:data-core-d2a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2a.integration.ts",
     "test:tenancy": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/tenancy.integration.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",
     "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts",

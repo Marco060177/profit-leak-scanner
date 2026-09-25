@@ -3,6 +3,25 @@ export const MIN_ATOMS = -(1n << 63n);
 export const MAX_ATOMS = (1n << 63n) - 1n;
 export const MAX_SCALE = 12;
 
+/** Exact non-floating quantity; order-item snapshots cannot have negative quantity. */
+export type FixedQuantity = Readonly<{ quantityAtoms: bigint; quantityScale: number }>;
+export function quantity(quantityAtoms: bigint, quantityScale: number): FixedQuantity {
+  if (typeof quantityAtoms !== "bigint" || quantityAtoms < 0n || quantityAtoms > MAX_ATOMS) throw new RangeError("Quantity atoms outside SQLite Int64 nonnegative range");
+  if (!Number.isInteger(quantityScale) || quantityScale < 0 || quantityScale > MAX_SCALE) throw new RangeError("Invalid quantity scale");
+  return { quantityAtoms, quantityScale };
+}
+
+/** Rescaling is exact only: source quantity precision is never rounded silently. */
+export function normalizeQuantityScale(value: FixedQuantity, targetScale: number): FixedQuantity {
+  quantity(value.quantityAtoms, value.quantityScale);
+  if (!Number.isInteger(targetScale) || targetScale < 0 || targetScale > MAX_SCALE) throw new RangeError("Invalid target quantity scale");
+  const delta = targetScale - value.quantityScale;
+  if (delta >= 0) return quantity(value.quantityAtoms * 10n ** BigInt(delta), targetScale);
+  const divisor = 10n ** BigInt(-delta);
+  if (value.quantityAtoms % divisor !== 0n) throw new Error("Quantity precision loss");
+  return quantity(value.quantityAtoms / divisor, targetScale);
+}
+
 export function money(amountAtoms: bigint, amountScale: number, currencyCode: string): FixedMoney {
   if (amountAtoms < MIN_ATOMS || amountAtoms > MAX_ATOMS) throw new RangeError("Money atoms overflow SQLite Int64");
   if (!Number.isInteger(amountScale) || amountScale < 0 || amountScale > MAX_SCALE) throw new RangeError("Invalid money scale");
