@@ -36,6 +36,8 @@ model Account {
   syncRuns SyncRun[]
   rawSourceRecords RawSourceRecord[]
   normalizedOrders NormalizedOrder[]
+  amazonSellerAuthorizations AmazonSellerAuthorization[]
+  sourceObservations SourceObservation[]
 
   @@index([status])
 }
@@ -98,6 +100,8 @@ model ChannelConnection {
   syncCheckpoints SyncCheckpoint[]
   dataCoverages DataCoverage[]
   coreAuthorization CoreChannelAuthorization?
+  amazonSellerAuthorization AmazonSellerAuthorization?
+  sourceObservations SourceObservation[]
 
   @@unique([channel, externalAccountId])
   @@unique([id, accountId])
@@ -590,6 +594,7 @@ model SyncRun {
   mappingVersion MappingVersion @relation(fields: [mappingVersionId], references: [id], onDelete: Restrict)
   rawSourceRecords RawSourceRecord[]
   slices SyncSlice[]
+  sourceObservations SourceObservation[]
   @@unique([id, accountId, channelConnectionId])
   @@index([channelConnectionId, stream, status])
 }
@@ -625,6 +630,7 @@ model RawSourceRecord {
   sliceEvidence SyncSliceEvidence[]
   normalizedOrderRevisions NormalizedOrderRevision[]
   normalizedOrderItemRevisions NormalizedOrderItemRevision[]
+  sourceObservations SourceObservation[]
   @@unique([channelConnectionId, sourceSystem, sourceVersion, sourceEntityType, sourceEntityId, payloadChecksum])
   @@unique([id, accountId, channelConnectionId])
   @@unique([id, accountId, channelConnectionId, ingestionRunId])
@@ -808,6 +814,7 @@ model SyncSlice {
   marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
   checkpoints SyncCheckpoint[]
   evidence SyncSliceEvidence[]
+  sourceObservations SourceObservation[]
   @@unique([channelConnectionId, marketplaceScopeKey, stream, sliceKey])
   @@unique([id, accountId, channelConnectionId])
   @@unique([id, accountId, channelConnectionId, runId])
@@ -826,15 +833,65 @@ model SyncSliceEvidence {
   runId String
   rawSourceRecordId String
   normalizationRunId String
+  sourceObservationId String?
   createdAt DateTime @default(now())
   slice SyncSlice @relation(fields: [sliceId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, runId], onDelete: Restrict)
-  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, ingestionRunId], onDelete: Restrict)
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
   normalizationRun NormalizationRun @relation(fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId], references: [id, accountId, channelConnectionId, rawSourceRecordId], onDelete: Restrict)
+  sourceObservation SourceObservation? @relation(fields: [sourceObservationId], references: [id], onDelete: Restrict)
   normalizedOrderRevisions NormalizedOrderRevision[]
   normalizedOrderItemRevisions NormalizedOrderItemRevision[]
   @@unique([sliceId, rawSourceRecordId])
   @@unique([id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId])
   @@index([accountId, channelConnectionId])
+  @@index([sourceObservationId])
+}
+
+model AmazonSellerAuthorization {
+  channelConnectionId String @id
+  accountId String
+  encryptedRefreshToken Bytes
+  encryptionProvider String
+  encryptionKeyVersion String
+  credentialFingerprint String
+  status String @default("ACTIVE")
+  authorizationVersion String
+  grantedAt DateTime
+  validatedAt DateTime?
+  renewalDueAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  @@unique([channelConnectionId, accountId])
+  @@unique([channelConnectionId, authorizationVersion])
+  @@index([accountId, status])
+}
+
+model SourceObservation {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  runId String
+  sliceId String
+  rawSourceRecordId String
+  sourceSystem String
+  sourceEntityType String
+  sourceEntityId String
+  observedAt DateTime
+  authorizationVersion String
+  createdAt DateTime @default(now())
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  run SyncRun @relation(fields: [runId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  slice SyncSlice @relation(fields: [sliceId, accountId, channelConnectionId, runId], references: [id, accountId, channelConnectionId, runId], onDelete: Restrict)
+  rawSourceRecord RawSourceRecord @relation(fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
+  sliceEvidence SyncSliceEvidence[]
+  @@unique([sliceId, sourceSystem, sourceEntityType, sourceEntityId, rawSourceRecordId])
+  @@unique([id, accountId, channelConnectionId, runId, rawSourceRecordId])
+  @@index([accountId, channelConnectionId, sourceSystem, sourceEntityType, sourceEntityId], map: "SourceObservation_account_channel_entity_idx")
+  @@index([runId, sliceId], map: "SourceObservation_run_slice_idx")
 }
 
 model SyncCheckpoint {

@@ -1,10 +1,11 @@
 import { createHash } from "node:crypto";
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { marketplaceScopeKey } from "./data-core-contracts";
 
 export const RAW_CHUNK_BYTES = 64 * 1024;
 export const RAW_TOTAL_BYTES = 2 * 1024 * 1024;
 const checksum = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+export type DataCoreTx = Prisma.TransactionClient;
 
 export async function storeRawSourceRecord(db: PrismaClient, input: {
   accountId: string; channelConnectionId: string; sourceSystem: string; sourceVersion: string;
@@ -120,6 +121,78 @@ export async function attachRawEvidenceToSlice(db: PrismaClient, input: {
   });
 }
 
+export async function recordSourceObservationTx(tx: DataCoreTx, input: {
+  accountId: string; channelConnectionId: string; runId: string; sliceId: string;
+  rawSourceRecordId: string; sourceSystem: string; sourceEntityType: string; sourceEntityId: string;
+  observedAt: Date; authorizationVersion: string;
+}) {
+  if (!input.sourceSystem.trim() || !input.sourceEntityType.trim() || !input.sourceEntityId.trim() ||
+      !input.authorizationVersion.trim() || !Number.isFinite(input.observedAt.getTime()))
+    throw new Error("Invalid source observation identity");
+  const [slice, raw, authorization] = await Promise.all([
+    tx.syncSlice.findUnique({ where: { id: input.sliceId }, include: { run: true } }),
+    tx.rawSourceRecord.findUnique({ where: { id: input.rawSourceRecordId } }),
+    tx.coreChannelAuthorization.findUnique({ where: { channelConnectionId: input.channelConnectionId } }),
+  ]);
+  if (!slice || !raw || slice.accountId !== input.accountId || slice.channelConnectionId !== input.channelConnectionId ||
+      slice.runId !== input.runId || slice.run.accountId !== input.accountId ||
+      slice.run.channelConnectionId !== input.channelConnectionId ||
+      slice.authorizationVersion !== input.authorizationVersion || slice.run.authorizationVersion !== input.authorizationVersion ||
+      authorization?.accountId !== input.accountId || authorization.authorizationVersion !== input.authorizationVersion ||
+      raw.accountId !== input.accountId || raw.channelConnectionId !== input.channelConnectionId ||
+      raw.sourceSystem !== input.sourceSystem || raw.sourceEntityType !== input.sourceEntityType || raw.sourceEntityId !== input.sourceEntityId)
+    throw new Error("Source observation ownership or identity mismatch");
+  const identity = { sliceId: input.sliceId, sourceSystem: input.sourceSystem, sourceEntityType: input.sourceEntityType,
+    sourceEntityId: input.sourceEntityId, rawSourceRecordId: input.rawSourceRecordId };
+  const existing = await tx.sourceObservation.findUnique({ where: {
+    sliceId_sourceSystem_sourceEntityType_sourceEntityId_rawSourceRecordId: identity,
+  } });
+  if (existing) {
+    if (existing.accountId !== input.accountId || existing.channelConnectionId !== input.channelConnectionId ||
+        existing.runId !== input.runId || existing.authorizationVersion !== input.authorizationVersion)
+      throw new Error("Source observation identity collision");
+    return { ...existing, replayed: true };
+  }
+  return { ...(await tx.sourceObservation.create({ data: { ...input } })), replayed: false };
+}
+
+export const recordSourceObservation = (db: PrismaClient, input: Parameters<typeof recordSourceObservationTx>[1]) =>
+  db.$transaction((tx) => recordSourceObservationTx(tx, input));
+
+export async function attachSourceObservationToSliceTx(tx: DataCoreTx, input: {
+  accountId: string; channelConnectionId: string; sliceId: string;
+  sourceObservationId: string; normalizationRunId: string; leaseOwner: string; now: Date;
+}) {
+  const slice = await tx.syncSlice.findUnique({ where: { id: input.sliceId }, include: { run: true } });
+  if (!slice || slice.accountId !== input.accountId || slice.channelConnectionId !== input.channelConnectionId ||
+      slice.stream !== slice.run.stream || slice.status !== "LEASED" || slice.leaseOwner !== input.leaseOwner ||
+      !slice.leaseExpiresAt || slice.leaseExpiresAt <= input.now) throw new Error("Source observation slice lease unavailable");
+  const observation = await tx.sourceObservation.findUnique({ where: { id: input.sourceObservationId } });
+  const normalization = await tx.normalizationRun.findUnique({ where: { id: input.normalizationRunId } });
+  if (!observation || !normalization || observation.accountId !== input.accountId ||
+      observation.channelConnectionId !== input.channelConnectionId || observation.sliceId !== slice.id ||
+      observation.runId !== slice.runId || observation.authorizationVersion !== slice.authorizationVersion ||
+      normalization.accountId !== input.accountId || normalization.channelConnectionId !== input.channelConnectionId ||
+      normalization.rawSourceRecordId !== observation.rawSourceRecordId || normalization.mappingVersionId !== slice.run.mappingVersionId)
+    throw new Error("Source observation does not belong to this slice and normalization");
+  const existing = await tx.syncSliceEvidence.findUnique({ where: { sliceId_rawSourceRecordId: {
+    sliceId: input.sliceId, rawSourceRecordId: observation.rawSourceRecordId,
+  } } });
+  if (existing) {
+    if (existing.normalizationRunId !== input.normalizationRunId || existing.sourceObservationId !== observation.id)
+      throw new Error("Immutable source observation evidence differs");
+    return existing;
+  }
+  return tx.syncSliceEvidence.create({ data: { accountId: input.accountId,
+    channelConnectionId: input.channelConnectionId, sliceId: slice.id, runId: slice.runId,
+    rawSourceRecordId: observation.rawSourceRecordId, normalizationRunId: input.normalizationRunId,
+    sourceObservationId: observation.id } });
+}
+
+export const attachSourceObservationToSlice =
+  (db: PrismaClient, input: Parameters<typeof attachSourceObservationToSliceTx>[1]) =>
+    db.$transaction((tx) => attachSourceObservationToSliceTx(tx, input));
+
 /** D1 evidence gate. D3 must commit normalized outputs and checkpoint together. */
 export async function prepareSyncSlice(db: PrismaClient, input: {
   accountId: string; channelConnectionId: string; sliceId: string;
@@ -137,10 +210,13 @@ export async function prepareSyncSlice(db: PrismaClient, input: {
       slice.status !== "LEASED" || slice.leaseOwner !== input.leaseOwner ||
       !slice.leaseExpiresAt || slice.leaseExpiresAt <= input.now) throw new Error("Sync preparation ownership unavailable");
     const evidence = await tx.syncSliceEvidence.findMany({ where: { sliceId: slice.id },
-      include: { rawSourceRecord: true, normalizationRun: true } });
+      include: { rawSourceRecord: true, normalizationRun: true, sourceObservation: true } });
     if (!evidence.length || evidence.some((row) => row.accountId !== input.accountId ||
       row.channelConnectionId !== input.channelConnectionId || row.runId !== slice.runId ||
-      row.rawSourceRecord.ingestionRunId !== slice.runId || row.normalizationRun.rawSourceRecordId !== row.rawSourceRecordId ||
+      (row.sourceObservation ? row.sourceObservation.runId !== slice.runId || row.sourceObservation.sliceId !== slice.id ||
+        row.sourceObservation.rawSourceRecordId !== row.rawSourceRecordId ||
+        row.sourceObservation.authorizationVersion !== input.authorizationVersion : row.rawSourceRecord.ingestionRunId !== slice.runId) ||
+      row.normalizationRun.rawSourceRecordId !== row.rawSourceRecordId ||
       row.normalizationRun.mappingVersionId !== slice.run.mappingVersionId || row.normalizationRun.status !== "SUCCEEDED")) {
       throw new Error("Sync slice has incomplete raw normalization evidence");
     }
@@ -157,12 +233,11 @@ export async function releaseSyncSlice(db: PrismaClient, input: { sliceId: strin
 }
 
 /** Call only after all slice persistence succeeds; this API changes slice and checkpoint atomically. */
-export async function completeSyncSlice(db: PrismaClient, input: {
+export async function completeSyncSliceTx(tx: DataCoreTx, input: {
   sliceId: string; accountId: string; channelConnectionId: string; leaseOwner: string;
   authorizationVersion: string; mappingVersionId: string; cursorValue?: string;
   windowWatermark?: Date; now: Date; expectedProcessedSliceId: string | null;
 }) {
-  return db.$transaction(async (tx) => {
     const slice = await tx.syncSlice.findUnique({ where: { id: input.sliceId }, include: { run: true } });
     const channel = await tx.channelConnection.findUnique({ where: { id: input.channelConnectionId }, include: { account: true } });
     const authorization = await tx.coreChannelAuthorization.findUnique({ where: { channelConnectionId: input.channelConnectionId } });
@@ -174,11 +249,13 @@ export async function completeSyncSlice(db: PrismaClient, input: {
       slice.stream !== slice.run.stream ||
       slice.leaseOwner !== input.leaseOwner || !slice.leaseExpiresAt || slice.leaseExpiresAt <= input.now) throw new Error("Sync commit ownership, lease or version mismatch");
     const evidence = await tx.syncSliceEvidence.findMany({ where: { sliceId: slice.id },
-      include: { rawSourceRecord: true, normalizationRun: true } });
+      include: { rawSourceRecord: true, normalizationRun: true, sourceObservation: true } });
     if (!evidence.length || evidence.some((row) => row.accountId !== input.accountId ||
       row.channelConnectionId !== input.channelConnectionId || row.runId !== slice.runId ||
       row.rawSourceRecord.accountId !== input.accountId || row.rawSourceRecord.channelConnectionId !== input.channelConnectionId ||
-      row.rawSourceRecord.ingestionRunId !== slice.runId ||
+      (row.sourceObservation ? row.sourceObservation.runId !== slice.runId || row.sourceObservation.sliceId !== slice.id ||
+        row.sourceObservation.rawSourceRecordId !== row.rawSourceRecordId ||
+        row.sourceObservation.authorizationVersion !== input.authorizationVersion : row.rawSourceRecord.ingestionRunId !== slice.runId) ||
       row.normalizationRun.accountId !== input.accountId || row.normalizationRun.channelConnectionId !== input.channelConnectionId ||
       row.normalizationRun.rawSourceRecordId !== row.rawSourceRecordId ||
       row.normalizationRun.mappingVersionId !== slice.run.mappingVersionId || row.normalizationRun.status !== "SUCCEEDED")) {
@@ -205,5 +282,8 @@ export async function completeSyncSlice(db: PrismaClient, input: {
       processedSliceId: slice.id, cursorValue: input.cursorValue, windowWatermark: input.windowWatermark },
     update: { authorizationVersion: input.authorizationVersion, mappingVersionId: input.mappingVersionId,
       processedSliceId: slice.id, cursorValue: input.cursorValue, windowWatermark: input.windowWatermark } });
-  });
+}
+
+export async function completeSyncSlice(db: PrismaClient, input: Parameters<typeof completeSyncSliceTx>[1]) {
+  return db.$transaction((tx) => completeSyncSliceTx(tx, input));
 }

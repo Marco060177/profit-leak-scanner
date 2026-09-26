@@ -41,7 +41,7 @@ async function validateProvenance(tx: Prisma.TransactionClient, tenant: Verified
     tx.channelConnection.findUnique({ where: { id: tenant.channelConnectionId }, include: { account: true } }),
     tx.rawSourceRecord.findUnique({ where: { id: evidence.rawSourceRecordId } }),
     tx.normalizationRun.findUnique({ where: { id: evidence.normalizationRunId } }),
-    tx.syncSliceEvidence.findUnique({ where: { id: evidence.syncSliceEvidenceId }, include: { slice: true } }),
+    tx.syncSliceEvidence.findUnique({ where: { id: evidence.syncSliceEvidenceId }, include: { slice: true, sourceObservation: true } }),
   ]);
   if (!channel || channel.accountId !== tenant.accountId || channel.status !== "ACTIVE" || channel.account.status !== "ACTIVE") throw new Error("Inactive or cross-tenant channel");
   if (!raw || raw.accountId !== tenant.accountId || raw.channelConnectionId !== tenant.channelConnectionId ||
@@ -51,7 +51,11 @@ async function validateProvenance(tx: Prisma.TransactionClient, tenant: Verified
       run.normalizationRevision !== evidence.normalizationRevision || run.status !== "SUCCEEDED") throw new Error("Successful normalization provenance required");
   if (!sliceEvidence || sliceEvidence.accountId !== tenant.accountId || sliceEvidence.channelConnectionId !== tenant.channelConnectionId ||
       sliceEvidence.rawSourceRecordId !== raw.id || sliceEvidence.normalizationRunId !== run.id ||
-      sliceEvidence.runId !== raw.ingestionRunId || sliceEvidence.slice.accountId !== tenant.accountId ||
+      (sliceEvidence.sourceObservation ?
+        sliceEvidence.sourceObservation.rawSourceRecordId !== raw.id ||
+        sliceEvidence.sourceObservation.runId !== sliceEvidence.runId ||
+        sliceEvidence.sourceObservation.sliceId !== sliceEvidence.sliceId : sliceEvidence.runId !== raw.ingestionRunId) ||
+      sliceEvidence.slice.accountId !== tenant.accountId ||
       sliceEvidence.slice.channelConnectionId !== tenant.channelConnectionId || sliceEvidence.slice.runId !== sliceEvidence.runId ||
       sliceEvidence.slice.marketplaceScopeKey !== expectedScope || sliceEvidence.slice.stream !== "orders") throw new Error("Exact marketplace slice evidence required");
   const mapping = await tx.mappingVersion.findUnique({ where: { id: evidence.mappingVersionId } });
