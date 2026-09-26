@@ -81,7 +81,11 @@ try {
   const chargedScope = await f.scope("d2d-charged-replacement", "SALE_BUNDLE");
   const chargedSource = await f.source("finances");
   const chargedBinding = await f.bind(chargedScope.id, "ACTUAL", chargedSource);
-  const chargedRevenue = await f.ledger(f.input(chargedScope.id, "ACTUAL", chargedBinding.id, chargedSource, 900n, "PRODUCT_REVENUE"));
+  const chargedRevenue = await f.ledger({
+    ...f.input(chargedScope.id, "ACTUAL", chargedBinding.id, chargedSource, 900n, "PRODUCT_REVENUE"),
+    orderId: replacementOrder.order.id,
+    itemId: replacementItems[3].item.id,
+  });
   await f.evidence(chargedScope.id, "ACTUAL", "COMPLETE", [chargedSource], [chargedRevenue.entry.id]);
   await f.publish(chargedScope.id);
   const chargedReplacement = await f.db.$transaction((tx) => recognizeSaleCogsTx(tx, f.tenant, {

@@ -171,9 +171,53 @@ export async function getCanonicalEconomicDatasetTx(
   const replacementCandidates = await tx.replacementLink.findMany({ where: tenant, orderBy: [{ linkKey: "asc" }, { revision: "desc" }] });
   const latest = new Map<string, ReplacementLink>();
   for (const link of replacementCandidates) if (!latest.has(link.linkKey)) latest.set(link.linkKey, link);
-  const scopedItemIds = new Set(itemId ? [itemId] : lots.flatMap((lot) => lot.itemId ? [lot.itemId] : []));
-  const replacements = [...latest.values()].filter((link) => link.status === "PRESENT" &&
-    (request.scope.kind === "CHANNEL" || scopedItemIds.has(link.predecessorItemId) || scopedItemIds.has(link.replacementItemId)));
+  const replacementItemIds = [...latest.values()].flatMap((link) => [link.predecessorItemId, link.replacementItemId]);
+  const replacementScopeItems = await tx.normalizedOrderItem.findMany({
+    where: { ...tenant, id: { in: replacementItemIds } },
+    select: { id: true, orderId: true, order: { select: { marketplaceId: true } } },
+  });
+  const replacementScopeItemById = new Map(replacementScopeItems.map((item) => [item.id, item]));
+  const replacementInScope = (link: ReplacementLink) => {
+    if (request.scope.kind === "CHANNEL") return true;
+    const predecessor = replacementScopeItemById.get(link.predecessorItemId);
+    const replacement = replacementScopeItemById.get(link.replacementItemId);
+    if (request.scope.kind === "MARKETPLACE")
+      return predecessor?.order.marketplaceId === request.scope.marketplaceId || replacement?.order.marketplaceId === request.scope.marketplaceId;
+    if (request.scope.kind === "ORDER")
+      return predecessor?.orderId === request.scope.orderId || replacement?.orderId === request.scope.orderId;
+    return link.predecessorItemId === request.scope.itemId || link.replacementItemId === request.scope.itemId;
+  };
+  const replacements = [...latest.values()].filter((link) => link.status === "PRESENT" && replacementInScope(link));
+  // Validation follows the linked replacement item across an order boundary, while
+  // `components` remains the consumable result for the caller's requested scope.
+  const validationComponents = new Map(financial.components.map((entry) => [entry.id, entry]));
+  if (request.scope.kind !== "CHANNEL") {
+    const validationOrderIds = [...new Set(replacements.flatMap((link) => {
+      const replacement = replacementScopeItemById.get(link.replacementItemId);
+      return replacement ? [replacement.orderId] : [];
+    }))];
+    for (const validationOrderId of validationOrderIds) {
+      const validationFinancial = await getEffectiveFinancialComponentsTx(tx, tenant, {
+        orderId: validationOrderId, effectiveWindow: { start, end },
+      });
+      if (validationFinancial.status === "BLOCKED")
+        return blocked(tx, request, validationFinancial.blockedScopes, validationFinancial.reasonCodes,
+          refs("FINANCIAL_COMPONENT", validationFinancial.diagnosticComponents));
+      for (const entry of validationFinancial.components) validationComponents.set(entry.id, entry);
+    }
+  }
+  const replacementRevenue = new Set([...validationComponents.values()]
+    .filter((entry) => entry.projectionKind === "PRODUCT_REVENUE" && entry.itemId !== null)
+    .map((entry) => entry.itemId));
+  const contradictoryReplacements = replacements.filter((link) => {
+    const hasRevenue = replacementRevenue.has(link.replacementItemId);
+    if (link.replacementKind === "FREE" || link.financialTreatment === "NO_REVENUE") return hasRevenue;
+    if (link.replacementKind === "CHARGED" && link.financialTreatment === "D2B_COMPONENT") return !hasRevenue;
+    return false;
+  });
+  if (contradictoryReplacements.length)
+    return blocked(tx, request, contradictoryReplacements.map((link) => link.linkKey),
+      ["REPLACEMENT_REVENUE_CONTRADICTION"], refs("REPLACEMENT_LINK", contradictoryReplacements));
 
   const ordersRaw = await tx.normalizedOrder.findMany({
     where: { ...tenant, ...(marketplaceId ? { marketplaceId } : {}), ...(orderId ? { id: orderId } : {}) },
@@ -241,8 +285,8 @@ export async function getCanonicalEconomicDatasetTx(
   });
   const costRevisionById = new Map(costRevisionSemantics.map((x) => [x.id, x]));
   const lotById = new Map(scopeLots.map((x) => [x.id, x]));
-  const replacementItemIds = replacements.flatMap((x) => [x.predecessorItemId, x.replacementItemId]);
-  const replacementItems = await tx.normalizedOrderItem.findMany({ where: { id: { in: replacementItemIds } }, select: { id: true, sourceItemKey: true, order: { select: { sourceSystem: true, sourceOrderKey: true } } } });
+  const scopedReplacementItemIds = replacements.flatMap((x) => [x.predecessorItemId, x.replacementItemId]);
+  const replacementItems = await tx.normalizedOrderItem.findMany({ where: { id: { in: scopedReplacementItemIds } }, select: { id: true, sourceItemKey: true, order: { select: { sourceSystem: true, sourceOrderKey: true } } } });
   const replacementItemById = new Map(replacementItems.map((x) => [x.id, x]));
   const skuRows = await tx.sku.findMany({ where: { id: { in: items.flatMap((x) => x.skuId ? [x.skuId] : []) } }, select: { id: true, sellerSku: true, barcode: true } });
   const skuById = new Map(skuRows.map((x) => [x.id, x]));
