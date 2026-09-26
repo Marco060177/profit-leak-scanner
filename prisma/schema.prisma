@@ -1159,3 +1159,224 @@ model FinancialComponentSelection {
   @@unique([id, accountId, channelConnectionId])
   @@unique([decisionId, componentId])
 }
+model CostRecord {
+  id                  String   @id @default(cuid())
+  accountId           String
+  skuId               String
+  channelConnectionId String?
+  marketplaceId       String?
+  channelScopeKey     String
+  marketplaceScopeKey String
+  sourceKind          String
+  costKey             String
+  currentRevisionId   String?
+  revision            Int      @default(0)
+  createdAt           DateTime @default(now())
+
+  @@unique([id, accountId])
+  @@unique([accountId, skuId, channelScopeKey, marketplaceScopeKey, sourceKind, costKey])
+}
+
+model CostRecordRevision {
+  id                    String    @id @default(cuid())
+  accountId             String
+  costRecordId          String
+  revision              Int
+  previousRevisionId    String?   @unique
+  operationKey          String
+  inputChecksum         String
+  status                String
+  authorityTier         String
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  unitCostAtoms         BigInt?
+  unitCostScale         Int?
+  currencyCode          String?
+  evidenceKind          String
+  actorRef              String?
+  manualReasonCode      String?
+  rawSourceRecordId     String?
+  normalizationRunId    String?
+  mappingVersionId      String?
+  normalizationRevision Int?
+  syncSliceEvidenceId   String?
+  sourceLeafPath        String?
+  occurredAt            DateTime?
+  postedAt              DateTime?
+  createdAt             DateTime  @default(now())
+
+  @@unique([id, accountId])
+  @@unique([costRecordId, revision])
+  @@unique([costRecordId, operationKey])
+}
+
+model InventoryEconomicLot {
+  id                    String   @id @default(cuid())
+  accountId             String
+  channelConnectionId   String
+  marketplaceId         String?
+  marketplaceScopeKey   String
+  skuId                 String
+  lotKey                String
+  originKind            String
+  orderId               String?
+  orderRevisionId       String?
+  itemId                String?
+  itemRevisionId        String?
+  quantityAtoms         BigInt
+  quantityScale         Int
+  costStatus            String
+  costRecordRevisionId  String?
+  unitCostAtoms         BigInt?
+  unitCostScale         Int?
+  currencyCode          String?
+  recognitionEconomicAt DateTime
+  recordedAt            DateTime @default(now())
+  operationKey          String
+  inputChecksum         String
+  rawSourceRecordId     String?
+  normalizationRunId    String?
+  mappingVersionId      String?
+  normalizationRevision Int?
+  syncSliceEvidenceId   String?
+  sourceLeafPath        String?
+  actorRef              String?
+  manualReasonCode      String?
+
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([accountId, channelConnectionId, lotKey])
+  @@unique([accountId, channelConnectionId, operationKey])
+}
+
+model InventoryEconomicEvent {
+  id                     String   @id @default(cuid())
+  accountId              String
+  channelConnectionId    String
+  lotId                  String
+  eventType              String
+  effectClass            String
+  stateFrom              String?
+  stateTo                String?
+  quantityAtoms          BigInt
+  quantityScale          Int
+  costRecordRevisionId   String?
+  unitCostAtoms          BigInt?
+  unitCostScale          Int?
+  currencyCode           String?
+  financialLedgerEntryId String?
+  compensatesEventId     String?
+  coverageKey            String?
+  closureKey             String?
+  operationKey           String
+  inputChecksum          String
+  economicAt             DateTime
+  recordedAt             DateTime @default(now())
+  rawSourceRecordId      String?
+  normalizationRunId     String?
+  mappingVersionId       String?
+  normalizationRevision  Int?
+  syncSliceEvidenceId    String?
+  sourceLeafPath         String?
+  actorRef               String?
+  manualReasonCode       String?
+
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([lotId, operationKey])
+  @@unique([financialLedgerEntryId])
+}
+
+model ReplacementLink {
+  id                        String   @id @default(cuid())
+  accountId                 String
+  channelConnectionId       String
+  linkKey                   String
+  revision                  Int
+  previousLinkId            String?  @unique
+  operationKey              String
+  inputChecksum             String
+  status                    String
+  replacementKind           String
+  financialTreatment        String
+  predecessorItemId         String
+  predecessorItemRevisionId String
+  replacementItemId         String
+  replacementItemRevisionId String
+  rawSourceRecordId         String?
+  normalizationRunId        String?
+  mappingVersionId          String?
+  normalizationRevision     Int?
+  syncSliceEvidenceId       String?
+  sourceLeafPath            String?
+  actorRef                  String?
+  manualReasonCode          String?
+  createdAt                 DateTime @default(now())
+
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([accountId, channelConnectionId, linkKey, revision])
+  @@unique([accountId, channelConnectionId, linkKey, operationKey])
+}
+
+model NormalizedTaxEvidence {
+  id                     String    @id @default(cuid())
+  accountId              String
+  channelConnectionId    String
+  evidenceKey            String
+  revision               Int
+  previousEvidenceId     String?   @unique
+  operationKey           String
+  inputChecksum          String
+  status                 String
+  marketplaceId          String?
+  orderId                String?
+  orderRevisionId        String?
+  itemId                 String?
+  itemRevisionId         String?
+  financialLedgerEntryId String?
+  category               String
+  economicRole           String
+  priceRelation          String
+  authorityClass         String
+  availability           String
+  coverageState          String
+  confidence             String
+  amountAtoms            BigInt?
+  amountScale            Int?
+  currencyCode           String?
+  jurisdictionCode       String?
+  periodStart            DateTime?
+  periodEnd              DateTime?
+  rawSourceRecordId      String?
+  normalizationRunId     String?
+  mappingVersionId       String?
+  normalizationRevision  Int?
+  syncSliceEvidenceId    String?
+  sourceLeafPath         String?
+  actorRef               String?
+  manualReasonCode       String?
+  createdAt              DateTime  @default(now())
+
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([accountId, channelConnectionId, evidenceKey, revision])
+  @@unique([accountId, channelConnectionId, evidenceKey, operationKey])
+}
+
+model TaxInterpretationPolicyVersion {
+  id                      String    @id @default(cuid())
+  accountId               String
+  policyKey               String
+  revision                Int
+  previousPolicyVersionId String?   @unique
+  operationKey            String
+  inputChecksum           String
+  status                  String
+  rulesJson               String
+  effectiveFrom           DateTime
+  effectiveTo             DateTime?
+  actorRef                String
+  reasonCode              String
+  createdAt               DateTime  @default(now())
+
+  @@unique([id, accountId])
+  @@unique([accountId, policyKey, revision])
+  @@unique([accountId, policyKey, operationKey])
+}

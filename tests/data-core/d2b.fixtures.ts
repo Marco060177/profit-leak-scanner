@@ -67,7 +67,12 @@ export async function fixture() {
   const source = async (
     stream: string,
     marketplaceId: string | null = null,
-    options: { status?: string; mappingId?: string; entityId?: string } = {},
+    options: {
+      status?: string;
+      mappingId?: string;
+      entityId?: string;
+      entityType?: string;
+    } = {},
   ) => {
     const run = await db.syncRun.create({
       data: {
@@ -95,7 +100,7 @@ export async function fixture() {
         ingestionRunId: run.id,
         sourceSystem: "SHOPIFY",
         sourceVersion: "1",
-        sourceEntityType: "FINANCIAL_DOCUMENT",
+        sourceEntityType: options.entityType ?? "FINANCIAL_DOCUMENT",
         sourceEntityId: options.entityId ?? next(),
         capturedAt: new Date(),
         schemaVersion: "1",
