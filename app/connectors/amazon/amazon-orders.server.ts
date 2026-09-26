@@ -45,7 +45,7 @@ function parsePage(value: unknown) {
   return { orders: root.orders, nextToken };
 }
 
-async function assertAmazonBoundary(db: PrismaClient, tenant: VerifiedCoreTenant, marketplaceId: string) {
+export async function assertAmazonOrdersBoundary(db: PrismaClient, tenant: VerifiedCoreTenant, marketplaceId: string) {
   const [owner, authorization, epoch, marketplace] = await Promise.all([
     db.channelConnection.findUnique({ where: { id: tenant.channelConnectionId }, include: { account: true } }),
     db.amazonSellerAuthorization.findUnique({ where: { channelConnectionId: tenant.channelConnectionId } }),
@@ -74,7 +74,7 @@ export async function listAmazonOrders(input: {
 }): Promise<AmazonOrderAcquisition> {
   const now = (input.retry?.now ?? Date.now)();
   validateQuery(input.query, now);
-  const externalMarketplaceId = await assertAmazonBoundary(input.db, input.tenant, input.marketplaceId);
+  const externalMarketplaceId = await assertAmazonOrdersBoundary(input.db, input.tenant, input.marketplaceId);
   let refreshToken: string;
   try { refreshToken = await resolveAmazonRefreshTokenForUse(input.db, input.tenant, input.encryptionProvider); }
   catch { throw new AmazonConnectorError("AUTHORIZATION"); }
@@ -116,6 +116,6 @@ export async function listAmazonOrders(input: {
     seenTokens.add(page.nextToken);
     nextToken = page.nextToken;
   }
-  await assertAmazonBoundary(input.db, input.tenant, input.marketplaceId);
+  await assertAmazonOrdersBoundary(input.db, input.tenant, input.marketplaceId);
   return { orders: [...orders.values()].sort((a, b) => a.externalOrderId.localeCompare(b.externalOrderId)), evidencePages };
 }
