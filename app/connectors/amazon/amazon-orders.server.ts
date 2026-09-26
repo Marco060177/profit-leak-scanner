@@ -14,7 +14,9 @@ export type AmazonOrderQuery = Readonly<{
   maxResultsPerPage?: number;
   maxPages?: number;
 }>;
-export type AmazonOrderEvidencePage = Readonly<{ pageNumber: number; body: Uint8Array; requestId: string | null }>;
+export type AmazonOrderEvidencePage = Readonly<{
+  pageNumber: number; body: Uint8Array; requestId: string | null; orderIds: ReadonlyArray<string>;
+}>;
 export type AmazonOrderAcquisition = Readonly<{
   orders: ReadonlyArray<AmazonCanonicalOrder>;
   evidencePages: ReadonlyArray<AmazonOrderEvidencePage>;
@@ -103,14 +105,17 @@ export async function listAmazonOrders(input: {
         "x-amz-date": new Date((input.retry?.now ?? Date.now)()).toISOString().replace(/[:-]|\.\d{3}/g, ""),
         "user-agent": input.config.userAgent, accept: "application/json",
       }, timeoutMs: input.config.timeoutMs }, input.config, input.retry);
-    evidencePages.push({ pageNumber, body: response.body.slice(), requestId: response.headers["x-amzn-requestid"] ?? null });
     const page = parsePage(parseAmazonJson(response));
+    const pageOrderIds: string[] = [];
     for (const source of page.orders) {
       const mapped = mapAmazonOrder(source, externalMarketplaceId);
+      pageOrderIds.push(mapped.externalOrderId);
       const prior = orders.get(mapped.externalOrderId);
       if (prior && semantic(prior) !== semantic(mapped)) throw new AmazonConnectorError("SOURCE_CONFLICT");
       orders.set(mapped.externalOrderId, mapped);
     }
+    evidencePages.push({ pageNumber, body: response.body.slice(), requestId: response.headers["x-amzn-requestid"] ?? null,
+      orderIds: [...new Set(pageOrderIds)].sort() });
     if (!page.nextToken) break;
     if (seenTokens.has(page.nextToken)) throw new AmazonConnectorError("SOURCE_CONFLICT");
     seenTokens.add(page.nextToken);

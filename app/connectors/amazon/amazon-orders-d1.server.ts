@@ -10,21 +10,21 @@ import type { AmazonRetryHooks } from "./amazon-sp-api-client.server";
 import type { AmazonApplicationConfig, AmazonHttpTransport } from "./amazon-types";
 
 const SOURCE_VERSION = "2026-01-01";
-const STREAM = "amazon-orders-v2026-01-01";
+const STREAM = "orders";
 const PARSER_VERSION = "amazon-e1c-v2026-01-01";
 
 export type RawSourceEncryptionBoundary = Readonly<{
   encryptChunk(plain: Uint8Array, chunkIndex: number): Uint8Array;
 }>;
-type SyncContext = Readonly<{
+export type AmazonOrdersSyncContext = Readonly<{
   runId: string; sliceId: string; authorizationVersion: string; mappingVersionId: string;
   expectedProcessedSliceId: string | null; alreadySucceeded: boolean;
 }>;
 
-async function establishSlice(db: PrismaClient, input: {
+export async function establishAmazonOrdersSlice(db: PrismaClient, input: {
   tenant: VerifiedCoreTenant; marketplaceId: string; operationKey: string; mappingVersionId: string;
   leaseOwner: string; now: Date; leaseMs: number;
-}): Promise<SyncContext> {
+}): Promise<AmazonOrdersSyncContext> {
   if (!input.operationKey.trim()) throw new Error("Amazon E1-D operation key required");
   const [authorization, mapping, marketplace] = await Promise.all([
     db.coreChannelAuthorization.findUnique({ where: { channelConnectionId: input.tenant.channelConnectionId } }),
@@ -90,11 +90,12 @@ async function normalizationForPage(db: PrismaClient, tenant: VerifiedCoreTenant
 
 export async function persistAmazonOrderAcquisitionToD1(input: {
   db: PrismaClient; tenant: VerifiedCoreTenant; externalMarketplaceId: string;
-  acquisition: AmazonOrderAcquisition; context: SyncContext;
-  leaseOwner: string; now: Date; rawEncryption: RawSourceEncryptionBoundary;
+  acquisition: AmazonOrderAcquisition; context: AmazonOrdersSyncContext;
+  leaseOwner: string; now: Date; rawEncryption: RawSourceEncryptionBoundary; includeOrderEvidence?: boolean;
 }) {
   if (!input.rawEncryption?.encryptChunk) throw new Error("Raw payload encryption required");
-  const persisted: Array<{ rawSourceRecordId: string; sourceObservationId: string; evidenceId: string; pageNumber: number }> = [];
+  const persisted: Array<{ rawSourceRecordId: string; sourceObservationId: string; evidenceId: string;
+    pageNumber: number; sourceEntityType: "ORDERS_SEARCH_PAGE" | "ORDER"; sourceEntityId: string }> = [];
   for (const page of [...input.acquisition.evidencePages].sort((a, b) => a.pageNumber - b.pageNumber)) {
     const sourceEntityId = `${input.externalMarketplaceId}:searchOrders:page:${page.pageNumber}`;
     const raw = await storeRawSourceRecord(input.db, { ...input.tenant, sourceSystem: "AMAZON",
@@ -120,7 +121,28 @@ export async function persistAmazonOrderAcquisitionToD1(input: {
       return { observation, evidence };
     });
     persisted.push({ rawSourceRecordId: raw.id, sourceObservationId: attached.observation.id,
-      evidenceId: attached.evidence.id, pageNumber: page.pageNumber });
+      evidenceId: attached.evidence.id, pageNumber: page.pageNumber, sourceEntityType: "ORDERS_SEARCH_PAGE", sourceEntityId });
+    if (input.includeOrderEvidence) for (const orderId of page.orderIds) {
+      const orderRaw = await storeRawSourceRecord(input.db, { ...input.tenant, sourceSystem: "AMAZON",
+        sourceVersion: SOURCE_VERSION, sourceEntityType: "ORDER", sourceEntityId: orderId,
+        sourceSnapshotVersion: `page-${page.pageNumber}`, schemaVersion: SOURCE_VERSION, retentionClass: "COMMERCE_SOURCE",
+        capturedAt: input.now, ingestionRunId: input.context.runId, payload: page.body,
+        encryptChunk: (plain, index) => input.rawEncryption.encryptChunk(plain, index) });
+      const orderNormalization = await normalizationForPage(input.db, input.tenant, orderRaw.id,
+        input.context.mappingVersionId, input.now);
+      const orderAttached = await input.db.$transaction(async (tx) => {
+        const observation = await recordSourceObservationTx(tx, { ...input.tenant, runId: input.context.runId,
+          sliceId: input.context.sliceId, rawSourceRecordId: orderRaw.id, sourceSystem: "AMAZON",
+          sourceEntityType: "ORDER", sourceEntityId: orderId, observedAt: input.now,
+          authorizationVersion: input.context.authorizationVersion });
+        const evidence = await attachSourceObservationToSliceTx(tx, { ...input.tenant, sliceId: input.context.sliceId,
+          sourceObservationId: observation.id, normalizationRunId: orderNormalization.id,
+          leaseOwner: input.leaseOwner, now: input.now });
+        return { observation, evidence };
+      });
+      persisted.push({ rawSourceRecordId: orderRaw.id, sourceObservationId: orderAttached.observation.id,
+        evidenceId: orderAttached.evidence.id, pageNumber: page.pageNumber, sourceEntityType: "ORDER", sourceEntityId: orderId });
+    }
   }
   return persisted;
 }
@@ -133,7 +155,7 @@ export async function ingestAmazonOrdersToD1(input: {
   retry?: AmazonRetryHooks;
 }) {
   const externalMarketplaceId = await assertAmazonOrdersBoundary(input.db, input.tenant, input.marketplaceId);
-  const context = await establishSlice(input.db, { tenant: input.tenant, marketplaceId: input.marketplaceId,
+  const context = await establishAmazonOrdersSlice(input.db, { tenant: input.tenant, marketplaceId: input.marketplaceId,
     operationKey: input.operationKey, mappingVersionId: input.mappingVersionId, leaseOwner: input.leaseOwner,
     now: input.now, leaseMs: input.leaseMs ?? 300_000 });
   if (context.alreadySucceeded) return { replayed: true, runId: context.runId, sliceId: context.sliceId,
