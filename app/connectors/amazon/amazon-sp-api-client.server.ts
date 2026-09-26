@@ -52,9 +52,9 @@ export const nativeAmazonHttpTransport: AmazonHttpTransport = {
   },
 };
 
-type RetryHooks = Readonly<{ now?: () => number; sleep?: (ms: number) => Promise<void>; random?: () => number }>;
+export type AmazonRetryHooks = Readonly<{ now?: () => number; sleep?: (ms: number) => Promise<void>; random?: () => number }>;
 
-function safeJson(response: AmazonHttpResponse): unknown {
+export function parseAmazonJson(response: AmazonHttpResponse): unknown {
   try { return JSON.parse(decoder.decode(response.body)); }
   catch { throw new AmazonConnectorError("MALFORMED_RESPONSE", { status: response.status,
     requestId: response.headers["x-amzn-requestid"] ?? null }); }
@@ -79,8 +79,8 @@ function classify(response: AmazonHttpResponse, now: () => number) {
   return new AmazonConnectorError("NON_RETRYABLE_UPSTREAM", common);
 }
 
-async function sendWithRetry(transport: AmazonHttpTransport, request: AmazonHttpRequest,
-  config: AmazonApplicationConfig, hooks: RetryHooks = {}) {
+export async function sendAmazonRequest(transport: AmazonHttpTransport, request: AmazonHttpRequest,
+  config: AmazonApplicationConfig, hooks: AmazonRetryHooks = {}) {
   const now = hooks.now ?? Date.now;
   const sleep = hooks.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
   const random = hooks.random ?? Math.random;
@@ -101,13 +101,13 @@ async function sendWithRetry(transport: AmazonHttpTransport, request: AmazonHttp
 }
 
 export async function exchangeLwaAccessToken(refreshToken: string, config: AmazonApplicationConfig,
-  transport: AmazonHttpTransport, hooks?: RetryHooks) {
+  transport: AmazonHttpTransport, hooks?: AmazonRetryHooks) {
   const body = new URLSearchParams({ grant_type: "refresh_token", refresh_token: refreshToken,
     client_id: config.lwaClientId, client_secret: config.lwaClientSecret }).toString();
-  const response = await sendWithRetry(transport, { method: "POST", url: LWA_TOKEN_URL,
+  const response = await sendAmazonRequest(transport, { method: "POST", url: LWA_TOKEN_URL,
     headers: { "content-type": "application/x-www-form-urlencoded;charset=UTF-8", accept: "application/json" },
     body: encoder.encode(body), timeoutMs: config.timeoutMs }, config, hooks);
-  const value = safeJson(response);
+  const value = parseAmazonJson(response);
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new AmazonConnectorError("MALFORMED_RESPONSE");
   const token = value as Record<string, unknown>;
   if (typeof token.access_token !== "string" || !token.access_token || token.access_token.length > 2048 ||
@@ -143,15 +143,15 @@ function parseMarketplaceResponse(value: unknown): AmazonMarketplaceParticipatio
 }
 
 export async function getMarketplaceParticipations(region: AmazonRegion, accessToken: string,
-  config: AmazonApplicationConfig, transport: AmazonHttpTransport, hooks?: RetryHooks) {
+  config: AmazonApplicationConfig, transport: AmazonHttpTransport, hooks?: AmazonRetryHooks) {
   const endpoint = amazonEndpointForRegion(region);
-  const response = await sendWithRetry(transport, { method: "GET",
+  const response = await sendAmazonRequest(transport, { method: "GET",
     url: `${endpoint}/sellers/v1/marketplaceParticipations`, headers: {
       host: new URL(endpoint).host, "x-amz-access-token": accessToken,
       "x-amz-date": new Date((hooks?.now ?? Date.now)()).toISOString().replace(/[:-]|\.\d{3}/g, ""),
       "user-agent": config.userAgent, accept: "application/json",
     }, timeoutMs: config.timeoutMs }, config, hooks);
-  const parsed = parseMarketplaceResponse(safeJson(response));
+  const parsed = parseMarketplaceResponse(parseAmazonJson(response));
   for (const marketplace of parsed)
     if (amazonRegionForMarketplace(marketplace.marketplaceId) !== region) throw new AmazonConnectorError("UNSUPPORTED_REGION");
   return parsed;

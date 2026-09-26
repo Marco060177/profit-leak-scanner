@@ -29,7 +29,8 @@ export interface AmazonHttpTransport {
 export type AmazonErrorKind =
   | "CONFIGURATION" | "AUTHORIZATION" | "AUTHENTICATION" | "THROTTLED"
   | "RETRYABLE_UPSTREAM" | "NON_RETRYABLE_UPSTREAM" | "TIMEOUT"
-  | "MALFORMED_RESPONSE" | "UNSUPPORTED_REGION";
+  | "MALFORMED_RESPONSE" | "UNSUPPORTED_REGION" | "SOURCE_CONFLICT"
+  | "UNSUPPORTED_SOURCE_VALUE" | "INVALID_QUERY";
 
 export class AmazonConnectorError extends Error {
   readonly kind: AmazonErrorKind;
@@ -67,4 +68,3 @@ export type AmazonMarketplaceParticipation = Readonly<{
   isParticipating: boolean;
   hasSuspendedListings: boolean;
 }>;
-
