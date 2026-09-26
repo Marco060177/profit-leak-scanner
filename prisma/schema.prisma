@@ -66,6 +66,15 @@ model AccountAiUsageReservation {
 }
 
 model ChannelConnection {
+  FinancialComponentSelection_ownerChannel FinancialComponentSelection[] @relation("FinancialComponentSelection_ownerChannel")
+  FinancialAuthorityDecision_ownerChannel FinancialAuthorityDecision[] @relation("FinancialAuthorityDecision_ownerChannel")
+  FinancialAuthorityEvidenceMember_ownerChannel FinancialAuthorityEvidenceMember[] @relation("FinancialAuthorityEvidenceMember_ownerChannel")
+  FinancialAuthorityEvidenceSource_ownerChannel FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_ownerChannel")
+  FinancialAuthorityEvidence_ownerChannel FinancialAuthorityEvidence[] @relation("FinancialAuthorityEvidence_ownerChannel")
+  FinancialLedgerEntry_ownerChannel FinancialLedgerEntry[] @relation("FinancialLedgerEntry_ownerChannel")
+  FinancialComponentHead_ownerChannel FinancialComponentHead[] @relation("FinancialComponentHead_ownerChannel")
+  FinancialAuthorityBinding_ownerChannel FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_ownerChannel")
+  FinancialAuthorityScope_ownerChannel FinancialAuthorityScope[] @relation("FinancialAuthorityScope_ownerChannel")
   id                 String             @id @default(cuid())
   accountId          String
   channel            ChannelPlatform
@@ -414,6 +423,7 @@ model ProfitImpactEvent {
 
 // D1 persisted Data Core foundation. Shopify runtime does not read these tables.
 model Marketplace {
+  FinancialAuthorityScope_marketplace FinancialAuthorityScope[] @relation("FinancialAuthorityScope_marketplace")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -539,6 +549,12 @@ model CurrencyPolicyVersion {
 }
 
 model MappingVersion {
+  FinancialAuthorityDecision_mapping FinancialAuthorityDecision[] @relation("FinancialAuthorityDecision_mapping")
+  FinancialAuthorityEvidenceSource_mapping FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_mapping")
+  FinancialAuthorityEvidence_mapping FinancialAuthorityEvidence[] @relation("FinancialAuthorityEvidence_mapping")
+  FinancialLedgerEntry_mapping FinancialLedgerEntry[] @relation("FinancialLedgerEntry_mapping")
+  FinancialAuthorityBinding_mapping FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_mapping")
+  FinancialAuthorityScope_policy FinancialAuthorityScope[] @relation("FinancialAuthorityScope_policy")
   id String @id @default(cuid())
   platform ChannelPlatform
   sourceContract String
@@ -579,6 +595,9 @@ model SyncRun {
 }
 
 model RawSourceRecord {
+  FinancialAuthorityEvidenceSource_raw FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_raw")
+  FinancialLedgerEntry_raw FinancialLedgerEntry[] @relation("FinancialLedgerEntry_raw")
+  FinancialAuthorityBinding_raw FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_raw")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -638,6 +657,9 @@ model SourceReference {
 }
 
 model NormalizationRun {
+  FinancialAuthorityEvidenceSource_normalization FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_normalization")
+  FinancialLedgerEntry_normalization FinancialLedgerEntry[] @relation("FinancialLedgerEntry_normalization")
+  FinancialAuthorityBinding_normalization FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_normalization")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -661,6 +683,7 @@ model NormalizationRun {
 }
 
 model NormalizedOrder {
+  FinancialLedgerEntry_orderIdRow FinancialLedgerEntry[] @relation("FinancialLedgerEntry_orderIdRow")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -681,6 +704,7 @@ model NormalizedOrder {
 }
 
 model NormalizedOrderRevision {
+  FinancialLedgerEntry_orderRevisionIdRow FinancialLedgerEntry[] @relation("FinancialLedgerEntry_orderRevisionIdRow")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -709,6 +733,7 @@ model NormalizedOrderRevision {
 }
 
 model NormalizedOrderItem {
+  FinancialLedgerEntry_itemIdRow FinancialLedgerEntry[] @relation("FinancialLedgerEntry_itemIdRow")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -723,6 +748,7 @@ model NormalizedOrderItem {
 }
 
 model NormalizedOrderItemRevision {
+  FinancialLedgerEntry_itemRevisionIdRow FinancialLedgerEntry[] @relation("FinancialLedgerEntry_itemRevisionIdRow")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -789,6 +815,10 @@ model SyncSlice {
 }
 
 model SyncSliceEvidence {
+  FinancialAuthorityEvidenceSource_sliceEvidence FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_sliceEvidence")
+  FinancialAuthorityEvidence_closure FinancialAuthorityEvidence[] @relation("FinancialAuthorityEvidence_closure")
+  FinancialLedgerEntry_sliceEvidence FinancialLedgerEntry[] @relation("FinancialLedgerEntry_sliceEvidence")
+  FinancialAuthorityBinding_sliceEvidence FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_sliceEvidence")
   id String @id @default(cuid())
   accountId String
   channelConnectionId String
@@ -847,4 +877,285 @@ model DataCoverage {
   marketplace Marketplace? @relation(fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict)
   @@unique([channelConnectionId, marketplaceScopeKey, datasetKey, windowStart, windowEnd, revision])
   @@index([accountId, datasetKey, windowStart])
+}
+
+model FinancialCurrencyDefinition {
+  id String @id @default(cuid())
+  code String @unique
+  sourceVersion String
+  createdAt DateTime @default(now())
+  FinancialLedgerEntry_currency FinancialLedgerEntry[] @relation("FinancialLedgerEntry_currency")
+}
+
+model FinancialAuthorityScope {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceId String?
+  marketplaceScopeKey String
+  economicEventKey String
+  coverageFamily String
+  provisionalSourceAuthority String
+  actualSourceAuthority String
+  policyMappingVersionId String
+  inputVersion Int @default(0)
+  currentDecisionId String?
+  periodStart DateTime?
+  periodEnd DateTime?
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityScope_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  marketplace Marketplace? @relation("FinancialAuthorityScope_marketplace", fields: [marketplaceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  policy MappingVersion @relation("FinancialAuthorityScope_policy", fields: [policyMappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  decision FinancialAuthorityDecision? @relation("FinancialAuthorityScope_decision", fields: [currentDecisionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([accountId, channelConnectionId, marketplaceScopeKey, economicEventKey, coverageFamily])
+  FinancialAuthorityBinding_scope FinancialAuthorityBinding[] @relation("FinancialAuthorityBinding_scope")
+  FinancialComponentHead_scope FinancialComponentHead[] @relation("FinancialComponentHead_scope")
+  FinancialLedgerEntry_scope FinancialLedgerEntry[] @relation("FinancialLedgerEntry_scope")
+  FinancialAuthorityEvidence_scope FinancialAuthorityEvidence[] @relation("FinancialAuthorityEvidence_scope")
+  FinancialAuthorityDecision_scope FinancialAuthorityDecision[] @relation("FinancialAuthorityDecision_scope")
+}
+
+model FinancialAuthorityBinding {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  authorityScopeId String
+  authorityClass String
+  sourceAuthority String
+  sourceSystem String
+  sourceEventNamespace String
+  sourceEventIdentity String
+  sourceLeafPath String
+  correlationRuleKey String
+  rawSourceRecordId String
+  normalizationRunId String
+  mappingVersionId String
+  normalizationRevision Int
+  syncSliceEvidenceId String
+  revision Int
+  previousBindingId String? @unique
+  operationKey String
+  inputChecksum String
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityBinding_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  scope FinancialAuthorityScope @relation("FinancialAuthorityBinding_scope", fields: [authorityScopeId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  mapping MappingVersion @relation("FinancialAuthorityBinding_mapping", fields: [mappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  raw RawSourceRecord @relation("FinancialAuthorityBinding_raw", fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  normalization NormalizationRun @relation("FinancialAuthorityBinding_normalization", fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], references: [id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], onDelete: Restrict, onUpdate: Restrict)
+  sliceEvidence SyncSliceEvidence @relation("FinancialAuthorityBinding_sliceEvidence", fields: [syncSliceEvidenceId, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], references: [id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], onDelete: Restrict, onUpdate: Restrict)
+  previous FinancialAuthorityBinding? @relation("FinancialAuthorityBinding_previous", fields: [previousBindingId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([channelConnectionId, sourceAuthority, sourceEventNamespace, sourceEventIdentity, revision])
+  @@unique([channelConnectionId, sourceAuthority, sourceEventNamespace, sourceEventIdentity, operationKey])
+  FinancialAuthorityBinding_previous FinancialAuthorityBinding? @relation("FinancialAuthorityBinding_previous")
+  FinancialLedgerEntry_binding FinancialLedgerEntry[] @relation("FinancialLedgerEntry_binding")
+}
+
+model FinancialComponentHead {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  authorityScopeId String
+  authorityClass String
+  sourceAuthority String
+  sourceComponentKey String
+  currentEntryId String?
+  revision Int @default(0)
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialComponentHead_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  scope FinancialAuthorityScope @relation("FinancialComponentHead_scope", fields: [authorityScopeId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  current FinancialLedgerEntry? @relation("FinancialComponentHead_current", fields: [currentEntryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([authorityScopeId, authorityClass, sourceAuthority, sourceComponentKey])
+  FinancialLedgerEntry_component FinancialLedgerEntry[] @relation("FinancialLedgerEntry_component")
+  FinancialAuthorityEvidenceMember_component FinancialAuthorityEvidenceMember[] @relation("FinancialAuthorityEvidenceMember_component")
+  FinancialComponentSelection_component FinancialComponentSelection[] @relation("FinancialComponentSelection_component")
+}
+
+model FinancialLedgerEntry {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  marketplaceScopeKey String
+  componentId String
+  authorityScopeId String
+  bindingId String
+  economicEventKey String
+  revision Int
+  previousEntryId String? @unique
+  operationKey String
+  inputChecksum String
+  state String
+  projectionKind String
+  sourceSubtype String
+  authorityClass String
+  amountAtoms BigInt
+  amountScale Int
+  currencyCode String
+  sourceAmountText String
+  sourceSignConvention String
+  signRuleKey String
+  economicRole String
+  informationalRuleKey String?
+  rawSourceRecordId String
+  normalizationRunId String
+  mappingVersionId String
+  normalizationRevision Int
+  syncSliceEvidenceId String
+  sourceLeafPath String
+  occurredAt DateTime?
+  postedAt DateTime?
+  effectiveAt DateTime
+  periodStart DateTime?
+  periodEnd DateTime?
+  orderId String?
+  orderRevisionId String?
+  itemId String?
+  itemRevisionId String?
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialLedgerEntry_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  scope FinancialAuthorityScope @relation("FinancialLedgerEntry_scope", fields: [authorityScopeId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  mapping MappingVersion @relation("FinancialLedgerEntry_mapping", fields: [mappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  raw RawSourceRecord @relation("FinancialLedgerEntry_raw", fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  normalization NormalizationRun @relation("FinancialLedgerEntry_normalization", fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], references: [id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], onDelete: Restrict, onUpdate: Restrict)
+  sliceEvidence SyncSliceEvidence @relation("FinancialLedgerEntry_sliceEvidence", fields: [syncSliceEvidenceId, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], references: [id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], onDelete: Restrict, onUpdate: Restrict)
+  component FinancialComponentHead @relation("FinancialLedgerEntry_component", fields: [componentId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  binding FinancialAuthorityBinding @relation("FinancialLedgerEntry_binding", fields: [bindingId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  previous FinancialLedgerEntry? @relation("FinancialLedgerEntry_previous", fields: [previousEntryId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  currency FinancialCurrencyDefinition @relation("FinancialLedgerEntry_currency", fields: [currencyCode], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  orderIdRow NormalizedOrder? @relation("FinancialLedgerEntry_orderIdRow", fields: [orderId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  orderRevisionIdRow NormalizedOrderRevision? @relation("FinancialLedgerEntry_orderRevisionIdRow", fields: [orderRevisionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  itemIdRow NormalizedOrderItem? @relation("FinancialLedgerEntry_itemIdRow", fields: [itemId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  itemRevisionIdRow NormalizedOrderItemRevision? @relation("FinancialLedgerEntry_itemRevisionIdRow", fields: [itemRevisionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([componentId, revision])
+  @@unique([componentId, operationKey])
+  FinancialComponentHead_current FinancialComponentHead[] @relation("FinancialComponentHead_current")
+  FinancialLedgerEntry_previous FinancialLedgerEntry? @relation("FinancialLedgerEntry_previous")
+  FinancialAuthorityEvidenceMember_entry FinancialAuthorityEvidenceMember[] @relation("FinancialAuthorityEvidenceMember_entry")
+  FinancialComponentSelection_entry FinancialComponentSelection[] @relation("FinancialComponentSelection_entry")
+}
+
+model FinancialAuthorityEvidence {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  authorityScopeId String
+  authorityClass String
+  revision Int
+  previousEvidenceId String? @unique
+  operationKey String
+  inputChecksum String
+  mappingVersionId String
+  coverageState String
+  status String @default("DRAFT")
+  boundariesJson String
+  sourceWatermark DateTime?
+  closureSyncSliceEvidenceId String?
+  closureLeafPath String?
+  closureRuleKey String?
+  expectedSourceCount Int
+  expectedMemberCount Int
+  reasonCode String?
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityEvidence_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  scope FinancialAuthorityScope @relation("FinancialAuthorityEvidence_scope", fields: [authorityScopeId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  mapping MappingVersion @relation("FinancialAuthorityEvidence_mapping", fields: [mappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  previous FinancialAuthorityEvidence? @relation("FinancialAuthorityEvidence_previous", fields: [previousEvidenceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  closure SyncSliceEvidence? @relation("FinancialAuthorityEvidence_closure", fields: [closureSyncSliceEvidenceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([authorityScopeId, authorityClass, revision])
+  @@unique([authorityScopeId, authorityClass, operationKey])
+  FinancialAuthorityEvidence_previous FinancialAuthorityEvidence? @relation("FinancialAuthorityEvidence_previous")
+  FinancialAuthorityEvidenceSource_evidence FinancialAuthorityEvidenceSource[] @relation("FinancialAuthorityEvidenceSource_evidence")
+  FinancialAuthorityEvidenceMember_evidence FinancialAuthorityEvidenceMember[] @relation("FinancialAuthorityEvidenceMember_evidence")
+  FinancialAuthorityDecision_provisionalEvidenceIdRow FinancialAuthorityDecision[] @relation("FinancialAuthorityDecision_provisionalEvidenceIdRow")
+  FinancialAuthorityDecision_actualEvidenceIdRow FinancialAuthorityDecision[] @relation("FinancialAuthorityDecision_actualEvidenceIdRow")
+}
+
+model FinancialAuthorityEvidenceSource {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  evidenceId String
+  rawSourceRecordId String
+  normalizationRunId String
+  mappingVersionId String
+  normalizationRevision Int
+  syncSliceEvidenceId String
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityEvidenceSource_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  mapping MappingVersion @relation("FinancialAuthorityEvidenceSource_mapping", fields: [mappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  raw RawSourceRecord @relation("FinancialAuthorityEvidenceSource_raw", fields: [rawSourceRecordId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  normalization NormalizationRun @relation("FinancialAuthorityEvidenceSource_normalization", fields: [normalizationRunId, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], references: [id, accountId, channelConnectionId, rawSourceRecordId, mappingVersionId, normalizationRevision], onDelete: Restrict, onUpdate: Restrict)
+  sliceEvidence SyncSliceEvidence @relation("FinancialAuthorityEvidenceSource_sliceEvidence", fields: [syncSliceEvidenceId, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], references: [id, accountId, channelConnectionId, rawSourceRecordId, normalizationRunId], onDelete: Restrict, onUpdate: Restrict)
+  evidence FinancialAuthorityEvidence @relation("FinancialAuthorityEvidenceSource_evidence", fields: [evidenceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([evidenceId, syncSliceEvidenceId])
+}
+
+model FinancialAuthorityEvidenceMember {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  evidenceId String
+  componentId String
+  entryId String
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityEvidenceMember_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  evidence FinancialAuthorityEvidence @relation("FinancialAuthorityEvidenceMember_evidence", fields: [evidenceId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  component FinancialComponentHead @relation("FinancialAuthorityEvidenceMember_component", fields: [componentId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  entry FinancialLedgerEntry @relation("FinancialAuthorityEvidenceMember_entry", fields: [entryId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([evidenceId, componentId])
+}
+
+model FinancialAuthorityDecision {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  authorityScopeId String
+  revision Int
+  previousDecisionId String? @unique
+  inputVersion Int
+  provisionalEvidenceId String?
+  actualEvidenceId String?
+  authorityState String
+  selectedClass String
+  reasonCode String
+  operationKey String
+  inputChecksum String
+  mappingVersionId String
+  status String @default("DRAFT")
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialAuthorityDecision_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  scope FinancialAuthorityScope @relation("FinancialAuthorityDecision_scope", fields: [authorityScopeId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  mapping MappingVersion @relation("FinancialAuthorityDecision_mapping", fields: [mappingVersionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  previous FinancialAuthorityDecision? @relation("FinancialAuthorityDecision_previous", fields: [previousDecisionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  provisionalEvidenceIdRow FinancialAuthorityEvidence? @relation("FinancialAuthorityDecision_provisionalEvidenceIdRow", fields: [provisionalEvidenceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  actualEvidenceIdRow FinancialAuthorityEvidence? @relation("FinancialAuthorityDecision_actualEvidenceIdRow", fields: [actualEvidenceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([authorityScopeId, revision])
+  @@unique([authorityScopeId, operationKey])
+  FinancialAuthorityScope_decision FinancialAuthorityScope[] @relation("FinancialAuthorityScope_decision")
+  FinancialAuthorityDecision_previous FinancialAuthorityDecision? @relation("FinancialAuthorityDecision_previous")
+  FinancialComponentSelection_decision FinancialComponentSelection[] @relation("FinancialComponentSelection_decision")
+}
+
+model FinancialComponentSelection {
+  id String @id @default(cuid())
+  accountId String
+  channelConnectionId String
+  decisionId String
+  componentId String
+  entryId String
+  role String
+  createdAt DateTime @default(now())
+  ownerChannel ChannelConnection @relation("FinancialComponentSelection_ownerChannel", fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  decision FinancialAuthorityDecision @relation("FinancialComponentSelection_decision", fields: [decisionId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  component FinancialComponentHead @relation("FinancialComponentSelection_component", fields: [componentId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  entry FinancialLedgerEntry @relation("FinancialComponentSelection_entry", fields: [entryId, accountId, channelConnectionId], references: [id, accountId, channelConnectionId], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([id, accountId, channelConnectionId])
+  @@unique([decisionId, componentId])
 }
