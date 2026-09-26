@@ -24,6 +24,7 @@
     "test:data-core-d2b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2b.integration.ts",
     "test:data-core-d2a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2a.integration.ts",
     "test:data-core-d2c": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2c.integration.ts",
+    "test:data-core-d2d": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2d.integration.ts && node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/d2d.composition.integration.ts",
     "test:tenancy": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/tenancy.integration.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",
     "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts",
