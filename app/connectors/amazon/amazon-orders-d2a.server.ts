@@ -52,10 +52,23 @@ export async function ingestAmazonOrdersToD2A(input: {
           sourceStatus: order.sourceStatus, occurredAt: order.purchaseDate, postedAt: order.lastUpdatedAt });
         orderCount += 1;
         for (const item of order.items) {
+          const listingKey = item.sellerSku && item.asin ? `seller-sku:${item.sellerSku}|asin:${item.asin}` :
+            item.sellerSku ? `seller-sku:${item.sellerSku}` : item.asin ? `asin:${item.asin}` : null;
+          const listing = listingKey ? await tx.channelListing.upsert({ where: {
+            channelConnectionId_marketplaceScopeKey_sourceEntityType_externalVariantOrListingId: {
+              channelConnectionId: input.tenant.channelConnectionId, marketplaceScopeKey: input.marketplaceId,
+              sourceEntityType: "AMAZON_LISTING", externalVariantOrListingId: listingKey,
+            } }, create: { ...input.tenant, marketplaceId: input.marketplaceId,
+              marketplaceScopeKey: input.marketplaceId, sourceEntityType: "AMAZON_LISTING",
+              externalProductId: item.asin ?? null, externalVariantOrListingId: listingKey,
+              metadataJson: JSON.stringify({ asin: item.asin ?? null, sellerSku: item.sellerSku ?? null,
+                title: item.title ?? null }) }, update: {} }) : null;
           await recordNormalizedOrderItemRevisionTx(tx, input.tenant, { ...provenance, orderId: orderResult.order.id,
             sourceItemKey: `id:${item.externalOrderItemId}`,
             operationKey: operation([context.runId, "ITEM", order.externalOrderId, item.externalOrderItemId]),
             quantityAtoms: BigInt(item.quantityOrdered), quantityScale: 0,
+            channelListingId: listing?.id ?? null, sourceListingEntityType: listing?.sourceEntityType ?? null,
+            sourceListingKey: listing?.externalVariantOrListingId ?? null,
             occurredAt: order.purchaseDate, postedAt: order.lastUpdatedAt });
           itemCount += 1;
         }
