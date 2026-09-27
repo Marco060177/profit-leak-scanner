@@ -19,7 +19,7 @@ export const PARTNER_REWARD_TIERS = [
 const uniqueViolation = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 
-export async function evaluatePartnerRewardMilestones(db: PartnerDb, partnerId: string, unlockedAt = new Date()) {
+export async function evaluatePartnerRewardMilestones(db: PrismaClient, partnerId: string, unlockedAt = new Date()) {
   const normalizedPartnerId = partnerId.trim();
   if (!normalizedPartnerId) throw new Error("partnerId is required");
 
