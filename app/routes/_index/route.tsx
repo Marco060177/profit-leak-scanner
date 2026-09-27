@@ -1,18 +1,22 @@
 import type { LoaderFunctionArgs } from "react-router";
-import { redirect, Form, useLoaderData } from "react-router";
+import { data, redirect, Form, useLoaderData } from "react-router";
 
 import { login } from "../../shopify.server";
+import prisma from "~/db.server";
+import { capturePartnerReferral } from "~/services/partner-referral-flow.server";
 
 import styles from "./styles.module.css";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
+  const capture = await capturePartnerReferral(prisma, request, process.env.SHOPIFY_API_SECRET ?? "");
+  const headers = capture.setCookie ? { "Set-Cookie": capture.setCookie } : undefined;
 
   if (url.searchParams.get("shop")) {
-    throw redirect(`/app?${url.searchParams.toString()}`);
+    throw redirect(`/app?${url.searchParams.toString()}`, { headers });
   }
 
-  return { showForm: Boolean(login) };
+  return data({ showForm: Boolean(login) }, { headers });
 };
 
 export default function App() {

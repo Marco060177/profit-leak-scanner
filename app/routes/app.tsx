@@ -1,27 +1,50 @@
 import type { HeadersFunction, LoaderFunctionArgs } from "react-router";
-import { Outlet, useLoaderData, useRouteError } from "react-router";
+import { data, Outlet, useLoaderData, useRouteError } from "react-router";
 import { boundary } from "@shopify/shopify-app-react-router/server";
 import { AppProvider } from "@shopify/shopify-app-react-router/react";
 
 import { I18nProvider } from "~/components/i18n/I18nProvider";
 import { loadLocaleMessages } from "~/utils/i18n-catalogs.server";
 import { getRequestLanguage } from "~/utils/i18n.server";
+import prisma from "~/db.server";
 import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
+import { getAttributionByAccount } from "~/services/partner-program.server";
+import {
+  buildEmbeddedPartnerReturnUrl,
+  buildPartnerClaimBridgeUrl,
+  createPartnerClaimToken,
+  shouldInitiatePartnerClaimBridge,
+} from "~/services/partner-referral-flow.server";
 import visualSystemStylesUrl from "~/styles/visual-system-v2.css?url";
 
 export const links = () => [{ rel: "stylesheet", href: visualSystemStylesUrl }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticateShopifyTenant(request);
+  const authenticated = await authenticateShopifyTenant(request);
+  const url = new URL(request.url);
+  const attribution = await getAttributionByAccount(prisma, authenticated.tenant.accountId);
+  if (shouldInitiatePartnerClaimBridge(Boolean(attribution), url.toString())) {
+    const returnUrl = buildEmbeddedPartnerReturnUrl(
+      authenticated.session.shop,
+      process.env.SHOPIFY_APP_HANDLE ?? "",
+    );
+    const token = createPartnerClaimToken(
+      authenticated.tenant, returnUrl, process.env.SHOPIFY_API_SECRET ?? "",
+    );
+    return authenticated.redirect(
+      buildPartnerClaimBridgeUrl(process.env.SHOPIFY_APP_URL || url.origin, token),
+      { target: "_top" },
+    );
+  }
   const language = getRequestLanguage(request);
   const messages = await loadLocaleMessages(language);
 
   // eslint-disable-next-line no-undef
-  return {
+  return data({
     apiKey: process.env.SHOPIFY_API_KEY || "",
     language,
     messages,
-  };
+  });
 };
 
 export default function App() {
