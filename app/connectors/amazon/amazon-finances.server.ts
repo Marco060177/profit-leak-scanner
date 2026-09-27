@@ -225,7 +225,9 @@ function breakdowns(value: AmazonLosslessJson | undefined, depth: number, maximu
       breakdowns: breakdowns(source.breakdowns, depth + 1, maximum) };
   });
 }
-function parsePage(body: Uint8Array, maximumDepth: number) {
+export function parseAmazonFinancesEvidencePage(body: Uint8Array, maximumDepth = 32) {
+  if (!Number.isSafeInteger(maximumDepth) || maximumDepth < 1 || maximumDepth > 128)
+    throw new AmazonConnectorError("INVALID_QUERY");
   const root = object(parseLosslessJson(body));
   if (root.errors !== undefined) throw new AmazonConnectorError("MALFORMED_RESPONSE");
   const payload = object(root.payload);
@@ -318,7 +320,7 @@ export async function listAmazonFinancialTransactions(input: {
         "x-amz-date": new Date((input.retry?.now ?? Date.now)()).toISOString().replace(/[:-]|\.\d{3}/g, ""),
         "user-agent": input.config.userAgent, accept: "application/json",
       }, timeoutMs: input.config.timeoutMs }, input.config, input.retry);
-    const page = parsePage(response.body, input.query.maxBreakdownDepth ?? 32);
+    const page = parseAmazonFinancesEvidencePage(response.body, input.query.maxBreakdownDepth ?? 32);
     pages.push({ pageIndex, body: response.body.slice(), transactions: page.transactions,
       requestId: response.headers["x-amzn-requestid"] ?? null, nextToken: page.nextToken ?? null });
     if (!page.nextToken) break;
