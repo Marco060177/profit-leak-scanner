@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
+import { completeSyncSliceTx, completeSyncSliceWithoutCheckpointTx } from "~/core/data-core-d1.server";
 import {
   canonicalChecksum,
   createFinancialAuthorityScopeTx,
@@ -63,12 +64,15 @@ async function replayPages(input: {
   tenant: VerifiedCoreTenant;
   sliceId: string;
   rawDecryption: RawSourceDecryptionBoundary;
+  allowPrepared?: boolean;
 }) {
   const slice = await input.db.syncSlice.findUnique({ where: { id: input.sliceId }, include: { run: true } });
   if (!slice || slice.accountId !== input.tenant.accountId ||
       slice.channelConnectionId !== input.tenant.channelConnectionId ||
       slice.stream !== AMAZON_FINANCES_STREAM || slice.run.stream !== AMAZON_FINANCES_STREAM ||
-      slice.status !== "SUCCEEDED" || slice.run.status !== "SUCCEEDED")
+      (input.allowPrepared
+        ? slice.status !== "PREPARED" || slice.run.status !== "RUNNING"
+        : slice.status !== "SUCCEEDED" || slice.run.status !== "SUCCEEDED"))
     throw new Error("Amazon E2-E requires completed owned Finances D1 evidence");
   const evidence = await input.db.syncSliceEvidence.findMany({ where: { sliceId: slice.id },
     include: { rawSourceRecord: { include: { chunks: { orderBy: { chunkIndex: "asc" } }, references: true } },
@@ -175,6 +179,18 @@ async function ingestTransaction(tx: Tx, tenant: VerifiedCoreTenant, input: {
       normalization.normalizationRevision !== input.page.provenance.normalizationRevision ||
       sliceEvidence.rawSourceRecordId !== raw.id || sliceEvidence.normalizationRunId !== normalization.id)
     throw new Error("Amazon E2-E invalid binding provenance");
+  const replayedEvidence = await tx.financialAuthorityEvidence.findUnique({ where: {
+    authorityScopeId_authorityClass_operationKey: { authorityScopeId: scope.id,
+      authorityClass: "ACTUAL", operationKey: observationKey },
+  } });
+  if (replayedEvidence) {
+    const replayedDecision = await tx.financialAuthorityDecision.findFirst({ where: {
+      authorityScopeId: scope.id, actualEvidenceId: replayedEvidence.id,
+    }, orderBy: { revision: "desc" } });
+    if (!replayedDecision) throw new Error("Amazon E2-E replayed evidence lacks published decision");
+    return { scopeId: scope.id, evidenceId: replayedEvidence.id, decisionId: replayedDecision.id,
+      entryIds: [] as string[], blocked: replayedDecision.selectedClass === "BLOCKED" };
+  }
   const binding = previousBinding ?? await recordFinancialAuthorityBindingTx(tx, tenant, {
     ...input.page.provenance, authorityScopeId: scope.id, authorityClass: "ACTUAL",
     sourceAuthority: AMAZON_FINANCES_SOURCE_AUTHORITY, sourceSystem: "AMAZON",
@@ -286,9 +302,19 @@ export async function ingestAmazonFinancesD1ToD2B(input: {
   tenant: VerifiedCoreTenant;
   sliceId: string;
   rawDecryption: RawSourceDecryptionBoundary;
+  completion?: Readonly<{
+    leaseOwner: string;
+    authorizationVersion: string;
+    mappingVersionId: string;
+    now: Date;
+    advanceCheckpoint: boolean;
+    expectedProcessedSliceId: string | null;
+    cursorValue?: string;
+    windowWatermark?: Date;
+  }>;
 }) {
   if (!input.rawDecryption?.decryptChunk) throw new Error("Raw payload decryption required");
-  const replayed = await replayPages(input);
+  const replayed = await replayPages({ ...input, allowPrepared: Boolean(input.completion) });
   const acquisition: AmazonFinancesAcquisition = { pages: replayed.pages.map((page) => ({
     pageIndex: page.pageIndex, body: page.body, transactions: page.transactions,
     requestId: null, nextToken: null,
@@ -313,6 +339,18 @@ export async function ingestAmazonFinancesD1ToD2B(input: {
       } catch (error) {
         throw new Error(`Amazon E2-E transaction failed: ${value.transactionId}`, { cause: error });
       }
+    }
+    if (input.completion) {
+      const common = { ...input.tenant, sliceId: input.sliceId,
+        leaseOwner: input.completion.leaseOwner,
+        authorizationVersion: input.completion.authorizationVersion,
+        mappingVersionId: input.completion.mappingVersionId, now: input.completion.now };
+      if (input.completion.advanceCheckpoint) await completeSyncSliceTx(tx, { ...common,
+        cursorValue: input.completion.cursorValue, windowWatermark: input.completion.windowWatermark,
+        expectedProcessedSliceId: input.completion.expectedProcessedSliceId });
+      else await completeSyncSliceWithoutCheckpointTx(tx, common);
+      await tx.syncRun.update({ where: { id: replayed.slice.runId },
+        data: { status: "SUCCEEDED", finishedAt: input.completion.now } });
     }
     return output;
   });

@@ -284,6 +284,41 @@ export async function completeSyncSliceTx(tx: DataCoreTx, input: {
       processedSliceId: slice.id, cursorValue: input.cursorValue, windowWatermark: input.windowWatermark } });
 }
 
+/** Finalize durable slice evidence that does not prove chronological coverage. */
+export async function completeSyncSliceWithoutCheckpointTx(tx: DataCoreTx, input: {
+  sliceId: string; accountId: string; channelConnectionId: string; leaseOwner: string;
+  authorizationVersion: string; mappingVersionId: string; now: Date;
+}) {
+  const slice = await tx.syncSlice.findUnique({ where: { id: input.sliceId }, include: { run: true } });
+  const channel = await tx.channelConnection.findUnique({ where: { id: input.channelConnectionId }, include: { account: true } });
+  const authorization = await tx.coreChannelAuthorization.findUnique({ where: { channelConnectionId: input.channelConnectionId } });
+  if (!slice || !channel || slice.accountId !== input.accountId || slice.channelConnectionId !== input.channelConnectionId ||
+    channel.accountId !== input.accountId || channel.status !== "ACTIVE" || channel.account.status !== "ACTIVE" ||
+    authorization?.accountId !== input.accountId || authorization.authorizationVersion !== input.authorizationVersion ||
+    slice.run.authorizationVersion !== input.authorizationVersion || slice.authorizationVersion !== input.authorizationVersion ||
+    slice.run.mappingVersionId !== input.mappingVersionId || !["PENDING", "RUNNING"].includes(slice.run.status) ||
+    slice.status !== "PREPARED" || slice.stream !== slice.run.stream || slice.leaseOwner !== input.leaseOwner ||
+    !slice.leaseExpiresAt || slice.leaseExpiresAt <= input.now)
+    throw new Error("Sync commit ownership, lease or version mismatch");
+  const evidence = await tx.syncSliceEvidence.findMany({ where: { sliceId: slice.id },
+    include: { rawSourceRecord: true, normalizationRun: true, sourceObservation: true } });
+  if (!evidence.length || evidence.some((row) => row.accountId !== input.accountId ||
+    row.channelConnectionId !== input.channelConnectionId || row.runId !== slice.runId ||
+    row.rawSourceRecord.accountId !== input.accountId || row.rawSourceRecord.channelConnectionId !== input.channelConnectionId ||
+    (row.sourceObservation ? row.sourceObservation.runId !== slice.runId || row.sourceObservation.sliceId !== slice.id ||
+      row.sourceObservation.rawSourceRecordId !== row.rawSourceRecordId ||
+      row.sourceObservation.authorizationVersion !== input.authorizationVersion : row.rawSourceRecord.ingestionRunId !== slice.runId) ||
+    row.normalizationRun.accountId !== input.accountId || row.normalizationRun.channelConnectionId !== input.channelConnectionId ||
+    row.normalizationRun.rawSourceRecordId !== row.rawSourceRecordId ||
+    row.normalizationRun.mappingVersionId !== slice.run.mappingVersionId || row.normalizationRun.status !== "SUCCEEDED"))
+    throw new Error("Sync completion requires durable exact-slice normalization evidence");
+  const updated = await tx.syncSlice.updateMany({ where: { id: slice.id, status: "PREPARED",
+    leaseOwner: input.leaseOwner, authorizationVersion: input.authorizationVersion,
+    leaseExpiresAt: { gt: input.now } }, data: { status: "SUCCEEDED", leaseOwner: null, leaseExpiresAt: null } });
+  if (updated.count !== 1) throw new Error("Sync slice changed concurrently");
+  return slice;
+}
+
 export async function completeSyncSlice(db: PrismaClient, input: Parameters<typeof completeSyncSliceTx>[1]) {
   return db.$transaction((tx) => completeSyncSliceTx(tx, input));
 }

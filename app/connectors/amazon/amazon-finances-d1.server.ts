@@ -312,6 +312,7 @@ export async function ingestAmazonFinancesToD1(input: {
   now: Date;
   leaseMs?: number;
   retry?: AmazonRetryHooks;
+  deferCompletion?: boolean;
 }) {
   const externalMarketplaceId = await assertAmazonOrdersBoundary(input.db, input.tenant, input.marketplaceId);
   const context = await establishAmazonFinancesSlice(input.db, {
@@ -334,17 +335,16 @@ export async function ingestAmazonFinancesToD1(input: {
     await prepareSyncSlice(input.db, { ...input.tenant, sliceId: context.sliceId,
       leaseOwner: input.leaseOwner, authorizationVersion: context.authorizationVersion, now: input.now });
     const request = requestEvidence(input.query, externalMarketplaceId);
-    await input.db.$transaction(async (tx) => {
+    if (!input.deferCompletion) await input.db.$transaction(async (tx) => {
       await completeSyncSliceTx(tx, { ...input.tenant, sliceId: context.sliceId,
         leaseOwner: input.leaseOwner, authorizationVersion: context.authorizationVersion,
-        mappingVersionId: context.mappingVersionId,
-        cursorValue: sha256(request), windowWatermark: input.query.postedBefore,
-        now: input.now, expectedProcessedSliceId: context.expectedProcessedSliceId });
-      await tx.syncRun.update({ where: { id: context.runId },
-        data: { status: "SUCCEEDED", finishedAt: input.now } });
+        mappingVersionId: context.mappingVersionId, cursorValue: sha256(request),
+        windowWatermark: input.query.postedBefore, now: input.now,
+        expectedProcessedSliceId: context.expectedProcessedSliceId });
+      await tx.syncRun.update({ where: { id: context.runId }, data: { status: "SUCCEEDED", finishedAt: input.now } });
     });
     return { replayed: false, runId: context.runId, sliceId: context.sliceId,
-      pages: persisted.length, evidence: persisted };
+      pages: persisted.length, evidence: persisted, context, requestFingerprint: sha256(request) };
   } catch (error) {
     await releaseSyncSlice(input.db, { sliceId: context.sliceId,
       leaseOwner: input.leaseOwner }).catch(() => undefined);
