@@ -39,6 +39,8 @@ model Account {
   amazonSellerAuthorizations AmazonSellerAuthorization[]
   sourceObservations SourceObservation[]
   partnerReferral PartnerReferral?
+  normalizedBillingEvents NormalizedBillingEvent[]
+  partnerQualificationEvidence PartnerQualificationEvidence[]
 
   @@index([status])
 }
@@ -69,9 +71,46 @@ model PartnerReferral {
   partner            Partner                   @relation(fields: [partnerId], references: [id], onDelete: Restrict)
   account            Account                   @relation(fields: [accountId], references: [id], onDelete: Restrict)
   milestoneEvents    PartnerMilestoneEvent[]
+  qualificationEvidence PartnerQualificationEvidence[]
 
   @@unique([id, accountId])
   @@index([partnerId, status])
+}
+
+model NormalizedBillingEvent {
+  id                    String   @id @default(cuid())
+  accountId             String
+  platform              String
+  externalEventId       String
+  eventType             String
+  occurredAt            DateTime
+  amountAtoms           BigInt?
+  amountScale           Int?
+  currencyCode          String?
+  subscriptionReference String?
+  provenanceJson        String?
+  createdAt             DateTime @default(now())
+  account               Account  @relation(fields: [accountId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  qualificationEvidence PartnerQualificationEvidence[]
+
+  @@unique([platform, externalEventId])
+  @@unique([id, accountId])
+  @@index([accountId, eventType, occurredAt])
+}
+
+model PartnerQualificationEvidence {
+  id             String                 @id @default(cuid())
+  referralId     String
+  accountId      String
+  billingEventId String                 @unique
+  ordinal        Int
+  createdAt      DateTime               @default(now())
+  referral       PartnerReferral        @relation(fields: [referralId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+  account        Account                @relation(fields: [accountId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  billingEvent   NormalizedBillingEvent @relation(fields: [billingEventId, accountId], references: [id, accountId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([referralId, ordinal])
+  @@index([accountId])
 }
 
 model PartnerMilestoneEvent {
