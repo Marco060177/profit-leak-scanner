@@ -20,10 +20,11 @@ import type { AmazonApplicationConfig, AmazonHttpRequest, AmazonHttpResponse, Am
 import { testCredentialEncryptionProvider } from "./test-credential-encryption";
 
 const migrations = readdirSync("prisma/migrations").filter((name) => /^\d{14}_/.test(name)).sort();
-assert.equal(migrations.length, 29);
+assert.equal(migrations.length, 30);
 assert.ok(migrations.includes("20260930120000_partner_p3_billing_qualification"));
 assert.ok(migrations.includes("20261001120000_partner_p4_reward_milestones"));
 assert.ok(migrations.includes("20261002120000_partner_p5_1_authentication"));
+assert.ok(migrations.includes("20261003120000_partner_p6_payout_ledger"));
 const encoder = new TextEncoder();
 const response = (body: unknown): AmazonHttpResponse => ({ status: 200, headers: {},
   body: encoder.encode(typeof body === "string" ? body : JSON.stringify(body)) });

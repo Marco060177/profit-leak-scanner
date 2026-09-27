@@ -56,8 +56,29 @@ model Partner {
   accessTokens PartnerAccessToken[]
   sessions     PartnerSession[]
   rewardMilestones PartnerRewardMilestone[]
+  payouts      PartnerPayout[]
 
   @@index([status])
+}
+
+model PartnerPayout {
+  id                   String   @id @default(cuid())
+  partnerId            String
+  amountAtoms           BigInt
+  amountScale           Int      @default(2)
+  currencyCode          String   @default("USD")
+  status                String   @default("PENDING")
+  entitlementFromAtoms BigInt
+  entitlementToAtoms   BigInt
+  createdAt             DateTime @default(now())
+  approvedAt            DateTime?
+  paidAt                DateTime?
+  cancelledAt           DateTime?
+  adminNote             String?
+  externalReference     String?
+  partner               Partner  @relation(fields: [partnerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([partnerId, status, createdAt])
 }
 
 model PartnerAccessToken {

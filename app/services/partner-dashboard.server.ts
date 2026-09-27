@@ -9,6 +9,10 @@ export type PartnerDashboardViewModel = {
   nextMilestone: null | { key: string; label: string; qualifiedCustomerTarget: number; customersRemaining: number; reward: RewardAmount; progressPercent: number };
   milestones: Array<{ key: string; label: string; qualifiedCustomerTarget: number; reward: RewardAmount; state: "UNLOCKED" | "NEXT" | "LOCKED" }>;
   progressToMaximumPercent: number;
+  payouts: {
+    paid: RewardAmount; pending: RewardAmount; approved: RewardAmount; outstanding: RewardAmount;
+    history: Array<{ status: string; amount: RewardAmount; createdAt: string; paidAt: string | null }>;
+  };
 };
 
 function amount(amountAtoms: bigint, amountScale: number, currencyCode: string): RewardAmount {
@@ -24,8 +28,9 @@ export async function getPartnerDashboard(db: PrismaClient, identity: Authorized
   if (!partnerId) throw new Error("Authorized Partner identity is required");
   const partner = await db.partner.findUnique({ where: { id: partnerId }, select: { displayName: true, referralCode: true } });
   if (!partner) throw new Error("Authorized Partner not found");
-  const [attributedReferrals, progress] = await Promise.all([
+  const [attributedReferrals, progress, payouts] = await Promise.all([
     db.partnerReferral.count({ where: { partnerId } }), getPartnerRewardProgress(db, partnerId),
+    db.partnerPayout.findMany({ where: { partnerId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] }),
   ]);
   const reward = (atoms: bigint) => amount(atoms, progress.amountScale, progress.currencyCode);
   const next = progress.nextTier;
@@ -47,5 +52,15 @@ export async function getPartnerDashboard(db: PrismaClient, identity: Authorized
       state: progress.qualifiedCustomers >= tier.qualifiedCustomers ? "UNLOCKED" as const : tier.key === next?.key ? "NEXT" as const : "LOCKED" as const,
     })),
     progressToMaximumPercent: Math.min(100, Math.round((progress.qualifiedCustomers / PARTNER_REWARD_TIERS.at(-1)!.qualifiedCustomers) * 100)),
+    payouts: (() => {
+      const total = (status: string) => payouts.filter((row) => row.status === status).reduce((sum, row) => sum + row.amountAtoms, 0n);
+      const paidAtoms = total("PAID");
+      const entitlementAtoms = progress.highestUnlocked?.cumulativeRewardAtoms ?? 0n;
+      return {
+        paid: reward(paidAtoms), pending: reward(total("PENDING")), approved: reward(total("APPROVED")),
+        outstanding: reward(entitlementAtoms > paidAtoms ? entitlementAtoms - paidAtoms : 0n),
+        history: payouts.map((row) => ({ status: row.status, amount: reward(row.amountAtoms), createdAt: row.createdAt.toISOString(), paidAt: row.paidAt?.toISOString() ?? null })),
+      };
+    })(),
   };
 }

@@ -23,6 +23,11 @@ export function PartnerDashboard({ dashboard }: { dashboard: PartnerDashboardVie
       </article>
       <article className={styles.card}><p className={styles.eyebrow}>YOUR REFERRAL</p><span className={styles.label}>Referral code</span><strong className={styles.code}>{dashboard.partner.referralCode}</strong><span className={styles.label}>Referral link</span><div className={styles.link}><span>{dashboard.partner.referralLink}</span><button type="button" onClick={copyLink}>{copied ? "Copied" : "Copy"}</button></div></article>
     </section>
+    <section className={`${styles.card} ${styles.ladder}`}><p className={styles.eyebrow}>PAYOUT STATUS</p><h2>Your payout summary</h2><div className={styles.tiers}>
+      <article className={styles.tier}><div><small>PAID</small><h3>{dashboard.payouts.paid.formatted}</h3></div></article>
+      <article className={styles.tier}><div><small>OUTSTANDING</small><h3>{dashboard.payouts.outstanding.formatted}</h3></div><div><span>{dashboard.payouts.pending.formatted} pending · {dashboard.payouts.approved.formatted} approved</span></div></article>
+      {dashboard.payouts.history.map((entry, index) => <article key={`${entry.createdAt}-${index}`} className={styles.tier}><div><small>{entry.status}</small><h3>{entry.amount.formatted}</h3></div><div><span>{new Date(entry.createdAt).toLocaleDateString()}</span></div></article>)}
+    </div></section>
     <section className={`${styles.card} ${styles.ladder}`}><p className={styles.eyebrow}>MILESTONE LADDER</p><h2>Your path to Legend</h2><div className={styles.tiers}>{dashboard.milestones.map((tier) => <article key={tier.key} className={`${styles.tier} ${styles[tier.state.toLowerCase()]}`}><div><small>{tier.state === "NEXT" ? "CURRENT / NEXT" : tier.state}</small><h3>{tier.label}</h3></div><div><b>{tier.reward.formatted}</b><span>{tier.qualifiedCustomerTarget} qualified</span></div></article>)}</div></section>
   </div></main>;
 }
