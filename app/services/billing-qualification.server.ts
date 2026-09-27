@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { appendMilestoneEvent } from "~/services/partner-program.server";
+import { evaluatePartnerRewardMilestones } from "~/services/partner-rewards.server";
 
 export const REQUIRED_SUCCESSFUL_PAYMENTS = 2;
 export const SUCCESSFUL_PAID_EVENT = "PAYMENT_SUCCEEDED";
@@ -56,7 +57,7 @@ export async function ingestNormalizedBillingEvent(db: PrismaClient, input: Norm
 }
 
 export async function evaluatePartnerQualification(db: PrismaClient, accountId: string) {
-  return db.$transaction(async (tx) => {
+  const referral = await db.$transaction(async (tx) => {
     const referral = await tx.partnerReferral.findUnique({ where: { accountId } });
     if (!referral) return null;
     if (referral.status !== "ATTRIBUTED") return referral;
@@ -81,4 +82,8 @@ export async function evaluatePartnerQualification(db: PrismaClient, accountId: 
       where: { id: referral.id }, data: { status: "QUALIFIED", qualifiedAt },
     });
   });
+  if (referral?.status === "QUALIFIED") {
+    await evaluatePartnerRewardMilestones(db, referral.partnerId);
+  }
+  return referral;
 }

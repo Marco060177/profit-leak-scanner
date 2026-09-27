@@ -53,8 +53,25 @@ model Partner {
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
   referrals    PartnerReferral[]
+  rewardMilestones PartnerRewardMilestone[]
 
   @@index([status])
+}
+
+model PartnerRewardMilestone {
+  id                         String   @id @default(cuid())
+  partnerId                  String
+  tierKey                    String
+  qualifiedCustomerThreshold Int
+  cumulativeRewardAtoms      BigInt
+  amountScale                Int      @default(2)
+  currencyCode               String   @default("USD")
+  unlockedAt                 DateTime
+  createdAt                  DateTime @default(now())
+  partner                    Partner  @relation(fields: [partnerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([partnerId, tierKey])
+  @@index([partnerId, qualifiedCustomerThreshold])
 }
 
 model PartnerReferral {
