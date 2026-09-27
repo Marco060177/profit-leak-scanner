@@ -44,7 +44,7 @@
     "test:partner-p2": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p2.integration.ts",
     "test:partner-p3": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p3.integration.ts",
     "test:partner-p3-sync": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p3-sync.integration.ts",
-    "partner:p3:sync": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/partner-p3-shopify-sync.ts",
+    "partner:p3:sync": "vite-node scripts/partner-p3-shopify-sync.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",
     "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts",
     "test:tenancy-t7": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t7-profit-assumptions.integration.ts",
