@@ -8,11 +8,11 @@ const temporaryDirectory = mkdtempSync(path.join(os.tmpdir(), "marginlab-partner
 const databasePath = path.join(temporaryDirectory, "partner.sqlite");
 const setup = new DatabaseSync(databasePath);
 setup.exec("PRAGMA foreign_keys = ON");
-for (const name of readdirSync("prisma/migrations").filter((entry) => /^\\d{14}_/.test(entry)).sort()) {
+for (const name of readdirSync("prisma/migrations").filter((entry) => /^\d{14}_/.test(entry)).sort()) {
   setup.exec(readFileSync(path.join("prisma/migrations", name, "migration.sql"), "utf8"));
 }
 setup.close();
-process.env.DATABASE_URL = `file:${databasePath.replace(/\\\\/g, "/")}`;
+process.env.DATABASE_URL = `file:${databasePath.replace(/\\/g, "/")}`;
 
 try {
   const [{ PrismaClient }, partner, rewards] = await Promise.all([
