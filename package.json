@@ -68,7 +68,9 @@
     "test:notification-dispatch": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/notification-dispatch.integration.ts",
     "tenancy:t8b:profit-impact-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t8b-profit-impact-backfill.ts",
     "test:partner-p4": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p4.integration.ts",
-    "test:partner-p5": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p5.integration.ts"
+    "test:partner-p5": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p5.integration.ts",
+    "test:partner-p5-auth": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p5-auth.integration.ts",
+    "partner:issue-access": "vite-node scripts/partner-issue-access.ts"
   },
   "type": "module",
   "engines": {
