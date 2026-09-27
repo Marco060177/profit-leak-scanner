@@ -18,7 +18,7 @@ import type { AmazonApplicationConfig, AmazonHttpRequest, AmazonHttpResponse, Am
 import { testCredentialEncryptionProvider } from "./test-credential-encryption";
 
 const migrations = readdirSync("prisma/migrations").filter((name) => /^\d{14}_/.test(name)).sort();
-assert.equal(migrations.length, 25);
+assert.equal(migrations.length, 26);
 const migrate = (file: string) => { const sql = new DatabaseSync(file); sql.exec("PRAGMA foreign_keys=ON");
   for (const name of migrations) sql.exec(readFileSync(path.join("prisma/migrations", name, "migration.sql"), "utf8"));
   assert.deepEqual(sql.prepare("PRAGMA foreign_key_check").all(), []);

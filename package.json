@@ -40,6 +40,7 @@
     "test:amazon-f3": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/amazon/f3.integration.ts",
     "test:money-range-remediation": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/money-range-remediation.integration.ts",
     "test:tenancy": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/tenancy.integration.ts",
+    "test:partner-p1": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p1.integration.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",
     "tenancy:t6:tax-profile-backfill": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs scripts/tenancy-t6-tax-profile-backfill.ts",
     "test:tenancy-t7": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t7-profit-assumptions.integration.ts",

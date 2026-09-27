@@ -38,8 +38,56 @@ model Account {
   normalizedOrders NormalizedOrder[]
   amazonSellerAuthorizations AmazonSellerAuthorization[]
   sourceObservations SourceObservation[]
+  partnerReferral PartnerReferral?
 
   @@index([status])
+}
+
+model Partner {
+  id           String            @id @default(cuid())
+  status       String            @default("ACTIVE")
+  displayName  String
+  referralCode String            @unique
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  referrals    PartnerReferral[]
+
+  @@index([status])
+}
+
+model PartnerReferral {
+  id                 String                    @id @default(cuid())
+  partnerId          String
+  accountId          String                    @unique
+  status             String                    @default("ATTRIBUTED")
+  attributionSource  String
+  sourceMetadataJson String?
+  attributedAt       DateTime                  @default(now())
+  qualifiedAt        DateTime?
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  partner            Partner                   @relation(fields: [partnerId], references: [id], onDelete: Restrict)
+  account            Account                   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  milestoneEvents    PartnerMilestoneEvent[]
+
+  @@unique([id, accountId])
+  @@index([partnerId, status])
+}
+
+model PartnerMilestoneEvent {
+  id             String          @id @default(cuid())
+  referralId     String
+  accountId      String
+  eventType      String
+  idempotencyKey String
+  metadataJson   String?
+  occurredAt     DateTime
+  createdAt      DateTime        @default(now())
+  referral       PartnerReferral @relation(fields: [referralId, accountId], references: [id, accountId], onDelete: Restrict)
+
+  @@unique([referralId, idempotencyKey])
+  @@index([accountId, occurredAt])
+  @@index([referralId, occurredAt])
 }
 
 model AccountAiUsage {

@@ -105,7 +105,7 @@ try {
   assert.equal(afterTargeted.processedSliceId, beforeTargeted.processedSliceId);
   assert.equal(afterTargeted.windowWatermark?.getTime(), beforeTargeted.windowWatermark?.getTime());
   assert.equal(await db.rawSourceRecord.count(), 3, "targeted evidence is preserved without false broad coverage");
-  assert.equal(readdirSync("prisma/migrations").filter((value) => /^\d{14}_/.test(value)).length, 25);
+  assert.equal(readdirSync("prisma/migrations").filter((value) => /^\d{14}_/.test(value)).length, 26);
   console.log("Amazon E2-F integration tests passed");
 } finally {
   await db.$disconnect(); sqlite.close(); rmSync(directory, { recursive: true, force: true });
