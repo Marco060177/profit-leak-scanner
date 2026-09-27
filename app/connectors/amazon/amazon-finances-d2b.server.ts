@@ -41,6 +41,21 @@ type ReplayedPage = Readonly<{
 const operation = (parts: readonly unknown[]) =>
   createHash("sha256").update(canonicalChecksum(parts)).digest("hex");
 
+function transactionSemanticIdentity(value: AmazonCanonicalFinancialTransaction) {
+  const monetary = (node: AmazonCanonicalFinancialMoneyNode) => {
+    const semantic = { ...node } as Record<string, unknown>;
+    delete semantic.blocker;
+    return semantic;
+  };
+  const semantic = { ...value } as Record<string, unknown>;
+  delete semantic.sourcePayloadChecksum;
+  delete semantic.informationalMonetaryNodes;
+  delete semantic.economicLeaves;
+  delete semantic.unresolvedEconomicLeaves;
+  return { ...semantic, informationalMonetaryNodes: value.informationalMonetaryNodes.map(monetary),
+    economicLeaves: value.economicLeaves.map(monetary) };
+}
+
 function family(value: AmazonCanonicalFinancialTransaction): CoverageFamily {
   const projections = new Set(value.economicLeaves.map((leaf) => leaf.projectionKind));
   if (projections.has("REFUND")) return "REFUND_BUNDLE";
@@ -168,7 +183,10 @@ async function ingestTransaction(tx: Tx, tenant: VerifiedCoreTenant, input: {
     orderBy: { revision: "desc" } });
   if (previousBinding && previousBinding.authorityScopeId !== scope.id)
     throw new Error("Amazon E2-E binding scope changed for stable transaction identity");
-  const observationKey = operation([input.page.rawChecksum, value.transactionId, value.transactionStatus]);
+  // Pagination and page composition are transport details. Stable economic identity must
+  // depend on the canonical transaction so an identical transaction replayed on another
+  // page is a no-op, while a corrected transaction produces a new revision.
+  const observationKey = operation([transactionSemanticIdentity(value)]);
   const [raw, normalization, sliceEvidence] = await Promise.all([
     tx.rawSourceRecord.findUnique({ where: { id: input.page.provenance.rawSourceRecordId } }),
     tx.normalizationRun.findUnique({ where: { id: input.page.provenance.normalizationRunId } }),
