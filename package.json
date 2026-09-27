@@ -71,13 +71,15 @@
     "test:partner-p5": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p5.integration.ts",
     "test:partner-p5-auth": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p5-auth.integration.ts",
     "partner:issue-access": "vite-node scripts/partner-issue-access.ts",
+    "partner:register": "vite-node scripts/partner-register.ts",
     "partner:payout:list": "vite-node scripts/partner-payout-admin.ts list",
     "partner:payout:history": "vite-node scripts/partner-payout-admin.ts history",
     "partner:payout:reconcile": "vite-node scripts/partner-payout-admin.ts reconcile",
     "partner:payout:approve": "vite-node scripts/partner-payout-admin.ts approve",
     "partner:payout:paid": "vite-node scripts/partner-payout-admin.ts paid",
     "partner:payout:cancel": "vite-node scripts/partner-payout-admin.ts cancel",
-    "test:partner-p6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p6.integration.ts"
+    "test:partner-p6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/p6.integration.ts",
+    "test:partner-final": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/partner/final.integration.ts"
   },
   "type": "module",
   "engines": {
