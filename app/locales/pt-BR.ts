@@ -2,6 +2,7 @@ export const ptBR = {
   nav: {
     overview: "Visão geral",
     products: "Produtos",
+    amazon: "Amazon",
     profitIntelligence: "Profit Intelligence",
     recommendations: "Recomendações",
     aiAdvisor: "AI Advisor",
@@ -10,6 +11,18 @@ export const ptBR = {
     profitAssumptions: "Premissas de lucro",
     billing: "Cobrança",
     more: "Mais",
+  },
+  amazonProfit: {
+    title: "Lucro da Amazon", description: "Economia exata do pedido a partir de dados financeiros e de custos canônicos da Amazon.",
+    noConnection: "Nenhuma conta Amazon está conectada ainda.", noConnectionHint: "Conecte a Amazon para ver o lucro dos pedidos.",
+    noOrders: "Nenhum pedido da Amazon está disponível ainda.", noOrdersHint: "Os pedidos aparecerão após a sincronização da Amazon.",
+    order: "Pedido", marketplace: "Marketplace", unknownOrder: "Pedido desconhecido", unknownMarketplace: "Marketplace desconhecido",
+    ready: "PRONTO", blocked: "BLOQUEADO", revenue: "Receita", fees: "Taxas da Amazon", cogs: "COGS", tax: "Imposto",
+    profit: "Lucro", exactCanonicalResult: "Resultado canônico exato", profitUnavailable: "Lucro indisponível",
+    reasons: { mappingRequired: "Mapeamento de produto necessário", costRequired: "Custo do produto necessário",
+      fxRequired: "Várias moedas exigem suporte a FX", financialIncomplete: "Os dados financeiros da Amazon ainda não estão completos",
+      financialReview: "Os dados financeiros da Amazon precisam de revisão",
+      additionalData: "Dados econômicos adicionais são necessários antes do cálculo do lucro" },
   },
   dashboard: {
     profitIntelligenceBrief: "Resumo Profit Intelligence",

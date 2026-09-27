@@ -2,6 +2,7 @@ export const en = {
   nav: {
     overview: "Overview",
     products: "Products",
+    amazon: "Amazon",
     profitIntelligence: "Profit Intelligence",
     recommendations: "Recommendations",
     aiAdvisor: "AI Advisor",
@@ -10,6 +11,18 @@ export const en = {
     profitAssumptions: "Profit Assumptions",
     billing: "Billing",
     more: "More",
+  },
+  amazonProfit: {
+    title: "Amazon Profit", description: "Exact order economics from canonical Amazon financial and cost data.",
+    noConnection: "No Amazon account is connected yet.", noConnectionHint: "Connect Amazon before viewing order profit.",
+    noOrders: "No Amazon orders are available yet.", noOrdersHint: "Orders will appear after Amazon synchronization.",
+    order: "Order", marketplace: "Marketplace", unknownOrder: "Unknown order", unknownMarketplace: "Unknown marketplace",
+    ready: "READY", blocked: "BLOCKED", revenue: "Revenue", fees: "Amazon fees", cogs: "COGS", tax: "Tax",
+    profit: "Profit", exactCanonicalResult: "Exact canonical result", profitUnavailable: "Profit unavailable",
+    reasons: { mappingRequired: "Product mapping required", costRequired: "Product cost required",
+      fxRequired: "Multiple currencies require FX support", financialIncomplete: "Amazon financial data is not complete yet",
+      financialReview: "Amazon financial data requires review",
+      additionalData: "Additional economic data is required before profit can be calculated" },
   },
   dashboard: {
     profitIntelligenceBrief: "Profit Intelligence Brief",

@@ -37,6 +37,7 @@
     "test:amazon-e2f": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/amazon/e2f.integration.ts",
     "test:amazon-e2g": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/amazon/e2g.acceptance.integration.ts",
     "test:amazon-f2": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/amazon/f2.integration.ts",
+    "test:amazon-f3": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/amazon/f3.integration.ts",
     "test:money-range-remediation": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/data-core/money-range-remediation.integration.ts",
     "test:tenancy": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/tenancy.integration.ts",
     "test:tenancy-t6": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/tenancy/t6-tax-profile.integration.ts",

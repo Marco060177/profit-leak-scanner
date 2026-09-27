@@ -11,6 +11,7 @@ import {
 type NavId =
   | "overview"
   | "products"
+  | "amazon"
   | "profit"
   | "alert-center"
   | "recommendations"
@@ -285,6 +286,11 @@ export default function DashboardNav({
       id: "products",
       label: t.nav.products,
       path: "/app/products",
+    },
+    {
+      id: "amazon",
+      label: t.nav.amazon,
+      path: "/app/amazon",
     },
     {
       id: "profit",

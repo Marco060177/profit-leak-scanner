@@ -2,6 +2,7 @@ export const fr = {
   nav: {
     overview: "Aperçu",
     products: "Produits",
+    amazon: "Amazon",
     profitIntelligence: "Profit Intelligence",
     recommendations: "Recommandations",
     aiAdvisor: "Conseiller IA",
@@ -10,6 +11,18 @@ export const fr = {
     profitAssumptions: "Hypothèses de bénéfices",
     billing: "Facturation",
     more: "Plus",
+  },
+  amazonProfit: {
+    title: "Profit Amazon", description: "Économie exacte de la commande issue des données financières et de coût Amazon.",
+    noConnection: "Aucun compte Amazon n'est encore connecté.", noConnectionHint: "Connectez Amazon pour afficher le profit des commandes.",
+    noOrders: "Aucune commande Amazon n'est encore disponible.", noOrdersHint: "Les commandes apparaîtront après la synchronisation Amazon.",
+    order: "Commande", marketplace: "Marketplace", unknownOrder: "Commande inconnue", unknownMarketplace: "Marketplace inconnue",
+    ready: "PRÊT", blocked: "BLOQUÉ", revenue: "Revenu", fees: "Frais Amazon", cogs: "COGS", tax: "Taxe",
+    profit: "Profit", exactCanonicalResult: "Résultat canonique exact", profitUnavailable: "Profit indisponible",
+    reasons: { mappingRequired: "Mappage produit requis", costRequired: "Coût produit requis",
+      fxRequired: "Plusieurs devises nécessitent la prise en charge FX", financialIncomplete: "Les données financières Amazon ne sont pas encore complètes",
+      financialReview: "Les données financières Amazon nécessitent une vérification",
+      additionalData: "Des données économiques supplémentaires sont requises pour calculer le profit" },
   },
   dashboard: {
     profitIntelligenceBrief: "Brief Profit Intelligence",
