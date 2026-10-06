@@ -13,6 +13,7 @@ datasource db {
 enum ChannelPlatform {
   SHOPIFY
   AMAZON
+  EBAY
 }
 
 model Account {
@@ -37,6 +38,7 @@ model Account {
   rawSourceRecords RawSourceRecord[]
   normalizedOrders NormalizedOrder[]
   amazonSellerAuthorizations AmazonSellerAuthorization[]
+  ebaySellerAuthorizations EbaySellerAuthorization[]
   sourceObservations SourceObservation[]
   partnerReferral PartnerReferral?
   normalizedBillingEvents NormalizedBillingEvent[]
@@ -253,6 +255,7 @@ model ChannelConnection {
   dataCoverages DataCoverage[]
   coreAuthorization CoreChannelAuthorization?
   amazonSellerAuthorization AmazonSellerAuthorization?
+  ebaySellerAuthorization EbaySellerAuthorization?
   sourceObservations SourceObservation[]
 
   @@unique([channel, externalAccountId])
@@ -1011,6 +1014,30 @@ model AmazonSellerAuthorization {
   grantedAt DateTime
   validatedAt DateTime?
   renewalDueAt DateTime?
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  @@unique([channelConnectionId, accountId])
+  @@unique([channelConnectionId, authorizationVersion])
+  @@index([accountId, status])
+}
+
+model EbaySellerAuthorization {
+  channelConnectionId String @id
+  accountId String
+  encryptedRefreshToken Bytes
+  encryptionProvider String
+  encryptionKeyVersion String
+  credentialFingerprint String
+  grantedScopesJson String
+  status String @default("ACTIVE")
+  authorizationVersion String
+  grantedAt DateTime
+  validatedAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  reauthRequiredAt DateTime?
   revokedAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
