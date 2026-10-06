@@ -8,11 +8,12 @@ import { PrismaClient } from "@prisma/client";
 const directory = mkdtempSync(path.join(os.tmpdir(), "marginlab-amazon-e1a-upgrade-"));
 const databasePath = path.join(directory, "upgrade.sqlite");
 const migrationNames = readdirSync("prisma/migrations").filter((name) => /^\d{14}_/.test(name)).sort();
-const e1aMigration = migrationNames.at(-1)!;
+const e1aMigration = migrationNames.find((name) => /amazon_e1a_authorization_observation$/.test(name))!;
 assert.match(e1aMigration, /amazon_e1a_authorization_observation$/);
+const e1aMigrationIndex = migrationNames.indexOf(e1aMigration);
 const sqlite = new DatabaseSync(databasePath);
 sqlite.exec("PRAGMA foreign_keys=ON");
-for (const name of migrationNames.slice(0, -1))
+for (const name of migrationNames.slice(0, e1aMigrationIndex))
   sqlite.exec(readFileSync(path.join("prisma/migrations", name, "migration.sql"), "utf8"));
 const db = new PrismaClient({ datasources: { db: { url: `file:${databasePath.replace(/\\/g, "/")}` } } });
 
