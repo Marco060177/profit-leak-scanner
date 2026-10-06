@@ -98,6 +98,7 @@ export async function executeEbayApiRequest(input: {
   query?: Readonly<Record<string, string>>;
   body?: Uint8Array;
   contentType?: string;
+  additionalHeaders?: Readonly<Record<string, string>>;
   operation: EbayApiOperation;
   transport: EbayHttpTransport;
   signingKeyProvider?: EbaySigningKeyProvider;
@@ -109,6 +110,14 @@ export async function executeEbayApiRequest(input: {
       /[\r\n]/.test(input.path) || (input.contentType !== undefined &&
         (!input.contentType.trim() || input.contentType !== input.contentType.trim() || /[\r\n]/.test(input.contentType))))
     throw new EbayConnectorError("AUTHORIZATION");
+  const additionalHeaders: Record<string, string> = {};
+  for (const [rawName, value] of Object.entries(input.additionalHeaders ?? {})) {
+    const name = rawName.toLowerCase();
+    if (!/^[a-z0-9-]{1,128}$/.test(name) || !value || value !== value.trim() || /[\r\n]/.test(value) ||
+        value.length > 2048 || ["authorization", "signature", "signature-input", "content-digest",
+          "x-ebay-signature-key"].includes(name)) throw new EbayConnectorError("AUTHORIZATION");
+    additionalHeaders[name] = value;
+  }
   const url = new URL(input.path, ebayApiBaseUrl(input.config));
   for (const [key, value] of Object.entries(input.query ?? {})) url.searchParams.append(key, value);
   const body = input.body?.slice() ?? new Uint8Array();
@@ -119,7 +128,8 @@ export async function executeEbayApiRequest(input: {
   const pause = input.sleep ?? ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
   let lastError: EbayConnectorError | null = null;
   for (let attempt = 1; attempt <= input.config.maxAttempts; attempt += 1) {
-    const headers: Record<string, string> = { authorization: `Bearer ${input.accessToken}`, accept: "application/json" };
+    const headers: Record<string, string> = { ...additionalHeaders,
+      authorization: `Bearer ${input.accessToken}`, accept: "application/json" };
     if (hasBody) headers["content-type"] = input.contentType ?? "application/json";
     if (mustSign) Object.assign(headers, await signEbayHttpRequest({ request: { method: input.method,
       url: url.toString(), body }, hasBody, created: Math.floor(clock() / 1000),
