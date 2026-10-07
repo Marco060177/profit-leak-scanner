@@ -219,6 +219,27 @@ try {
       { amountAtoms: 47n, amountScale: 0, currencyCode: "EUR" });
   }
 
+  const realPipelineFeature = await db.$transaction((tx) => loadEbayFeatureDataTx(tx, { ...tenant,
+    currentPeriod, previousPeriod: null }));
+  assert.equal(realPipelineFeature.status, "READY");
+  if (realPipelineFeature.status !== "READY") throw new Error("EB5 real canonical pipeline expected READY");
+  assert.deepEqual(realPipelineFeature.current.summary.revenue, feature.current.summary.revenue);
+  assert.deepEqual(realPipelineFeature.current.summary.fees, feature.current.summary.fees);
+  assert.deepEqual(realPipelineFeature.current.summary.cogs, feature.current.summary.cogs);
+  assert.deepEqual(realPipelineFeature.current.summary.profit, feature.current.summary.profit);
+  assert.equal(buildProfitIntelligenceModel(realPipelineFeature).status, "READY");
+  const realPipelineForecast = buildForecastingModel({ data: realPipelineFeature, assumptions: {
+    monthlyAdvertising: availableZero, monthlyShipping: availableZero, monthlyOperating: availableZero,
+    additionalPaymentFeeRate: { status: "AVAILABLE", value: { numerator: 0n, denominator: 1n } },
+    additionalTransactionFeeRate: { status: "AVAILABLE", value: { numerator: 0n, denominator: 1n } },
+    managerialTaxReserveRate: { status: "AVAILABLE", value: { numerator: 0n, denominator: 1n } },
+    recoveryOpportunity: { status: "UNAVAILABLE", reasonCodes: ["NO_RECOVERY_INPUT"] },
+  }, scenario: { monthlyRevenueGrowthRate: { numerator: 0n, denominator: 1n },
+    marginImprovementRate: { numerator: 0n, denominator: 1n },
+    monthlyFixedCostGrowthRate: { numerator: 0n, denominator: 1n },
+    recoveryCaptureRate: { numerator: 0n, denominator: 1n }, outputScale: 2 }, horizonMonths: 3 });
+  assert.equal(realPipelineForecast.status, "READY");
+
   const featureRepeated = await db.$transaction((tx) => loadEbayFeatureDataTx(tx, { ...tenant, currentPeriod,
     previousPeriod, readCanonical: canonicalReader as never }));
   assert.deepEqual(featureRepeated, feature);

@@ -102,7 +102,7 @@ export function multiplyExactCost(cogs: Pick<CanonicalEconomicDatasetReady["cogs
 const feeKinds = new Set(["MARKETPLACE_COMMISSION", "FULFILLMENT_FEE", "SHIPPING_EXPENSE", "STORAGE_FEE"]);
 const otherKinds = new Set(["DISCOUNT_PROMOTION", "SHIPPING_REVENUE", "REIMBURSEMENT", "ADJUSTMENT"]);
 
-export function projectAmazonOrderProfit(dataset: Awaited<ReturnType<typeof getCanonicalEconomicDatasetTx>>) {
+export function projectCanonicalOrderProfit(dataset: Awaited<ReturnType<typeof getCanonicalEconomicDatasetTx>>) {
   const order = dataset.status === "READY" ? dataset.commerce.orders[0] : null;
   const base = { orderId: order?.id ?? (dataset.requestedScope.kind === "ORDER" ? dataset.requestedScope.orderId : null),
     sourceOrderId: null as string | null, marketplaceId: order?.marketplaceId ?? null };
@@ -132,6 +132,9 @@ export function projectAmazonOrderProfit(dataset: Awaited<ReturnType<typeof getC
   }
 }
 
+/** Compatibility alias for existing Amazon callers. */
+export const projectAmazonOrderProfit = projectCanonicalOrderProfit;
+
 export async function getAmazonOrderProfitTx(tx: Prisma.TransactionClient, input: {
   tenant: VerifiedCoreTenant; orderId: string; startInclusive: Date; endExclusive: Date;
   currencyPolicyVersionId: string;
@@ -140,7 +143,7 @@ export async function getAmazonOrderProfitTx(tx: Prisma.TransactionClient, input
     scope: { kind: "ORDER", orderId: input.orderId }, economicWindow: {
       startInclusive: input.startInclusive, endExclusive: input.endExclusive },
     currencyPolicyVersionId: input.currencyPolicyVersionId });
-  const projected = projectAmazonOrderProfit(dataset);
+  const projected = projectCanonicalOrderProfit(dataset);
   const order = await tx.normalizedOrder.findUnique({ where: { id: input.orderId },
     select: { sourceOrderKey: true } });
   return { ...projected, sourceOrderId: order?.sourceOrderKey ?? null };
