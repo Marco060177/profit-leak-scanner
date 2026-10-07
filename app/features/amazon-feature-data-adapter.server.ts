@@ -1,5 +1,5 @@
 import type { FinancialLedgerEntry, Prisma } from "@prisma/client";
-import { projectAmazonOrderProfit } from "~/connectors/amazon/amazon-cogs-profit.server";
+import { projectCanonicalOrderProfit } from "~/connectors/amazon/amazon-cogs-profit.server";
 import { getCanonicalEconomicDatasetTx } from "~/core/canonical-economic-dataset.server";
 import type { CanonicalEconomicDatasetReady } from "~/core/data-core-d2d-contracts";
 import type { FeatureData, FeatureEconomicPeriod, FeatureMoney, FeatureOptionalMoney,
@@ -98,7 +98,7 @@ readCanonical: CanonicalReader, fallbackCurrency: string | null): Promise<Featur
   for (const order of dataset.commerce.orders.filter((row) => economicOrderIds.has(row.id))) {
     const orderDataset = await readCanonical(tx, { tenant, scope: { kind: "ORDER", orderId: order.id },
       economicWindow: period, currencyPolicyVersionId });
-    const projection = projectAmazonOrderProfit(orderDataset);
+    const projection = projectCanonicalOrderProfit(orderDataset);
     if (projection.status === "BLOCKED") return { blocked: projection.reasonCodes };
     projections.push(projection);
   }

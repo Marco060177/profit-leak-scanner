@@ -1,5 +1,5 @@
 import type { FinancialLedgerEntry, Prisma } from "@prisma/client";
-import { projectAmazonOrderProfit as projectCanonicalOrderProfit } from "~/connectors/amazon/amazon-cogs-profit.server";
+import { projectCanonicalOrderProfit } from "~/connectors/amazon/amazon-cogs-profit.server";
 import { getCanonicalEconomicDatasetTx } from "~/core/canonical-economic-dataset.server";
 import type { CanonicalEconomicDatasetReady } from "~/core/data-core-d2d-contracts";
 import type { FeatureData, FeatureEconomicPeriod, FeatureMoney, FeatureOptionalMoney,
@@ -171,7 +171,8 @@ export async function loadEbayFeatureDataTx(tx: Prisma.TransactionClient, input:
       periodComparison: previous ? { status: "AVAILABLE" } :
         { status: "UNAVAILABLE", reasonCodes: ["PREVIOUS_PERIOD_NOT_PROVIDED"] },
       fees: { status: "AVAILABLE" }, tax: current.summary.tax.status === "AVAILABLE" ? { status: "AVAILABLE" } :
-        { status: "UNAVAILABLE", reasonCodes: current.summary.tax.reasonCodes },
+        { status: "UNAVAILABLE", reasonCodes: current.summary.tax.reasonCodes ??
+          ["EBAY_TAX_NOT_CANONICALLY_AVAILABLE"] },
       refunds: { status: "UNAVAILABLE", reasonCodes: ["EBAY_REFUND_FEATURE_SEMANTICS_NOT_AVAILABLE"] },
       assumptions: { status: "NOT_APPLICABLE", reasonCodes: ["ASSUMPTIONS_OUTSIDE_FEATURE_DATA_ADAPTER"] },
       orderLevelAllocation: { status: "UNAVAILABLE",
