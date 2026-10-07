@@ -45,6 +45,7 @@
     "test:ebay-eb2b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb2b.integration.ts",
     "test:ebay-eb3a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb3a.integration.ts",
     "test:ebay-eb3b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb3b.integration.ts",
+    "test:ebay-eb4": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb4.integration.ts",
     "test:feature-fa1a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/feature-money.test.ts",
     "test:feature-fa1b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/shopify-feature-data-adapter.test.ts",
     "test:feature-fa1c": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/amazon-feature-data-adapter.integration.ts",
