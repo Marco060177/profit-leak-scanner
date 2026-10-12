@@ -7,16 +7,35 @@ export const RAW_TOTAL_BYTES = 2 * 1024 * 1024;
 const checksum = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 export type DataCoreTx = Prisma.TransactionClient;
 
+export type RawSourceEncryptionContext = Readonly<{
+  dataClass: "D1";
+  accountId: string;
+  channelConnectionId: string;
+  recordIdentity: string;
+}>;
+
+export function rawSourceEncryptionContext(input: {
+  accountId: string; channelConnectionId: string; sourceSystem: string; sourceVersion: string;
+  sourceEntityType: string; sourceEntityId: string; payloadChecksum: string;
+}): RawSourceEncryptionContext {
+  const recordIdentity = checksum(Buffer.from(JSON.stringify([
+    input.sourceSystem, input.sourceVersion, input.sourceEntityType, input.sourceEntityId, input.payloadChecksum,
+  ]), "utf8"));
+  return { dataClass: "D1", accountId: input.accountId,
+    channelConnectionId: input.channelConnectionId, recordIdentity };
+}
+
 export async function storeRawSourceRecord(db: PrismaClient, input: {
   accountId: string; channelConnectionId: string; sourceSystem: string; sourceVersion: string;
   sourceEntityType: string; sourceEntityId: string; sourceSnapshotVersion?: string;
   schemaVersion: string; retentionClass: string; capturedAt: Date; sourceUpdatedAt?: Date;
   ingestionRunId?: string; payload: Uint8Array;
-  encryptChunk: (plain: Uint8Array, index: number) => Uint8Array;
+  encryptChunk: (plain: Uint8Array, index: number, context: RawSourceEncryptionContext) => Uint8Array;
 }) {
   if (input.payload.byteLength > RAW_TOTAL_BYTES) throw new RangeError("Raw payload exceeds D1 bound");
   if (!input.encryptChunk) throw new Error("Raw payload encryption required");
   const payloadChecksum = checksum(input.payload);
+  const encryptionContext = rawSourceEncryptionContext({ ...input, payloadChecksum });
   return db.$transaction(async (tx) => {
     const owner = await tx.channelConnection.findUnique({ where: { id: input.channelConnectionId }, include: { account: true } });
     if (!owner || owner.accountId !== input.accountId || owner.status !== "ACTIVE" || owner.account.status !== "ACTIVE") throw new Error("Inactive raw source owner");
@@ -32,7 +51,9 @@ export async function storeRawSourceRecord(db: PrismaClient, input: {
     }
     const chunks: { chunkIndex: number; encryptedBytes: Uint8Array<ArrayBuffer>; accountId: string; channelConnectionId: string }[] = [];
     for (let offset = 0, index = 0; offset < input.payload.byteLength; offset += RAW_CHUNK_BYTES, index += 1) {
-      const encryptedBytes = input.encryptChunk(input.payload.slice(offset, offset + RAW_CHUNK_BYTES), index);
+      const encryptedBytes = input.encryptChunk(
+        input.payload.slice(offset, offset + RAW_CHUNK_BYTES), index, encryptionContext,
+      );
       if (!encryptedBytes.byteLength || encryptedBytes.byteLength > RAW_CHUNK_BYTES + 1024) throw new RangeError("Encrypted raw chunk exceeds bound");
       chunks.push({ chunkIndex: index, encryptedBytes: new Uint8Array(encryptedBytes), accountId: input.accountId, channelConnectionId: input.channelConnectionId });
     }

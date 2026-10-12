@@ -1,4 +1,7 @@
+export const EBAY_IDENTITY_SCOPE = "https://api.ebay.com/oauth/api_scope/commerce.identity.readonly";
+
 export const EBAY_REQUIRED_SCOPES = [
+  EBAY_IDENTITY_SCOPE,
   "https://api.ebay.com/oauth/api_scope/sell.account",
   "https://api.ebay.com/oauth/api_scope/sell.finances",
   "https://api.ebay.com/oauth/api_scope/sell.fulfillment",
@@ -76,11 +79,11 @@ function validScope(scope: string) {
     /^https:\/\/api\.ebay\.com\/oauth\/api_scope\/[a-z.]+$/.test(scope);
 }
 
-export function canonicalizeEbayScopes(scopes: readonly string[]) {
+export function canonicalizeEbayScopes(scopes: readonly string[], requireRequired = true) {
   if (!Array.isArray(scopes) || !scopes.length || scopes.some((scope) => typeof scope !== "string" || !validScope(scope)))
     throw new EbayConnectorError("AUTHORIZATION");
   const canonical = [...new Set(scopes)].sort();
-  if (EBAY_REQUIRED_SCOPES.some((required) => !canonical.includes(required)))
+  if (requireRequired && EBAY_REQUIRED_SCOPES.some((required) => !canonical.includes(required)))
     throw new EbayConnectorError("AUTHORIZATION");
   return canonical;
 }

@@ -47,6 +47,19 @@
     "test:ebay-eb3b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb3b.integration.ts",
     "test:ebay-eb4": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb4.integration.ts",
     "test:ebay-eb5": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/eb5.integration.ts",
+    "test:ebay-ed3a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3a-marketplace-account-deletion-challenge.test.ts",
+    "test:ebay-ed3b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3b-notification-signature.test.ts",
+    "test:ebay-ed3c": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3c-deletion-notification-inbox.integration.ts && node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3c-migration.integration.ts",
+    "test:ebay-ed3e": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3e-deletion-processing.integration.ts && node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3e-migration.integration.ts",
+    "test:ebay-ed3f": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3f-seller-identity.integration.ts && node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3f-migration.integration.ts",
+    "test:ebay-ed3g": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3g-aes-256-gcm-encryption.test.ts",
+    "test:ebay-ed3h": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3h-credential-encryption.integration.ts",
+    "test:ebay-ed3i": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3i-d1-encryption.integration.ts",
+    "test:ebay-ed3j": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3j-signing-key-provider.test.ts",
+    "test:ebay-ed3k": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3k-production-composition.integration.ts",
+    "test:ebay-ed3m": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3m-sqlite-backup.integration.ts",
+    "sqlite:backup": "tsx scripts/sqlite-backup.ts create",
+    "sqlite:verify-restore": "tsx scripts/sqlite-backup.ts verify-restore",
     "test:feature-fa1a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/feature-money.test.ts",
     "test:feature-fa1b": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/shopify-feature-data-adapter.test.ts",
     "test:feature-fa1c": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/amazon-feature-data-adapter.integration.ts",
@@ -116,6 +129,8 @@
     "react-dom": "^18.3.1",
     "react-router": "^7.12.0",
     "resend": "^6.20.0",
+    "sqlite3": "^6.0.1",
+    "tsx": "^4.23.15",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
@@ -145,7 +160,8 @@
     "@shopify/plugin-cloudflare"
   ],
   "overrides": {
-    "p-map": "^4.0.0"
+    "p-map": "^4.0.0",
+    "tar": "^7.5.22"
   },
   "author": "Dell"
 }

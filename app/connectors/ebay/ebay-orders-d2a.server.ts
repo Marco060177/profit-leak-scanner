@@ -1,20 +1,26 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import { attachSourceObservationToSliceTx, claimSyncSlice, completeSyncSliceWithoutCheckpointTx,
-  deterministicSliceKey, prepareSyncSlice, recordSourceObservationTx, releaseSyncSlice }
+  deterministicSliceKey, prepareSyncSlice, rawSourceEncryptionContext, recordSourceObservationTx,
+  releaseSyncSlice, type RawSourceEncryptionContext }
   from "~/core/data-core-d1.server";
 import { recordNormalizedOrderItemRevisionTx, recordNormalizedOrderRevisionTx,
   type VerifiedCoreTenant } from "~/core/data-core-d2a.server";
 import { mapEbayOrder, type EbayCanonicalOrder } from "./ebay-order-mapper.server";
+import { EBAY_FULFILLMENT_HISTORICAL_SOURCE_VERSION, EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION,
+  EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+  EBAY_ORDER_ECONOMIC_PROJECTION_SCHEMA, ebayOrderProjectionToMapperInput,
+  projectEbayOrderEconomic, serializeEbayOrderEconomicProjection }
+  from "./ebay-order-economic-projection";
 import { assertEbayOrdersBoundary } from "./ebay-orders.server";
 
-const SOURCE_VERSION = "sell-fulfillment-v1";
-const PARSER_VERSION = "ebay-eb2b-v1";
+const HISTORICAL_PARSER_VERSION = "ebay-eb2b-v1";
+const MINIMIZED_PARSER_VERSION = "ebay-ed2c-d2a-v1";
 const STREAM = "orders";
 const decoder = new TextDecoder("utf-8", { fatal: true });
 
 export type EbayRawSourceDecryptionBoundary = Readonly<{
-  decryptChunk(encrypted: Uint8Array, chunkIndex: number): Uint8Array;
+  decryptChunk(encrypted: Uint8Array, chunkIndex: number, context: RawSourceEncryptionContext): Uint8Array;
 }>;
 
 function operation(parts: readonly string[]) {
@@ -42,7 +48,11 @@ async function establishNormalizationSlice(db: PrismaClient, input: {
       sourceSlice.channelConnectionId !== input.tenant.channelConnectionId ||
       sourceSlice.marketplaceId !== input.marketplaceId || sourceSlice.stream !== STREAM ||
       sourceSlice.authorizationVersion !== boundary.authorizationVersion ||
-      !mapping || mapping.platform !== "EBAY" || mapping.sourceVersion !== SOURCE_VERSION ||
+      sourceSlice.run.mappingVersionId !== input.mappingVersionId || !mapping || mapping.platform !== "EBAY" ||
+      ![EBAY_FULFILLMENT_HISTORICAL_SOURCE_VERSION,
+        EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION].includes(mapping.sourceVersion) ||
+      mapping.sourceVersion === EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION &&
+        mapping.mapperSemanticVersion !== EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION ||
       !mapping.activatedAt || mapping.deactivatedAt || !marketplace || marketplace.status !== "ACTIVE" ||
       marketplace.accountId !== input.tenant.accountId ||
       marketplace.channelConnectionId !== input.tenant.channelConnectionId)
@@ -93,13 +103,17 @@ async function establishNormalizationSlice(db: PrismaClient, input: {
     expectedProcessedSliceId: created.expectedProcessedSliceId, alreadySucceeded: false };
 }
 
-async function decryptRaw(db: PrismaClient, rawSourceRecordId: string,
+async function decryptRaw(db: PrismaClient, rawSourceRecord: {
+  id: string; accountId: string; channelConnectionId: string; sourceSystem: string; sourceVersion: string;
+  sourceEntityType: string; sourceEntityId: string; payloadChecksum: string;
+},
 decryption: EbayRawSourceDecryptionBoundary) {
-  const chunks = await db.rawSourceBlobChunk.findMany({ where: { rawSourceRecordId },
+  const chunks = await db.rawSourceBlobChunk.findMany({ where: { rawSourceRecordId: rawSourceRecord.id },
     orderBy: { chunkIndex: "asc" } });
   if (!chunks.length) throw new Error("eBay EB2-B raw evidence unavailable");
+  const encryptionContext = rawSourceEncryptionContext(rawSourceRecord);
   return Buffer.concat(chunks.map((chunk) => Buffer.from(decryption.decryptChunk(
-    new Uint8Array(chunk.encryptedBytes), chunk.chunkIndex))));
+    new Uint8Array(chunk.encryptedBytes), chunk.chunkIndex, encryptionContext))));
 }
 
 function orderFromPage(bytes: Uint8Array, expectedOrderId: string) {
@@ -113,12 +127,29 @@ function orderFromPage(bytes: Uint8Array, expectedOrderId: string) {
   return mapEbayOrder(matches[0]);
 }
 
+function orderFromProjection(bytes: Uint8Array, expectedOrderId: string, externalMarketplaceId: string) {
+  let value: unknown;
+  try { value = JSON.parse(decoder.decode(bytes)); } catch { throw new Error("eBay EB2-B projection JSON invalid"); }
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("eBay EB2-B projection invalid");
+  const candidate = value as Parameters<typeof ebayOrderProjectionToMapperInput>[0];
+  if (candidate.projectionSchema !== EBAY_ORDER_ECONOMIC_PROJECTION_SCHEMA ||
+      candidate.marketplaceId !== externalMarketplaceId)
+    throw new Error("eBay EB2-B projection identity invalid");
+  const projection = projectEbayOrderEconomic(ebayOrderProjectionToMapperInput(candidate), externalMarketplaceId);
+  if (projection.orderId !== expectedOrderId ||
+      !Buffer.from(serializeEbayOrderEconomicProjection(projection)).equals(Buffer.from(bytes)))
+    throw new Error("eBay EB2-B canonical projection invalid");
+  return mapEbayOrder(ebayOrderProjectionToMapperInput(projection));
+}
+
 async function createNormalizationEvidence(input: {
   db: PrismaClient;
   tenant: VerifiedCoreTenant;
   context: Awaited<ReturnType<typeof establishNormalizationSlice>>;
   rawSourceRecordId: string;
   sourceOrderKey: string;
+  parserVersion: string;
   leaseOwner: string;
   now: Date;
 }) {
@@ -129,7 +160,7 @@ async function createNormalizationEvidence(input: {
     if (existing.accountId !== input.tenant.accountId ||
         existing.channelConnectionId !== input.tenant.channelConnectionId ||
         existing.normalizationRun.mappingVersionId !== input.context.mappingVersionId ||
-        existing.normalizationRun.parserVersion !== PARSER_VERSION ||
+        existing.normalizationRun.parserVersion !== input.parserVersion ||
         existing.normalizationRun.status !== "SUCCEEDED")
       throw new Error("eBay EB2-B immutable normalization evidence mismatch");
     return { normalization: existing.normalizationRun, evidence: existing };
@@ -139,7 +170,7 @@ async function createNormalizationEvidence(input: {
   _max: { normalizationRevision: true } });
   const normalization = await input.db.normalizationRun.create({ data: { ...input.tenant,
     rawSourceRecordId: input.rawSourceRecordId, mappingVersionId: input.context.mappingVersionId,
-    parserVersion: PARSER_VERSION, normalizationRevision: (latest._max.normalizationRevision ?? 0) + 1,
+    parserVersion: input.parserVersion, normalizationRevision: (latest._max.normalizationRevision ?? 0) + 1,
     status: "SUCCEEDED", finishedAt: input.now } });
   return input.db.$transaction(async (tx) => {
     const observation = await recordSourceObservationTx(tx, { ...input.tenant,
@@ -178,27 +209,39 @@ export async function normalizeEbayOrdersFromD1(input: {
       syncSliceEvidence: { sliceId: context.sliceId } } }) };
   try {
     const sourceEvidence = await input.db.syncSliceEvidence.findMany({ where: {
-      sliceId: input.sourceSliceId, rawSourceRecord: { sourceSystem: "EBAY",
-        sourceVersion: SOURCE_VERSION, sourceEntityType: "ORDER" } },
+      sliceId: input.sourceSliceId, rawSourceRecord: { sourceSystem: "EBAY", sourceEntityType: "ORDER" } },
     include: { rawSourceRecord: true }, orderBy: { rawSourceRecord: { sourceEntityId: "asc" } } });
     if (!sourceEvidence.length) throw new Error("eBay EB2-B has no trusted order evidence");
-    const mapped: Array<{ order: EbayCanonicalOrder; rawSourceRecordId: string }> = [];
+    const externalMarketplaceId = (await input.db.marketplace.findUniqueOrThrow({
+      where: { id: input.marketplaceId }, select: { externalMarketplaceId: true },
+    })).externalMarketplaceId;
+    const mapped: Array<{ order: EbayCanonicalOrder; rawSourceRecordId: string;
+      parserVersion: string }> = [];
     const seen = new Set<string>();
     for (const source of sourceEvidence) {
-      const bytes = await decryptRaw(input.db, source.rawSourceRecordId, input.rawDecryption);
+      const bytes = await decryptRaw(input.db, source.rawSourceRecord, input.rawDecryption);
       if (bytes.byteLength !== source.rawSourceRecord.payloadByteLength)
         throw new Error("eBay EB2-B raw evidence length mismatch");
-      const order = orderFromPage(bytes, source.rawSourceRecord.sourceEntityId);
+      const minimized = source.rawSourceRecord.sourceVersion === EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION &&
+        source.rawSourceRecord.schemaVersion === EBAY_ORDER_ECONOMIC_PROJECTION_SCHEMA;
+      const historical = source.rawSourceRecord.sourceVersion === EBAY_FULFILLMENT_HISTORICAL_SOURCE_VERSION &&
+        source.rawSourceRecord.schemaVersion === EBAY_FULFILLMENT_HISTORICAL_SOURCE_VERSION;
+      if (!minimized && !historical) throw new Error("eBay EB2-B unsupported order evidence version");
+      const order = minimized
+        ? orderFromProjection(bytes, source.rawSourceRecord.sourceEntityId, externalMarketplaceId)
+        : orderFromPage(bytes, source.rawSourceRecord.sourceEntityId);
       if (seen.has(order.externalOrderId)) throw new Error("eBay EB2-B duplicate order evidence");
       seen.add(order.externalOrderId);
-      mapped.push({ order, rawSourceRecordId: source.rawSourceRecordId });
+      mapped.push({ order, rawSourceRecordId: source.rawSourceRecordId,
+        parserVersion: minimized ? MINIMIZED_PARSER_VERSION : HISTORICAL_PARSER_VERSION });
     }
     const prepared: Array<typeof mapped[number] & { normalizationRunId: string;
       normalizationRevision: number; syncSliceEvidenceId: string }> = [];
     for (const entry of mapped) {
       const provenance = await createNormalizationEvidence({ db: input.db, tenant: input.tenant,
         context, rawSourceRecordId: entry.rawSourceRecordId,
-        sourceOrderKey: entry.order.externalOrderId, leaseOwner: input.leaseOwner, now: input.now });
+        sourceOrderKey: entry.order.externalOrderId, parserVersion: entry.parserVersion,
+        leaseOwner: input.leaseOwner, now: input.now });
       prepared.push({ ...entry, normalizationRunId: provenance.normalization.id,
         normalizationRevision: provenance.normalization.normalizationRevision,
         syncSliceEvidenceId: provenance.evidence.id });
@@ -239,7 +282,7 @@ export async function normalizeEbayOrdersFromD1(input: {
             sourceEntityType: "EBAY_LISTING", externalProductId: item.legacyItemId ?? null,
             externalVariantOrListingId: listingKey,
             metadataJson: JSON.stringify({ legacyItemId: item.legacyItemId ?? null,
-              sku: item.sku ?? null, title: item.title ?? null }) }, update: {} });
+              sku: item.sku ?? null, ...(item.title ? { title: item.title } : {}) }) }, update: {} });
           const sourceItemKey = `id:${item.externalOrderItemId}`;
           const itemOperation = operation([entry.rawSourceRecordId, context.mappingVersionId,
             "ITEM", item.externalOrderItemId]);

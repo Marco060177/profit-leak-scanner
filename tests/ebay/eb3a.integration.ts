@@ -8,6 +8,9 @@ import { PrismaClient } from "@prisma/client";
 import { markEbayAuthorizationReauthRequired, persistEbaySellerAuthorization,
   revokeEbaySellerAuthorization } from "../../app/connectors/ebay/ebay-authorization.server";
 import { ingestEbayFinancesToD1 } from "../../app/connectors/ebay/ebay-finances-d1.server";
+import { EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+  projectEbayFinancesEconomic, serializeEbayFinancesEconomicProjection }
+  from "../../app/connectors/ebay/ebay-finances-economic-projection";
 import type { EbaySigningKeyProvider } from "../../app/connectors/ebay/ebay-http-signature.server";
 import type { EbayRawSourceEncryptionBoundary } from "../../app/connectors/ebay/ebay-orders-d1.server";
 import { EBAY_REQUIRED_SCOPES, type EbayApplicationConfig,
@@ -44,11 +47,14 @@ const signingKeyProvider: EbaySigningKeyProvider = { async getSigningMaterial() 
 } };
 const tx = (id: string, type: string, extras: Record<string, unknown> = {}) => ({ transactionId: id,
   transactionType: type, transactionStatus: "FUNDS_AVAILABLE_FOR_PAYOUT",
-  transactionDate: "2026-09-03T10:00:00.000Z", amount: { value: "7.2500", currency: "EUR" }, ...extras });
+  transactionDate: "2026-09-03T10:00:00.000Z", bookingEntry: "CREDIT",
+  amount: { value: "7.2500", currency: "EUR" }, ...extras });
 const fixtures = [tx("TX-SALE", "SALE", { orderId: "ORDER-EXACT",
+  totalFeeBasisAmount: { value: "7.2500", currency: "EUR" },
   orderLineItems: [{ lineItemId: "LINE-EXACT", marketplaceFees: [{ feeType: "FINAL_VALUE_FEE",
     amount: { value: "-1.05", currency: "EUR" } }] }] }),
-tx("TX-FEE", "NON_SALE_CHARGE"), tx("TX-REFUND", "REFUND"), tx("TX-FUTURE", "FUTURE_NEW_TYPE")];
+tx("TX-FEE", "NON_SALE_CHARGE", { bookingEntry: "DEBIT" }),
+tx("TX-REFUND", "REFUND", { bookingEntry: "DEBIT" }), tx("TX-FUTURE", "FUTURE_NEW_TYPE")];
 const nextFor = (request: EbayHttpRequest, offset: number) => {
   const url = new URL(request.url); url.searchParams.set("offset", String(offset)); return url.toString();
 };
@@ -91,8 +97,9 @@ try {
   const otherMarketplace = await db.marketplace.create({ data: { accountId: other.id,
     channelConnectionId: otherChannel.id, externalMarketplaceId: "EBAY_DE", countryCode: "DE", currencyCode: "EUR" } });
   const mapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-finances-transaction-v1", sourceVersion: "sell-finances-v1",
-    mapperSemanticVersion: "eb3a", formulaCompatibilityVersion: "d2b-v1",
+    sourceContract: "sell-finances-transaction-economic-v1",
+    sourceVersion: EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2b-v1",
     checksum: "eb3a-mapping", activatedAt: now } });
   const invoke = (key: string, transport: EbayHttpTransport, overrides: Record<string, unknown> = {}) =>
     ingestEbayFinancesToD1({ db, tenant, marketplaceId: marketplace.id, operationKey: key,
@@ -113,7 +120,8 @@ try {
   assert.equal(single.pages, 1);
   const evidence = await db.syncSliceEvidence.findFirstOrThrow({ where: { sliceId: single.sliceId },
     include: { rawSourceRecord: true, sourceObservation: true } });
-  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(JSON.stringify(body)));
+  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(
+    serializeEbayFinancesEconomicProjection(projectEbayFinancesEconomic(body))));
   assert.equal(evidence.rawSourceRecord.retentionClass, "FINANCIAL_SOURCE");
   assert.equal(evidence.sourceObservation?.authorizationVersion,
     (await db.ebaySellerAuthorization.findUniqueOrThrow({ where: { channelConnectionId: channel.id } })).authorizationVersion);
@@ -164,7 +172,7 @@ try {
     (request) => json({ transactions: [fixtures[0]], next: nextFor(request, 2) }),
     () => json({ transactions: [fixtures[1]] })]));
   assert.equal(recovered.sliceId, failed.id); assert.equal(recovered.pages, 2);
-  assert.equal(await db.rawSourceRecord.count(), rawBeforeFailure + 1);
+  assert.equal(await db.rawSourceRecord.count(), rawBeforeFailure);
 
   const replay = await invoke("single", new MockTransport([]));
   assert.equal(replay.replayed, true);

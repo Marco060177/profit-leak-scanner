@@ -1,21 +1,29 @@
 import type { PrismaClient } from "@prisma/client";
 import { attachSourceObservationToSliceTx, claimSyncSlice, completeSyncSliceTx, deterministicSliceKey,
-  prepareSyncSlice, recordSourceObservationTx, releaseSyncSlice, storeRawSourceRecord }
+  prepareSyncSlice, recordSourceObservationTx, releaseSyncSlice, storeRawSourceRecord,
+  type RawSourceEncryptionContext }
   from "~/core/data-core-d1.server";
 import { marketplaceScopeKey } from "~/core/data-core-contracts";
 import type { VerifiedCoreTenant } from "~/core/data-core-d2a.server";
 import type { CredentialEncryptionProvider } from "~/services/credential-encryption.server";
 import type { EbaySigningKeyProvider } from "./ebay-http-signature.server";
+import { assertEbayOrderPageManifestPersistence, assertEbayOrderProjectionPersistence }
+  from "./ebay-economic-projection-guard";
+import { EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+  EBAY_ORDER_ECONOMIC_PROJECTION_SCHEMA,
+  EBAY_ORDER_PAGE_MANIFEST_SCHEMA, projectEbayOrderPage, serializeEbayOrderEconomicProjection,
+  serializeEbayOrderPageManifest } from "./ebay-order-economic-projection";
 import { assertEbayOrdersBoundary, listEbayOrderPages, type EbayOrderEvidencePage, type EbayOrderQuery }
   from "./ebay-orders.server";
 import type { EbayApplicationConfig, EbayHttpTransport } from "./ebay-types";
 
-const SOURCE_VERSION = "sell-fulfillment-v1";
+const SOURCE_VERSION = EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION;
 const STREAM = "orders";
-const PARSER_VERSION = "ebay-eb2a-sell-fulfillment-v1";
+const PARSER_VERSION = "ebay-ed2c-economic-projection-v1";
+const PAGE_ENTITY_TYPE = "FULFILLMENT_ORDERS_PAGE_MANIFEST";
 
 export type EbayRawSourceEncryptionBoundary = Readonly<{
-  encryptChunk(plain: Uint8Array, chunkIndex: number): Uint8Array;
+  encryptChunk(plain: Uint8Array, chunkIndex: number, context: RawSourceEncryptionContext): Uint8Array;
 }>;
 export type EbayOrdersSyncContext = Readonly<{
   runId: string;
@@ -42,6 +50,7 @@ export async function establishEbayOrdersSlice(db: PrismaClient, input: {
     db.marketplace.findUnique({ where: { id: input.marketplaceId } }),
   ]);
   if (!mapping || mapping.platform !== "EBAY" || mapping.sourceVersion !== SOURCE_VERSION ||
+      mapping.mapperSemanticVersion !== EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION ||
       !mapping.activatedAt || mapping.deactivatedAt || !marketplace || marketplace.accountId !== input.tenant.accountId ||
       marketplace.channelConnectionId !== input.tenant.channelConnectionId)
     throw new Error("eBay EB2-A sync context invalid");
@@ -118,38 +127,63 @@ async function persistPage(input: {
   const window = `${input.query.createdAfter.toISOString()}..${input.query.createdBefore.toISOString()}`;
   const offset = new URL(input.page.requestUrl).searchParams.get("offset");
   if (offset === null || !/^\d+$/.test(offset)) throw new Error("eBay EB2-A page provenance invalid");
+  let source: unknown;
+  try { source = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(input.page.body)); }
+  catch { throw new Error("eBay EB2-A page projection invalid"); }
+  const root = source as { next?: unknown };
+  let nextOffset: number | null = null;
+  if (typeof root.next === "string") {
+    const candidate = Number(new URL(root.next).searchParams.get("offset"));
+    if (!Number.isSafeInteger(candidate) || candidate < 0)
+      throw new Error("eBay EB2-A page projection invalid");
+    nextOffset = candidate;
+  }
+  const projected = projectEbayOrderPage(source, { marketplaceId: input.externalMarketplaceId,
+    pageNumber: input.page.pageNumber, offset: Number(offset), nextOffset });
+  const projectedIds = projected.orders.map((order) => order.orderId);
+  if (JSON.stringify(projectedIds) !== JSON.stringify([...input.page.orderIds].sort()))
+    throw new Error("eBay EB2-A page identity mismatch");
+  const manifestPayload = serializeEbayOrderPageManifest(projected.manifest);
+  assertEbayOrderPageManifestPersistence(manifestPayload);
   const sourceEntityId = `${input.externalMarketplaceId}:getOrders:${window}:offset:${offset}:page:${input.page.pageNumber}`;
   const raw = await storeRawSourceRecord(input.db, { ...input.tenant, sourceSystem: "EBAY",
-    sourceVersion: SOURCE_VERSION, sourceEntityType: "FULFILLMENT_ORDERS_PAGE", sourceEntityId,
-    sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: SOURCE_VERSION,
+    sourceVersion: SOURCE_VERSION, sourceEntityType: PAGE_ENTITY_TYPE, sourceEntityId,
+    sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: EBAY_ORDER_PAGE_MANIFEST_SCHEMA,
     retentionClass: "COMMERCE_SOURCE", capturedAt: input.now, ingestionRunId: input.context.runId,
-    payload: input.page.body, encryptChunk: (plain, index) => input.rawEncryption.encryptChunk(plain, index) });
+    payload: manifestPayload,
+    encryptChunk: (plain, index, encryptionContext) =>
+      input.rawEncryption.encryptChunk(plain, index, encryptionContext) });
   const normalization = await normalizationForPage(input.db, input.tenant, raw.id,
     input.context.mappingVersionId, input.now);
   const pageAttached = await input.db.$transaction(async (tx) => {
     const observation = await recordSourceObservationTx(tx, { ...input.tenant, runId: input.context.runId,
       sliceId: input.context.sliceId, rawSourceRecordId: raw.id, sourceSystem: "EBAY",
-      sourceEntityType: "FULFILLMENT_ORDERS_PAGE", sourceEntityId, observedAt: input.now,
+      sourceEntityType: PAGE_ENTITY_TYPE, sourceEntityId, observedAt: input.now,
       authorizationVersion: input.context.authorizationVersion });
     const evidence = await attachSourceObservationToSliceTx(tx, { ...input.tenant,
       sliceId: input.context.sliceId, sourceObservationId: observation.id,
       normalizationRunId: normalization.id, leaseOwner: input.leaseOwner, now: input.now });
     await tx.sourceReference.upsert({ where: {
       rawSourceRecordId_sourceLeafPath_targetKind_targetKey: { rawSourceRecordId: raw.id,
-        sourceLeafPath: "$", targetKind: "EBAY_FULFILLMENT_ORDERS_PAGE",
+        sourceLeafPath: "$", targetKind: "EBAY_FULFILLMENT_ORDERS_PAGE_MANIFEST",
         targetKey: `${input.externalMarketplaceId}:offset:${offset}:page:${input.page.pageNumber}:${input.page.requestId ?? "NO_REQUEST_ID"}` } },
     create: { ...input.tenant, rawSourceRecordId: raw.id, sourceLeafPath: "$",
-      targetKind: "EBAY_FULFILLMENT_ORDERS_PAGE",
+      targetKind: "EBAY_FULFILLMENT_ORDERS_PAGE_MANIFEST",
       targetKey: `${input.externalMarketplaceId}:offset:${offset}:page:${input.page.pageNumber}:${input.page.requestId ?? "NO_REQUEST_ID"}` },
     update: {} });
     return { raw, observation, evidence };
   });
-  for (const orderId of input.page.orderIds) {
+  for (const order of projected.orders) {
+    const orderId = order.orderId;
+    const orderPayload = serializeEbayOrderEconomicProjection(order);
+    assertEbayOrderProjectionPersistence(orderPayload);
     const orderRaw = await storeRawSourceRecord(input.db, { ...input.tenant, sourceSystem: "EBAY",
       sourceVersion: SOURCE_VERSION, sourceEntityType: "ORDER", sourceEntityId: orderId,
-      sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: SOURCE_VERSION,
+      sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: EBAY_ORDER_ECONOMIC_PROJECTION_SCHEMA,
       retentionClass: "COMMERCE_SOURCE", capturedAt: input.now, ingestionRunId: input.context.runId,
-      payload: input.page.body, encryptChunk: (plain, index) => input.rawEncryption.encryptChunk(plain, index) });
+      payload: orderPayload,
+      encryptChunk: (plain, index, encryptionContext) =>
+        input.rawEncryption.encryptChunk(plain, index, encryptionContext) });
     const orderNormalization = await normalizationForPage(input.db, input.tenant, orderRaw.id,
       input.context.mappingVersionId, input.now);
     await input.db.$transaction(async (tx) => {
@@ -191,7 +225,7 @@ export async function ingestEbayOrdersToD1(input: {
     now: input.now, leaseMs: input.leaseMs ?? 300_000 });
   if (context.alreadySucceeded) return { replayed: true, runId: context.runId, sliceId: context.sliceId,
     pages: await input.db.syncSliceEvidence.count({ where: { sliceId: context.sliceId,
-      rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE" } } }) };
+      rawSourceRecord: { sourceEntityType: PAGE_ENTITY_TYPE } } }) };
   try {
     for await (const page of listEbayOrderPages({ db: input.db, tenant: input.tenant,
       marketplaceId: input.marketplaceId, query: input.query, config: input.config,
@@ -214,7 +248,7 @@ export async function ingestEbayOrdersToD1(input: {
     });
     return { replayed: false, runId: context.runId, sliceId: context.sliceId,
       pages: await input.db.syncSliceEvidence.count({ where: { sliceId: context.sliceId,
-        rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE" } } }) };
+        rawSourceRecord: { sourceEntityType: PAGE_ENTITY_TYPE } } }) };
   } catch (error) {
     await releaseSyncSlice(input.db, { sliceId: context.sliceId, leaseOwner: input.leaseOwner }).catch(() => undefined);
     await input.db.syncRun.updateMany({ where: { id: context.runId, status: "RUNNING" },

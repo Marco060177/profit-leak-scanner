@@ -5,8 +5,9 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 const migrations = readdirSync("prisma/migrations").filter((name) => /^\d{14}_/.test(name)).sort();
-assert.equal(migrations.length, 31);
-assert.match(migrations.at(-1)!, /ebay_eb1a_tenancy_foundation$/);
+assert.equal(migrations.length, 34);
+const ebayFoundationIndex = migrations.findIndex((name) => /ebay_eb1a_tenancy_foundation$/.test(name));
+assert.notEqual(ebayFoundationIndex, -1);
 const sql = (name: string) => readFileSync(path.join("prisma/migrations", name, "migration.sql"), "utf8");
 const check = (db: DatabaseSync) => {
   assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
@@ -29,7 +30,7 @@ try {
 
   const upgrade = new DatabaseSync(path.join(directory, "upgrade.sqlite"));
   upgrade.exec("PRAGMA foreign_keys=ON");
-  for (const name of migrations.slice(0, -1)) upgrade.exec(sql(name));
+  for (const name of migrations.slice(0, ebayFoundationIndex)) upgrade.exec(sql(name));
   upgrade.prepare("INSERT INTO Account (id,status,createdAt,updatedAt) VALUES (?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
     .run("existing-account", "ACTIVE");
   upgrade.prepare("INSERT INTO ChannelConnection (id,accountId,channel,externalAccountId,status,createdAt,updatedAt) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
@@ -47,7 +48,7 @@ try {
     .run("existing-amazon", "existing-account", Buffer.from("encrypted"), "test", "v1", "fingerprint",
       "ACTIVE", "existing-amazon-auth");
   check(upgrade);
-  upgrade.exec(sql(migrations.at(-1)!));
+  upgrade.exec(sql(migrations[ebayFoundationIndex]));
   assert.equal((upgrade.prepare("SELECT externalAccountId FROM ChannelConnection WHERE id='existing-shopify'")
     .get() as { externalAccountId: string }).externalAccountId, "existing.myshopify.com");
   assert.equal((upgrade.prepare("SELECT externalAccountId FROM ChannelConnection WHERE id='existing-amazon'")

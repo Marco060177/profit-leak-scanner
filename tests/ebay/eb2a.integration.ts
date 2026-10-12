@@ -9,6 +9,9 @@ import { persistEbaySellerAuthorization, revokeEbaySellerAuthorization,
   markEbayAuthorizationReauthRequired } from "../../app/connectors/ebay/ebay-authorization.server";
 import { ingestEbayOrdersToD1, type EbayRawSourceEncryptionBoundary }
   from "../../app/connectors/ebay/ebay-orders-d1.server";
+import { EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+  projectEbayOrderPage,
+  serializeEbayOrderPageManifest } from "../../app/connectors/ebay/ebay-order-economic-projection";
 import { EBAY_REQUIRED_SCOPES, EbayConnectorError, type EbayApplicationConfig,
   type EbayHttpRequest, type EbayHttpResponse, type EbayHttpTransport }
   from "../../app/connectors/ebay/ebay-types";
@@ -42,7 +45,13 @@ const query = { createdAfter: new Date("2026-09-01T00:00:00Z"),
   createdBefore: new Date("2026-09-30T00:00:00Z"), pageSize: 2 };
 const oauth = () => json({ access_token: accessToken, token_type: "bearer", expires_in: 7200 });
 const order = (id: string) => ({ orderId: id, creationDate: "2026-09-02T10:00:00.000Z",
-  pricingSummary: { total: { value: "7.25", currency: "EUR" } } });
+  orderFulfillmentStatus: "NOT_STARTED",
+  buyer: { username: "buyer-secret", buyerRegistrationAddress: { fullName: "Private Buyer",
+    contactAddress: { addressLine1: "PII Street", postalCode: "00100" },
+    primaryPhone: { phoneNumber: "+390000000" }, email: "buyer@example.invalid" } },
+  pricingSummary: { total: { value: "7.25", currency: "EUR" } },
+  lineItems: [{ lineItemId: `${id}-LINE`, quantity: 1, lineItemFulfillmentStatus: "NOT_STARTED",
+    title: "Private purchase title", lineItemCost: { value: "7.25", currency: "EUR" } }] });
 const nextFor = (request: EbayHttpRequest, offset: number) => {
   const url = new URL(request.url); url.searchParams.set("offset", String(offset)); return url.toString();
 };
@@ -88,8 +97,9 @@ try {
   const otherMarketplace = await db.marketplace.create({ data: { accountId: otherAccount.id,
     channelConnectionId: otherChannel.id, externalMarketplaceId: "EBAY_DE", countryCode: "DE", currencyCode: "EUR" } });
   const mapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-fulfillment-order-v1", sourceVersion: "sell-fulfillment-v1",
-    mapperSemanticVersion: "eb2a", formulaCompatibilityVersion: "d2a-v1",
+    sourceContract: "sell-fulfillment-order-economic-v1",
+    sourceVersion: EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2a-v1",
     checksum: "eb2a-mapping", activatedAt: now } });
   const invoke = (operationKey: string, transport: EbayHttpTransport, overrides: Record<string, unknown> = {}) =>
     ingestEbayOrdersToD1({ db, tenant, marketplaceId: marketplace.id, operationKey,
@@ -109,9 +119,33 @@ try {
   assert.equal(single.pages, 1); assert.equal(single.replayed, false);
   const evidence = await db.syncSliceEvidence.findFirstOrThrow({ where: { sliceId: single.sliceId },
     include: { rawSourceRecord: true, sourceObservation: true } });
-  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(JSON.stringify(singleBody)));
+  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(
+    serializeEbayOrderPageManifest(projectEbayOrderPage(singleBody,
+      { marketplaceId: "EBAY_IT", pageNumber: 1, offset: 0 }).manifest)));
   assert.equal(evidence.rawSourceRecord.sourceSystem, "EBAY");
-  assert.equal(evidence.rawSourceRecord.sourceEntityType, "FULFILLMENT_ORDERS_PAGE");
+  assert.equal(evidence.rawSourceRecord.sourceEntityType, "FULFILLMENT_ORDERS_PAGE_MANIFEST");
+  const singleEvidence = await db.syncSliceEvidence.findMany({ where: { sliceId: single.sliceId },
+    include: { rawSourceRecord: true } });
+  assert.equal(singleEvidence.length, 2);
+  const persistedBodies = await Promise.all(singleEvidence.map(async (row) => ({
+    type: row.rawSourceRecord.sourceEntityType,
+    bytes: await decryptRaw(db, row.rawSourceRecordId),
+    checksum: row.rawSourceRecord.payloadChecksum,
+  })));
+  for (const persisted of persistedBodies) {
+    const text = decoder.decode(persisted.bytes);
+    for (const pii of ["buyer-secret", "Private Buyer", "PII Street", "+390000000",
+      "buyer@example.invalid", "Private purchase title"])
+      assert.equal(text.includes(pii), false);
+    assert.equal(persisted.checksum, createHash("sha256").update(persisted.bytes).digest("hex"));
+  }
+  const manifestBody = JSON.parse(decoder.decode(persistedBodies.find((row) =>
+    row.type === "FULFILLMENT_ORDERS_PAGE_MANIFEST")!.bytes));
+  assert.equal("orders" in manifestBody, false);
+  const orderBody = JSON.parse(decoder.decode(persistedBodies.find((row) => row.type === "ORDER")!.bytes));
+  assert.equal(orderBody.orderId, "ORDER-1");
+  assert.equal("buyer" in orderBody, false);
+  assert.equal("title" in orderBody.lineItems[0], false);
   assert.equal(evidence.sourceObservation?.authorizationVersion,
     (await db.ebaySellerAuthorization.findUniqueOrThrow({ where: { channelConnectionId: channel.id } })).authorizationVersion);
 
@@ -127,10 +161,15 @@ try {
   assert.equal(multi.pages, 3);
   const multiEvidence = await db.syncSliceEvidence.findMany({ where: { sliceId: multi.sliceId },
     include: { rawSourceRecord: true } });
-  assert.deepEqual(multiEvidence.filter((row) => row.rawSourceRecord.sourceEntityType === "FULFILLMENT_ORDERS_PAGE")
+  assert.deepEqual(multiEvidence.filter((row) => row.rawSourceRecord.sourceEntityType === "FULFILLMENT_ORDERS_PAGE_MANIFEST")
     .map((row) => row.rawSourceRecord.sourceSnapshotVersion).sort(),
     ["page-1", "page-2", "page-3"]);
   assert.equal(new Set(multiEvidence.map((row) => row.rawSourceRecord.sourceEntityId)).size, 6);
+  for (const row of multiEvidence.filter((entry) => entry.rawSourceRecord.sourceEntityType === "ORDER")) {
+    const persisted = JSON.parse(decoder.decode(await decryptRaw(db, row.rawSourceRecordId)));
+    assert.equal(persisted.orderId, row.rawSourceRecord.sourceEntityId);
+    assert.equal("orders" in persisted, false);
+  }
 
   const repeated = new MockTransport([oauth, (request) => json({ orders: [order("R1")], next: request.url })]);
   await assert.rejects(invoke("repeated", repeated),
@@ -138,7 +177,7 @@ try {
   const repeatedSlice = await db.syncSlice.findFirstOrThrow({ where: { run: { status: "FAILED" } },
     orderBy: { createdAt: "desc" } });
   assert.equal(await db.syncSliceEvidence.count({ where: { sliceId: repeatedSlice.id,
-    rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE" } } }), 1);
+    rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE_MANIFEST" } } }), 1);
 
   const bounded = new MockTransport([oauth, (request) => json({ orders: [order("BOUND")], next: nextFor(request, 2) })]);
   await assert.rejects(invoke("bounded", bounded, { query: { ...query, maxPages: 1 } }));
@@ -158,7 +197,7 @@ try {
   const failedSlice = await db.syncSlice.findFirstOrThrow({ where: { run: { status: "FAILED" } },
     orderBy: { createdAt: "desc" } });
   assert.equal(await db.syncSliceEvidence.count({ where: { sliceId: failedSlice.id,
-    rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE" } } }), 1);
+    rawSourceRecord: { sourceEntityType: "FULFILLMENT_ORDERS_PAGE_MANIFEST" } } }), 1);
   assert.equal(await db.syncCheckpoint.count({ where: { processedSliceId: failedSlice.id } }), 0);
   const recovered = await invoke("recover", new MockTransport([oauth,
     (request) => json({ orders: [order("RECOVER-A")], next: nextFor(request, 2) }),

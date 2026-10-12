@@ -23,7 +23,7 @@ import { getCanonicalEconomicDatasetTx } from "../../app/core/canonical-economic
 import { buildProfitIntelligenceModel } from "../../app/features/profit-intelligence-model";
 
 const migrations = readdirSync("prisma/migrations").filter((name) => /^\d{14}_/.test(name)).sort();
-assert.equal(migrations.length, 31);
+assert.equal(migrations.length, 33);
 assert.ok(migrations.includes("20260930120000_partner_p3_billing_qualification"));
 assert.ok(migrations.includes("20261001120000_partner_p4_reward_milestones"));
 assert.ok(migrations.includes("20261002120000_partner_p5_1_authentication"));

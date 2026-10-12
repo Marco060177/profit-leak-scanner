@@ -11,6 +11,8 @@ import { persistEbaySellerAuthorization } from "../../app/connectors/ebay/ebay-a
 import { mapEbayOrder } from "../../app/connectors/ebay/ebay-order-mapper.server";
 import { ingestEbayOrdersToD1, type EbayRawSourceEncryptionBoundary }
   from "../../app/connectors/ebay/ebay-orders-d1.server";
+import { EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION }
+  from "../../app/connectors/ebay/ebay-order-economic-projection";
 import { normalizeEbayOrdersFromD1, type EbayRawSourceDecryptionBoundary }
   from "../../app/connectors/ebay/ebay-orders-d2a.server";
 import { EBAY_REQUIRED_SCOPES, type EbayApplicationConfig, type EbayHttpRequest,
@@ -101,8 +103,9 @@ try {
   const marketplace = await db.marketplace.create({ data: { ...tenant,
     externalMarketplaceId: "EBAY_IT", countryCode: "IT", currencyCode: "EUR" } });
   const mapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-fulfillment-order-v1", sourceVersion: "sell-fulfillment-v1",
-    mapperSemanticVersion: "eb2b-v1", formulaCompatibilityVersion: "d2a-v1",
+    sourceContract: "sell-fulfillment-order-economic-v1",
+    sourceVersion: EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2a-v1",
     checksum: "eb2b-mapping", activatedAt: now } });
   const ingest = (key: string, orders: unknown[]) => ingestEbayOrdersToD1({ db, tenant,
     marketplaceId: marketplace.id, operationKey: `d1-${key}`, mappingVersionId: mapping.id, query,
@@ -132,11 +135,13 @@ try {
     orderBy: { externalVariantOrListingId: "asc" } });
   assert.equal(JSON.parse(listings[0].metadataJson!).sku, "SKU-ONE");
   assert.equal(JSON.parse(listings[1].metadataJson!).sku, null);
+  assert.equal("title" in JSON.parse(listings[0].metadataJson!), false);
+  assert.equal("title" in JSON.parse(listings[1].metadataJson!), false);
   const provenance = await db.normalizedOrderRevision.findFirstOrThrow({ where: { orderId: normalized.id },
     include: { rawSourceRecord: true, normalizationRun: true, syncSliceEvidence: true } });
   assert.equal(provenance.rawSourceRecord.sourceSystem, "EBAY");
   assert.equal(provenance.rawSourceRecord.sourceEntityType, "ORDER");
-  assert.equal(provenance.normalizationRun.parserVersion, "ebay-eb2b-v1");
+  assert.equal(provenance.normalizationRun.parserVersion, "ebay-ed2c-d2a-v1");
   assert.equal(provenance.syncSliceEvidence.rawSourceRecordId, provenance.rawSourceRecordId);
 
   const sameSource = await ingest("same", [order()]);
@@ -157,9 +162,8 @@ try {
 
   const beforeMalformed = { orders: await db.normalizedOrderRevision.count(),
     items: await db.normalizedOrderItemRevision.count() };
-  const malformedSource = await ingest("malformed", [order({ orderId: "VALID-BUT-PAGE-ROLLBACK" }),
-    { orderId: "BROKEN", creationDate: "bad", orderFulfillmentStatus: "NOT_STARTED", lineItems: [] }]);
-  await assert.rejects(normalize("malformed", malformedSource.sliceId));
+  await assert.rejects(ingest("malformed", [order({ orderId: "VALID-BUT-PAGE-ROLLBACK" }),
+    { orderId: "BROKEN", creationDate: "bad", orderFulfillmentStatus: "NOT_STARTED", lineItems: [] }]));
   assert.deepEqual({ orders: await db.normalizedOrderRevision.count(),
     items: await db.normalizedOrderItemRevision.count() }, beforeMalformed);
 
@@ -210,6 +214,57 @@ try {
     await tx.syncRun.update({ where: { id: foreignRun.id }, data: { status: "SUCCEEDED", finishedAt: now } });
   });
   await assert.rejects(normalize("non-ebay", foreignSlice.id));
+
+  const historicalMapping = await db.mappingVersion.create({ data: { platform: "EBAY",
+    sourceContract: "sell-fulfillment-order-v1", sourceVersion: "sell-fulfillment-v1",
+    mapperSemanticVersion: "eb2b-historical", formulaCompatibilityVersion: "d2a-v1",
+    checksum: "eb2b-historical-mapping", activatedAt: now } });
+  const historicalRun = await db.syncRun.create({ data: { ...tenant, stream: "orders",
+    authorizationVersion: authorization.authorizationVersion, mappingVersionId: historicalMapping.id,
+    status: "RUNNING", startedAt: now } });
+  const historicalSlice = await db.syncSlice.create({ data: { ...tenant, runId: historicalRun.id,
+    marketplaceId: marketplace.id, marketplaceScopeKey: marketplace.id, stream: "orders",
+    sliceKey: "historical-full-payload-source-slice", authorizationVersion: authorization.authorizationVersion } });
+  assert.equal(await claimSyncSlice(db, { ...tenant, sliceId: historicalSlice.id,
+    authorizationVersion: authorization.authorizationVersion, leaseOwner: "historical-source",
+    now, leaseMs: 300_000 }), true);
+  const historicalOrder = order({ orderId: "HISTORICAL-ORDER",
+    lineItems: [item("HISTORICAL-LINE", 1, "HISTORICAL-SKU")] });
+  const historicalRaw = await storeRawSourceRecord(db, { ...tenant, sourceSystem: "EBAY",
+    sourceVersion: "sell-fulfillment-v1", sourceEntityType: "ORDER", sourceEntityId: "HISTORICAL-ORDER",
+    sourceSnapshotVersion: "page-1", schemaVersion: "sell-fulfillment-v1",
+    retentionClass: "COMMERCE_SOURCE", capturedAt: now, ingestionRunId: historicalRun.id,
+    payload: encoder.encode(JSON.stringify({ orders: [historicalOrder] })),
+    encryptChunk: rawEncryption.encryptChunk });
+  const historicalNormalization = await db.normalizationRun.create({ data: { ...tenant,
+    rawSourceRecordId: historicalRaw.id, mappingVersionId: historicalMapping.id,
+    parserVersion: "ebay-eb2a-sell-fulfillment-v1", normalizationRevision: 1,
+    status: "SUCCEEDED", finishedAt: now } });
+  await db.$transaction(async (tx) => {
+    const observation = await recordSourceObservationTx(tx, { ...tenant, runId: historicalRun.id,
+      sliceId: historicalSlice.id, rawSourceRecordId: historicalRaw.id, sourceSystem: "EBAY",
+      sourceEntityType: "ORDER", sourceEntityId: "HISTORICAL-ORDER", observedAt: now,
+      authorizationVersion: authorization.authorizationVersion });
+    await attachSourceObservationToSliceTx(tx, { ...tenant, sliceId: historicalSlice.id,
+      sourceObservationId: observation.id, normalizationRunId: historicalNormalization.id,
+      leaseOwner: "historical-source", now });
+  });
+  await prepareSyncSlice(db, { ...tenant, sliceId: historicalSlice.id,
+    leaseOwner: "historical-source", authorizationVersion: authorization.authorizationVersion, now });
+  await db.$transaction(async (tx) => {
+    await completeSyncSliceWithoutCheckpointTx(tx, { ...tenant, sliceId: historicalSlice.id,
+      leaseOwner: "historical-source", authorizationVersion: authorization.authorizationVersion,
+      mappingVersionId: historicalMapping.id, now });
+    await tx.syncRun.update({ where: { id: historicalRun.id },
+      data: { status: "SUCCEEDED", finishedAt: now } });
+  });
+  const historicalResult = await normalizeEbayOrdersFromD1({ db, tenant,
+    marketplaceId: marketplace.id, sourceSliceId: historicalSlice.id, operationKey: "historical",
+    mappingVersionId: historicalMapping.id, rawDecryption, leaseOwner: "historical-normalize", now });
+  assert.equal(historicalResult.orderCount, 1);
+  const historicalListing = await db.channelListing.findFirstOrThrow({ where: {
+    channelConnectionId: channel.id, externalVariantOrListingId: "legacy-item:LEGACY-HISTORICAL-LINE" } });
+  assert.equal(JSON.parse(historicalListing.metadataJson!).title, "Product HISTORICAL-LINE");
 
   assert.equal(await db.financialLedgerEntry.count(), 0);
   assert.equal(await db.inventoryEconomicEvent.count(), 0);
