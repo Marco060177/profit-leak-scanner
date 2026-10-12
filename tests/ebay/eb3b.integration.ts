@@ -5,9 +5,15 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { PrismaClient } from "@prisma/client";
+import { attachSourceObservationToSliceTx, claimSyncSlice, completeSyncSliceWithoutCheckpointTx,
+  prepareSyncSlice, recordSourceObservationTx, storeRawSourceRecord }
+  from "../../app/core/data-core-d1.server";
 import { markEbayAuthorizationReauthRequired, persistEbaySellerAuthorization,
   revokeEbaySellerAuthorization } from "../../app/connectors/ebay/ebay-authorization.server";
 import { ingestEbayFinancesToD1 } from "../../app/connectors/ebay/ebay-finances-d1.server";
+import { EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+  projectEbayFinancesEconomic, serializeEbayFinancesEconomicProjection }
+  from "../../app/connectors/ebay/ebay-finances-economic-projection";
 import { ingestEbayFinancesD1ToD2B } from "../../app/connectors/ebay/ebay-finances-d2b.server";
 import { mapEbayFinancialTransaction, parseEbayFinancesEvidencePage } from
   "../../app/connectors/ebay/ebay-finances-mapper.server";
@@ -51,8 +57,12 @@ const tx = (id: string, type: string, extras: Record<string, unknown> = {}) => (
   amount: { value: "7.2500", currency: "EUR" }, ...extras });
 const fixtures = [tx("TX-SALE", "SALE", { orderId: "ORDER-EXACT",
   totalFeeBasisAmount: { value: "8.3000", currency: "EUR" },
+  buyer: { username: "private-buyer", fullName: "Private Buyer",
+    address: { addressLine1: "Secret Street" }, phone: "+390000", email: "buyer@example.invalid" },
   orderLineItems: [{ lineItemId: "LINE-EXACT", marketplaceFees: [{ feeType: "FINAL_VALUE_FEE",
-    amount: { value: "1.05", currency: "EUR" } }] }] }),
+    amount: { value: "1.05", currency: "EUR" } }, { feeType: "FINAL_VALUE_FEE",
+    amount: { value: "1.05", currency: "EUR" } }, { feeType: "FINAL_VALUE_FEE",
+    amount: { value: "0.25", currency: "EUR" } }] }] }),
 tx("TX-FEE", "NON_SALE_CHARGE", { bookingEntry: "DEBIT", amount: { value: "2.50", currency: "EUR" } }),
 tx("TX-REFUND", "REFUND", { bookingEntry: "DEBIT", amount: { value: "7.25", currency: "EUR" } }),
 tx("TX-CREDIT", "CREDIT", { amount: { value: "1.2300", currency: "EUR" } }),
@@ -104,8 +114,9 @@ try {
   const otherMarketplace = await db.marketplace.create({ data: { accountId: other.id,
     channelConnectionId: otherChannel.id, externalMarketplaceId: "EBAY_DE", countryCode: "DE", currencyCode: "EUR" } });
   const mapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-finances-transaction-v1", sourceVersion: "sell-finances-v1",
-    mapperSemanticVersion: "eb3a", formulaCompatibilityVersion: "d2b-v1",
+    sourceContract: "sell-finances-transaction-economic-v1",
+    sourceVersion: EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2b-v1",
     checksum: "eb3a-mapping", activatedAt: now } });
   const invoke = (key: string, transport: EbayHttpTransport, overrides: Record<string, unknown> = {}) =>
     ingestEbayFinancesToD1({ db, tenant, marketplaceId: marketplace.id, operationKey: key,
@@ -126,7 +137,14 @@ try {
   assert.equal(single.pages, 1);
   const evidence = await db.syncSliceEvidence.findFirstOrThrow({ where: { sliceId: single.sliceId },
     include: { rawSourceRecord: true, sourceObservation: true } });
-  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(JSON.stringify(body)));
+  assert.deepEqual(await decryptRaw(db, evidence.rawSourceRecordId), Buffer.from(
+    serializeEbayFinancesEconomicProjection(projectEbayFinancesEconomic(body))));
+  const persistedText = decoder.decode(await decryptRaw(db, evidence.rawSourceRecordId));
+  for (const pii of ["private-buyer", "Private Buyer", "Secret Street", "+390000",
+    "buyer@example.invalid"])
+    assert.equal(persistedText.includes(pii), false);
+  assert.equal(evidence.rawSourceRecord.payloadChecksum,
+    createHash("sha256").update(persistedText).digest("hex"));
   assert.equal(evidence.rawSourceRecord.retentionClass, "FINANCIAL_SOURCE");
   assert.equal(evidence.sourceObservation?.authorizationVersion,
     (await db.ebaySellerAuthorization.findUniqueOrThrow({ where: { channelConnectionId: channel.id } })).authorizationVersion);
@@ -151,6 +169,14 @@ try {
     binding: { sourceAuthority: "ebay-finances-v1" }, state: "PRESENT" } });
   assert(ledger.some((row) => row.projectionKind === "PRODUCT_REVENUE" && row.amountAtoms === 83n && row.amountScale === 1));
   assert(ledger.some((row) => row.projectionKind === "MARKETPLACE_COMMISSION" && row.amountAtoms === -105n));
+  const saleFees = ledger.filter((row) => row.economicEventKey.includes("TX-SALE") &&
+    row.projectionKind === "MARKETPLACE_COMMISSION");
+  assert.equal(saleFees.length, 3);
+  assert.deepEqual(saleFees.map((row) => row.sourceLeafPath).sort(), [
+    "$.transactions[4]/orderLineItems/0/marketplaceFees/0/amount",
+    "$.transactions[4]/orderLineItems/0/marketplaceFees/1/amount",
+    "$.transactions[4]/orderLineItems/0/marketplaceFees/2/amount",
+  ]);
   assert(ledger.some((row) => row.projectionKind === "MARKETPLACE_COMMISSION" && row.amountAtoms === -25n));
   assert(ledger.some((row) => row.projectionKind === "REFUND" && row.amountAtoms === -725n));
   assert(ledger.some((row) => row.projectionKind === "ADJUSTMENT" && row.amountAtoms === 123n));
@@ -213,7 +239,7 @@ try {
     (request) => json({ transactions: [fixtures[0]], next: nextFor(request, 2) }),
     () => json({ transactions: [fixtures[1]] })]));
   assert.equal(recovered.sliceId, failed.id); assert.equal(recovered.pages, 2);
-  assert.equal(await db.rawSourceRecord.count(), rawBeforeFailure + 1);
+  assert.equal(await db.rawSourceRecord.count(), rawBeforeFailure);
 
   const replay = await invoke("single", new MockTransport([]));
   assert.equal(replay.replayed, true);
@@ -236,6 +262,63 @@ try {
     transactionDateTo: new Date("2026-03-01T00:00:00.000Z") } });
   assert.equal(differentWindow.replayed, false);
   assert.equal(differentWindowTransport.requests.length, 2);
+
+  const historicalMapping = await db.mappingVersion.create({ data: { platform: "EBAY",
+    sourceContract: "sell-finances-transaction-v1", sourceVersion: "sell-finances-v1",
+    mapperSemanticVersion: "eb3b-historical", formulaCompatibilityVersion: "d2b-v1",
+    checksum: "eb3b-historical-mapping", activatedAt: now } });
+  const historicalAuthorization = await db.coreChannelAuthorization.findUniqueOrThrow({
+    where: { channelConnectionId: channel.id } });
+  const historicalRun = await db.syncRun.create({ data: { ...tenant, stream: "ebay-finances-v1",
+    authorizationVersion: historicalAuthorization.authorizationVersion,
+    mappingVersionId: historicalMapping.id, status: "RUNNING", startedAt: now } });
+  const historicalSlice = await db.syncSlice.create({ data: { ...tenant, runId: historicalRun.id,
+    marketplaceId: marketplace.id, marketplaceScopeKey: marketplace.id, stream: "ebay-finances-v1",
+    sliceKey: "historical-finances-full-page", authorizationVersion: historicalAuthorization.authorizationVersion } });
+  assert.equal(await claimSyncSlice(db, { ...tenant, sliceId: historicalSlice.id,
+    authorizationVersion: historicalAuthorization.authorizationVersion, leaseOwner: "historical-finances",
+    now, leaseMs: 300_000 }), true);
+  const historicalBody = encoder.encode(JSON.stringify({ href: "historical", transactions: [
+    tx("HISTORICAL-SALE", "SALE", { totalFeeBasisAmount: { value: "4.2000", currency: "EUR" },
+      buyer: { username: "historical-private-buyer" } }),
+  ] }));
+  const historicalRaw = await storeRawSourceRecord(db, { ...tenant, sourceSystem: "EBAY",
+    sourceVersion: "sell-finances-v1", sourceEntityType: "FINANCES_TRANSACTIONS_PAGE",
+    sourceEntityId: "EBAY_IT:historical:page:1", sourceSnapshotVersion: "page-1",
+    schemaVersion: "sell-finances-v1", retentionClass: "FINANCIAL_SOURCE", capturedAt: now,
+    ingestionRunId: historicalRun.id, payload: historicalBody, encryptChunk: rawEncryption.encryptChunk });
+  const historicalNormalization = await db.normalizationRun.create({ data: { ...tenant,
+    rawSourceRecordId: historicalRaw.id, mappingVersionId: historicalMapping.id,
+    parserVersion: "ebay-eb3a-sell-finances-v1", normalizationRevision: 1,
+    status: "SUCCEEDED", finishedAt: now } });
+  await db.$transaction(async (database) => {
+    const observation = await recordSourceObservationTx(database, { ...tenant, runId: historicalRun.id,
+      sliceId: historicalSlice.id, rawSourceRecordId: historicalRaw.id, sourceSystem: "EBAY",
+      sourceEntityType: "FINANCES_TRANSACTIONS_PAGE", sourceEntityId: "EBAY_IT:historical:page:1",
+      observedAt: now, authorizationVersion: historicalAuthorization.authorizationVersion });
+    await attachSourceObservationToSliceTx(database, { ...tenant, sliceId: historicalSlice.id,
+      sourceObservationId: observation.id, normalizationRunId: historicalNormalization.id,
+      leaseOwner: "historical-finances", now });
+    await database.sourceReference.create({ data: { ...tenant, rawSourceRecordId: historicalRaw.id,
+      sourceLeafPath: "$.transactions[0]", targetKind: "EBAY_FINANCES_TRANSACTION",
+      targetKey: "HISTORICAL-SALE" } });
+  });
+  await prepareSyncSlice(db, { ...tenant, sliceId: historicalSlice.id, leaseOwner: "historical-finances",
+    authorizationVersion: historicalAuthorization.authorizationVersion, now });
+  await db.$transaction(async (database) => {
+    await completeSyncSliceWithoutCheckpointTx(database, { ...tenant, sliceId: historicalSlice.id,
+      leaseOwner: "historical-finances", authorizationVersion: historicalAuthorization.authorizationVersion,
+      mappingVersionId: historicalMapping.id, now });
+    await database.syncRun.update({ where: { id: historicalRun.id },
+      data: { status: "SUCCEEDED", finishedAt: now } });
+  });
+  const historicalPublished = await ingestEbayFinancesD1ToD2B({ db, tenant,
+    sliceId: historicalSlice.id, rawDecryption });
+  assert.equal(historicalPublished.transactionCount, 1);
+  assert(await db.financialLedgerEntry.findFirstOrThrow({ where: {
+    economicEventKey: "ebay-finances:transaction:HISTORICAL-SALE",
+    sourceLeafPath: "$.transactions[0]/totalFeeBasisAmount",
+    amountAtoms: 42n, amountScale: 1 } }));
 
   const boundary = async (key: string, overrides: Record<string, unknown>) => {
     const noHttp = new MockTransport([]); await assert.rejects(invoke(key, noHttp, overrides));
@@ -277,6 +360,8 @@ try {
     grantedAt: now, refreshTokenExpiresAt: new Date("2030-01-01T00:00:00Z") }, testEbayCredentialEncryptionProvider);
 
   for (const [key, value] of [["bad-root", { wrong: [] }],
+    ["unsupported-no-money", { transactions: [{ transactionId: "NO-MONEY",
+      transactionType: "FUTURE_NEW_TYPE", transactionStatus: "UNKNOWN" }] }],
     ["bad-next", { transactions: [fixtures[0]], next: "https://evil.invalid/sell/finances/v1/transaction?offset=2" }]] as const)
     await assert.rejects(invoke(key, new MockTransport([oauth, () => json(value)])));
 
@@ -285,6 +370,8 @@ try {
   for (const secret of [refreshToken, accessToken, config.clientSecret, "eb3a-test-public-jwe",
     "Signature-Input", "sig1=:"]) assert.equal(durable.includes(secret), false);
   assert.equal(decoder.decode((await db.rawSourceBlobChunk.findFirstOrThrow()).encryptedBytes).includes("TX-SALE"), false);
+  assert.equal((sqlite.prepare(`SELECT COUNT(*) AS count FROM FinancialAuthorityScope s
+    JOIN FinancialDecisionValidity v ON v.id=s.currentDecisionId WHERE v.valid<>1`).get() as { count: number }).count, 0);
   assert.deepEqual(sqlite.prepare("PRAGMA foreign_key_check").all(), []);
   assert.equal((sqlite.prepare("PRAGMA integrity_check").get() as { integrity_check: string }).integrity_check, "ok");
   console.log("eBay EB3-B trusted Finances D1 evidence to D2B ledger: PASS");

@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
-import { completeSyncSliceTx, completeSyncSliceWithoutCheckpointTx } from "~/core/data-core-d1.server";
+import { completeSyncSliceTx, completeSyncSliceWithoutCheckpointTx, rawSourceEncryptionContext,
+  type RawSourceEncryptionContext } from "~/core/data-core-d1.server";
 import {
   canonicalChecksum,
   createFinancialAuthorityScopeTx,
@@ -16,15 +17,19 @@ import {
 } from "~/core/financial-authority.server";
 import {
   EBAY_FINANCES_SOURCE_AUTHORITY,
-  mapEbayFinancialTransactions,
+  mapEbayFinancialTransaction,
   parseEbayFinancesEvidencePage,
   type EbayCanonicalFinancialNode,
   type EbayCanonicalFinancialTransaction,
 } from "./ebay-finances-mapper.server";
+import { EBAY_FINANCES_ECONOMIC_PROJECTION_SCHEMA, EBAY_FINANCES_HISTORICAL_SOURCE_VERSION,
+  EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+  ebayFinancesProjectionToMapperInput, projectEbayFinancesEconomic,
+  serializeEbayFinancesEconomicProjection } from "./ebay-finances-economic-projection";
 import { EBAY_FINANCES_STREAM } from "./ebay-finances-d1.server";
 
 export type RawSourceDecryptionBoundary = Readonly<{
-  decryptChunk(encrypted: Uint8Array, chunkIndex: number): Uint8Array;
+  decryptChunk(encrypted: Uint8Array, chunkIndex: number, context: RawSourceEncryptionContext): Uint8Array;
 }>;
 
 type ReplayedPage = Readonly<{
@@ -39,6 +44,22 @@ type ReplayedPage = Readonly<{
 
 const operation = (parts: readonly unknown[]) =>
   createHash("sha256").update(canonicalChecksum(parts)).digest("hex");
+
+function parseMinimizedFinancesEvidence(body: Uint8Array) {
+  let value: unknown;
+  try { value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(body)); }
+  catch { throw new Error("eBay EB3-B projection JSON invalid"); }
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new Error("eBay EB3-B projection invalid");
+  const candidate = value as Parameters<typeof ebayFinancesProjectionToMapperInput>[0];
+  if (candidate.projectionSchema !== EBAY_FINANCES_ECONOMIC_PROJECTION_SCHEMA)
+    throw new Error("eBay EB3-B projection schema invalid");
+  const projection = projectEbayFinancesEconomic(ebayFinancesProjectionToMapperInput(candidate));
+  if (!Buffer.from(serializeEbayFinancesEconomicProjection(projection)).equals(Buffer.from(body)))
+    throw new Error("eBay EB3-B canonical projection invalid");
+  return parseEbayFinancesEvidencePage(new TextEncoder().encode(
+    JSON.stringify(ebayFinancesProjectionToMapperInput(projection))));
+}
 
 function transactionSemanticIdentity(value: EbayCanonicalFinancialTransaction) {
   const monetary = (node: EbayCanonicalFinancialNode) => {
@@ -93,15 +114,29 @@ async function replayPages(input: {
         row.normalizationRun.status !== "SUCCEEDED" ||
         row.normalizationRun.mappingVersionId !== slice.run.mappingVersionId)
       throw new Error("eBay EB3-B invalid D1 provenance chain");
+    const minimized = row.rawSourceRecord.sourceVersion === EBAY_FINANCES_MINIMIZED_SOURCE_VERSION &&
+      row.rawSourceRecord.schemaVersion === EBAY_FINANCES_ECONOMIC_PROJECTION_SCHEMA &&
+      row.normalizationRun.parserVersion === "ebay-ed2d-economic-projection-v1";
+    const historical = row.rawSourceRecord.sourceVersion === EBAY_FINANCES_HISTORICAL_SOURCE_VERSION &&
+      row.rawSourceRecord.schemaVersion === EBAY_FINANCES_HISTORICAL_SOURCE_VERSION &&
+      row.normalizationRun.parserVersion === "ebay-eb3a-sell-finances-v1";
+    if (!minimized && !historical) throw new Error("eBay EB3-B unsupported Finances evidence version");
+    if (minimized) {
+      const mapping = await input.db.mappingVersion.findUnique({ where: { id: slice.run.mappingVersionId } });
+      if (mapping?.mapperSemanticVersion !== EBAY_FINANCES_MINIMIZED_MAPPING_VERSION)
+        throw new Error("eBay EB3-B minimized mapping invalid");
+    }
     const pageNumber = Number(row.rawSourceRecord.sourceSnapshotVersion?.replace(/^page-/, ""));
     if (!Number.isSafeInteger(pageNumber) || pageNumber < 1)
       throw new Error("eBay EB3-B invalid page identity");
+    const encryptionContext = rawSourceEncryptionContext(row.rawSourceRecord);
     const plain = Buffer.concat(row.rawSourceRecord.chunks.map((chunk) =>
-      Buffer.from(input.rawDecryption.decryptChunk(new Uint8Array(chunk.encryptedBytes), chunk.chunkIndex))));
+      Buffer.from(input.rawDecryption.decryptChunk(
+        new Uint8Array(chunk.encryptedBytes), chunk.chunkIndex, encryptionContext))));
     if (plain.byteLength !== row.rawSourceRecord.payloadByteLength ||
         createHash("sha256").update(plain).digest("hex") !== row.rawSourceRecord.payloadChecksum)
       throw new Error("eBay EB3-B raw evidence integrity failure");
-    const parsed = parseEbayFinancesEvidencePage(plain);
+    const parsed = minimized ? parseMinimizedFinancesEvidence(plain) : parseEbayFinancesEvidencePage(plain);
     const transactionPathById = new Map(row.rawSourceRecord.references
       .filter((reference) => reference.targetKind === "EBAY_FINANCES_TRANSACTION")
       .map((reference) => [reference.targetKey, reference.sourceLeafPath]));
@@ -316,7 +351,17 @@ export async function ingestEbayFinancesD1ToD2B(input: {
 }) {
   if (!input.rawDecryption?.decryptChunk) throw new Error("Raw payload decryption required");
   const replayed = await replayPages({ ...input, allowPrepared: Boolean(input.completion) });
-  const canonical = mapEbayFinancialTransactions(replayed.pages);
+  const canonicalById = new Map<string, EbayCanonicalFinancialTransaction>();
+  const sourceById = new Map<string, string>();
+  for (const page of replayed.pages) for (const transaction of page.transactions) {
+    const mapped = mapEbayFinancialTransaction(transaction, page.rawChecksum);
+    const semantic = canonicalChecksum(transaction);
+    const prior = sourceById.get(mapped.transactionId);
+    if (prior && prior !== semantic) throw new Error("eBay Finances source transaction conflict");
+    if (!prior) { sourceById.set(mapped.transactionId, semantic); canonicalById.set(mapped.transactionId, mapped); }
+  }
+  const canonical = [...canonicalById.values()]
+    .sort((left, right) => left.transactionId.localeCompare(right.transactionId));
   const pageByTransaction = new Map<string, ReplayedPage>();
   for (const page of replayed.pages) for (const transaction of page.transactions) {
     const prior = pageByTransaction.get(transaction.transactionId);

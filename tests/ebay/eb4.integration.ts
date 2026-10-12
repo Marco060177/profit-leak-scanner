@@ -7,8 +7,12 @@ import { DatabaseSync } from "node:sqlite";
 import { PrismaClient } from "@prisma/client";
 import { persistEbaySellerAuthorization } from "../../app/connectors/ebay/ebay-authorization.server";
 import { ingestEbayOrdersToD1 } from "../../app/connectors/ebay/ebay-orders-d1.server";
+import { EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION }
+  from "../../app/connectors/ebay/ebay-order-economic-projection";
 import { normalizeEbayOrdersFromD1 } from "../../app/connectors/ebay/ebay-orders-d2a.server";
 import { ingestEbayFinancesToD1 } from "../../app/connectors/ebay/ebay-finances-d1.server";
+import { EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, EBAY_FINANCES_MINIMIZED_SOURCE_VERSION }
+  from "../../app/connectors/ebay/ebay-finances-economic-projection";
 import { ingestEbayFinancesD1ToD2B } from "../../app/connectors/ebay/ebay-finances-d2b.server";
 import { approveEbayListingSkuMappingTx, getEbayCanonicalEconomicDatasetTx,
   recognizeEbayOrderItemCogsTx } from "../../app/connectors/ebay/ebay-economic-composition.server";
@@ -73,12 +77,14 @@ try {
   const marketplace = await db.marketplace.create({ data: { ...tenant, externalMarketplaceId: "EBAY_IT",
     countryCode: "IT", currencyCode: "EUR" } });
   const orderMapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-fulfillment-order-v1", sourceVersion: "sell-fulfillment-v1",
-    mapperSemanticVersion: "eb4-orders", formulaCompatibilityVersion: "d2a-v1",
+    sourceContract: "sell-fulfillment-order-economic-v1",
+    sourceVersion: EBAY_FULFILLMENT_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FULFILLMENT_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2a-v1",
     checksum: "eb4-orders", activatedAt: now } });
   const financeMapping = await db.mappingVersion.create({ data: { platform: "EBAY",
-    sourceContract: "sell-finances-v1", sourceVersion: "sell-finances-v1",
-    mapperSemanticVersion: "eb4-finances", formulaCompatibilityVersion: "d2b-v1",
+    sourceContract: "sell-finances-transaction-economic-v1",
+    sourceVersion: EBAY_FINANCES_MINIMIZED_SOURCE_VERSION,
+    mapperSemanticVersion: EBAY_FINANCES_MINIMIZED_MAPPING_VERSION, formulaCompatibilityVersion: "d2b-v1",
     checksum: "eb4-finances", activatedAt: now } });
   const orderD1 = await ingestEbayOrdersToD1({ db, tenant, marketplaceId: marketplace.id,
     operationKey: "eb4-order-d1", mappingVersionId: orderMapping.id,

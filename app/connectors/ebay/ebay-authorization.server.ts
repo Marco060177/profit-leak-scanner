@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import type { VerifiedCoreTenant } from "~/core/data-core-d2a.server";
 import { requireCredentialEncryptionProvider,
-  type CredentialEncryptionProvider } from "~/services/credential-encryption.server";
+  type CredentialEncryptionContext, type CredentialEncryptionProvider } from "~/services/credential-encryption.server";
 import { canonicalizeEbayScopes, EbayConnectorError } from "./ebay-types";
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -22,12 +22,12 @@ export type EbayAuthorizationMetadata = Readonly<{
   replayed: boolean;
 }>;
 
-function parseScopes(value: string) {
+function parseScopes(value: string, requireRequired = true) {
   try {
     const parsed: unknown = JSON.parse(value);
     if (!Array.isArray(parsed) || parsed.some((scope) => typeof scope !== "string"))
       throw new Error("invalid");
-    return canonicalizeEbayScopes(parsed);
+    return canonicalizeEbayScopes(parsed, requireRequired);
   } catch (error) {
     if (error instanceof EbayConnectorError) throw error;
     throw new EbayConnectorError("AUTHORIZATION");
@@ -43,7 +43,7 @@ function metadata(row: {
     throw new EbayConnectorError("AUTHORIZATION");
   return { accountId: row.accountId, channelConnectionId: row.channelConnectionId,
     status: row.status as AuthorizationStatus, authorizationVersion: row.authorizationVersion,
-    grantedScopes: parseScopes(row.grantedScopesJson), grantedAt: row.grantedAt,
+    grantedScopes: parseScopes(row.grantedScopesJson, row.status === "ACTIVE"), grantedAt: row.grantedAt,
     validatedAt: row.validatedAt, refreshTokenExpiresAt: row.refreshTokenExpiresAt,
     reauthRequiredAt: row.reauthRequiredAt, revokedAt: row.revokedAt, replayed };
 }
@@ -64,6 +64,11 @@ function sameDate(left: Date | null, right: Date | null) {
   return left === right || (left !== null && right !== null && left.getTime() === right.getTime());
 }
 
+function credentialContext(tenant: VerifiedCoreTenant): CredentialEncryptionContext {
+  return { dataClass: "CREDENTIAL", accountId: tenant.accountId,
+    channelConnectionId: tenant.channelConnectionId, recordIdentity: "EbaySellerAuthorization" };
+}
+
 export async function persistEbaySellerAuthorization(db: PrismaClient, tenant: VerifiedCoreTenant, input: {
   refreshToken: string; grantedScopes: readonly string[]; grantedAt: Date;
   validatedAt?: Date | null; refreshTokenExpiresAt?: Date | null;
@@ -75,7 +80,7 @@ export async function persistEbaySellerAuthorization(db: PrismaClient, tenant: V
   const grantedScopesJson = JSON.stringify(grantedScopes);
   await requireEbayOwner(db, tenant);
   const encrypted = await requireCredentialEncryptionProvider(encryptionProvider)
-    .encrypt(Buffer.from(input.refreshToken, "utf8"));
+    .encrypt(Buffer.from(input.refreshToken, "utf8"), credentialContext(tenant));
   if (!encrypted.ciphertext.byteLength || !encrypted.provider.trim() || !encrypted.keyVersion.trim() ||
       !encrypted.credentialFingerprint.trim() || encrypted.provider.length > 255 ||
       encrypted.keyVersion.length > 255 || encrypted.credentialFingerprint.length > 512)
@@ -122,7 +127,8 @@ encryptionProvider?: CredentialEncryptionProvider) {
     throw new EbayConnectorError("AUTHORIZATION");
   parseScopes(row.grantedScopesJson);
   const plain = await requireCredentialEncryptionProvider(encryptionProvider).decrypt({
-    ciphertext: row.encryptedRefreshToken, provider: row.encryptionProvider, keyVersion: row.encryptionKeyVersion });
+    ciphertext: row.encryptedRefreshToken, provider: row.encryptionProvider, keyVersion: row.encryptionKeyVersion },
+  credentialContext(tenant));
   const token = Buffer.from(plain).toString("utf8");
   if (!token || token.length > 16_384) throw new EbayConnectorError("AUTHORIZATION");
   return token;

@@ -8,13 +8,17 @@ import type { VerifiedCoreTenant } from "~/core/data-core-d2a.server";
 import type { CredentialEncryptionProvider } from "~/services/credential-encryption.server";
 import { assertEbayFinancesBoundary, listEbayFinancesPages,
   type EbayFinancesEvidencePage, type EbayFinancesQuery } from "./ebay-finances.server";
+import { assertEbayFinancesProjectionPersistence } from "./ebay-economic-projection-guard";
+import { EBAY_FINANCES_ECONOMIC_PROJECTION_SCHEMA, EBAY_FINANCES_MINIMIZED_MAPPING_VERSION,
+  EBAY_FINANCES_MINIMIZED_SOURCE_VERSION, projectEbayFinancesEconomic,
+  serializeEbayFinancesEconomicProjection } from "./ebay-finances-economic-projection";
 import type { EbaySigningKeyProvider } from "./ebay-http-signature.server";
 import type { EbayRawSourceEncryptionBoundary } from "./ebay-orders-d1.server";
 import type { EbayApplicationConfig, EbayHttpTransport } from "./ebay-types";
 
-export const EBAY_FINANCES_SOURCE_VERSION = "sell-finances-v1";
+export const EBAY_FINANCES_SOURCE_VERSION = EBAY_FINANCES_MINIMIZED_SOURCE_VERSION;
 export const EBAY_FINANCES_STREAM = "ebay-finances-v1";
-const PARSER_VERSION = "ebay-eb3a-sell-finances-v1";
+const PARSER_VERSION = "ebay-ed2d-economic-projection-v1";
 const SOURCE_ENTITY_TYPE = "FINANCES_TRANSACTIONS_PAGE";
 
 function sha256(value: string) { return createHash("sha256").update(value).digest("hex"); }
@@ -32,6 +36,7 @@ async function establishSlice(db: PrismaClient, input: {
   const boundary = await assertEbayFinancesBoundary(db, input.tenant, input.marketplaceId);
   const mapping = await db.mappingVersion.findUnique({ where: { id: input.mappingVersionId } });
   if (!mapping || mapping.platform !== "EBAY" || mapping.sourceVersion !== EBAY_FINANCES_SOURCE_VERSION ||
+      mapping.mapperSemanticVersion !== EBAY_FINANCES_MINIMIZED_MAPPING_VERSION ||
       !mapping.activatedAt || mapping.deactivatedAt) throw new Error("eBay EB3-A mapping invalid");
   const scope = marketplaceScopeKey(input.marketplaceId);
   const requestFingerprint = sha256(requestEvidence(input.query, boundary.externalMarketplaceId));
@@ -104,12 +109,23 @@ async function persistPage(input: {
   const fingerprint = sha256(request);
   const offset = new URL(input.page.requestUrl).searchParams.get("offset");
   if (offset === null || !/^\d+$/.test(offset)) throw new Error("eBay EB3-A page provenance invalid");
+  let source: unknown;
+  try { source = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(input.page.body)); }
+  catch { throw new Error("eBay EB3-A financial projection invalid"); }
+  const projected = projectEbayFinancesEconomic(source);
+  const projectedIds = projected.transactions.map((transaction) => transaction.transactionId).sort();
+  if (JSON.stringify(projectedIds) !== JSON.stringify(
+    input.page.transactions.map((transaction) => transaction.transactionId).sort()))
+    throw new Error("eBay EB3-A transaction identity mismatch");
+  const payload = serializeEbayFinancesEconomicProjection(projected);
+  assertEbayFinancesProjectionPersistence(payload);
   const sourceEntityId = `${input.externalMarketplaceId}:getTransactions:${fingerprint}:offset:${offset}:page:${input.page.pageNumber}`;
   const raw = await storeRawSourceRecord(input.db, { ...input.tenant, sourceSystem: "EBAY",
     sourceVersion: EBAY_FINANCES_SOURCE_VERSION, sourceEntityType: SOURCE_ENTITY_TYPE, sourceEntityId,
-    sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: EBAY_FINANCES_SOURCE_VERSION,
+    sourceSnapshotVersion: `page-${input.page.pageNumber}`, schemaVersion: EBAY_FINANCES_ECONOMIC_PROJECTION_SCHEMA,
     retentionClass: "FINANCIAL_SOURCE", capturedAt: input.now, ingestionRunId: input.context.runId,
-    payload: input.page.body, encryptChunk: (plain, index) => input.rawEncryption.encryptChunk(plain, index) });
+    payload, encryptChunk: (plain, index, encryptionContext) =>
+      input.rawEncryption.encryptChunk(plain, index, encryptionContext) });
   const normalization = await normalizationForPage(input.db, input.tenant, raw.id,
     input.context.mappingVersionId, input.now);
   return input.db.$transaction(async (tx) => {
@@ -133,8 +149,8 @@ async function persistPage(input: {
         sourceLeafPath: "$.request", targetKind: "EBAY_FINANCES_REQUEST", targetKey: request } },
     create: { ...input.tenant, rawSourceRecordId: raw.id, sourceLeafPath: "$.request",
       targetKind: "EBAY_FINANCES_REQUEST", targetKey: request }, update: {} });
-    for (let index = 0; index < input.page.transactions.length; index += 1) {
-      const transaction = input.page.transactions[index];
+    for (let index = 0; index < projected.transactions.length; index += 1) {
+      const transaction = projected.transactions[index];
       await tx.sourceReference.upsert({ where: {
         rawSourceRecordId_sourceLeafPath_targetKind_targetKey: { rawSourceRecordId: raw.id,
           sourceLeafPath: `$.transactions[${index}]`, targetKind: "EBAY_FINANCES_TRANSACTION",
@@ -147,14 +163,14 @@ async function persistPage(input: {
           targetKey: transaction.orderId } }, create: { ...input.tenant, rawSourceRecordId: raw.id,
         sourceLeafPath: `$.transactions[${index}].orderId`, targetKind: "EBAY_ORDER_ID",
         targetKey: transaction.orderId }, update: {} });
-      for (let itemIndex = 0; itemIndex < transaction.orderLineItemIds.length; itemIndex += 1)
+      for (let itemIndex = 0; itemIndex < transaction.orderLineItems.length; itemIndex += 1)
         await tx.sourceReference.upsert({ where: {
           rawSourceRecordId_sourceLeafPath_targetKind_targetKey: { rawSourceRecordId: raw.id,
             sourceLeafPath: `$.transactions[${index}].orderLineItems[${itemIndex}].lineItemId`,
-            targetKind: "EBAY_ORDER_LINE_ITEM_ID", targetKey: transaction.orderLineItemIds[itemIndex] } },
+            targetKind: "EBAY_ORDER_LINE_ITEM_ID", targetKey: transaction.orderLineItems[itemIndex].lineItemId } },
         create: { ...input.tenant, rawSourceRecordId: raw.id,
           sourceLeafPath: `$.transactions[${index}].orderLineItems[${itemIndex}].lineItemId`,
-          targetKind: "EBAY_ORDER_LINE_ITEM_ID", targetKey: transaction.orderLineItemIds[itemIndex] }, update: {} });
+          targetKind: "EBAY_ORDER_LINE_ITEM_ID", targetKey: transaction.orderLineItems[itemIndex].lineItemId }, update: {} });
     }
     return { raw, observation, evidence };
   });

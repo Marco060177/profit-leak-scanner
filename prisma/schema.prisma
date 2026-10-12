@@ -39,6 +39,7 @@ model Account {
   normalizedOrders NormalizedOrder[]
   amazonSellerAuthorizations AmazonSellerAuthorization[]
   ebaySellerAuthorizations EbaySellerAuthorization[]
+  ebaySellerIdentityBindings EbaySellerIdentityBinding[]
   sourceObservations SourceObservation[]
   partnerReferral PartnerReferral?
   normalizedBillingEvents NormalizedBillingEvent[]
@@ -256,6 +257,7 @@ model ChannelConnection {
   coreAuthorization CoreChannelAuthorization?
   amazonSellerAuthorization AmazonSellerAuthorization?
   ebaySellerAuthorization EbaySellerAuthorization?
+  ebaySellerIdentityBindings EbaySellerIdentityBinding[]
   sourceObservations SourceObservation[]
 
   @@unique([channel, externalAccountId])
@@ -1043,9 +1045,27 @@ model EbaySellerAuthorization {
   updatedAt DateTime @updatedAt
   account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
   channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  identityBindings EbaySellerIdentityBinding[]
   @@unique([channelConnectionId, accountId])
   @@unique([channelConnectionId, authorizationVersion])
   @@index([accountId, status])
+}
+
+model EbaySellerIdentityBinding {
+  channelConnectionId String
+  accountId String
+  hmacKeyVersion String
+  userLookupToken String
+  verifiedSource String
+  verifiedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  channelConnection ChannelConnection @relation(fields: [channelConnectionId, accountId], references: [id, accountId], onDelete: Restrict)
+  authorization EbaySellerAuthorization @relation(fields: [channelConnectionId, accountId], references: [channelConnectionId, accountId], onDelete: Restrict)
+  @@id([channelConnectionId, hmacKeyVersion])
+  @@unique([hmacKeyVersion, userLookupToken])
+  @@index([accountId, channelConnectionId])
 }
 
 model SourceObservation {
@@ -1615,4 +1635,28 @@ model TaxInterpretationPolicyVersion {
   @@unique([id, accountId])
   @@unique([accountId, policyKey, revision])
   @@unique([accountId, policyKey, operationKey])
+}
+
+model EbayDeletionNotificationInbox {
+  notificationId      String   @id
+  topic               String
+  schemaVersion       String
+  eventAt             DateTime
+  receivedAt          DateTime
+  processingStatus    String   @default("PENDING_UNRESOLVED")
+  retryCount          Int      @default(0)
+  diagnosticCode      String?
+  leaseOwner          String?
+  leaseExpiresAt      DateTime?
+  nextAttemptAt       DateTime?
+  lastAttemptAt       DateTime?
+  payloadChecksum     String
+  userLookupToken     String
+  hmacKeyVersion      String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([processingStatus, receivedAt])
+  @@index([processingStatus, nextAttemptAt, leaseExpiresAt])
+  @@index([hmacKeyVersion, userLookupToken])
 }

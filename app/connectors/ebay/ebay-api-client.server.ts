@@ -241,16 +241,22 @@ export async function refreshEbaySellerAccessToken(input: {
   db: PrismaClient; tenant: VerifiedCoreTenant; config: EbayApplicationConfig;
   transport: EbayHttpTransport; encryptionProvider: CredentialEncryptionProvider; now?: Date;
 }) {
-  let refreshToken: string;
-  try { refreshToken = await resolveEbayRefreshTokenForUse(input.db, input.tenant, input.encryptionProvider); }
-  catch { throw new EbayConnectorError("AUTHORIZATION"); }
   const authorization = await input.db.ebaySellerAuthorization.findUnique({
     where: { channelConnectionId: input.tenant.channelConnectionId } });
   if (!authorization || authorization.accountId !== input.tenant.accountId)
     throw new EbayConnectorError("AUTHORIZATION");
   let grantedScopes: string[];
   try { grantedScopes = canonicalizeEbayScopes(JSON.parse(authorization.grantedScopesJson) as unknown as string[]); }
-  catch { throw new EbayConnectorError("AUTHORIZATION"); }
+  catch {
+    await markEbayAuthorizationReauthRequired(input.db, input.tenant, input.now ?? new Date());
+    throw new EbayConnectorError("REAUTH_REQUIRED");
+  }
+  let refreshToken: string;
+  try { refreshToken = await resolveEbayRefreshTokenForUse(input.db, input.tenant, input.encryptionProvider); }
+  catch (error) {
+    if (error instanceof EbayConnectorError && error.kind === "REAUTH_REQUIRED") throw error;
+    throw new EbayConnectorError("AUTHORIZATION");
+  }
   try {
     return await exchangeEbayRefreshToken({ refreshToken, grantedScopes, config: input.config,
       transport: input.transport });
@@ -259,4 +265,31 @@ export async function refreshEbaySellerAccessToken(input: {
       await markEbayAuthorizationReauthRequired(input.db, input.tenant, input.now ?? new Date());
     throw error;
   }
+}
+
+export type EbayAuthenticatedSellerIdentity = Readonly<{ userId: string; username: string | null }>;
+
+function hasControlCharacters(value: string) {
+  return [...value].some((character) => {
+    const code = character.charCodeAt(0);
+    return code <= 31 || code === 127;
+  });
+}
+
+export async function getAuthenticatedEbaySellerIdentity(input: {
+  config: EbayApplicationConfig;
+  accessToken: string;
+  transport: EbayHttpTransport;
+}): Promise<EbayAuthenticatedSellerIdentity> {
+  const response = await executeEbayApiRequest({ config: input.config, accessToken: input.accessToken,
+    method: "GET", path: "/commerce/identity/v1/user/", operation: "STANDARD", transport: input.transport });
+  const value = parseJson(response);
+  const userId = value.userId;
+  const username = value.username;
+  if (typeof userId !== "string" || !userId || userId !== userId.trim() || userId.length > 256 ||
+      hasControlCharacters(userId) || (username !== undefined && username !== null &&
+      (typeof username !== "string" || !username || username !== username.trim() || username.length > 256 ||
+       hasControlCharacters(username))))
+    throw new EbayConnectorError("MALFORMED_RESPONSE", { status: response.status, requestId: requestId(response) });
+  return { userId, username: typeof username === "string" ? username : null };
 }

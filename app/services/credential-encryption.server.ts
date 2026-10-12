@@ -11,10 +11,17 @@ export type StoredEncryptedCredential = Readonly<{
   keyVersion: string;
 }>;
 
-/** Implementations must use a reviewed external KMS or envelope-encryption provider. */
+export type CredentialEncryptionContext = Readonly<{
+  dataClass: "CREDENTIAL";
+  accountId: string;
+  channelConnectionId: string;
+  recordIdentity: string;
+}>;
+
+/** Implementations must use reviewed authenticated encryption or an external KMS/envelope provider. */
 export interface CredentialEncryptionProvider {
-  encrypt(plaintext: Uint8Array): Promise<EncryptedCredential>;
-  decrypt(credential: StoredEncryptedCredential): Promise<Uint8Array>;
+  encrypt(plaintext: Uint8Array, context?: CredentialEncryptionContext): Promise<EncryptedCredential>;
+  decrypt(credential: StoredEncryptedCredential, context?: CredentialEncryptionContext): Promise<Uint8Array>;
 }
 
 /** E1-A intentionally has no production cipher. Production use fails closed. */
