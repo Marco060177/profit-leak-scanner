@@ -288,11 +288,6 @@ export default function DashboardNav({
       path: "/app/products",
     },
     {
-      id: "amazon",
-      label: t.nav.amazon,
-      path: "/app/amazon",
-    },
-    {
       id: "profit",
       label: t.nav.profitIntelligence,
       path: "/app/profit-intelligence",
