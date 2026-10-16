@@ -24,6 +24,7 @@ const STARTER_HANDLES = new Set([
 
 const GROWTH_HANDLES = new Set([
   "growth",
+  "growth-evaluator",
 ]);
 
 type BillingIdentity = {
