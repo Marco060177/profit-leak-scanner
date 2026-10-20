@@ -256,6 +256,8 @@ export const en = {
       "Track hidden margin leaks, underpriced products and pricing issues affecting your Shopify store profitability.",
     periodSuffix: "d",
     runAnalysis: "Run analysis",
+    analysisNoOrders: "Analysis completed: no orders found in the selected period.",
+    analysisFailed: "The analysis could not be refreshed. Please try again.",
   },
   topLeaksPanel: {
     title: "Top Profit Leaks Detected",

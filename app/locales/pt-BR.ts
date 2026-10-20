@@ -255,6 +255,8 @@ export const ptBR = {
       "Rastreie vazamentos de margem ocultos, produtos subvalorizados e problemas de preços que afetam a lucratividade da sua loja Shopify.",
     periodSuffix: "d",
     runAnalysis: "Executar análise",
+    analysisNoOrders: "Análise concluída: nenhum pedido no período selecionado.",
+    analysisFailed: "Não foi possível atualizar a análise. Tente novamente.",
   },
   topLeaksPanel: {
     title: "Principais vazamentos de lucro detectados",

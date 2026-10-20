@@ -262,6 +262,8 @@ export const fr = {
       "Suivez les fuites de marge cachées, les produits sous-évalués et les problèmes de prix affectant la rentabilité de votre magasin Shopify.",
     periodSuffix: "d",
     runAnalysis: "Exécuter une analyse",
+    analysisNoOrders: "Analyse terminée : aucune commande sur la période sélectionnée.",
+    analysisFailed: "Impossible d'actualiser l'analyse. Veuillez réessayer.",
   },
   topLeaksPanel: {
     title: "Principales fuites de bénéfices détectées",

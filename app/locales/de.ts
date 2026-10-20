@@ -276,6 +276,8 @@ export const de = {
       "Verfolgen Sie versteckte Margenverluste, unterbewertete Produkte und Preisprobleme, die sich auf die Rentabilität Ihres Shopify-Shops auswirken.",
     periodSuffix: "d",
     runAnalysis: "Analyse durchführen",
+    analysisNoOrders: "Analyse abgeschlossen: keine Bestellungen im gewählten Zeitraum.",
+    analysisFailed: "Die Analyse konnte nicht aktualisiert werden. Bitte erneut versuchen.",
   },
   topLeaksPanel: {
     title: "Top-Gewinnlecks entdeckt",

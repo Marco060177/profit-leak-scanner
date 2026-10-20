@@ -255,6 +255,8 @@ export const it = {
       "Monitora margini nascosti, prodotti sottoprezzati e problemi di prezzo che influenzano la redditività del tuo negozio Shopify.",
     periodSuffix: "g",
     runAnalysis: "Avvia analisi",
+    analysisNoOrders: "Analisi completata: nessun ordine nel periodo selezionato.",
+    analysisFailed: "Non è stato possibile aggiornare l'analisi. Riprova.",
   },
   topLeaksPanel: {
     title: "Principali Perdite di Profitto Rilevate",

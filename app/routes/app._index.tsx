@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLoaderData, useNavigate } from "react-router";
+import { useLoaderData, useNavigate, useRevalidator } from "react-router";
 import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { useI18n } from "~/components/i18n/I18nProvider";
 import dashboardStylesUrl from "~/styles/dashboard.css?url";
@@ -113,7 +113,12 @@ export default function DashboardV2() {
   } = useLoaderData<typeof loader>();
 
   const navigate = useNavigate();
-  const [analysisLoading, setAnalysisLoading] = React.useState(false);
+  const revalidator = useRevalidator();
+  const [analysisRequested, setAnalysisRequested] = React.useState(false);
+  const [analysisOutcome, setAnalysisOutcome] = React.useState<
+    "complete" | "empty" | "error" | null
+  >(null);
+  const previousRevalidationState = React.useRef(revalidator.state);
 
   const { language, locale, messages, t } = useI18n();
   const copy = messages.dashboardPage;
@@ -192,8 +197,42 @@ export default function DashboardV2() {
   const primaryAlert = alerts[0] ?? null;
 
   const analysisSteps = copy.analysisSteps;
+  const analysisLoading = revalidator.state !== "idle";
+  const analysisText = analysisSteps[0];
+  const currentPeriodHasSales = Boolean(analysisContext?.current.hasSales);
 
-  const [analysisText, setAnalysisText] = React.useState(analysisSteps[0]);
+  React.useEffect(() => {
+    const revalidationCompleted =
+      analysisRequested &&
+      previousRevalidationState.current === "loading" &&
+      revalidator.state === "idle";
+
+    if (revalidationCompleted) {
+      setAnalysisOutcome(currentPeriodHasSales ? "complete" : "empty");
+      setAnalysisRequested(false);
+    }
+
+    previousRevalidationState.current = revalidator.state;
+  }, [analysisRequested, currentPeriodHasSales, revalidator.state]);
+
+  const analysisStatusMessage =
+    analysisOutcome === "complete"
+      ? analysisSteps.at(-1) ?? null
+      : analysisOutcome === "empty"
+        ? messages.dashboardHero.analysisNoOrders
+        : analysisOutcome === "error"
+          ? messages.dashboardHero.analysisFailed
+          : null;
+
+  function runAnalysis() {
+    if (revalidator.state !== "idle") return;
+    setAnalysisOutcome(null);
+    setAnalysisRequested(true);
+    void revalidator.revalidate().catch(() => {
+      setAnalysisRequested(false);
+      setAnalysisOutcome("error");
+    });
+  }
 
   const dashboardLoading = false;
 
@@ -364,9 +403,8 @@ export default function DashboardV2() {
           navigate={navigate}
           analysisLoading={analysisLoading}
           analysisText={analysisText}
-          analysisSteps={analysisSteps}
-          setAnalysisLoading={setAnalysisLoading}
-          setAnalysisText={setAnalysisText}
+          analysisStatusMessage={analysisStatusMessage}
+          onRunAnalysis={runAnalysis}
           visual={<MarginHealthSignal assessment={marginAssessment} />}
         />
 

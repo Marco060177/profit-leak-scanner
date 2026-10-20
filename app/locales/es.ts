@@ -266,6 +266,8 @@ export const es = {
       "Realice un seguimiento de las fugas de márgenes ocultas, los productos con precios bajos y los problemas de precios que afectan la rentabilidad de su tienda Shopify.",
     periodSuffix: "re",
     runAnalysis: "Ejecutar análisis",
+    analysisNoOrders: "Análisis completado: no hay pedidos en el período seleccionado.",
+    analysisFailed: "No se pudo actualizar el análisis. Inténtalo de nuevo.",
   },
   topLeaksPanel: {
     title: "Principales fugas de beneficios detectadas",
