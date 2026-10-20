@@ -274,7 +274,7 @@ assert.ok(queries.some((entry) => entry.after === "current-1"), "outer Shopify o
 assert.ok(documents.some((query) => query.includes("query MarginLabAppData")));
 const ordersDocument = documents.find((query) => query.includes("query MarginLabOrders"));
 assert.ok(ordersDocument);
-assert.match(ordersDocument, /orders\(\s*first:\s*50/);
+assert.match(ordersDocument, /orders\(\s*first:\s*25/);
 assert.match(ordersDocument, /lineItems\(first:\s*150\)/);
 assert.match(ordersDocument, /refundLineItems\(first:\s*100\)/);
 assert.match(ordersDocument, /shippingLines\(first:\s*10\)/);

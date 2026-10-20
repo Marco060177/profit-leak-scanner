@@ -83,10 +83,10 @@ export async function loadMarginDashboardData({
   const storeMoney = (value: number) =>
     formatMoney(value, { currencyCode, locale, timeZone });
 
-  const [currentOrderEdges, previousOrderEdges] = await Promise.all([
-    fetchShopifyMarginOrders(admin, queryString),
-    fetchShopifyMarginOrders(admin, previousQueryString),
-  ]);
+  // These queries share one Shopify GraphQL cost bucket. Keep them sequential
+  // so two expensive first pages cannot consume the same restored capacity.
+  const currentOrderEdges = await fetchShopifyMarginOrders(admin, queryString);
+  const previousOrderEdges = await fetchShopifyMarginOrders(admin, previousQueryString);
 
   const normalizedDataset: NormalizedCommerceDataset = {
     current: mapShopifyOrdersToNormalizedPeriod(currentOrderEdges),
