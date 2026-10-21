@@ -220,8 +220,55 @@ export function buildShopifyAppStoreUrl(appHandle: string) {
   return `https://apps.shopify.com/${appHandle}`;
 }
 
-export function shouldInitiatePartnerClaimBridge(hasAttribution: boolean, requestUrl: string) {
-  return !hasAttribution && new URL(requestUrl).searchParams.get(PARTNER_CLAIM_COMPLETED_PARAM) !== "done";
+export function hasValidPendingPartnerReferral(
+  cookieHeader: string | null,
+  secret: string,
+  now = new Date(),
+) {
+  return readPendingReferral(cookieHeader, secret, now) !== null;
+}
+
+export function shouldInitiatePartnerClaimBridge(
+  hasAttribution: boolean,
+  requestUrl: string,
+  hasPendingReferral: boolean,
+) {
+  return hasPendingReferral && !hasAttribution &&
+    new URL(requestUrl).searchParams.get(PARTNER_CLAIM_COMPLETED_PARAM) !== "done";
+}
+
+export function redirectPendingPartnerReferral({
+  request,
+  hasAttribution,
+  tenant,
+  shopDomain,
+  appHandle,
+  appUrl,
+  secret,
+  redirect,
+}: {
+  request: Request;
+  hasAttribution: boolean;
+  tenant: AuthenticatedTenantContext;
+  shopDomain: string;
+  appHandle: string;
+  appUrl: string;
+  secret: string;
+  redirect: (url: string, init: { target: "_top" }) => Response;
+}) {
+  const hasPendingReferral = hasValidPendingPartnerReferral(
+    request.headers.get("Cookie"),
+    secret,
+  );
+  if (!shouldInitiatePartnerClaimBridge(
+    hasAttribution,
+    request.url,
+    hasPendingReferral,
+  )) return null;
+
+  const returnUrl = buildEmbeddedPartnerReturnUrl(shopDomain, appHandle);
+  const token = createPartnerClaimToken(tenant, returnUrl, secret);
+  return redirect(buildPartnerClaimBridgeUrl(appUrl, token), { target: "_top" });
 }
 
 export async function claimPartnerReferral(

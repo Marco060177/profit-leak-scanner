@@ -10,10 +10,7 @@ import prisma from "~/db.server";
 import { authenticateShopifyTenant } from "~/services/authenticated-shopify-context.server";
 import { getAttributionByAccount } from "~/services/partner-program.server";
 import {
-  buildEmbeddedPartnerReturnUrl,
-  buildPartnerClaimBridgeUrl,
-  createPartnerClaimToken,
-  shouldInitiatePartnerClaimBridge,
+  redirectPendingPartnerReferral,
 } from "~/services/partner-referral-flow.server";
 import visualSystemStylesUrl from "~/styles/visual-system-v2.css?url";
 
@@ -21,21 +18,18 @@ export const links = () => [{ rel: "stylesheet", href: visualSystemStylesUrl }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const authenticated = await authenticateShopifyTenant(request);
-  const url = new URL(request.url);
   const attribution = await getAttributionByAccount(prisma, authenticated.tenant.accountId);
-  if (shouldInitiatePartnerClaimBridge(Boolean(attribution), url.toString())) {
-    const returnUrl = buildEmbeddedPartnerReturnUrl(
-      authenticated.session.shop,
-      process.env.SHOPIFY_APP_HANDLE ?? "",
-    );
-    const token = createPartnerClaimToken(
-      authenticated.tenant, returnUrl, process.env.SHOPIFY_API_SECRET ?? "",
-    );
-    return authenticated.redirect(
-      buildPartnerClaimBridgeUrl(process.env.SHOPIFY_APP_URL || url.origin, token),
-      { target: "_top" },
-    );
-  }
+  const partnerRedirect = redirectPendingPartnerReferral({
+    request,
+    hasAttribution: Boolean(attribution),
+    tenant: authenticated.tenant,
+    shopDomain: authenticated.session.shop,
+    appHandle: process.env.SHOPIFY_APP_HANDLE ?? "",
+    appUrl: process.env.SHOPIFY_APP_URL || new URL(request.url).origin,
+    secret: process.env.SHOPIFY_API_SECRET ?? "",
+    redirect: authenticated.redirect,
+  });
+  if (partnerRedirect) return partnerRedirect;
   const language = getRequestLanguage(request);
   const messages = await loadLocaleMessages(language);
 

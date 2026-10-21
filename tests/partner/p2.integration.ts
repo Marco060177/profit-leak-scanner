@@ -18,7 +18,9 @@ process.env.SHOPIFY_APP_URL = "https://app.marginlab.test";
 process.env.SHOPIFY_APP_HANDLE = "marginlab";
 
 const SECRET = "p2-test-cookie-secret";
-const now = new Date("2026-10-01T12:00:00Z");
+// The referral route uses the system clock. Keep the explicit test clock just
+// ahead of route execution so the same cookie is never evaluated "in the past".
+const now = new Date(Date.now() + 60_000);
 const cookieHeader = (setCookie: string) => setCookie.split(";", 1)[0];
 
 try {
@@ -140,10 +142,70 @@ try {
     const noReferral = await flow.consumePartnerClaimBridge(db, noReferralToken, null, SECRET, now);
     assert.equal(noReferral.status, "NO_REFERRAL");
     assert.equal(await p1.getAttributionByAccount(db, accountB.id), null);
-    assert.equal(flow.shouldInitiatePartnerClaimBridge(false, "https://app.marginlab.test/app"), true);
+    const dataRequestUrl = "https://app.marginlab.test/app/tax-profile.data";
+    const dataRedirects: string[] = [];
+    const appBridgeDataRedirect = (url: string) => {
+      dataRedirects.push(url);
+      return new Response(null, {
+        status: 401,
+        headers: { "X-Shopify-API-Request-Failure-Reauthorize-Url": url },
+      });
+    };
+    const dataTenant = {
+      accountId: accountB.id,
+      channelConnectionId: channelB.id,
+      channel: "SHOPIFY" as const,
+      legacyShopDomain: "p2-b.myshopify.com",
+    };
+    assert.equal(flow.hasValidPendingPartnerReferral(null, SECRET, now), false);
+    assert.equal(flow.hasValidPendingPartnerReferral(
+      `${flow.PARTNER_REFERRAL_COOKIE_NAME}=tampered`, SECRET, now), false);
+    assert.equal(flow.shouldInitiatePartnerClaimBridge(false, dataRequestUrl, false), false,
+      "ordinary authenticated navigation must not enter the App Bridge redirect path");
+    const growthEvaluatorWithoutPartnerReferral = {
+      hasAttribution: false,
+      hasPendingReferral: false,
+    };
+    assert.equal(flow.shouldInitiatePartnerClaimBridge(
+      growthEvaluatorWithoutPartnerReferral.hasAttribution,
+      dataRequestUrl,
+      growthEvaluatorWithoutPartnerReferral.hasPendingReferral,
+    ), false,
+      "Growth Evaluator access without a PartnerReferral is not referral evidence");
+    assert.equal(flow.hasValidPendingPartnerReferral(cookieA, SECRET, now), true);
+    assert.equal(flow.shouldInitiatePartnerClaimBridge(false, dataRequestUrl, true), true);
     assert.equal(flow.shouldInitiatePartnerClaimBridge(false,
-      "https://app.marginlab.test/app?partner_claim=done"), false);
-    assert.equal(flow.shouldInitiatePartnerClaimBridge(true, "https://app.marginlab.test/app"), false);
+      `${dataRequestUrl}?partner_claim=done`, true), false);
+    assert.equal(flow.shouldInitiatePartnerClaimBridge(true, dataRequestUrl, true), false);
+
+    const ordinaryNavigation = flow.redirectPendingPartnerReferral({
+      request: new Request(dataRequestUrl, { headers: { Authorization: "Bearer synthetic-session-token" } }),
+      hasAttribution: false, tenant: dataTenant, shopDomain: dataTenant.legacyShopDomain,
+      appHandle: "marginlab", appUrl: "https://app.marginlab.test", secret: SECRET,
+      redirect: appBridgeDataRedirect,
+    });
+    assert.equal(ordinaryNavigation, null);
+    assert.equal(dataRedirects.length, 0);
+
+    const validReferralNavigation = flow.redirectPendingPartnerReferral({
+      request: new Request(dataRequestUrl, {
+        headers: { Authorization: "Bearer synthetic-session-token", Cookie: cookieA },
+      }),
+      hasAttribution: false, tenant: dataTenant, shopDomain: dataTenant.legacyShopDomain,
+      appHandle: "marginlab", appUrl: "https://app.marginlab.test", secret: SECRET,
+      redirect: appBridgeDataRedirect,
+    });
+    assert.equal(validReferralNavigation?.status, 401);
+    assert.match(validReferralNavigation?.headers.get(
+      "X-Shopify-API-Request-Failure-Reauthorize-Url") ?? "", /\/partner\/claim\?token=/);
+
+    const completedNavigation = flow.redirectPendingPartnerReferral({
+      request: new Request(`${dataRequestUrl}?partner_claim=done`, { headers: { Cookie: cookieA } }),
+      hasAttribution: false, tenant: dataTenant, shopDomain: dataTenant.legacyShopDomain,
+      appHandle: "marginlab", appUrl: "https://app.marginlab.test", secret: SECRET,
+      redirect: appBridgeDataRedirect,
+    });
+    assert.equal(completedNavigation, null);
 
     await db.legacyShopMapping.delete({ where: { shopDomain: "p2-a.myshopify.com" } });
     await db.channelConnection.delete({ where: { id: channelA.id } });
