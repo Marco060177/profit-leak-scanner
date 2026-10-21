@@ -57,6 +57,18 @@ try {
       shippingIncludeVat: false, shippingVatRatePct: 9,
     });
     assert.equal((await db.storeTaxProfile.findUniqueOrThrow({ where: { shop: "before.myshopify.com" } })).channelConnectionId, valid.connection.id);
+    await saveStoreTaxProfile({
+      shop: "before.myshopify.com", countryCode: "IT", regime: "ITALY_STANDARD",
+      defaultVatRatePct: 0, pricesIncludeVat: false, costsIncludeVat: true,
+      recoverInputVat: false, inputVatRecoveryPct: 0,
+      shippingIncludeVat: false, shippingVatRatePct: 0,
+    });
+    const zeroProfile = await db.storeTaxProfile.findUniqueOrThrow({ where: { shop: "before.myshopify.com" } });
+    assert.equal(zeroProfile.defaultVatRatePct, 0);
+    assert.equal(zeroProfile.shippingVatRatePct, 0);
+    const zeroContext = await getStoreTaxContext({ shop: "before.myshopify.com", shopCountryCode: "IT" });
+    assert.equal(zeroContext.defaultVatRatePct, 0);
+    assert.equal(zeroContext.shippingVatRatePct, 0);
     assert.equal((await runTaxProfileShadowBackfill(db, true)).counts.ALREADY_MATCHED, 1);
     assert.equal((await runTaxProfileShadowBackfill(db, true)).updated, 0);
 

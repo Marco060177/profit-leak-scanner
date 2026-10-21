@@ -12,6 +12,13 @@ import {
   getStoreTaxContext,
   saveStoreTaxProfile,
 } from "~/utils/tax-profile.server";
+import {
+  getInitialTaxRate,
+  parseTaxRate,
+  persistTaxProfile,
+  TaxRateValidationError,
+  transitionStandardTaxSettings,
+} from "~/utils/tax-profile-form";
 
 import "~/styles/dashboard.css";
 import "~/styles/tax-profile-map.css";
@@ -263,12 +270,6 @@ const SHOP_QUERY = `#graphql
 
 function parseBoolean(value: FormDataEntryValue | null) {
   return String(value ?? "false") === "true";
-}
-
-function parseRate(value: FormDataEntryValue | null, fallback: number) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.min(100, Math.max(0, parsed));
 }
 
 function isSupportedRegime(value: string): value is SupportedRegime {
@@ -653,26 +654,40 @@ export async function loader({ request }: { request: Request }) {
 export async function action({ request }: { request: Request }) {
   const { admin, session, tenant } = await authenticateShopifyTenant(request);
 
-  const response = await admin.graphql(SHOP_QUERY);
-  const json: TaxProfileShopResponse = await response.json();
+  let json: TaxProfileShopResponse;
+  let context: Awaited<ReturnType<typeof getStoreTaxContext>>;
+  try {
+    const response = await admin.graphql(SHOP_QUERY);
+    json = await response.json();
 
-  if (json?.errors?.length) {
+    if (json?.errors?.length) {
+      return Response.json(
+        {
+          ok: false,
+          errorKind: "validation",
+          error: "Unable to verify the Shopify tax jurisdiction.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const shopCountryCode = json?.data?.shop?.billingAddress?.countryCodeV2 ?? "";
+    context = await getStoreTaxContext({
+      shop: session.shop,
+      tenant,
+      shopCountryCode,
+    });
+  } catch (error) {
+    if (error instanceof Response) throw error;
     return Response.json(
       {
         ok: false,
-        error: "Unable to verify the Shopify tax jurisdiction.",
+        errorKind: "validation",
+        error: "Unable to validate the Tax Profile. Please try again.",
       },
-      { status: 400 },
+      { status: 500 },
     );
   }
-
-  const shopCountryCode = json?.data?.shop?.billingAddress?.countryCodeV2 ?? "";
-
-  const context = await getStoreTaxContext({
-    shop: session.shop,
-    tenant,
-    shopCountryCode,
-  });
 
   if (!context.advancedProfileAvailable) {
     return Response.json(
@@ -713,29 +728,43 @@ export async function action({ request }: { request: Request }) {
     );
   }
 
-  const countryDefaultRate = getDefaultRateForCountry(
-    context.effectiveCountryCode,
-  );
-
-  let defaultVatRatePct = parseRate(
-    formData.get("defaultVatRatePct"),
-    countryDefaultRate,
-  );
+  let defaultVatRatePct: number;
 
   let pricesIncludeVat = parseBoolean(formData.get("pricesIncludeVat"));
 
   const costsIncludeVat = parseBoolean(formData.get("costsIncludeVat"));
 
-  let inputVatRecoveryPct = parseRate(formData.get("inputVatRecoveryPct"), 100);
-
-  let recoverInputVat = inputVatRecoveryPct > 0;
+  let inputVatRecoveryPct: number;
 
   let shippingIncludeVat = parseBoolean(formData.get("shippingIncludeVat"));
 
-  let shippingVatRatePct = parseRate(
-    formData.get("shippingVatRatePct"),
-    defaultVatRatePct,
-  );
+  let shippingVatRatePct: number;
+
+  try {
+    defaultVatRatePct = parseTaxRate(
+      formData.get("defaultVatRatePct"),
+      "Default tax rate",
+      1,
+    );
+    inputVatRecoveryPct = parseTaxRate(
+      formData.get("inputVatRecoveryPct"),
+      "Input tax recovery rate",
+      0,
+    );
+    shippingVatRatePct = parseTaxRate(
+      formData.get("shippingVatRatePct"),
+      "Shipping tax rate",
+      1,
+    );
+  } catch (error) {
+    if (!(error instanceof TaxRateValidationError)) throw error;
+    return Response.json(
+      { ok: false, errorKind: "validation", error: error.message },
+      { status: 400 },
+    );
+  }
+
+  let recoverInputVat = inputVatRecoveryPct > 0;
 
   if (!isStandardRecoverableRegime(regime)) {
     defaultVatRatePct = 0;
@@ -746,21 +775,21 @@ export async function action({ request }: { request: Request }) {
     shippingVatRatePct = 0;
   }
 
-  await saveStoreTaxProfile({
-    shop: session.shop,
-    tenant,
-    countryCode: context.effectiveCountryCode,
-    regime,
-    defaultVatRatePct,
-    pricesIncludeVat,
-    costsIncludeVat,
-    recoverInputVat,
-    inputVatRecoveryPct,
-    shippingIncludeVat,
-    shippingVatRatePct,
-  });
-
-  return Response.json({ ok: true });
+  return persistTaxProfile(() =>
+    saveStoreTaxProfile({
+      shop: session.shop,
+      tenant,
+      countryCode: context.effectiveCountryCode,
+      regime,
+      defaultVatRatePct,
+      pricesIncludeVat,
+      costsIncludeVat,
+      recoverInputVat,
+      inputVatRecoveryPct,
+      shippingIncludeVat,
+      shippingVatRatePct,
+    }),
+  );
 }
 
 function Toggle({
@@ -843,7 +872,11 @@ function Toggle({
 export default function TaxProfilePage() {
   const { taxContext } = useLoaderData() as Awaited<ReturnType<typeof loader>>;
 
-  const fetcher = useFetcher<{ ok: boolean; error?: string }>();
+  const fetcher = useFetcher<{
+    ok: boolean;
+    errorKind?: "validation" | "persistence";
+    error?: string;
+  }>();
 
   const navigate = useNavigate();
 
@@ -876,7 +909,11 @@ export default function TaxProfilePage() {
   const [regime, setRegime] = React.useState<SupportedRegime>(initialRegime);
 
   const [defaultVatRatePct, setDefaultVatRatePct] = React.useState(
-    taxContext.defaultVatRatePct || countryDefaultRate,
+    getInitialTaxRate(
+      taxContext.defaultVatRatePct,
+      countryDefaultRate,
+      taxContext.configured,
+    ),
   );
 
   const [pricesIncludeVat, setPricesIncludeVat] = React.useState(
@@ -898,7 +935,11 @@ export default function TaxProfilePage() {
   );
 
   const [shippingVatRatePct, setShippingVatRatePct] = React.useState(
-    taxContext.shippingVatRatePct || countryDefaultRate,
+    getInitialTaxRate(
+      taxContext.shippingVatRatePct,
+      countryDefaultRate,
+      taxContext.configured,
+    ),
   );
 
   const saving = fetcher.state !== "idle";
@@ -920,30 +961,41 @@ export default function TaxProfilePage() {
     language,
   });
 
+  const previousStandardRegime = React.useRef(standardRegime);
+  const savedStandardSettings = React.useRef({
+    defaultVatRatePct: standardRegime ? defaultVatRatePct : countryDefaultRate,
+    pricesIncludeVat,
+    inputVatRecoveryPct,
+    shippingIncludeVat,
+    shippingVatRatePct: standardRegime ? shippingVatRatePct : countryDefaultRate,
+  });
+
   React.useEffect(() => {
-    if (standardRegime) {
-      if (defaultVatRatePct === 0) {
-        setDefaultVatRatePct(countryDefaultRate);
-      }
-
-      if (shippingVatRatePct === 0) {
-        setShippingVatRatePct(countryDefaultRate);
-      }
-
-      return;
-    }
-
-    setDefaultVatRatePct(0);
-    setPricesIncludeVat(false);
-    setInputVatRecoveryPct(0);
-    setShippingIncludeVat(false);
-    setShippingVatRatePct(0);
+    const transition = transitionStandardTaxSettings({
+      wasStandard: previousStandardRegime.current,
+      isStandard: standardRegime,
+      current: {
+        defaultVatRatePct,
+        pricesIncludeVat,
+        inputVatRecoveryPct,
+        shippingIncludeVat,
+        shippingVatRatePct,
+      },
+      savedStandard: savedStandardSettings.current,
+    });
+    savedStandardSettings.current = transition.savedStandard;
+    setDefaultVatRatePct(transition.current.defaultVatRatePct);
+    setPricesIncludeVat(transition.current.pricesIncludeVat);
+    setInputVatRecoveryPct(transition.current.inputVatRecoveryPct);
+    setShippingIncludeVat(transition.current.shippingIncludeVat);
+    setShippingVatRatePct(transition.current.shippingVatRatePct);
+    previousStandardRegime.current = standardRegime;
+    // The transition is intentionally keyed to the selected regime. Current
+    // settings are captured at the moment a standard profile is left.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     regime,
     standardRegime,
-    countryDefaultRate,
-    defaultVatRatePct,
-    shippingVatRatePct,
   ]);
 
   return (
@@ -1538,7 +1590,9 @@ export default function TaxProfilePage() {
             )}
 
             {fetcher.data?.error && (
-              <div style={styles.error}>{fetcher.data.error}</div>
+              <div role="alert" aria-live="polite" style={styles.error}>
+                {fetcher.data.error}
+              </div>
             )}
 
             <div style={styles.saveBar}>
