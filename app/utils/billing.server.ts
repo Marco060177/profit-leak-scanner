@@ -1,8 +1,10 @@
 import type { AdminApiContext } from "@shopify/shopify-app-react-router/server";
+import type { AuthenticatedTenantContext } from "~/core/authenticated-tenant-context";
 import type {
   BillingPlan,
   BillingStatus,
 } from "~/utils/margin";
+import type { ServerPerformanceTrace } from "~/utils/server-performance.server";
 
 type GraphqlError = {
   message?: string;
@@ -330,20 +332,31 @@ async function getShopifyAppPricingStatus({
 
 export async function getBillingStatus(
   admin: AdminApiContext,
+  performanceTrace?: ServerPerformanceTrace,
 ): Promise<BillingStatus> {
-  const identity =
-    await getBillingIdentity(admin);
+  const identity = performanceTrace
+    ? await performanceTrace.measure("billingAdminGraphql", () =>
+        getBillingIdentity(admin))
+    : await getBillingIdentity(admin);
+  const evaluateLegacy = () => performanceTrace
+    ? performanceTrace.measure("billingLegacyEvaluation", async () =>
+        getLegacyBillingStatus(identity.legacySubscriptions))
+    : Promise.resolve(getLegacyBillingStatus(identity.legacySubscriptions));
 
   /*
    * Shopify App Pricing — canonical check.
    */
   if (identity.appId && identity.shopId) {
     try {
-      const appPricingStatus =
-        await getShopifyAppPricingStatus({
-          appId: identity.appId,
-          shopId: identity.shopId,
-        });
+      const appId = identity.appId;
+      const shopId = identity.shopId;
+      const loadAppPricingStatus = () => getShopifyAppPricingStatus({
+        appId,
+        shopId,
+      });
+      const appPricingStatus = performanceTrace
+        ? await performanceTrace.measure("billingPartnerApi", loadAppPricingStatus)
+        : await loadAppPricingStatus();
 
       if (appPricingStatus) {
         /*
@@ -362,9 +375,7 @@ export async function getBillingStatus(
          * old subscriptions may still exist.
          */
         const legacyStatus =
-          getLegacyBillingStatus(
-            identity.legacySubscriptions,
-          );
+          await evaluateLegacy();
 
         if (legacyStatus.active) {
           return legacyStatus;
@@ -384,7 +395,40 @@ export async function getBillingStatus(
    * Temporary compatibility fallback until
    * Partner API credentials are configured.
    */
-  return getLegacyBillingStatus(
-    identity.legacySubscriptions,
-  );
+  return evaluateLegacy();
+}
+
+const inFlightBillingByTenant = new Map<string, Promise<BillingStatus>>();
+
+function tenantBillingKey(tenant: AuthenticatedTenantContext) {
+  return `${tenant.accountId}\u0000${tenant.channelConnectionId}`;
+}
+
+/** Deduplicates only simultaneous checks for the same authenticated tenant. */
+export async function getTenantBillingStatus({
+  admin,
+  tenant,
+  performanceTrace,
+}: {
+  admin: AdminApiContext;
+  tenant: AuthenticatedTenantContext;
+  performanceTrace?: ServerPerformanceTrace;
+}): Promise<BillingStatus> {
+  const key = tenantBillingKey(tenant);
+  const existing = inFlightBillingByTenant.get(key);
+  if (existing) {
+    return performanceTrace
+      ? performanceTrace.measure("billingSingleFlightWait", () => existing)
+      : existing;
+  }
+
+  const pending = getBillingStatus(admin, performanceTrace);
+  inFlightBillingByTenant.set(key, pending);
+  try {
+    return await pending;
+  } finally {
+    if (inFlightBillingByTenant.get(key) === pending) {
+      inFlightBillingByTenant.delete(key);
+    }
+  }
 }

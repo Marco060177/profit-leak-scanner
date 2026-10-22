@@ -93,6 +93,32 @@ test("grants Growth when Shopify reports an active growth-evaluator subscription
   );
 });
 
+test("keeps an active trial subscription on its declared Growth plan", async () => {
+  await withPartnerApiSubscription(
+    { items: [{ handle: "growth" }], trialEndsAt: "2026-11-01T00:00:00Z" } as ActiveSubscription,
+    async () => {
+      assert.deepEqual(await getBillingStatus(adminWithBillingIdentity()), {
+        active: true,
+        plan: "GROWTH",
+        subscriptionName: "growth",
+      });
+    },
+  );
+});
+
+test("recognizes an active Starter App Pricing subscription", async () => {
+  await withPartnerApiSubscription(
+    { items: [{ handle: "starter" }] },
+    async () => {
+      assert.deepEqual(await getBillingStatus(adminWithBillingIdentity()), {
+        active: true,
+        plan: "STARTER",
+        subscriptionName: "starter",
+      });
+    },
+  );
+});
+
 test("fails closed when Shopify reports no active subscription", async () => {
   await withPartnerApiSubscription(null, async () => {
     const billing = await getBillingStatus(adminWithBillingIdentity());

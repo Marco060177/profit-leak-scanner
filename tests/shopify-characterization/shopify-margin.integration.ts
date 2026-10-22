@@ -47,6 +47,29 @@ assert.equal(boundaryCalls.__profitEngineCalls, 1);
 assert.equal(boundaryCalls.__canonicalBuildCalls, 1);
 assert.equal(boundaryCalls.__legacyProjectionCalls, 1);
 
+const parallelAdmin = createAdmin(comprehensiveScenario);
+let resolveParallelBilling!: (status: typeof billing) => void;
+const pendingBilling = new Promise<typeof billing>((resolve) => {
+  resolveParallelBilling = resolve;
+});
+const parallelLoad = loadMarginDashboardData({
+  admin: parallelAdmin.admin as never,
+  session,
+  period: "30",
+  locale: "en-US",
+  billingStatus: pendingBilling,
+  analysisEndDate: "2026-08-31",
+});
+await Promise.resolve();
+assert.ok(
+  parallelAdmin.documents.length > 0,
+  "Shopify AppData must start while the billing promise is still pending",
+);
+resolveParallelBilling(billing);
+const parallelData = await parallelLoad;
+assert.deepEqual(parallelData.summary, data.summary,
+  "parallel orchestration must preserve dashboard economics");
+
 const normalizedDataset = {
   current: mapShopifyOrdersToNormalizedPeriod(comprehensiveScenario.currentPages.flat() as never),
   previous: mapShopifyOrdersToNormalizedPeriod(comprehensiveScenario.previousPages.flat() as never),

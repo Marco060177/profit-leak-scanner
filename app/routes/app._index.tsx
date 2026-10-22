@@ -27,7 +27,7 @@ import { getRequestLanguage } from "~/utils/i18n.server";
 import { syncProfitMonitor } from "~/services/profit-monitor.server";
 import { listProfitImpactActionsForShop } from "~/services/profit-impact.server";
 import { aggregateProfitImpact } from "~/utils/profit-impact-summary";
-import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
+import { getTenantBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { buildMarginAssessment } from "~/utils/margin-decision-engine";
 import { createServerPerformanceTrace } from "~/utils/server-performance.server";
 
@@ -55,8 +55,6 @@ export const loader = async ({ request }: { request: Request }) => {
   const locale = getLanguageLocale(language);
 
   const { admin, session, tenant } = await authenticateShopifyTenant(request, performanceTrace);
-  const billing = await performanceTrace.measure("billing", () => getBillingStatus(admin));
-
   try {
     await performanceTrace.measure("shopifyAuthProbe", () =>
       admin.graphql(`query { shop { id } }`));
@@ -66,14 +64,18 @@ export const loader = async ({ request }: { request: Request }) => {
     });
   }
 
+  const billingPromise = performanceTrace.measure("billing", () =>
+    getTenantBillingStatus({ admin, tenant, performanceTrace }));
+
   const data = await loadMarginDashboardData({
     admin,
     session,
     period,
     locale,
-    billingStatus: billing,
+    billingStatus: billingPromise,
     performanceTrace,
   });
+  const billing = await billingPromise;
   const alerts = generateProfitAlerts({
     summary: data.summary,
     rows: data.rows,

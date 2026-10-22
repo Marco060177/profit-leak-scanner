@@ -29,7 +29,7 @@ export async function loadMarginDashboardData({
   session: Session;
   period: string;
   locale?: string;
-  billingStatus?: BillingStatus;
+  billingStatus?: BillingStatus | Promise<BillingStatus>;
   analysisEndDate?: string;
   performanceTrace?: ServerPerformanceTrace;
 }): Promise<LoaderData> {
@@ -71,7 +71,7 @@ export async function loadMarginDashboardData({
     performanceTrace
       ? performanceTrace.measure("shopifyAppData", () => fetchShopifyMarginAppData(admin))
       : fetchShopifyMarginAppData(admin),
-    billingStatus ?? (performanceTrace
+    billingStatus ? Promise.resolve(billingStatus) : (performanceTrace
       ? performanceTrace.measure("billing", () => getBillingStatus(admin))
       : getBillingStatus(admin)),
   ]);
