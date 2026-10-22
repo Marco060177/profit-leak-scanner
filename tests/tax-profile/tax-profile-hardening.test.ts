@@ -6,7 +6,7 @@ import {
   persistTaxProfile,
   TaxRateValidationError,
   transitionStandardTaxSettings,
-} from "../../app/utils/tax-profile-form.ts";
+} from "../../app/utils/tax-profile-form";
 
 function expectRateError(
   value: FormDataEntryValue | null,

@@ -11,15 +11,46 @@ const routeFiles = readdirSync(path.join(process.cwd(), "app/routes"), { recursi
   .map(String)
   .filter((name) => /\.[jt]sx?$/.test(name));
 const directAdminExceptions = new Set(["app.billing.tsx", "auth.$.tsx"]);
+
+const countAdminHandlers = (source: string) =>
+  [...source.matchAll(/export (?:const|async function) (?:loader|action)\b/g)].length;
+
+const countTenantBoundaries = (source: string) =>
+  [...source.matchAll(/authenticateShopifyTenant\s*\(\s*request\s*(?=,|\))/g)].length;
+
+const assertTenantBoundaries = (source: string, name: string) => {
+  const handlers = countAdminHandlers(source);
+  const tenantCalls = countTenantBoundaries(source);
+  assert.ok(tenantCalls >= handlers, `Admin handler without tenant boundary in ${name}`);
+};
+
+assert.equal(countTenantBoundaries(
+  "export const loader = async ({ request }) => authenticateShopifyTenant(request, performanceTrace);",
+), 1, "tenant boundary accepts additional instrumentation arguments");
+assert.throws(
+  () => assertTenantBoundaries(
+    "export const loader = async ({ request }) => loadDashboard(request);",
+    "synthetic-missing-boundary.tsx",
+  ),
+  /Admin handler without tenant boundary/,
+  "a route without tenant authentication must remain rejected",
+);
+assert.throws(
+  () => assertTenantBoundaries(
+    "export const action = async ({ request }) => authenticateShopifyTenant(otherRequest, performanceTrace);",
+    "synthetic-wrong-request.tsx",
+  ),
+  /Admin handler without tenant boundary/,
+  "a tenant check for a different request must not satisfy the boundary",
+);
+
 for (const name of routeFiles) {
   const source = readFileSync(path.join(process.cwd(), "app/routes", name), "utf8");
   if (/authenticate\.admin\s*\(/.test(source)) {
     assert.ok(directAdminExceptions.has(name), `Direct Admin authentication bypass in ${name}`);
   }
   if (/^app(?:\.|\.tsx$)/.test(name) && !directAdminExceptions.has(name)) {
-    const handlers = [...source.matchAll(/export (?:const|async function) (?:loader|action)\b/g)].length;
-    const tenantCalls = [...source.matchAll(/authenticateShopifyTenant\s*\(request\)/g)].length;
-    assert.ok(tenantCalls >= handlers, `Admin handler without tenant boundary in ${name}`);
+    assertTenantBoundaries(source, name);
   }
   if (name.startsWith("webhooks.") && name !== "webhooks.tsx") {
     assert.doesNotMatch(source, /resolveShopifyTenantContext|authenticateShopifyTenant/, `Creating tenant resolver in ${name}`);

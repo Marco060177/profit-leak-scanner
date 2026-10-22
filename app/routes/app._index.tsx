@@ -29,6 +29,7 @@ import { listProfitImpactActionsForShop } from "~/services/profit-impact.server"
 import { aggregateProfitImpact } from "~/utils/profit-impact-summary";
 import { getBillingStatus, hasGrowthAccess } from "~/utils/billing.server";
 import { buildMarginAssessment } from "~/utils/margin-decision-engine";
+import { createServerPerformanceTrace } from "~/utils/server-performance.server";
 
 import {
   uiMoney as formatStoreMoney,
@@ -43,6 +44,9 @@ export const links = () => [
 ];
 
 export const loader = async ({ request }: { request: Request }) => {
+  const performanceTrace = createServerPerformanceTrace("dashboard-loader");
+  let outcome: "ok" | "error" = "error";
+  try {
   const url = new URL(request.url);
   const period = url.searchParams.get("period") || "30";
 
@@ -50,11 +54,12 @@ export const loader = async ({ request }: { request: Request }) => {
 
   const locale = getLanguageLocale(language);
 
-  const { admin, session, tenant } = await authenticateShopifyTenant(request);
-  const billing = await getBillingStatus(admin);
+  const { admin, session, tenant } = await authenticateShopifyTenant(request, performanceTrace);
+  const billing = await performanceTrace.measure("billing", () => getBillingStatus(admin));
 
   try {
-    await admin.graphql(`query { shop { id } }`);
+    await performanceTrace.measure("shopifyAuthProbe", () =>
+      admin.graphql(`query { shop { id } }`));
   } catch {
     throw new Response("Auth/scopes not ready. Reinstall the app.", {
       status: 401,
@@ -66,6 +71,8 @@ export const loader = async ({ request }: { request: Request }) => {
     session,
     period,
     locale,
+    billingStatus: billing,
+    performanceTrace,
   });
   const alerts = generateProfitAlerts({
     summary: data.summary,
@@ -74,7 +81,7 @@ export const loader = async ({ request }: { request: Request }) => {
     period,
     currencyCode: data.currencyCode,
   });
-  const alertStates = await syncProfitMonitor({
+  const alertStates = await performanceTrace.measure("profitMonitor", () => syncProfitMonitor({
     shop: session.shop,
     tenant,
     period,
@@ -84,16 +91,21 @@ export const loader = async ({ request }: { request: Request }) => {
       economicSnapshot: data.economicSnapshot,
       alertIds: alerts.map((alert) => alert.id),
     },
-  });
+  }));
   const impactActions = hasGrowthAccess(billing)
-    ? await listProfitImpactActionsForShop({ shop: session.shop, take: 100 })
+    ? await performanceTrace.measure("profitImpact", () =>
+        listProfitImpactActionsForShop({ shop: session.shop, take: 100 }))
     : [];
   const impactSummary = hasGrowthAccess(billing)
     ? aggregateProfitImpact(impactActions)
     : null;
   const latestCompletedImpact =
     impactActions.find((action) => action.status === "COMPLETED") ?? null;
+  outcome = "ok";
   return { ...data, alerts, alertStates, impactSummary, latestCompletedImpact };
+  } finally {
+    performanceTrace.finish(outcome);
+  }
 };
 
 export default function DashboardV2() {

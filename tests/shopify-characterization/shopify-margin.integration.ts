@@ -31,6 +31,11 @@ const data = await loadMarginDashboardData({
   billingStatus: billing,
   analysisEndDate: "2026-08-31",
 });
+assert.equal(
+  documents.filter((document) => document.includes("MarginLabBillingIdentity")).length,
+  0,
+  "a supplied billingStatus must prevent a second billing query",
+);
 
 // The test loader counts only calls made by the live margin.server facade.
 const boundaryCalls = globalThis as typeof globalThis & {

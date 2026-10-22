@@ -14,6 +14,7 @@ import { toYYYYMMDD } from "~/utils/margin";
 import { formatMoney } from "~/utils/formatting";
 import { getBillingStatus } from "~/utils/billing.server";
 import { getStoreTaxContext } from "~/utils/tax-profile.server";
+import type { ServerPerformanceTrace } from "~/utils/server-performance.server";
 
 export async function loadMarginDashboardData({
   admin,
@@ -22,6 +23,7 @@ export async function loadMarginDashboardData({
   locale = "en-US",
   billingStatus,
   analysisEndDate,
+  performanceTrace,
 }: {
   admin: AdminApiContext;
   session: Session;
@@ -29,6 +31,7 @@ export async function loadMarginDashboardData({
   locale?: string;
   billingStatus?: BillingStatus;
   analysisEndDate?: string;
+  performanceTrace?: ServerPerformanceTrace;
 }): Promise<LoaderData> {
   const days = Number.parseInt(period, 10);
   const safeDays = Number.isFinite(days) && days > 0 ? days : 30;
@@ -65,8 +68,12 @@ export async function loadMarginDashboardData({
     `processed_at:>=${previousFromYYYYMMDD} processed_at:<${fromYYYYMMDD}`;
 
   const [shopAppData, billing] = await Promise.all([
-    fetchShopifyMarginAppData(admin),
-    billingStatus ?? getBillingStatus(admin),
+    performanceTrace
+      ? performanceTrace.measure("shopifyAppData", () => fetchShopifyMarginAppData(admin))
+      : fetchShopifyMarginAppData(admin),
+    billingStatus ?? (performanceTrace
+      ? performanceTrace.measure("billing", () => getBillingStatus(admin))
+      : getBillingStatus(admin)),
   ]);
 
   const billingActive = billing.active;
@@ -74,10 +81,12 @@ export async function loadMarginDashboardData({
   const timeZone = shopAppData?.ianaTimezone || "UTC";
   const shopCountryCode =
     shopAppData?.billingAddress?.countryCodeV2 || "";
-  const taxContext = await getStoreTaxContext({
-    shop: session.shop,
-    shopCountryCode,
-  });
+  const taxContext = performanceTrace
+    ? await performanceTrace.measure("taxProfile", () => getStoreTaxContext({
+        shop: session.shop,
+        shopCountryCode,
+      }))
+    : await getStoreTaxContext({ shop: session.shop, shopCountryCode });
 
 
   const storeMoney = (value: number) =>
@@ -85,8 +94,16 @@ export async function loadMarginDashboardData({
 
   // These queries share one Shopify GraphQL cost bucket. Keep them sequential
   // so two expensive first pages cannot consume the same restored capacity.
-  const currentOrderEdges = await fetchShopifyMarginOrders(admin, queryString);
-  const previousOrderEdges = await fetchShopifyMarginOrders(admin, previousQueryString);
+  const currentOrderEdges = performanceTrace
+    ? await performanceTrace.measure("ordersCurrent", () =>
+        fetchShopifyMarginOrders(admin, queryString))
+    : await fetchShopifyMarginOrders(admin, queryString);
+  const previousOrderEdges = performanceTrace
+    ? await performanceTrace.measure("ordersPrevious", () =>
+        fetchShopifyMarginOrders(admin, previousQueryString))
+    : await fetchShopifyMarginOrders(admin, previousQueryString);
+
+  const stopCalculations = performanceTrace?.start("profitCalculations");
 
   const normalizedDataset: NormalizedCommerceDataset = {
     current: mapShopifyOrdersToNormalizedPeriod(currentOrderEdges),
@@ -267,11 +284,13 @@ export async function loadMarginDashboardData({
     },
   };
 
-  return projectLegacyMarginV1(canonicalResult, {
+  const result = projectLegacyMarginV1(canonicalResult, {
     ...loaderData,
     taxContext,
     taxAwarePeriod,
     taxTreatment,
     taxAwareEconomics,
   });
+  stopCalculations?.();
+  return result;
 }

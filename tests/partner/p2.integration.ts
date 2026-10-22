@@ -178,6 +178,20 @@ try {
       `${dataRequestUrl}?partner_claim=done`, true), false);
     assert.equal(flow.shouldInitiatePartnerClaimBridge(true, dataRequestUrl, true), false);
 
+    let attributionLoads = 0;
+    assert.equal(await flow.loadPendingPartnerAttribution(false, async () => {
+      attributionLoads += 1;
+      return { accountId: accountB.id };
+    }), null);
+    assert.equal(attributionLoads, 0,
+      "ordinary navigation must not query PartnerReferral");
+    assert.deepEqual(await flow.loadPendingPartnerAttribution(true, async () => {
+      attributionLoads += 1;
+      return { accountId: accountB.id };
+    }), { accountId: accountB.id });
+    assert.equal(attributionLoads, 1,
+      "a valid pending referral must retain the first-touch lookup");
+
     const ordinaryNavigation = flow.redirectPendingPartnerReferral({
       request: new Request(dataRequestUrl, { headers: { Authorization: "Bearer synthetic-session-token" } }),
       hasAttribution: false, tenant: dataTenant, shopDomain: dataTenant.legacyShopDomain,

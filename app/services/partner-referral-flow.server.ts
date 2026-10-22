@@ -228,6 +228,13 @@ export function hasValidPendingPartnerReferral(
   return readPendingReferral(cookieHeader, secret, now) !== null;
 }
 
+export async function loadPendingPartnerAttribution<T>(
+  hasPendingReferral: boolean,
+  load: () => Promise<T>,
+) {
+  return hasPendingReferral ? load() : null;
+}
+
 export function shouldInitiatePartnerClaimBridge(
   hasAttribution: boolean,
   requestUrl: string,
