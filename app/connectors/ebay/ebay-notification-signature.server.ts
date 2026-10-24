@@ -14,6 +14,8 @@ const MAX_CACHE_TTL_MS = 60 * 60 * 1000;
 const APPLICATION_SCOPE = "https://api.ebay.com/oauth/api_scope";
 const KEY_ID_PATTERN = /^[A-Za-z0-9._~-]{1,256}$/;
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+const PUBLIC_KEY_START = "-----BEGIN PUBLIC KEY-----";
+const PUBLIC_KEY_END = "-----END PUBLIC KEY-----";
 
 export type EbayNotificationVerificationFailure =
   | "MALFORMED_PAYLOAD"
@@ -220,6 +222,17 @@ function parseBoundedResponse(body: Uint8Array) {
   }
 }
 
+function normalizeEbayPublicKey(key: string) {
+  const trimmed = key.trim();
+  if (!trimmed.startsWith(PUBLIC_KEY_START) || !trimmed.endsWith(PUBLIC_KEY_END))
+    throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+  const body = trimmed.slice(PUBLIC_KEY_START.length, -PUBLIC_KEY_END.length).trim();
+  if (!body) throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+  const normalized = `${PUBLIC_KEY_START}\n${body}\n${PUBLIC_KEY_END}`;
+  createPublicKey(normalized);
+  return normalized;
+}
+
 export function createEbayNotificationPublicKeyProvider(
   config: EbayApplicationConfig,
   transport: EbayHttpTransport,
@@ -274,8 +287,7 @@ export function createEbayNotificationPublicKeyProvider(
     try {
       const key = parseBoundedResponse(keyResponse.body).key;
       if (typeof key !== "string" || !key || key.length > 16_384) throw new Error("invalid");
-      createPublicKey(key);
-      return key;
+      return normalizeEbayPublicKey(key);
     } catch {
       throw failure("PUBLIC_KEY_RETRIEVAL", "UPSTREAM_RESPONSE_INVALID", keyStartedAt,
         keyResponse.status);
