@@ -398,4 +398,3 @@ export async function ingestEbayFinancesD1ToD2B(input: {
   });
   return { sliceId: input.sliceId, transactionCount: canonical.length, results };
 }
-
