@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { generateKeyPairSync, verify } from "node:crypto";
-import { executeEbayApiRequest, ebayApiBaseUrl, extractSafeEbayRequestId,
+import { ebayApiBaseUrl, ebayFinancesApiBaseUrl, executeEbayApiRequest, extractSafeEbayRequestId,
   type EbayApiOperation } from "../../app/connectors/ebay/ebay-api-client.server";
 import { ebayContentDigest, ebaySignatureBase, signEbayHttpRequest,
   type EbaySigningKeyProvider } from "../../app/connectors/ebay/ebay-http-signature.server";
@@ -43,6 +43,10 @@ const verifies = (request: EbayHttpRequest, base = signedBase(request)) =>
   verify(null, Buffer.from(base), publicKey, signatureBytes(request.headers.signature));
 
 const financesPath = "/sell/finances/v1/transaction";
+assert.equal(ebayApiBaseUrl(config), "https://api.sandbox.ebay.com");
+assert.equal(ebayApiBaseUrl({ environment: "PRODUCTION" }), "https://api.ebay.com");
+assert.equal(ebayFinancesApiBaseUrl(config), "https://apiz.sandbox.ebay.com");
+assert.equal(ebayFinancesApiBaseUrl({ environment: "PRODUCTION" }), "https://apiz.ebay.com");
 const getRequest = (overrides: Partial<Parameters<typeof executeEbayApiRequest>[0]> = {}) => ({
   config, accessToken, method: "GET" as const, path: financesPath, operation: "FINANCES" as EbayApiOperation,
   transport: new MockTransport([() => response(200)]), keyProvider, signingKeyProvider: keyProvider,
@@ -51,7 +55,8 @@ const getRequest = (overrides: Partial<Parameters<typeof executeEbayApiRequest>[
 
 // F0-compatible path-only signing: query is transmitted but excluded from @path.
 const getTransport = new MockTransport([(request) => {
-  assert.equal(request.url, `${ebayApiBaseUrl(config)}${financesPath}?limit=10&filter=status%3A%7BSALE%7D`);
+  assert.equal(request.url,
+    `${ebayFinancesApiBaseUrl(config)}${financesPath}?limit=10&filter=status%3A%7BSALE%7D`);
   assert.equal(request.headers["content-digest"], undefined);
   assert.match(request.headers["signature-input"],
     /^sig1=\("x-ebay-signature-key" "@method" "@path" "@authority"\);created=1700000000$/);

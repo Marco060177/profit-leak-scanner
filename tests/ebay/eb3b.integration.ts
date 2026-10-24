@@ -66,7 +66,9 @@ const fixtures = [tx("TX-SALE", "SALE", { orderId: "ORDER-EXACT",
 tx("TX-FEE", "NON_SALE_CHARGE", { bookingEntry: "DEBIT", amount: { value: "2.50", currency: "EUR" } }),
 tx("TX-REFUND", "REFUND", { bookingEntry: "DEBIT", amount: { value: "7.25", currency: "EUR" } }),
 tx("TX-CREDIT", "CREDIT", { amount: { value: "1.2300", currency: "EUR" } }),
-tx("TX-FUTURE", "FUTURE_NEW_TYPE")];
+tx("TX-FUTURE", "FUTURE_NEW_TYPE"),
+{ transactionId: "ZZ-MISSING-TYPE", transactionStatus: "COMPLETED", bookingEntry: "CREDIT",
+  transactionDate: "2026-09-03T10:00:00.000Z", amount: { value: "4.20", currency: "EUR" } }];
 const nextFor = (request: EbayHttpRequest, offset: number) => {
   const url = new URL(request.url); url.searchParams.set("offset", String(offset)); return url.toString();
 };
@@ -155,8 +157,8 @@ try {
   assert(references.some((row) => row.targetKind === "EBAY_ORDER_ID" && row.targetKey === "ORDER-EXACT"));
   assert(references.some((row) => row.targetKind === "EBAY_ORDER_LINE_ITEM_ID" && row.targetKey === "LINE-EXACT"));
   assert.equal(references.filter((row) => row.targetKind === "EBAY_ORDER_ID").length, 1);
-  assert.deepEqual(fixtures.map((entry) => entry.transactionType),
-    ["SALE", "NON_SALE_CHARGE", "REFUND", "CREDIT", "FUTURE_NEW_TYPE"]);
+  assert.deepEqual(fixtures.map((entry) => "transactionType" in entry ? entry.transactionType : null),
+    ["SALE", "NON_SALE_CHARGE", "REFUND", "CREDIT", "FUTURE_NEW_TYPE", null]);
   const canonical = parseEbayFinancesEvidencePage(Buffer.from(JSON.stringify(body)))
     .map((value) => mapEbayFinancialTransaction(value, evidence.rawSourceRecord.payloadChecksum));
   assert.equal(canonical[0].economicLeaves[0].sourceMoney.amountAtoms, 83000n);
@@ -181,6 +183,15 @@ try {
   assert(ledger.some((row) => row.projectionKind === "REFUND" && row.amountAtoms === -725n));
   assert(ledger.some((row) => row.projectionKind === "ADJUSTMENT" && row.amountAtoms === 123n));
   assert(ledger.some((row) => row.projectionKind === "UNKNOWN_UNCLASSIFIED"));
+  const missingTypeEvidence = (await db.financialAuthorityEvidence.findMany({ where: {
+    accountId: account.id, channelConnectionId: channel.id } })).find((row) => {
+      const boundaries = JSON.parse(row.boundariesJson) as { transactionId?: string };
+      return boundaries.transactionId === "ZZ-MISSING-TYPE";
+    });
+  assert(missingTypeEvidence);
+  assert.equal(missingTypeEvidence.coverageState, "UNKNOWN");
+  assert.equal(missingTypeEvidence.reasonCode, "UNKNOWN_UNCLASSIFIED");
+  assert.equal(JSON.parse(missingTypeEvidence.boundariesJson).transactionType, null);
   assert(ledger.every((row) => row.currencyCode === "EUR"));
   assert(ledger.every((row) => row.orderId === null && row.itemId === null));
   assert((await db.financialAuthorityBinding.findMany({ where: {

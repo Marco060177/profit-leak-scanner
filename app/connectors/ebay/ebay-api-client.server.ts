@@ -42,6 +42,14 @@ const API_BASE_URLS = {
   SANDBOX: "https://api.sandbox.ebay.com",
   PRODUCTION: "https://api.ebay.com",
 } as const;
+const IDENTITY_API_BASE_URLS = {
+  SANDBOX: "https://apiz.sandbox.ebay.com",
+  PRODUCTION: "https://apiz.ebay.com",
+} as const;
+const FINANCES_API_BASE_URLS = {
+  SANDBOX: "https://apiz.sandbox.ebay.com",
+  PRODUCTION: "https://apiz.ebay.com",
+} as const;
 const SAFE_REQUEST_ID = /^[A-Za-z0-9._:-]{1,256}$/;
 const SIGNATURE_ERROR_IDS = new Set([215120, 215121, 215122, 215123, 215124]);
 
@@ -49,6 +57,14 @@ export type EbayApiOperation = "STANDARD" | "FINANCES" | "EU_UK_ISSUE_REFUND";
 
 export function ebayApiBaseUrl(config: Pick<EbayApplicationConfig, "environment">) {
   return API_BASE_URLS[config.environment];
+}
+
+export function ebayIdentityApiBaseUrl(config: Pick<EbayApplicationConfig, "environment">) {
+  return IDENTITY_API_BASE_URLS[config.environment];
+}
+
+export function ebayFinancesApiBaseUrl(config: Pick<EbayApplicationConfig, "environment">) {
+  return FINANCES_API_BASE_URLS[config.environment];
 }
 
 export function extractSafeEbayRequestId(headers: Readonly<Record<string, string>>) {
@@ -90,7 +106,7 @@ function signatureRequired(operation: EbayApiOperation, pathname: string) {
     /\/issue_?refund(?:\/|$)/i.test(pathname);
 }
 
-export async function executeEbayApiRequest(input: {
+type EbayApiRequestInput = {
   config: EbayApplicationConfig;
   accessToken: string;
   method: EbayHttpRequest["method"];
@@ -104,7 +120,10 @@ export async function executeEbayApiRequest(input: {
   signingKeyProvider?: EbaySigningKeyProvider;
   now?: () => number;
   sleep?: (milliseconds: number) => Promise<void>;
-}): Promise<EbayHttpResponse> {
+};
+
+async function executeEbayApiRequestAgainstBase(input: EbayApiRequestInput,
+baseUrl: string): Promise<EbayHttpResponse> {
   if (!input.accessToken || input.accessToken !== input.accessToken.trim() || input.accessToken.length > 16_384 ||
       /[\r\n]/.test(input.accessToken) || !input.path.startsWith("/") || input.path.startsWith("//") ||
       /[\r\n]/.test(input.path) || (input.contentType !== undefined &&
@@ -118,7 +137,7 @@ export async function executeEbayApiRequest(input: {
           "x-ebay-signature-key"].includes(name)) throw new EbayConnectorError("AUTHORIZATION");
     additionalHeaders[name] = value;
   }
-  const url = new URL(input.path, ebayApiBaseUrl(input.config));
+  const url = new URL(input.path, baseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) url.searchParams.append(key, value);
   const body = input.body?.slice() ?? new Uint8Array();
   const hasBody = input.body !== undefined;
@@ -154,6 +173,11 @@ export async function executeEbayApiRequest(input: {
     await pause(wait);
   }
   throw lastError ?? new EbayConnectorError("RETRYABLE_UPSTREAM", { retryable: true });
+}
+
+export function executeEbayApiRequest(input: EbayApiRequestInput): Promise<EbayHttpResponse> {
+  return executeEbayApiRequestAgainstBase(input, input.operation === "FINANCES" ?
+    ebayFinancesApiBaseUrl(input.config) : ebayApiBaseUrl(input.config));
 }
 
 function requestId(response: EbayHttpResponse) {
@@ -281,8 +305,9 @@ export async function getAuthenticatedEbaySellerIdentity(input: {
   accessToken: string;
   transport: EbayHttpTransport;
 }): Promise<EbayAuthenticatedSellerIdentity> {
-  const response = await executeEbayApiRequest({ config: input.config, accessToken: input.accessToken,
-    method: "GET", path: "/commerce/identity/v1/user/", operation: "STANDARD", transport: input.transport });
+  const response = await executeEbayApiRequestAgainstBase({ config: input.config,
+    accessToken: input.accessToken, method: "GET", path: "/commerce/identity/v1/user/",
+    operation: "STANDARD", transport: input.transport }, ebayIdentityApiBaseUrl(input.config));
   const value = parseJson(response);
   const userId = value.userId;
   const username = value.username;

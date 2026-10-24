@@ -49,6 +49,7 @@ try {
   const seller = await seedAuthorization("ed3f-seller", EBAY_REQUIRED_SCOPES);
   const identityTransport: EbayHttpTransport = { request: async (request) => {
     assert.equal(request.method, "GET");
+    assert.equal(new URL(request.url).origin, "https://apiz.sandbox.ebay.com");
     assert.equal(new URL(request.url).pathname, "/commerce/identity/v1/user/");
     assert.equal(request.headers.authorization, "Bearer seller-access-token");
     return response(200, { userId: "immutable-user-123", username: "secondary-name",

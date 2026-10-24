@@ -16,7 +16,7 @@ export type EbayFinancesEconomicProjection = Readonly<{
   sourceContract: typeof EBAY_FINANCES_SOURCE_CONTRACT;
   transactions: readonly Readonly<{
     transactionId: string;
-    transactionType: string;
+    transactionType: OptionalString;
     transactionStatus: OptionalString;
     bookingEntry: "CREDIT" | "DEBIT" | null;
     transactionDate: OptionalString;
@@ -63,7 +63,8 @@ const optionalBookingEntry = (value: unknown): "CREDIT" | "DEBIT" | null => {
 function projectTransaction(value: unknown) {
   const source = object(value);
   const transactionId = requiredString(source.transactionId);
-  const transactionType = requiredString(source.transactionType);
+  const transactionType = source.transactionType === undefined || source.transactionType === null ? null :
+    requiredString(source.transactionType);
   const transactionStatus = optionalString(source.transactionStatus);
   const bookingEntry = optionalBookingEntry(source.bookingEntry);
   const transactionDate = timestamp(source.transactionDate);
@@ -86,8 +87,8 @@ function projectTransaction(value: unknown) {
     });
     return { lineItemId, marketplaceFees };
   });
-  const normalizedType = transactionType.replace(/([a-z0-9])([A-Z])/g, "$1_$2")
-    .replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").toUpperCase();
+  const normalizedType = transactionType?.replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+    .replace(/[^A-Za-z0-9]+/g, "_").replace(/^_+|_+$/g, "").toUpperCase() ?? null;
   if (!amount && !totalFeeBasisAmount) return malformed();
   if (normalizedType === "SALE" && (!totalFeeBasisAmount || !transactionDate)) return malformed();
   if (["REFUND", "NON_SALE_CHARGE", "SHIPPING_LABEL", "ADJUSTMENT", "CREDIT"].includes(normalizedType) &&

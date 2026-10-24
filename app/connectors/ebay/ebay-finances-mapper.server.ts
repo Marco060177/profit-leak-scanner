@@ -13,7 +13,7 @@ export const EBAY_FINANCES_SOURCE_AUTHORITY = "ebay-finances-v1";
 type SourceMoney = Readonly<{ value: string; currency: string }>;
 export type EbayFinancialSourceTransaction = Readonly<{
   transactionId: string;
-  transactionType: string;
+  transactionType: string | null;
   transactionStatus: string | null;
   bookingEntry: "CREDIT" | "DEBIT" | null;
   transactionDate: string | null;
@@ -41,7 +41,7 @@ export type EbayCanonicalFinancialNode =
       reasonCode: MoneyRepresentabilityReason; blocker: UnrepresentableMoneyBlocker }>);
 export type EbayCanonicalFinancialTransaction = Readonly<{
   transactionId: string;
-  transactionType: string;
+  transactionType: string | null;
   transactionStatus: string | null;
   bookingEntry: "CREDIT" | "DEBIT" | null;
   postedDate: Date | null;
@@ -60,7 +60,7 @@ function requiredString(value: unknown) {
   return value;
 }
 function optionalString(value: unknown) {
-  return value === undefined ? null : requiredString(value);
+  return value === undefined || value === null ? null : requiredString(value);
 }
 function sourceMoney(value: unknown): SourceMoney {
   if (!value || typeof value !== "object" || Array.isArray(value))
@@ -85,13 +85,15 @@ export function parseEbayFinancesEvidencePage(body: Uint8Array) {
     if (!Array.isArray(items)) throw new EbayConnectorError("MALFORMED_RESPONSE");
     return {
       transactionId: requiredString(value.transactionId),
-      transactionType: requiredString(value.transactionType),
+      transactionType: value.transactionType === undefined || value.transactionType === null ? null :
+        requiredString(value.transactionType),
       transactionStatus: optionalString(value.transactionStatus),
       transactionDate: optionalString(value.transactionDate),
-      bookingEntry: value.bookingEntry === undefined ? null :
+      bookingEntry: value.bookingEntry === undefined || value.bookingEntry === null ? null :
         requiredString(value.bookingEntry) as "CREDIT" | "DEBIT",
-      amount: value.amount === undefined ? null : sourceMoney(value.amount),
-      totalFeeBasisAmount: value.totalFeeBasisAmount === undefined ? null : sourceMoney(value.totalFeeBasisAmount),
+      amount: value.amount === undefined || value.amount === null ? null : sourceMoney(value.amount),
+      totalFeeBasisAmount: value.totalFeeBasisAmount === undefined || value.totalFeeBasisAmount === null ? null :
+        sourceMoney(value.totalFeeBasisAmount),
       orderId: optionalString(value.orderId),
       orderLineItems: items.map((item) => {
         if (!item || typeof item !== "object" || Array.isArray(item))
@@ -149,8 +151,9 @@ export function mapEbayFinancialTransaction(transaction: EbayFinancialSourceTran
 sourcePayloadChecksum: string): EbayCanonicalFinancialTransaction {
   if (!/^[a-f0-9]{64}$/.test(sourcePayloadChecksum))
     throw new EbayConnectorError("MALFORMED_RESPONSE");
-  const semantic = normalized(transaction.transactionType);
-  const projection = projectionByTransaction[semantic] ?? "UNKNOWN_UNCLASSIFIED";
+  const semantic = transaction.transactionType === null ? null : normalized(transaction.transactionType);
+  const projection = semantic === null ? "UNKNOWN_UNCLASSIFIED" :
+    projectionByTransaction[semantic] ?? "UNKNOWN_UNCLASSIFIED";
   const supported = projection !== "UNKNOWN_UNCLASSIFIED";
   if (supported && (!transaction.transactionDate ||
       (semantic === "SALE" ? !transaction.totalFeeBasisAmount : !transaction.amount || !transaction.bookingEntry)))
@@ -162,10 +165,12 @@ sourcePayloadChecksum: string): EbayCanonicalFinancialTransaction {
     throw new EbayConnectorError("MALFORMED_RESPONSE");
   const leaves: EbayCanonicalFinancialNode[] = [];
   if (semantic === "SALE" && transaction.totalFeeBasisAmount) leaves.push(node({ transaction,
-    checksum: sourcePayloadChecksum, path: "/totalFeeBasisAmount", type: transaction.transactionType,
+    checksum: sourcePayloadChecksum, path: "/totalFeeBasisAmount",
+    type: transaction.transactionType ?? "EBAY_TRANSACTION_TYPE_MISSING",
     projection, money: transaction.totalFeeBasisAmount, lineItemId: null, sign: "CREDIT" }));
   else if (transaction.amount && transaction.bookingEntry) leaves.push(node({ transaction,
-    checksum: sourcePayloadChecksum, path: "/amount", type: transaction.transactionType,
+    checksum: sourcePayloadChecksum, path: "/amount",
+    type: transaction.transactionType ?? "EBAY_TRANSACTION_TYPE_MISSING",
     projection, money: transaction.amount, lineItemId: null, sign: transaction.bookingEntry }));
   for (let itemIndex = 0; itemIndex < transaction.orderLineItems.length; itemIndex += 1) {
     const item = transaction.orderLineItems[itemIndex];
@@ -177,11 +182,7 @@ sourcePayloadChecksum: string): EbayCanonicalFinancialTransaction {
         lineItemId: item.lineItemId, sign: "DEBIT" }));
     }
   }
-  const currencies = new Set([
-    transaction.amount?.currency,
-    transaction.totalFeeBasisAmount?.currency,
-    ...leaves.map((leaf) => leaf.sourceMoney.currencyCode),
-  ].filter((value): value is string => value !== undefined));
+  const currencies = new Set(leaves.map((leaf) => leaf.sourceMoney.currencyCode));
   if (currencies.size > 1) throw new Error("eBay Finances transaction currency conflict");
   return { transactionId: transaction.transactionId, transactionType: transaction.transactionType,
     transactionStatus: transaction.transactionStatus, bookingEntry: transaction.bookingEntry, postedDate,

@@ -1,7 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 import type { VerifiedCoreTenant } from "~/core/data-core-d2a.server";
 import type { CredentialEncryptionProvider } from "~/services/credential-encryption.server";
-import { executeEbayApiRequest, extractSafeEbayRequestId, refreshEbaySellerAccessToken }
+import { ebayFinancesApiBaseUrl, executeEbayApiRequest, extractSafeEbayRequestId,
+  refreshEbaySellerAccessToken }
   from "./ebay-api-client.server";
 import type { EbaySigningKeyProvider } from "./ebay-http-signature.server";
 import { assertEbayOrdersBoundary } from "./ebay-orders.server";
@@ -20,7 +21,7 @@ export type EbayFinancesQuery = Readonly<{
 }>;
 export type EbayFinancialTransactionReference = Readonly<{
   transactionId: string;
-  transactionType: string;
+  transactionType: string | null;
   transactionStatus?: string;
   transactionDate?: string;
   orderId?: string;
@@ -43,7 +44,7 @@ function requiredString(value: unknown) {
   return value;
 }
 function optionalString(value: unknown) {
-  return value === undefined ? undefined : requiredString(value);
+  return value === undefined || value === null ? undefined : requiredString(value);
 }
 function validateQuery(query: EbayFinancesQuery) {
   if (!validDate(query.transactionDateFrom) || !validDate(query.transactionDateTo) ||
@@ -79,7 +80,8 @@ function parsePage(body: Uint8Array) {
     const lineItems = source.orderLineItems === undefined ? [] : source.orderLineItems;
     if (!Array.isArray(lineItems)) throw new EbayConnectorError("MALFORMED_RESPONSE");
     return { transactionId: requiredString(source.transactionId),
-      transactionType: requiredString(source.transactionType),
+      transactionType: source.transactionType === undefined || source.transactionType === null ? null :
+        requiredString(source.transactionType),
       transactionStatus: optionalString(source.transactionStatus),
       transactionDate: optionalString(source.transactionDate), orderId: optionalString(source.orderId),
       orderLineItemIds: lineItems.map((item) => {
@@ -131,8 +133,7 @@ export async function* listEbayFinancesPages(input: {
     encryptionProvider: input.credentialEncryptionProvider });
   const pageSize = input.query.pageSize ?? 200;
   const maxPages = input.query.maxPages ?? 100;
-  const baseUrl = input.config.environment === "SANDBOX" ?
-    "https://api.sandbox.ebay.com" : "https://api.ebay.com";
+  const baseUrl = ebayFinancesApiBaseUrl(input.config);
   const first = new URL(`${baseUrl}${FINANCES_PATH}`);
   first.searchParams.set("filter",
     `transactionDate:[${input.query.transactionDateFrom.toISOString()}..${input.query.transactionDateTo.toISOString()}]`);

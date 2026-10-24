@@ -85,7 +85,7 @@ function financesProjection(value: unknown) {
     const transaction = object(value);
     exactKeys(transaction, ["transactionId", "transactionType", "transactionStatus", "bookingEntry",
       "transactionDate", "amount", "totalFeeBasisAmount", "orderId", "orderLineItems"]);
-    string(transaction.transactionId); string(transaction.transactionType);
+    string(transaction.transactionId); nullableString(transaction.transactionType);
     nullableString(transaction.transactionStatus); nullableString(transaction.transactionDate);
     nullableString(transaction.orderId);
     if (transaction.bookingEntry !== null && transaction.bookingEntry !== "CREDIT" &&
