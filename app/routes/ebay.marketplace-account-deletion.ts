@@ -11,6 +11,8 @@ import {
 } from "~/connectors/ebay/ebay-marketplace-account-deletion-challenge.server";
 import { createEbayNotificationPublicKeyProvider,
   createEbayNotificationSignatureVerifier } from "~/connectors/ebay/ebay-notification-signature.server";
+import { ebayDeletionDiagnosticSink, elapsedMilliseconds } from
+  "~/connectors/ebay/ebay-deletion-notification-diagnostics.server";
 
 const jsonError = (status: number) => Response.json({ error: "Request rejected" }, { status });
 
@@ -33,14 +35,33 @@ export const loader = ({ request }: LoaderFunctionArgs) => {
 let productionVerifier: ReturnType<typeof createEbayNotificationSignatureVerifier> | undefined;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  let startedAt = Date.now();
+  let config;
   try {
-    const config = resolveEbayApplicationConfig();
+    config = resolveEbayApplicationConfig();
+  } catch {
+    ebayDeletionDiagnosticSink({ stage: "APPLICATION_CONFIG", category: "CONFIGURATION_INVALID",
+      durationMs: elapsedMilliseconds(startedAt, Date.now) });
+    return new Response(null, { status: 503 });
+  }
+  try {
     productionVerifier ??= createEbayNotificationSignatureVerifier({
       publicKeyProvider: createEbayNotificationPublicKeyProvider(config, nativeEbayOAuthTransport),
     });
-    return await handleEbayDeletionNotificationPost({ request, db: prisma, verifier: productionVerifier,
-      hmacConfig: resolveEbayDeletionHmacConfig() });
   } catch {
+    ebayDeletionDiagnosticSink({ stage: "APPLICATION_CONFIG", category: "UNEXPECTED_FAILURE",
+      durationMs: elapsedMilliseconds(startedAt, Date.now) });
     return new Response(null, { status: 503 });
   }
+  startedAt = Date.now();
+  let hmacConfig;
+  try {
+    hmacConfig = resolveEbayDeletionHmacConfig();
+  } catch {
+    ebayDeletionDiagnosticSink({ stage: "HMAC_CONFIG", category: "CONFIGURATION_INVALID",
+      durationMs: elapsedMilliseconds(startedAt, Date.now) });
+    return new Response(null, { status: 503 });
+  }
+  return handleEbayDeletionNotificationPost({ request, db: prisma, verifier: productionVerifier,
+    hmacConfig, diagnostics: ebayDeletionDiagnosticSink });
 };

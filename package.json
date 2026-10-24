@@ -58,6 +58,7 @@
     "test:ebay-ed3j": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3j-signing-key-provider.test.ts",
     "test:ebay-ed3k": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3k-production-composition.integration.ts",
     "test:ebay-ed3m": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ed3m-sqlite-backup.integration.ts",
+    "test:ebay-deletion-diagnostics": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/ebay/ebay-deletion-notification-diagnostics.test.ts",
     "sqlite:backup": "tsx scripts/sqlite-backup.ts create",
     "sqlite:verify-restore": "tsx scripts/sqlite-backup.ts verify-restore",
     "test:feature-fa1a": "node --experimental-strip-types --loader ./tests/tenancy/loader.mjs tests/features/feature-money.test.ts",

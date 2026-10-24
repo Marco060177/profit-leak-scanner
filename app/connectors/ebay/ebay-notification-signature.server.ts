@@ -1,6 +1,9 @@
 import { createPublicKey, createVerify } from "node:crypto";
 import type { EbayApplicationConfig, EbayHttpTransport } from "./ebay-types";
 import { ebayOAuthTokenEndpoint } from "./ebay-api-client.server";
+import type { EbayDeletionDiagnosticCategory, EbayDeletionDiagnosticStage } from
+  "./ebay-deletion-notification-diagnostics.server";
+import { elapsedMilliseconds } from "./ebay-deletion-notification-diagnostics.server";
 
 const decoder = new TextDecoder("utf-8", { fatal: true });
 const encoder = new TextEncoder();
@@ -22,11 +25,24 @@ export type EbayNotificationVerificationFailure =
 
 export class EbayNotificationVerificationError extends Error {
   readonly code: EbayNotificationVerificationFailure;
+  readonly diagnosticStage?: EbayDeletionDiagnosticStage;
+  readonly diagnosticCategory?: EbayDeletionDiagnosticCategory;
+  readonly upstreamStatus?: number;
+  readonly durationMs?: number;
 
-  constructor(code: EbayNotificationVerificationFailure) {
+  constructor(code: EbayNotificationVerificationFailure, diagnostic?: Readonly<{
+    stage: EbayDeletionDiagnosticStage;
+    category: EbayDeletionDiagnosticCategory;
+    upstreamStatus?: number;
+    durationMs: number;
+  }>) {
     super(`eBay notification verification ${code.toLowerCase().replaceAll("_", " ")}`);
     this.name = "EbayNotificationVerificationError";
     this.code = code;
+    this.diagnosticStage = diagnostic?.stage;
+    this.diagnosticCategory = diagnostic?.category;
+    this.upstreamStatus = diagnostic?.upstreamStatus;
+    this.durationMs = diagnostic?.durationMs;
   }
 }
 
@@ -207,35 +223,62 @@ function parseBoundedResponse(body: Uint8Array) {
 export function createEbayNotificationPublicKeyProvider(
   config: EbayApplicationConfig,
   transport: EbayHttpTransport,
+  hooks?: Readonly<{ now?: () => number }>,
 ): EbayNotificationPublicKeyProvider {
   return { async getPublicKey(keyId) {
     if (!KEY_ID_PATTERN.test(keyId)) throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+    const now = hooks?.now ?? Date.now;
+    const failure = (stage: "APPLICATION_TOKEN" | "PUBLIC_KEY_RETRIEVAL",
+      category: EbayDeletionDiagnosticCategory, startedAt: number, upstreamStatus?: number) =>
+      new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED", {
+        stage, category, upstreamStatus, durationMs: elapsedMilliseconds(startedAt, now),
+      });
+    const tokenStartedAt = now();
+    let tokenResponse;
     try {
       const form = new URLSearchParams({ grant_type: "client_credentials", scope: APPLICATION_SCOPE });
-      const tokenResponse = await transport.request({ method: "POST", url: ebayOAuthTokenEndpoint(config), headers: {
+      tokenResponse = await transport.request({ method: "POST", url: ebayOAuthTokenEndpoint(config), headers: {
         authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`, "utf8").toString("base64")}`,
         "content-type": "application/x-www-form-urlencoded", accept: "application/json",
       }, body: encoder.encode(form.toString()), timeoutMs: config.timeoutMs });
-      if (tokenResponse.status < 200 || tokenResponse.status >= 300)
-        throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
-      const token = parseBoundedResponse(tokenResponse.body);
+    } catch {
+      throw failure("APPLICATION_TOKEN", "TRANSPORT_FAILURE", tokenStartedAt);
+    }
+    if (tokenResponse.status < 200 || tokenResponse.status >= 300)
+      throw failure("APPLICATION_TOKEN", "UPSTREAM_HTTP_ERROR", tokenStartedAt, tokenResponse.status);
+    let token;
+    try {
+      token = parseBoundedResponse(tokenResponse.body);
       if (typeof token.access_token !== "string" || !token.access_token || token.access_token.length > 16_384 ||
           typeof token.token_type !== "string" ||
           !["application access token", "bearer"].includes(token.token_type.toLowerCase()) ||
           typeof token.expires_in !== "number" || !Number.isSafeInteger(token.expires_in) || token.expires_in < 1)
-        throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
-      const keyResponse = await transport.request({ method: "GET",
+        throw new Error("invalid");
+    } catch {
+      throw failure("APPLICATION_TOKEN", "UPSTREAM_RESPONSE_INVALID", tokenStartedAt,
+        tokenResponse.status);
+    }
+
+    const keyStartedAt = now();
+    let keyResponse;
+    try {
+      keyResponse = await transport.request({ method: "GET",
         url: `${notificationApiBaseUrl(config.environment)}${encodeURIComponent(keyId)}`,
         headers: { authorization: `Bearer ${token.access_token}`, accept: "application/json" },
         body: new Uint8Array(), timeoutMs: config.timeoutMs });
-      if (keyResponse.status !== 200) throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+    } catch {
+      throw failure("PUBLIC_KEY_RETRIEVAL", "TRANSPORT_FAILURE", keyStartedAt);
+    }
+    if (keyResponse.status !== 200)
+      throw failure("PUBLIC_KEY_RETRIEVAL", "UPSTREAM_HTTP_ERROR", keyStartedAt, keyResponse.status);
+    try {
       const key = parseBoundedResponse(keyResponse.body).key;
-      if (typeof key !== "string" || !key || key.length > 16_384)
-        throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+      if (typeof key !== "string" || !key || key.length > 16_384) throw new Error("invalid");
       createPublicKey(key);
       return key;
     } catch {
-      throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+      throw failure("PUBLIC_KEY_RETRIEVAL", "UPSTREAM_RESPONSE_INVALID", keyStartedAt,
+        keyResponse.status);
     }
   } };
 }
@@ -261,7 +304,11 @@ export function createEbayNotificationSignatureVerifier(input: {
     if (cached) cache.delete(keyId);
     let key: string;
     try { key = await input.publicKeyProvider.getPublicKey(keyId); createPublicKey(key); }
-    catch { throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED"); }
+    catch (error) {
+      if (error instanceof EbayNotificationVerificationError && error.code === "KEY_RETRIEVAL_FAILED")
+        throw error;
+      throw new EbayNotificationVerificationError("KEY_RETRIEVAL_FAILED");
+    }
     while (cache.size >= maxCacheEntries) cache.delete(cache.keys().next().value as string);
     cache.set(keyId, { key, expiresAt: currentTime + cacheTtlMs });
     return key;

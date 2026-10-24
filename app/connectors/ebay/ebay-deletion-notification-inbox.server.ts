@@ -1,6 +1,8 @@
 import { createHmac } from "node:crypto";
 import type { PrismaClient } from "@prisma/client";
 import { EbayNotificationVerificationError } from "./ebay-notification-signature.server";
+import type { EbayDeletionDiagnosticSink } from "./ebay-deletion-notification-diagnostics.server";
+import { elapsedMilliseconds } from "./ebay-deletion-notification-diagnostics.server";
 
 const KEY_VERSION_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -163,29 +165,61 @@ export async function handleEbayDeletionNotificationPost(input: {
   verifier: EbayDeletionNotificationVerifier;
   hmacConfig: EbayDeletionHmacConfig;
   now?: () => Date;
+  nowMs?: () => number;
+  diagnostics?: EbayDeletionDiagnosticSink;
 }) {
+  const nowMs = input.nowMs ?? Date.now;
+  let startedAt = nowMs();
+  const report = (stage: Parameters<EbayDeletionDiagnosticSink>[0]["stage"],
+    category: Parameters<EbayDeletionDiagnosticSink>[0]["category"], upstreamStatus?: number,
+    durationMs = elapsedMilliseconds(startedAt, nowMs)) =>
+    input.diagnostics?.({ stage, category, upstreamStatus, durationMs });
   if (input.request.method !== "POST") return new Response(null, { status: 405,
     headers: { Allow: "POST" } });
   const mediaType = input.request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
-  if (mediaType !== "application/json") return new Response(null, { status: 415 });
+  if (mediaType !== "application/json") {
+    report("BODY_VALIDATION", "REQUEST_INVALID");
+    return new Response(null, { status: 415 });
+  }
   try {
     const rawBody = await boundedBody(input.request, 256 * 1024);
+    startedAt = nowMs();
     const verified = await input.verifier.verify(rawBody, input.request.headers.get("x-ebay-signature"));
+    startedAt = nowMs();
     await persistVerifiedEbayDeletionNotification({ db: input.db, notification: verified.notification,
       hmacConfig: input.hmacConfig, receivedAt: (input.now ?? (() => new Date()))() });
     return new Response(null, { status: 204 });
   } catch (error) {
-    if (error instanceof Response) return error;
+    if (error instanceof Response) {
+      report("BODY_VALIDATION", "REQUEST_INVALID");
+      return error;
+    }
     if (error instanceof EbayNotificationVerificationError) {
+      if (error.diagnosticStage && error.diagnosticCategory) {
+        report(error.diagnosticStage, error.diagnosticCategory, error.upstreamStatus, error.durationMs);
+      } else if (["MALFORMED_PAYLOAD", "UNSUPPORTED_PAYLOAD"].includes(error.code)) {
+        report("BODY_VALIDATION", "REQUEST_INVALID");
+      } else {
+        report("SIGNATURE_VERIFICATION", "SIGNATURE_INVALID");
+      }
       if (error.code === "INVALID_SIGNATURE") return new Response(null, { status: 412 });
       if (error.code === "KEY_RETRIEVAL_FAILED") return new Response(null, { status: 503 });
       return new Response(null, { status: 400 });
     }
     if (error instanceof EbayDeletionInboxError) {
-      if (error.code === "CONFLICT") return new Response(null, { status: 409 });
-      if (error.code === "INVALID_PAYLOAD") return new Response(null, { status: 400 });
+      if (error.code === "CONFLICT") {
+        report("INBOX_PERSISTENCE", "IDEMPOTENCY_CONFLICT");
+        return new Response(null, { status: 409 });
+      }
+      if (error.code === "INVALID_PAYLOAD") {
+        report("BODY_VALIDATION", "REQUEST_INVALID");
+        return new Response(null, { status: 400 });
+      }
+      report("INBOX_PERSISTENCE", error.code === "PERSISTENCE" ? "PERSISTENCE_FAILURE" :
+        "CONFIGURATION_INVALID");
       return new Response(null, { status: 503 });
     }
+    report("INBOX_PERSISTENCE", "UNEXPECTED_FAILURE");
     return new Response(null, { status: 503 });
   }
 }

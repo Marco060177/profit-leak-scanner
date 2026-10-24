@@ -111,13 +111,15 @@ assert.equal(transport.requests[1].url,
   "https://api.ebay.com/commerce/notification/v1/public_key/official-compatible-key-1");
 assert.equal(transport.requests[1].headers.authorization, "Bearer application-token");
 
-for (const badTransport of [
-  new MockTransport([response(500, {})]),
-  new MockTransport([response(200, { access_token: "token", token_type: "Application Access Token",
-    expires_in: 7200 }), response(404, {})]),
-  new MockTransport([response(200, { access_token: "token", token_type: "Application Access Token",
-    expires_in: 7200 }), response(200, { key: "bad" })]),
-]) await assert.rejects(createEbayNotificationPublicKeyProvider(config, badTransport).getPublicKey("key-1"),
-  (error) => error instanceof EbayNotificationVerificationError && error.code === "KEY_RETRIEVAL_FAILED");
+for (const [badTransport, expectedStage] of [
+  [new MockTransport([response(500, {})]), "APPLICATION_TOKEN"],
+  [new MockTransport([response(200, { access_token: "token", token_type: "Application Access Token",
+    expires_in: 7200 }), response(404, {})]), "PUBLIC_KEY_RETRIEVAL"],
+  [new MockTransport([response(200, { access_token: "token", token_type: "Application Access Token",
+    expires_in: 7200 }), response(200, { key: "bad" })]), "PUBLIC_KEY_RETRIEVAL"],
+] as const) await assert.rejects(
+  createEbayNotificationPublicKeyProvider(config, badTransport).getPublicKey("key-1"),
+  (error) => error instanceof EbayNotificationVerificationError && error.code === "KEY_RETRIEVAL_FAILED" &&
+    error.diagnosticStage === expectedStage);
 
 console.log("ED3-B SDK-compatible eBay notification signature tests passed");
